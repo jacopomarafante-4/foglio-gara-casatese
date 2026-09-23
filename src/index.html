@@ -181,10 +181,38 @@ function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',cat
 let S = {teams:[], players:[], schemes:[], sheet:defaultSheet()};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
-/* PIN admin: protegge l'ingresso come amministratore sul link pubblico (i mister non lo vedono, entrano col loro codice squadra) */
+/* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
+   L'amministratore serve un PIN rapido + (fuori da Claude) un vero login Supabase legato alla tua email. */
 const ADMIN_PIN = '1611';
-let adminUnlocked = false, pinError = false;
+let adminUnlocked = false, pinError = false, codeError = false, teamsLoaded = false;
 try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
+const RUNNING_IN_CLAUDE = !!(window.claude && window.claude.use);
+const SUPABASE_URL = 'https://vxqpuwoqanvkpfzilrcc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4cXB1d29xYW52a3BmemlscmNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDg0NjksImV4cCI6MjEwNTcyNDQ2OX0.MIF-vt76o1jeuVuESFcrLf3lbXffu8P7aqtRd9k247o';
+const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let supaSession = null;
+function adminAccessGranted(){
+  if(!adminUnlocked) return false;
+  if(RUNNING_IN_CLAUDE || !supabaseClient) return true;
+  return !!supaSession;
+}
+async function initAuth(){
+  if(!supabaseClient) return;
+  try{
+    const { data } = await supabaseClient.auth.getSession();
+    supaSession = data.session || null;
+  }catch(e){}
+  supabaseClient.auth.onAuthStateChange((event, session) => { supaSession = session; render(); });
+  render();
+}
+async function sendMagicLink(email){
+  if(!supabaseClient || !email) return;
+  setStatus('Invio link…');
+  try{
+    const { error } = await supabaseClient.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('#')[0] } });
+    setStatus(error ? 'Errore invio link' : 'Controlla la tua email');
+  }catch(e){ setStatus('Errore invio link'); }
+}
 const isAdmin = () => ROLE === 'admin';
 const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
@@ -273,8 +301,6 @@ function switchView(role, team){
 }
 /* Fuori da Claude (es. GitHub Pages) il salvataggio condiviso passa da Supabase:
    stessa interfaccia doc().set()/onSnapshot() usata sopra, tabella "docs" a chiave/valore. */
-const SUPABASE_URL = 'https://vxqpuwoqanvkpfzilrcc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4cXB1d29xYW52a3BmemlscmNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDg0NjksImV4cCI6MjEwNTcyNDQ2OX0.MIF-vt76o1jeuVuESFcrLf3lbXffu8P7aqtRd9k247o';
 function makeSupabaseDb(client){
   return {
     doc(path){
@@ -302,25 +328,27 @@ function makeSupabaseDb(client){
   };
 }
 async function initStore(){
-  try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){ db = null; }
-  if(!db && window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY){
-    try{ db = makeSupabaseDb(window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)); }catch(e){ db = null; }
+  try{ if(RUNNING_IN_CLAUDE) db = await window.claude.use('db'); }catch(e){ db = null; }
+  if(!db && supabaseClient){
+    try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
   }
-  try{ if(window.claude && window.claude.use) downloads = await window.claude.use('downloads'); }catch(e){ downloads = null; }
+  try{ if(RUNNING_IN_CLAUDE) downloads = await window.claude.use('downloads'); }catch(e){ downloads = null; }
   if(db){
     let first = true;
     db.doc('shared/schemes').onSnapshot(snap => { if(pending['shared/schemes']) return; if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
     db.doc('shared/teams').onSnapshot(snap => {
       if(pending['shared/teams']) return;
       if(snap.exists) applyDoc('teams', snap.data());
+      teamsLoaded = true;
       const before = curTeam, beforeRole = ROLE; resolveAccess();
       if(first){ first = false; if(ROLE==='coach') tab = 'formazione'; subscribeTeam(); }
       else if(before !== curTeam || beforeRole !== ROLE) subscribeTeam();
       else render();
-    }, () => setStatus('Sincronizzazione in pausa'));
+    }, () => { teamsLoaded = true; setStatus('Sincronizzazione in pausa'); render(); });
     setStatus('Sincronizzato');
   } else {
     ['teams','schemes'].forEach(n => { try{ const v = localStorage.getItem('fg:shared/'+n); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
+    teamsLoaded = true;
     resolveAccess(); if(ROLE==='coach') tab = 'formazione';
     setStatus('Salvato su questo dispositivo');
     subscribeTeam();
@@ -380,22 +408,43 @@ function renderChrome(){
     : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span>`;
   $('#tabs').innerHTML = allowedTabs().map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('');
 }
-function viewPinGate(){
-  return `<section class="panel" style="max-width:340px;margin:48px auto">
-    <h2>Accesso amministratore</h2>
-    <p class="hint">Inserisci il PIN per gestire squadre, rose e schemi. Il tuo mister non deve fare nulla di tutto questo: entra col link della sua squadra.</p>
-    <label class="f" for="pingate">PIN</label>
-    <input id="pingate" type="password" inputmode="numeric" autocomplete="off" placeholder="····" autofocus>
-    ${pinError?'<p class="note" style="color:var(--red);margin-top:8px">PIN errato, riprova.</p>':''}
-    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="pinsubmit">Entra</button></div>
+function viewGate(){
+  if(!teamsLoaded){
+    return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Caricamento…</p></section>`;
+  }
+  let adminInner;
+  if(!adminUnlocked){
+    adminInner = `<label class="f" for="pingate">PIN amministratore</label>
+      <input id="pingate" type="password" inputmode="numeric" autocomplete="off" placeholder="····">
+      ${pinError?'<p class="note" style="color:var(--red);margin-top:6px">PIN errato, riprova.</p>':''}
+      <div class="row" style="margin-top:10px"><button class="btn" data-act="pinsubmit">Entra come admin</button></div>`;
+  } else if(!RUNNING_IN_CLAUDE && supabaseClient && !supaSession){
+    adminInner = `<p class="hint">PIN corretto. Ora accedi con la tua email per confermare che sei tu — arriverà un link, nessuna password da ricordare.</p>
+      <label class="f" for="gateemail">Email amministratore</label>
+      <input id="gateemail" type="email" autocomplete="email" placeholder="tu@esempio.it">
+      <div class="row" style="margin-top:10px"><button class="btn" data-act="sendlink">Invia link di accesso</button></div>`;
+  } else {
+    adminInner = `<p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p>`;
+  }
+  return `<section class="panel" style="max-width:380px;margin:48px auto 0">
+    <h2>Sei il mister?</h2>
+    <p class="hint">Inserisci il codice della tua squadra.</p>
+    <label class="f" for="teamcode">Codice squadra</label>
+    <input id="teamcode" autocomplete="off" placeholder="Es. U14-FA7C" style="text-transform:uppercase">
+    ${codeError?'<p class="note" style="color:var(--red);margin-top:6px">Codice non valido.</p>':''}
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="entercode">Entra</button></div>
+  </section>
+  <section class="panel" style="max-width:380px;margin:14px auto 0">
+    <h2>Sei l'amministratore?</h2>
+    ${adminInner}
   </section>`;
 }
 function render(){
-  if(isAdmin() && !hashLocked && !adminUnlocked){
+  if(!hashLocked && !adminAccessGranted()){
     $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
     $('#ctx').innerHTML = ''; $('#tabs').innerHTML = '';
-    $('#view').innerHTML = viewPinGate();
-    $('#pingate')?.focus();
+    $('#view').innerHTML = viewGate();
+    $('#teamcode')?.focus();
     return;
   }
   if(!allowedTabs().includes(tab)) tab = isAdmin() ? 'squadre' : 'formazione';
@@ -1010,10 +1059,20 @@ document.addEventListener('click', e => {
       else pinError = true;
       render();
       break; }
+    case 'entercode': {
+      const val = ($('#teamcode')?.value || '').trim();
+      const tm = S.teams.find(x => (x.code||'').toLowerCase() === val.toLowerCase());
+      if(tm){ codeError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); }
+      else { codeError = true; render(); }
+      break; }
+    case 'sendlink': sendMagicLink(($('#gateemail')?.value || '').trim()); break;
   }
 });
 document.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && e.target && e.target.id === 'pingate'){ e.preventDefault(); $('[data-act="pinsubmit"]')?.click(); }
+  if(e.key !== 'Enter' || !e.target) return;
+  if(e.target.id === 'pingate'){ e.preventDefault(); $('[data-act="pinsubmit"]')?.click(); }
+  else if(e.target.id === 'teamcode'){ e.preventDefault(); $('[data-act="entercode"]')?.click(); }
+  else if(e.target.id === 'gateemail'){ e.preventDefault(); $('[data-act="sendlink"]')?.click(); }
 });
 document.addEventListener('input', e => {
   const t = e.target;
@@ -1120,6 +1179,7 @@ document.addEventListener('pointercancel', () => { if(dnd?.ghost) dnd.ghost.remo
 
 render();
 ensureFonts();
+initAuth();
 initStore();
 </script>
 </body>
