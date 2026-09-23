@@ -309,6 +309,11 @@ function makeSupabaseDb(client){
           const { error } = await client.from('docs').upsert({ path, data, updated_at: new Date().toISOString() });
           if(error) throw error;
         },
+        async get(){
+          const { data, error } = await client.from('docs').select('data').eq('path', path).maybeSingle();
+          if(error) throw error;
+          return { exists: !!data, data: () => data && data.data };
+        },
         onSnapshot(onNext, onError){
           let stopped = false;
           client.from('docs').select('data').eq('path', path).maybeSingle()
@@ -492,6 +497,11 @@ function viewSquadre(){
       <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>
+  </section>
+  <section class="panel">
+    <h3 style="margin-top:0">Backup</h3>
+    <p class="hint">Scarica un file con tutti i dati attuali (squadre, rose, schemi, formazioni): una copia di sicurezza da tenere da parte.</p>
+    <button class="btn" data-act="exportbackup">Esporta backup</button>
   </section>`;
 }
 
@@ -990,6 +1000,23 @@ function browserDownload(filename, blob){
   a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+async function exportBackup(){
+  if(!db){ setStatus('Backup non disponibile'); return; }
+  setStatus('Preparo il backup…');
+  try{
+    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id])];
+    const docs = {};
+    for(const p of paths){
+      const snap = await db.doc(p).get();
+      if(snap.exists) docs[p] = snap.data();
+    }
+    const blob = new Blob([JSON.stringify({exportedAt:new Date().toISOString(), docs}, null, 2)], {type:'application/json'});
+    const filename = 'foglio-gara-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    if(downloads) await downloads.save({filename, data:blob});
+    else browserDownload(filename, blob);
+    setStatus('Backup pronto');
+  }catch(e){ setStatus('Backup non riuscito'); }
+}
 async function downloadPdf(){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   setStatus('Creo il PDF…');
@@ -1013,7 +1040,7 @@ document.addEventListener('click', e => {
   if(t.dataset.tab){ tab = t.dataset.tab; selectedPlayer = null; if(tab!=='piazzati') openSchemeId = null; render(); window.scrollTo(0,0); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
-  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','deldraw','edittext'];
+  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','deldraw','edittext','exportbackup'];
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.mode==='move' || t.dataset.mode==='draw' || t.dataset.drawtool || t.dataset.teamdel || t.dataset.teamcode)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
@@ -1053,6 +1080,7 @@ document.addEventListener('click', e => {
     case 'delscheme': if(sc && confirm(`Eliminare lo schema "${sc.name}"?`)){ S.schemes = S.schemes.filter(q=>q!==sc); S.sheet.selected = S.sheet.selected.filter(i=>i!==sc.id); delete S.sheet.overrides[sc.id]; save('schemes'); save('sheet'); openSchemeId=null; render(); } break;
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
+    case 'exportbackup': exportBackup(); break;
     case 'pinsubmit': {
       const val = $('#pingate')?.value || '';
       if(val === ADMIN_PIN){ adminUnlocked = true; pinError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} }
