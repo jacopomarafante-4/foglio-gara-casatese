@@ -137,6 +137,7 @@ summary{cursor:pointer;font-weight:600}
 .ro-row .nm{font-weight:600}
 .cols2{columns:2 240px;column-gap:28px}
 .teamcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:var(--paper)}
+.nextmatch{background:var(--paper);border:2px solid var(--sel);border-radius:10px;padding:10px 12px;margin-bottom:14px}
 .teamcard .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .teamcard .hd strong{font-family:var(--cond);font-size:21px;font-weight:700}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--bg);padding:4px 9px;border-radius:6px;border:1px solid var(--line);letter-spacing:.05em}
@@ -187,7 +188,7 @@ const BASES = {
 function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{}}}
 function effSlot(s, n, bx, by){ const o = (s.slotPos||{})[n]; return o ? {x:o.x, y:o.y} : {x:bx, y:by}; }
 
-let S = {teams:[], players:[], schemes:[], sheet:defaultSheet()};
+let S = {teams:[], players:[], schemes:[], sheet:defaultSheet(), calendar:[]};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
 /* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
@@ -254,6 +255,7 @@ function payload(name){
   if(name==='teams') return {items:S.teams};
   if(name==='roster') return {players:S.players};
   if(name==='schemes') return {items:S.schemes};
+  if(name==='calendar') return {matches:S.calendar};
   return clone(S.sheet);
 }
 function save(name){
@@ -276,6 +278,7 @@ function applyDoc(name, data){
   if(name==='teams') S.teams = clone(data.items || []);
   else if(name==='roster') S.players = clone(data.players || []);
   else if(name==='schemes') S.schemes = clone(data.items || []);
+  else if(name==='calendar') S.calendar = clone(data.matches || []);
   else S.sheet = Object.assign(defaultSheet(), clone(data));
 }
 function resolveAccess(){
@@ -288,10 +291,10 @@ function resolveAccess(){
 }
 function subscribeTeam(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
-  S.players = []; S.sheet = defaultSheet();
+  S.players = []; S.sheet = defaultSheet(); S.calendar = [];
   if(curTeam){
     if(db){
-      ['roster','sheet'].forEach(n => {
+      ['roster','sheet','calendar'].forEach(n => {
         const path = docPath(n);
         unsubs.push(db.doc(path).onSnapshot(snap => {
           if(pending[path]) return;
@@ -299,7 +302,7 @@ function subscribeTeam(){
         }, () => setStatus('Sincronizzazione in pausa')));
       });
     } else {
-      ['roster','sheet'].forEach(n => { try{ const v = localStorage.getItem('fg:'+docPath(n)); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
+      ['roster','sheet','calendar'].forEach(n => { try{ const v = localStorage.getItem('fg:'+docPath(n)); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
     }
   }
   render();
@@ -589,12 +592,38 @@ function viewRosa(){
   </section>`;
 }
 
+function nextMatch(){
+  const today = new Date().toISOString().slice(0,10);
+  return S.calendar.filter(m => m.date && m.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0] || null;
+}
 function viewPartita(){
   const s = S.sheet;
+  const A = isAdmin();
   const opts = sel => `<option value="">Nessuno</option>` + S.players.map(p => { const n=matchNum(p.id); return `<option value="${p.id}" ${sel===p.id?'selected':''}>${esc((n?n+' ':'')+p.name)}</option>`; }).join('');
   const f = (k,l,t='text') => `<div><label class="f" for="f_${k}">${l}</label><input id="f_${k}" type="${t}" data-sheet="${k}" value="${esc(s[k])}"></div>`;
+  const nm = nextMatch();
+  const calRows = S.calendar.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(m => `
+    <div class="teamcard">
+      <div class="grid">
+        <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
+        <div><label class="f">Ora</label><input type="time" data-calf="time" data-calid="${m.id}" value="${esc(m.time||'')}"></div>
+        <div><label class="f">Avversario</label><input data-calf="opponent" data-calid="${m.id}" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
+        <div><label class="f">Campo</label><input data-calf="venue" data-calid="${m.id}" value="${esc(m.venue||'')}" placeholder="Campo"></div>
+      </div>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+        <label class="row" style="gap:6px"><input type="checkbox" data-calf="home" data-calid="${m.id}" ${m.home?'checked':''}> In casa</label>
+        <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
+      </div>
+    </div>`).join('');
   return `<section class="panel">
     <h2>Partita</h2>
+    ${nm ? `<div class="nextmatch">
+      <span class="note">Prossima partita in calendario</span>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
+        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}</div>
+        <button class="btn small primary" data-act="usenext">Usa questa</button>
+      </div>
+    </div>` : ''}
     <p class="hint">Questi dati finiscono nell'intestazione di ogni pagina del PDF.</p>
     <div class="grid">
       ${f('team','La nostra squadra (nel PDF)')}${f('opponent','Avversario')}
@@ -605,7 +634,13 @@ function viewPartita(){
     </div>
     <div style="margin-top:12px"><label class="f" for="f_notes">Note per la squadra</label><textarea id="f_notes" data-sheet="notes">${esc(s.notes)}</textarea></div>
     <div class="row" style="margin-top:14px"><button class="btn ghost danger" data-act="newmatch">Nuova partita (svuota formazione e dati)</button></div>
-  </section>`;
+  </section>
+  ${A ? `<section class="panel">
+    <h3 style="margin-top:0">Calendario</h3>
+    <p class="hint">Le partite in programma per questa squadra: servono solo per la scorciatoia "Usa questa" qui sopra.</p>
+    ${calRows || '<p class="empty">Nessuna partita in calendario.</p>'}
+    <div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>
+  </section>` : ''}`;
 }
 
 function chip(p, extra=''){
@@ -1078,7 +1113,7 @@ async function exportBackup(){
   if(!db){ setStatus('Backup non disponibile'); return; }
   setStatus('Preparo il backup…');
   try{
-    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id])];
+    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id, 'calendar/'+t.id])];
     const docs = {};
     for(const p of paths){
       const snap = await db.doc(p).get();
@@ -1114,13 +1149,14 @@ document.addEventListener('click', e => {
   if(t.dataset.tab){ tab = t.dataset.tab; selectedPlayer = null; if(tab!=='piazzati') openSchemeId = null; render(); window.scrollTo(0,0); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
-  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','exportbackup'];
-  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode)) return;
+  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','exportbackup','caladd'];
+  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
   if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genPin(); save('teams'); render(); } return; }
   if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ curTeam = S.teams[0]?.id||null; subscribeTeam(); } else render(); } return; }
   if(t.dataset.pdel){ const id=t.dataset.pdel; S.players = S.players.filter(p=>p.id!==id); const l=S.sheet.lineup; Object.keys(l).forEach(k=>{if(l[k]===id) delete l[k]}); S.sheet.bench=S.sheet.bench.filter(b=>b!==id); save('roster'); save('sheet'); render(); return; }
+  if(t.dataset.caldel){ S.calendar = S.calendar.filter(m=>m.id!==t.dataset.caldel); save('calendar'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
   if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); selectedPlayer=null; render(); } return; }
   if(t.dataset.dropToken){ if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); } return; }
@@ -1134,6 +1170,8 @@ document.addEventListener('click', e => {
   switch(act){
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genPin()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
+    case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
+    case 'usenext': { const nm = nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; save('sheet'); render(); } break; }
     case 'bulk': {
       const lines = ($('#bulk').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
       lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
@@ -1186,8 +1224,9 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team)) return;
+  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid)) return;
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
+  if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }
   if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save('roster'); } }
   else if(t.dataset.sheet && t.tagName!=='SELECT'){ S.sheet[t.dataset.sheet]=t.value; save('sheet'); if(['team','opponent','date'].includes(t.dataset.sheet)) $('#matchline').textContent = (S.sheet.opponent?`${teamLabel()} contro ${S.sheet.opponent}`:'Nuova partita') + (S.sheet.date?`, ${fmtDate(S.sheet.date)}`:''); }
   else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
@@ -1198,7 +1237,8 @@ document.addEventListener('change', e => {
   if(t.dataset.asview){ const v = t.value; if(v==='admin') switchView('admin'); else switchView('coach', v.split(':')[1]); return; }
   if(t.dataset.curteam){ curTeam = t.value; openSchemeId = null; subscribeTeam(); return; }
   if(t.dataset.team && t.dataset.tf==='name'){ render(); return; }
-  if(!isAdmin() && (t.dataset.sc || (t.dataset.tok))) return;
+  if(!isAdmin() && (t.dataset.sc || (t.dataset.tok) || t.dataset.calid)) return;
+  if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.dataset.calf==='home' ? t.checked : t.value; save('calendar'); } return; }
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
   else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }
