@@ -435,6 +435,7 @@ function viewGate(){
       <label class="f" for="gateemail">Email amministratore</label>
       <input id="gateemail" type="email" autocomplete="email" placeholder="tu@esempio.it" autofocus>
       <div class="row" style="margin-top:10px"><button class="btn primary" data-act="sendlink">Invia link di accesso</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="gateback">← Non sei tu? Torna al PIN</button></div>
     </section>`;
   }
   return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p></section>`;
@@ -1083,6 +1084,7 @@ document.addEventListener('click', e => {
       gateError = true; render();
       break; }
     case 'sendlink': sendMagicLink(($('#gateemail')?.value || '').trim()); break;
+    case 'gateback': adminUnlocked = false; gateError = false; try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
   }
 });
 document.addEventListener('keydown', e => {
