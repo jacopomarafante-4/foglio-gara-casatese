@@ -210,8 +210,9 @@ async function sendMagicLink(email){
   setStatus('Invio link…');
   try{
     const { error } = await supabaseClient.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('#')[0] } });
-    setStatus(error ? 'Errore invio link' : 'Controlla la tua email');
-  }catch(e){ setStatus('Errore invio link'); }
+    if(error){ console.error('signInWithOtp error:', error); setStatus('Errore invio link: ' + (error.message||error.name||'sconosciuto')); }
+    else setStatus('Controlla la tua email');
+  }catch(e){ console.error('signInWithOtp exception:', e); setStatus('Errore invio link: ' + (e && e.message || 'sconosciuto')); }
 }
 const isAdmin = () => ROLE === 'admin';
 const TEAM = () => S.teams.find(t => t.id === curTeam);
