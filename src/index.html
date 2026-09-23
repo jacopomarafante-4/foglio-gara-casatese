@@ -184,6 +184,7 @@ let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
 /* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
    L'amministratore serve un PIN rapido + (fuori da Claude) un vero login Supabase legato alla tua email. */
 const ADMIN_PIN = '1611';
+const ADMIN_EMAIL = 'jacopo.marafante@gmail.com';
 let adminUnlocked = false, gateError = false, teamsLoaded = false;
 try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
 const RUNNING_IN_CLAUDE = !!(window.claude && window.claude.use);
@@ -205,14 +206,15 @@ async function initAuth(){
   supabaseClient.auth.onAuthStateChange((event, session) => { supaSession = session; render(); });
   render();
 }
-async function sendMagicLink(email){
-  if(!supabaseClient || !email) return;
-  setStatus('Invio link…');
+async function adminLogin(password){
+  if(!supabaseClient || !password) return;
+  setStatus('Accesso…');
   try{
-    const { error } = await supabaseClient.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('#')[0] } });
-    if(error){ console.error('signInWithOtp error:', error); setStatus('Errore invio link: ' + (error.message||error.name||'sconosciuto')); }
-    else setStatus('Controlla la tua email');
-  }catch(e){ console.error('signInWithOtp exception:', e); setStatus('Errore invio link: ' + (e && e.message || 'sconosciuto')); }
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+    if(error){ console.error('signInWithPassword error:', error); gateError = true; setStatus('Accesso non riuscito'); }
+    else { gateError = false; setStatus('Accesso riuscito'); }
+  }catch(e){ console.error('signInWithPassword exception:', e); gateError = true; setStatus('Accesso non riuscito'); }
+  render();
 }
 const isAdmin = () => ROLE === 'admin';
 const TEAM = () => S.teams.find(t => t.id === curTeam);
@@ -431,10 +433,13 @@ function viewGate(){
   if(!RUNNING_IN_CLAUDE && supabaseClient && !supaSession){
     return `<section class="panel" style="max-width:360px;margin:48px auto">
       <h2>Conferma amministratore</h2>
-      <p class="hint">PIN corretto. Ora accedi con la tua email per confermare che sei tu — arriverà un link, nessuna password da ricordare.</p>
-      <label class="f" for="gateemail">Email amministratore</label>
-      <input id="gateemail" type="email" autocomplete="email" placeholder="tu@esempio.it" autofocus>
-      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="sendlink">Invia link di accesso</button></div>
+      <p class="hint">PIN corretto. Ora accedi con nome utente e password.</p>
+      <div class="grid">
+        <div><label class="f" for="gateuser">Nome utente</label><input id="gateuser" autocomplete="username" placeholder="Es. Jacopo" autofocus></div>
+        <div><label class="f" for="gatepass">Password</label><input id="gatepass" type="password" autocomplete="current-password"></div>
+      </div>
+      ${gateError?'<p class="note" style="color:var(--red);margin-top:8px">Accesso non riuscito, controlla la password.</p>':''}
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="adminlogin">Accedi</button></div>
       <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="gateback">← Non sei tu? Torna al PIN</button></div>
     </section>`;
   }
@@ -1083,14 +1088,14 @@ document.addEventListener('click', e => {
       if(tm){ gateError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); break; }
       gateError = true; render();
       break; }
-    case 'sendlink': sendMagicLink(($('#gateemail')?.value || '').trim()); break;
+    case 'adminlogin': adminLogin($('#gatepass')?.value || ''); break;
     case 'gateback': adminUnlocked = false; gateError = false; try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
   }
 });
 document.addEventListener('keydown', e => {
   if(e.key !== 'Enter' || !e.target) return;
   if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
-  else if(e.target.id === 'gateemail'){ e.preventDefault(); $('[data-act="sendlink"]')?.click(); }
+  else if(e.target.id === 'gateuser' || e.target.id === 'gatepass'){ e.preventDefault(); $('[data-act="adminlogin"]')?.click(); }
 });
 document.addEventListener('input', e => {
   const t = e.target;
