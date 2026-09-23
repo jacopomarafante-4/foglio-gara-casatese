@@ -815,7 +815,7 @@ function viewScheme(){
     <div class="legend">${legend}</div>
     ${moveMode && A ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : ''}
     ${boardMode==='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>` : ''}
-    ${boardMode!=='assign' && hasEdits ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetedits">Ripristina posizioni/disegni di questa partita</button></div>` : ''}
+    ${boardMode!=='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetedits" ${hasEdits?'':'disabled'}>Ripristina originale</button></div>` : ''}
     ${panel}
     ${A ? `<div style="margin-top:14px"><label class="f">Nota sotto lo schema</label><input data-sc="note" value="${esc(sc.note)}" placeholder="Es. Marcatura a uomo sui saltatori"></div>
     <div class="row" style="margin-top:16px;justify-content:space-between">
