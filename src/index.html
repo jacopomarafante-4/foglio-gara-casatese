@@ -13,7 +13,7 @@
 :root{
   --bg:#EEF2EF; --paper:#FFFFFF; --ink:#15202B; --muted:#5B6875; --line:#D5DDD8;
   --grass:#2F6B45; --grass-soft:#E3EFE6; --grass-2:#D8E9DD; --red:#C8102E; --amber:#E3A008;
-  --sel:#1F5FA8;
+  --sel:#1F5FA8; --brand:#1B4B9E;
   --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow","Helvetica Neue",Arial,sans-serif;
   box-sizing:border-box;
@@ -28,14 +28,17 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
 button,input,select,textarea{font:inherit;color:inherit}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
-.bar{max-width:1000px;margin:0 auto;padding:12px 16px 0;display:flex;align-items:baseline;gap:12px;justify-content:space-between}
+.bar{max-width:1000px;margin:0 auto;padding:12px 16px 0;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.brandrow{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{height:38px;width:auto;display:block;flex-shrink:0}
 .brand{font-family:var(--cond);font-weight:700;font-size:28px;letter-spacing:.01em;line-height:1}
 .brand small{display:block;font-family:var(--body);font-weight:500;font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:0}
 .status{font-size:12px;color:var(--muted);white-space:nowrap}
+.logout{border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:2px}
 .tabs{max-width:1000px;margin:0 auto;display:flex;gap:4px;padding:10px 12px 0;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{border:0;background:none;padding:8px 12px 10px;font-family:var(--cond);font-weight:600;font-size:18px;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
-.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--grass)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--brand)}
 main{max-width:1000px;margin:0 auto;padding:16px 16px 80px}
 h2{font-family:var(--cond);font-weight:700;font-size:26px;margin:0 0 4px;line-height:1.1}
 h3{font-family:var(--cond);font-weight:600;font-size:20px;margin:22px 0 8px}
@@ -48,9 +51,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .btn{border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;min-height:42px}
-.btn.primary{background:var(--grass);border-color:var(--grass);color:#fff}
-:root[data-theme="dark"] .btn.primary{color:#0F1612}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#0F1612}}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
 .btn.ghost{background:none}
 .btn.small{min-height:34px;padding:5px 10px;font-size:14px}
 .btn.danger{color:var(--red)}
@@ -148,7 +149,10 @@ summary{cursor:pointer;font-weight:600}
 <div class="top">
   <div class="demo" id="demo"></div>
   <div class="bar">
-    <div><div class="brand" id="brand">Foglio gara<small id="matchline">Nuova partita</small></div><div class="ctx" id="ctx"></div></div>
+    <div class="brandrow">
+      <img src="casatese-logo.png" alt="Casatese Merate" class="logo">
+      <div><div class="brand" id="brand">Foglio gara<small id="matchline">Nuova partita</small></div><div class="ctx" id="ctx"></div></div>
+    </div>
     <div class="status" id="status" aria-live="polite"></div>
   </div>
   <nav class="tabs" role="tablist" id="tabs"></nav>
@@ -302,6 +306,18 @@ function switchView(role, team){
   tab = isAdmin() ? 'squadre' : 'formazione';
   subscribeTeam(); window.scrollTo(0,0);
 }
+async function logout(){
+  unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
+  if(supabaseClient){ try{ await supabaseClient.auth.signOut(); }catch(e){} }
+  adminUnlocked = false; supaSession = null; gateError = false;
+  try{ localStorage.removeItem('fg:adminpin'); }catch(e){}
+  ROLE = 'admin'; curTeam = null; hashLocked = false;
+  S.players = []; S.sheet = defaultSheet();
+  history.replaceState(null, '', location.pathname + location.search);
+  tab = 'squadre'; openSchemeId = null; selectedPlayer = null;
+  window.scrollTo(0,0);
+  render();
+}
 /* Fuori da Claude (es. GitHub Pages) il salvataggio condiviso passa da Supabase:
    stessa interfaccia doc().set()/onSnapshot() usata sopra, tabella "docs" a chiave/valore. */
 function makeSupabaseDb(client){
@@ -412,8 +428,8 @@ function renderChrome(){
   $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.name)}</option>`).join('')}</select>` : ''}`
-    : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span>`;
+    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
+    : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span><button class="logout" data-act="logout">Esci</button>`;
   $('#tabs').innerHTML = allowedTabs().map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('');
 }
 function viewGate(){
@@ -1090,6 +1106,7 @@ document.addEventListener('click', e => {
       break; }
     case 'adminlogin': adminLogin($('#gatepass')?.value || ''); break;
     case 'gateback': adminUnlocked = false; gateError = false; try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
+    case 'logout': logout(); break;
   }
 });
 document.addEventListener('keydown', e => {
