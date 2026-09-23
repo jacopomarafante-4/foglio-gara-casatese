@@ -997,7 +997,7 @@ function viewPdf(){
 /* ---------- Canvas: pagine PDF ---------- */
 const W = 1188, H = 840, K = 2.5;
 const INK = '#15202B', MUTED = '#5B6875', GRASS = '#2F6B45', G1 = '#E3EFE6', G2 = '#D8E9DD', RED = '#C8102E';
-const AMBER_BG = '#E3A008', LINE_C = '#D5DDD8';
+const LABEL_BG = '#EEF1F4', LINE_C = '#D5DDD8';
 function cv(){ const c = document.createElement('canvas'); c.width = W*K; c.height = H*K; const x = c.getContext('2d'); x.scale(K,K); x.fillStyle='#fff'; x.fillRect(0,0,W,H); return [c,x]; }
 function font(x, size, weight=600, cond=false){ x.font = `${weight} ${size}px ${cond?'"Barlow Condensed","Arial Narrow",Arial':'"Barlow",Arial'},sans-serif`; }
 function T(x, s, px, py, o={}){
@@ -1225,34 +1225,36 @@ async function exportBackup(){
     setStatus('Backup pronto');
   }catch(e){ setStatus('Backup non riuscito'); }
 }
-let logoImgPromise = null;
-function loadLogo(){
-  if(!logoImgPromise){
-    logoImgPromise = new Promise(res => {
+const imgPromises = {};
+function loadImg(src){
+  if(!imgPromises[src]){
+    imgPromises[src] = new Promise(res => {
       const img = new Image();
       img.onload = () => res(img);
       img.onerror = () => res(null);
-      img.src = 'casatese-logo.png';
+      img.src = src;
     });
   }
-  return logoImgPromise;
+  return imgPromises[src];
 }
-function convocazionePage(logoImg){
+const loadLogo = () => loadImg('casatese-logo.png');
+function convocazionePage(logoImg, figcImg){
   const PW = 800, PH = 1131, PK = 2;
   const c = document.createElement('canvas'); c.width = PW*PK; c.height = PH*PK;
   const x = c.getContext('2d'); x.scale(PK,PK); x.fillStyle = '#fff'; x.fillRect(0,0,PW,PH);
   const s = S.sheet;
   const mx = 40, tw = PW - mx*2;
-  let y = 36;
-  if(logoImg) x.drawImage(logoImg, mx, y, 80, 80);
-  T(x, teamLabel(), mx+96, y+30, {size:26, weight:700, cond:true, max:tw-96});
-  if(s.category) T(x, s.category, mx+96, y+56, {size:16, weight:600, color:MUTED});
-  T(x, 'Foglio convocazione', mx+96, y+78, {size:13, color:MUTED});
-  y += 100;
-  x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.moveTo(mx,y); x.lineTo(PW-mx,y); x.stroke();
-  y += 14;
+  let y = 30;
+  const hh = 96, lw = 200, rw = 88;
+  if(figcImg){ const fh = lw*figcImg.height/figcImg.width; x.drawImage(figcImg, mx, y+(hh-fh)/2, lw, fh); }
+  if(logoImg) x.drawImage(logoImg, PW-mx-rw, y+(hh-rw)/2, rw, rw);
+  const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
+  T(x, 'ACADEMY', cx, y+28, {size:26, weight:700, align:'center', max:cmax});
+  T(x, 'CASATESE MERATE', cx, y+60, {size:30, weight:700, align:'center', max:cmax});
+  T(x, (s.category || TEAM()?.category || teamLabel()).toUpperCase(), cx, y+88, {size:21, weight:700, align:'center', max:cmax});
+  y += hh + 14;
   const cellRow = (label, value, lw, h, fs) => {
-    x.fillStyle = AMBER_BG; x.fillRect(mx, y, lw, h);
+    x.fillStyle = LABEL_BG; x.fillRect(mx, y, lw, h);
     x.strokeStyle = LINE_C; x.lineWidth = 1; x.strokeRect(mx, y, lw, h); x.strokeRect(mx+lw, y, tw-lw, h);
     T(x, label, mx+10, y+h/2+1, {size:12, weight:700, base:'middle', color:INK});
     T(x, value||'—', mx+lw+10, y+h/2+1, {size:fs||13, weight:600, base:'middle', max:tw-lw-20});
@@ -1261,7 +1263,7 @@ function convocazionePage(logoImg){
   cellRow('GARA', gara, 130, 34); y += 34;
   const cols = [['IMPEGNO', s.convType||''], ['DATA', s.date?fmtDate(s.date):''], ['ORARIO RITROVO', defaultMeetTime(s)], ['ORARI PARTITA', s.time||'']];
   const cw = tw/4;
-  cols.forEach(([l],i) => { x.fillStyle = AMBER_BG; x.fillRect(mx+i*cw, y, cw, 26); x.strokeStyle = LINE_C; x.strokeRect(mx+i*cw, y, cw, 26); T(x, l, mx+i*cw+cw/2, y+13+1, {size:10.5, weight:700, align:'center', base:'middle', color:INK, max:cw-8}); });
+  cols.forEach(([l],i) => { x.fillStyle = LABEL_BG; x.fillRect(mx+i*cw, y, cw, 26); x.strokeStyle = LINE_C; x.strokeRect(mx+i*cw, y, cw, 26); T(x, l, mx+i*cw+cw/2, y+13+1, {size:10.5, weight:700, align:'center', base:'middle', color:INK, max:cw-8}); });
   y += 26;
   cols.forEach(([,v],i) => { x.strokeStyle = LINE_C; x.strokeRect(mx+i*cw, y, cw, 30); T(x, v||'—', mx+i*cw+cw/2, y+15+1, {size:12.5, weight:600, align:'center', base:'middle', max:cw-10}); });
   y += 30;
@@ -1294,8 +1296,8 @@ async function downloadConvocazione(){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   setStatus('Creo la convocazione…');
   await ensureFonts();
-  const logoImg = await loadLogo();
-  const page = convocazionePage(logoImg);
+  const [logoImg, figcImg] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]);
+  const page = convocazionePage(logoImg, figcImg);
   const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:true});
   doc.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
   const s = S.sheet;
