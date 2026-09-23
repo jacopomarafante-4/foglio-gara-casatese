@@ -180,7 +180,8 @@ const BASES = {
   'punizione-sfavore':{name:'Punizione a sfavore', side:'sfavore', ball:{x:12,y:26}},
   'libero':{name:'Nuovo schema', side:'favore', ball:{x:0,y:30}}
 };
-function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{}}}
+function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{}}}
+function effSlot(s, n, bx, by){ const o = (s.slotPos||{})[n]; return o ? {x:o.x, y:o.y} : {x:bx, y:by}; }
 
 let S = {teams:[], players:[], schemes:[], sheet:defaultSheet()};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
@@ -605,11 +606,13 @@ function viewFormazione(){
   const s = S.sheet;
   if(!S.players.length) return `<section class="panel"><h2>Formazione</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
   const fopts = Object.keys(FORMATIONS).map(k => `<option ${k===s.formation?'selected':''}>${k}</option>`).join('');
-  const slots = (FORMATIONS[s.formation]||[]).map(([n,x,y]) => {
+  const hasSlotPos = !!(s.slotPos && Object.keys(s.slotPos).length);
+  const slots = (FORMATIONS[s.formation]||[]).map(([n,bx,by]) => {
     const p = P(s.lineup[n]);
+    const {x,y} = effSlot(s, n, bx, by);
     return `<div class="slot ${p?'':'empty'}" data-drop-slot="${n}" style="left:${x}%;top:${y}%">
       <span class="sn">${n}</span>
-      <span class="disc">${p ? esc(p.num||'·') : n}</span>
+      <span class="disc" data-move-slot="${n}" style="cursor:grab">${p ? esc(p.num||'·') : n}</span>
       ${p ? `<span class="pname">${esc(surname(p.name))}</span><button class="x" aria-label="Togli ${esc(p.name)}" data-clear-slot="${n}">×</button>` : ''}
     </div>`;
   }).join('');
@@ -617,8 +620,11 @@ function viewFormazione(){
   const bench = others.map(p => `<button class="chip ${s.bench.includes(p.id)?'bench':''}" data-bench="${p.id}" aria-pressed="${s.bench.includes(p.id)}"><b>${esc(p.num||'?')}</b>${esc(p.name)}</button>`).join('');
   return `<section class="panel">
     <h2>Formazione</h2>
-    <p class="hint">Trascina un giocatore su una posizione, oppure toccalo e poi tocca la posizione. Il numerino piccolo è il ruolo usato negli schemi.</p>
-    <div style="max-width:240px;margin-bottom:14px"><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation">${fopts}</select></div>
+    <p class="hint">Trascina un giocatore su una posizione, oppure toccalo e poi tocca la posizione. Trascina invece il numerino di una posizione per spostarla leggermente sul campo. Il numerino piccolo è il ruolo usato negli schemi.</p>
+    <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:14px">
+      <div style="max-width:240px"><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation">${fopts}</select></div>
+      ${hasSlotPos ? `<button class="btn small ghost" data-act="resetslotpos">Ripristina posizioni modulo</button>` : ''}
+    </div>
     <div class="formwrap">
       <div class="pitch" id="pitch">${pitchLines()}${slots}</div>
       <div>
@@ -923,7 +929,8 @@ function coverPage(total){
     x.strokeRect(px+pw/2-20.16*m, d>0?yy:yy-16.5*m, 40.32*m, 16.5*m);
     x.strokeRect(px+pw/2-9.16*m, d>0?yy:yy-5.5*m, 18.32*m, 5.5*m);
   });
-  (FORMATIONS[s.formation]||[]).forEach(([n,fx,fy]) => {
+  (FORMATIONS[s.formation]||[]).forEach(([n,bx,by]) => {
+    const {x:fx,y:fy} = effSlot(s, n, bx, by);
     const p = P(s.lineup[n]); const cx = px + fx/100*pw, cy = py + fy/100*ph;
     disc(x, cx, cy, 19, INK, p ? (p.num||n) : n, {hollow:!p, size:21});
     if(p){ T(x, surname(p.name), cx, cy+36, {size:14, weight:700, align:'center', halo:4, max:110}); }
@@ -1117,6 +1124,7 @@ document.addEventListener('click', e => {
     case 'deltok': if(sc){ sc.tokens = sc.tokens.filter(q=>q.id!==selectedToken); selectedToken=null; save('schemes'); render(); } break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
     case 'resetedits': if(sc){ delete (S.sheet.schemeEdits||{})[sc.id]; save('sheet'); render(); } break;
+    case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
     case 'deldraw': if(sc && selectedDraw){
       const { layer, kind, index } = selectedDraw;
       const arr = layer==='base' ? (kind==='draw' ? (sc.draw||(sc.draw=[])) : (sc.marks||(sc.marks=[]))) : (kind==='draw' ? schemeEdit(sc).draw : schemeEdit(sc).marks);
@@ -1167,7 +1175,7 @@ document.addEventListener('change', e => {
   if(t.dataset.curteam){ curTeam = t.value; openSchemeId = null; subscribeTeam(); return; }
   if(t.dataset.team && t.dataset.tf==='name'){ render(); return; }
   if(!isAdmin() && (t.dataset.sc || (t.dataset.tok))) return;
-  if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; save('sheet'); render(); }
+  if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
   else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }
   else if(t.dataset.tok==='role'){ render(); }
@@ -1178,6 +1186,31 @@ let dnd = null;
 document.addEventListener('pointerdown', e => {
   const chipEl = e.target.closest('[data-player]');
   if(chipEl){ dnd = {pid:chipEl.dataset.player, x:e.clientX, y:e.clientY, started:false, el:chipEl}; return; }
+
+  const slotHandle = e.target.closest('[data-move-slot]');
+  if(slotHandle && !selectedPlayer){
+    const pitch = $('#pitch'); const slotEl = slotHandle.closest('.slot');
+    if(pitch && slotEl){
+      const n = slotHandle.dataset.moveSlot;
+      slotHandle.setPointerCapture?.(e.pointerId);
+      let moved = false, finalX, finalY;
+      const mv = ev => {
+        const rect = pitch.getBoundingClientRect();
+        const x = Math.max(2, Math.min(98, +(((ev.clientX-rect.left)/rect.width)*100).toFixed(2)));
+        const y = Math.max(2, Math.min(98, +(((ev.clientY-rect.top)/rect.height)*100).toFixed(2)));
+        slotEl.style.left = x+'%'; slotEl.style.top = y+'%';
+        finalX = x; finalY = y; moved = true;
+      };
+      const up = () => {
+        slotHandle.removeEventListener('pointermove', mv); slotHandle.removeEventListener('pointerup', up); slotHandle.removeEventListener('pointercancel', up);
+        if(moved){ S.sheet.slotPos = S.sheet.slotPos || {}; S.sheet.slotPos[n] = {x:finalX, y:finalY}; save('sheet'); }
+        render();
+      };
+      slotHandle.addEventListener('pointermove', mv); slotHandle.addEventListener('pointerup', up); slotHandle.addEventListener('pointercancel', up);
+      e.preventDefault();
+      return;
+    }
+  }
 
   if(boardMode==='draw'){
     const svg = $('#board'); const sc = S.schemes.find(q=>q.id===openSchemeId);
