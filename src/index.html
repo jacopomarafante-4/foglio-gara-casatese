@@ -191,7 +191,9 @@ const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
 const LOCK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function lockNote(t){ return `<div class="lock">${LOCK_ICON}<div>${t}</div></div>`; }
 function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<6;i++) c+=a[Math.floor(Math.random()*a.length)]; return c.slice(0,3)+'-'+c.slice(3); }
-let tab = 'squadre', selectedPlayer = null, openSchemeId = null, moveMode = false, selectedToken = null;
+let tab = 'squadre', selectedPlayer = null, openSchemeId = null, selectedToken = null;
+/* boardMode: 'assign' (compiti/giocatori) | 'move' (pedine) | 'draw' (frecce, linee, testi) */
+let boardMode = 'assign', drawTool = null, selectedDraw = null;
 let db = null, downloads = null;
 const pending = {}; const timers = {};
 
@@ -265,7 +267,7 @@ function subscribeTeam(){
 function switchView(role, team){
   ROLE = role; if(team) curTeam = team;
   if(!TEAM()) curTeam = S.teams[0]?.id || null;
-  openSchemeId = null; moveMode = false; selectedToken = null; selectedPlayer = null;
+  openSchemeId = null; boardMode = 'assign'; drawTool = null; selectedDraw = null; selectedToken = null; selectedPlayer = null;
   tab = isAdmin() ? 'squadre' : 'formazione';
   subscribeTeam(); window.scrollTo(0,0);
 }
@@ -595,16 +597,51 @@ function fieldSVG(){
 function ballSVG(b, drag){ return `<g ${drag?'data-ball="1" style="cursor:grab"':''} transform="translate(${b.x} ${b.y*YS})"><circle r="1.15" fill="#fff" stroke="#15202B" stroke-width=".22"/><path d="M0 -.45 L.43 -.14 L.27 .37 L-.27 .37 L-.43 -.14Z" fill="#15202B"/></g>`; }
 function schemeThumb(sc){
   const rm = roleMap(sc);
+  const mid = 'ah-'+sc.id;
   const dots = sc.tokens.map(t => `<circle cx="${t.x}" cy="${t.y*YS}" r="1.5" fill="${tokColor(sc,t,rm)}" stroke="#fff" stroke-width=".3"/>`).join('');
-  return `<svg class="sthumb" viewBox="${VX0} ${VY0*YS} ${VX1-VX0} ${(VY1-VY0)*YS}" role="img" aria-label="Anteprima schema ${esc(sc.name)}">${fieldSVG()}${ballSVG(sc.ball,false)}${dots}</svg>`;
+  const shapes = (sc.draw||[]).map(d => `<line x1="${d.x1}" y1="${d.y1*YS}" x2="${d.x2}" y2="${d.y2*YS}" stroke="#C8102E" stroke-width=".35" stroke-linecap="round" ${d.dashed?'stroke-dasharray=".9 .7"':''} ${d.type==='arrow'?`marker-end="url(#${mid})"`:''}/>`).join('');
+  return `<svg class="sthumb" viewBox="${VX0} ${VY0*YS} ${VX1-VX0} ${(VY1-VY0)*YS}" role="img" aria-label="Anteprima schema ${esc(sc.name)}"><defs><marker id="${mid}" markerWidth="3.2" markerHeight="3.2" refX="2.6" refY="1.6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L3.2,1.6 L0,3.2 Z" fill="#C8102E"/></marker></defs>${fieldSVG()}${shapes}${ballSVG(sc.ball,false)}${dots}</svg>`;
 }
 
+function marksSVG(sc, sel){
+  return (sc.marks||[]).map((m,i) => {
+    const isSel = boardMode==='draw' && sel && sel.kind==='mark' && sel.index===i;
+    return `<g data-mark="${i}" style="cursor:pointer">
+      <circle cx="${m.x}" cy="${m.y*YS}" r="2.2" fill="transparent"/>
+      <text x="${m.x}" y="${m.y*YS+.6}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="2" fill="${isSel?'#1F5FA8':'#C8102E'}" pointer-events="none">${esc(m.text)}</text>
+    </g>`;
+  }).join('');
+}
+function drawShapesSVG(sc, sel){
+  return (sc.draw||[]).map((d,i) => {
+    const isSel = boardMode==='draw' && sel && sel.kind==='draw' && sel.index===i;
+    const dash = d.dashed ? 'stroke-dasharray=".9 .7"' : '';
+    const marker = d.type==='arrow' ? 'marker-end="url(#arrowhead)"' : '';
+    return `<g>
+      <line x1="${d.x1}" y1="${d.y1*YS}" x2="${d.x2}" y2="${d.y2*YS}" stroke="transparent" stroke-width="1.6" data-draw="${i}" style="cursor:pointer"/>
+      <line x1="${d.x1}" y1="${d.y1*YS}" x2="${d.x2}" y2="${d.y2*YS}" stroke="${isSel?'#1F5FA8':'#C8102E'}" stroke-width="${isSel?.45:.32}" stroke-linecap="round" ${dash} ${marker} pointer-events="none"/>
+    </g>`;
+  }).join('');
+}
+function renderDraftLine(d){
+  const el = document.getElementById('draftline'); if(!el) return;
+  el.setAttribute('x1', d.x1); el.setAttribute('y1', d.y1*YS);
+  el.setAttribute('x2', d.x2); el.setAttribute('y2', d.y2*YS);
+  el.setAttribute('stroke-dasharray', d.dashed ? '.9 .7' : '');
+  el.setAttribute('marker-end', d.type==='arrow' ? 'url(#arrowhead)' : '');
+  el.setAttribute('opacity', '1');
+}
+const DRAW_TOOLS = [
+  ['arrow','Freccia'], ['arrow-dash','Freccia tratteggiata'],
+  ['line','Linea'], ['line-dash','Linea tratteggiata'], ['text','Testo']
+];
 function viewScheme(){
   const sc = S.schemes.find(s => s.id===openSchemeId);
   if(!sc){ openSchemeId=null; return viewSchemes(); }
-  const A = isAdmin(); if(!A) moveMode = false;
+  const A = isAdmin(); if(!A) boardMode = 'assign';
   const rm = roleMap(sc);
   const nl = nameLayout(sc.tokens);
+  const moveMode = boardMode==='move', drawMode = boardMode==='draw';
   const toks = sc.tokens.map(t => {
     const {p, override} = tokenPlayer(sc, t);
     const col = tokColor(sc, t, rm);
@@ -618,12 +655,15 @@ function viewScheme(){
       ${p?`<text y="${nl[t.id].low?4.6:3.25}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.1" fill="#15202B" stroke="#fff" stroke-width=".35" paint-order="stroke">${esc(surname(p.name))}${override?' *':''}</text>`:''}
     </g>`;
   }).join('');
-  const marks = (sc.marks||[]).map(m => `<text x="${m.x}" y="${m.y*YS+.6}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="2" fill="#C8102E">${esc(m.text)}</text>`).join('');
   const legend = [...rm.entries()].map(([r,c]) => `<span><i style="background:${c}"></i>${esc(r)}</span>`).join('');
   const st = sc.tokens.find(t => t.id===selectedToken);
   const roles = [...new Set(S.schemes.flatMap(s => s.tokens.map(t => t.role).filter(Boolean)))];
   const slotOpts = n => Array.from({length:11},(_,i)=>`<option ${i+1===n?'selected':''}>${i+1}</option>`).join('');
-  const panel = moveMode ? (st ? `<div class="tokpanel">
+  const selShape = drawMode && selectedDraw && selectedDraw.kind==='draw' ? sc.draw[selectedDraw.index] : null;
+  const selMark = drawMode && selectedDraw && selectedDraw.kind==='mark' ? sc.marks[selectedDraw.index] : null;
+  let panel;
+  if(moveMode){
+    panel = st ? `<div class="tokpanel">
       <div class="grid">
         <div><label class="f">Numero di ruolo</label><select data-tok="slot">${slotOpts(st.slot)}</select></div>
         <div><label class="f">Compito</label><input data-tok="role" list="rolelist" value="${esc(st.role)}" placeholder="Es. Marcatura"></div>
@@ -631,14 +671,28 @@ function viewScheme(){
       </div>
       <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
       <div class="row" style="margin-top:10px"><button class="btn small danger" data-act="deltok">Elimina pedina</button></div>
-    </div>` : `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne ruolo e compito.</p>`)
-    : `<h3>Giocatori</h3><p class="hint">Trascina un giocatore su una pedina per cambiarlo solo in questo schema (segnato con *).</p><div class="tray">${S.players.map(p=>chip(p)).join('')}</div>`;
+    </div>` : `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne ruolo e compito.</p>`;
+  } else if(drawMode){
+    const toolBtns = DRAW_TOOLS.map(([k,label]) => `<button data-drawtool="${k}" aria-pressed="${drawTool===k}">${label}</button>`).join('');
+    panel = `<div class="tokpanel">
+      <label class="f">Strumento</label>
+      <div class="seg" role="group" aria-label="Strumento di disegno" style="flex-wrap:wrap">${toolBtns}</div>
+      <p class="hint" style="margin-top:8px">${drawTool==='text' ? 'Tocca il campo dove vuoi scrivere.' : drawTool ? 'Trascina sul campo per disegnare.' : 'Scegli uno strumento, oppure tocca una freccia/linea/testo già presente per selezionarla.'}</p>
+      ${selShape || selMark ? `<div class="row" style="margin-top:10px">
+        ${selMark ? `<button class="btn small" data-act="edittext">Modifica testo</button>` : ''}
+        <button class="btn small danger" data-act="deldraw">Elimina selezionato</button>
+      </div>` : ''}
+    </div>`;
+  } else {
+    panel = `<h3>Giocatori</h3><p class="hint">Trascina un giocatore su una pedina per cambiarlo solo in questo schema (segnato con *).</p><div class="tray">${S.players.map(p=>chip(p)).join('')}</div>`;
+  }
   return `<section class="panel">
     <div class="row" style="justify-content:space-between;margin-bottom:10px">
       <button class="btn small ghost" data-act="back">← Tutti gli schemi</button>
       ${A ? `<div class="seg" role="group" aria-label="Modalità">
-        <button data-mode="assign" aria-pressed="${!moveMode}">Assegna</button>
-        <button data-mode="move" aria-pressed="${moveMode}">Modifica disegno</button>
+        <button data-mode="assign" aria-pressed="${boardMode==='assign'}">Assegna</button>
+        <button data-mode="move" aria-pressed="${moveMode}">Pedine</button>
+        <button data-mode="draw" aria-pressed="${drawMode}">Disegna</button>
       </div>` : '<span class="badge coach">Sola lettura</span>'}
     </div>
     ${A ? '' : `<h2>${esc(sc.name)}<span class="side ${sc.side}">${sc.side==='favore'?'A favore':'A sfavore'}</span></h2><p class="hint">${esc(sc.subtitle||'')}</p>`}
@@ -648,10 +702,13 @@ function viewScheme(){
       <div><label class="f">Tipo</label><select data-sc="side"><option value="favore" ${sc.side==='favore'?'selected':''}>A favore</option><option value="sfavore" ${sc.side==='sfavore'?'selected':''}>A sfavore</option></select></div>
     </div>
     <svg class="board" id="board" viewBox="${VX0} ${VY0*YS} ${VX1-VX0} ${(VY1-VY0)*YS}" role="img" aria-label="Schema ${esc(sc.name)}">
-      ${fieldSVG()}${marks}${ballSVG(sc.ball, moveMode)}${toks}
+      <defs><marker id="arrowhead" markerWidth="3.2" markerHeight="3.2" refX="2.6" refY="1.6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L3.2,1.6 L0,3.2 Z" fill="#C8102E"/></marker></defs>
+      ${fieldSVG()}${drawShapesSVG(sc, selectedDraw)}${marksSVG(sc, selectedDraw)}${ballSVG(sc.ball, moveMode)}${toks}
+      ${drawMode ? '<line id="draftline" x1="0" y1="0" x2="0" y2="0" stroke="#C8102E" stroke-width=".35" opacity="0" pointer-events="none"/>' : ''}
     </svg>
     <div class="legend">${legend}</div>
-    ${moveMode ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>`}
+    ${moveMode ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : ''}
+    ${boardMode==='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>` : ''}
     ${panel}
     ${A ? `<div style="margin-top:14px"><label class="f">Nota sotto lo schema</label><input data-sc="note" value="${esc(sc.note)}" placeholder="Es. Marcatura a uomo sui saltatori"></div>
     <div class="row" style="margin-top:16px;justify-content:space-between">
@@ -716,6 +773,21 @@ function disc(x, cx, cy, r, fill, label, o={}){
   if(o.hollow){ x.fillStyle='#fff'; x.fill(); x.setLineDash([4,3]); x.lineWidth=2; x.strokeStyle=fill; x.stroke(); x.setLineDash([]); }
   else { x.fillStyle=fill; x.fill(); x.lineWidth=2.5; x.strokeStyle='#fff'; x.stroke(); }
   T(x, label, cx, cy+1, {size:o.size||r*1.05, weight:700, cond:true, align:'center', base:'middle', color:o.hollow?fill:'#fff'});
+}
+function drawShape(x, x1, y1, x2, y2, type, dashed){
+  x.save();
+  x.strokeStyle = RED; x.lineWidth = dashed?2.5:3; x.lineCap='round';
+  if(dashed) x.setLineDash([10,8]);
+  x.beginPath(); x.moveTo(x1,y1); x.lineTo(x2,y2); x.stroke();
+  x.setLineDash([]);
+  if(type==='arrow'){
+    const ang = Math.atan2(y2-y1, x2-x1), len = 15;
+    x.beginPath(); x.moveTo(x2,y2);
+    x.lineTo(x2-len*Math.cos(ang-Math.PI/7), y2-len*Math.sin(ang-Math.PI/7));
+    x.lineTo(x2-len*Math.cos(ang+Math.PI/7), y2-len*Math.sin(ang+Math.PI/7));
+    x.closePath(); x.fillStyle = RED; x.fill();
+  }
+  x.restore();
 }
 
 function coverPage(total){
@@ -801,6 +873,8 @@ function schemePage(sc, page, total){
   const bx2 = X(sc.ball.x), by2 = Y(sc.ball.y), br = 1.15*sx;
   x.beginPath(); x.arc(bx2,by2,br,0,7); x.fillStyle='#fff'; x.fill(); x.lineWidth=2; x.strokeStyle=INK; x.stroke();
   x.beginPath(); for(let i=0;i<5;i++){ const an = -Math.PI/2 + i*2*Math.PI/5; x.lineTo(bx2+Math.cos(an)*br*.42, by2+Math.sin(an)*br*.42); } x.closePath(); x.fillStyle=INK; x.fill();
+  // frecce e linee disegnate
+  (sc.draw||[]).forEach(d => drawShape(x, X(d.x1), Y(d.y1), X(d.x2), Y(d.y2), d.type, d.dashed));
   // segni
   (sc.marks||[]).forEach(m => T(x, m.text, X(m.x), Y(m.y)+1, {size:24, weight:700, align:'center', base:'middle', color:RED}));
   // pedine
@@ -890,8 +964,8 @@ document.addEventListener('click', e => {
   if(t.dataset.tab){ tab = t.dataset.tab; selectedPlayer = null; if(tab!=='piazzati') openSchemeId = null; render(); window.scrollTo(0,0); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
-  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd'];
-  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.mode==='move' || t.dataset.teamdel || t.dataset.teamcode)) return;
+  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','deldraw','edittext'];
+  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.mode==='move' || t.dataset.mode==='draw' || t.dataset.drawtool || t.dataset.teamdel || t.dataset.teamcode)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
   if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genCode(); save('teams'); render(); } return; }
@@ -902,9 +976,10 @@ document.addEventListener('click', e => {
   if(t.dataset.dropToken){ if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); } return; }
   if(t.dataset.bench){ const id=t.dataset.bench; const b=S.sheet.bench; S.sheet.bench = b.includes(id) ? b.filter(x=>x!==id) : [...b,id]; save('sheet'); render(); return; }
   if(t.dataset.schemecard){ const id=t.dataset.schemecard; const order=S.schemes.map(q=>q.id); let s=S.sheet.selected.filter(i=>i!==id); if(!S.sheet.selected.includes(id)) s.push(id); S.sheet.selected = s.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('sheet'); render(); return; }
-  if(t.dataset.open){ openSchemeId=t.dataset.open; moveMode = !!t.dataset.editmode && isAdmin(); selectedToken=null; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.open){ openSchemeId=t.dataset.open; boardMode = (t.dataset.editmode && isAdmin()) ? 'move' : 'assign'; selectedToken=null; drawTool=null; selectedDraw=null; render(); window.scrollTo(0,0); return; }
   if(t.dataset.up || t.dataset.down){ const i=+(t.dataset.up??t.dataset.down), j=t.dataset.up!==undefined?i-1:i+1; if(j<0||j>=S.schemes.length) return; [S.schemes[i],S.schemes[j]]=[S.schemes[j],S.schemes[i]]; const order=S.schemes.map(q=>q.id); S.sheet.selected.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('schemes'); save('sheet'); render(); return; }
-  if(t.dataset.mode){ moveMode = t.dataset.mode==='move'; selectedToken=null; selectedPlayer=null; render(); return; }
+  if(t.dataset.mode){ boardMode = t.dataset.mode; selectedToken=null; selectedPlayer=null; drawTool=null; selectedDraw=null; render(); return; }
+  if(t.dataset.drawtool){ drawTool = drawTool===t.dataset.drawtool ? null : t.dataset.drawtool; selectedDraw=null; render(); return; }
   const sc = S.schemes.find(q=>q.id===openSchemeId);
   switch(act){
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genCode()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
@@ -917,12 +992,14 @@ document.addEventListener('click', e => {
     case 'newscheme': {
       const b = BASES[$('#base').value];
       const tokens = Array.from({length:11},(_,i)=>({id:uid('t'), slot:i+1, x:-22+i*4.5, y:28, role:'', tag:''}));
-      const q = {id:uid('s'), name:b.name, subtitle:'', side:b.side, note:'', legend:'', ball:{...b.ball}, tokens, marks:[]};
-      S.schemes.push(q); S.sheet.selected.push(q.id); save('schemes'); save('sheet'); openSchemeId=q.id; moveMode=true; render(); break; }
-    case 'back': openSchemeId=null; selectedToken=null; render(); break;
+      const q = {id:uid('s'), name:b.name, subtitle:'', side:b.side, note:'', legend:'', ball:{...b.ball}, tokens, marks:[], draw:[]};
+      S.schemes.push(q); S.sheet.selected.push(q.id); save('schemes'); save('sheet'); openSchemeId=q.id; boardMode='move'; render(); break; }
+    case 'back': openSchemeId=null; selectedToken=null; boardMode='assign'; drawTool=null; selectedDraw=null; render(); break;
     case 'addtok': if(sc){ const n={id:uid('t'), slot:1, x:0, y:30, role:'', tag:''}; sc.tokens.push(n); selectedToken=n.id; save('schemes'); render(); } break;
     case 'deltok': if(sc){ sc.tokens = sc.tokens.filter(q=>q.id!==selectedToken); selectedToken=null; save('schemes'); render(); } break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
+    case 'deldraw': if(sc && selectedDraw){ const arr = selectedDraw.kind==='draw' ? (sc.draw||(sc.draw=[])) : (sc.marks||(sc.marks=[])); arr.splice(selectedDraw.index,1); selectedDraw=null; save('schemes'); render(); } break;
+    case 'edittext': if(sc && selectedDraw && selectedDraw.kind==='mark'){ const m = sc.marks[selectedDraw.index]; const val = prompt('Testo:', m.text); if(val!=null){ const t = val.trim(); if(t) m.text = t; else sc.marks.splice(selectedDraw.index,1); selectedDraw=null; save('schemes'); render(); } } break;
     case 'dupscheme': if(sc){ const q = clone(sc); q.id=uid('s'); q.name = sc.name+' (copia)'; q.tokens.forEach(t=>t.id=uid('t')); S.schemes.splice(S.schemes.indexOf(sc)+1,0,q); save('schemes'); openSchemeId=q.id; render(); } break;
     case 'delscheme': if(sc && confirm(`Eliminare lo schema "${sc.name}"?`)){ S.schemes = S.schemes.filter(q=>q!==sc); S.sheet.selected = S.sheet.selected.filter(i=>i!==sc.id); delete S.sheet.overrides[sc.id]; save('schemes'); save('sheet'); openSchemeId=null; render(); } break;
     case 'refresh': buildPreview(); break;
@@ -965,8 +1042,43 @@ let dnd = null;
 document.addEventListener('pointerdown', e => {
   const chipEl = e.target.closest('[data-player]');
   if(chipEl){ dnd = {pid:chipEl.dataset.player, x:e.clientX, y:e.clientY, started:false, el:chipEl}; return; }
+
+  if(boardMode==='draw' && isAdmin()){
+    const svg = $('#board'); const sc = S.schemes.find(q=>q.id===openSchemeId);
+    if(svg && sc && svg.contains(e.target)){
+      const toLocal = ev => { const pt = svg.createSVGPoint(); pt.x=ev.clientX; pt.y=ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+      const clampX = v => Math.max(VX0+1, Math.min(VX1-1, +v.toFixed(2)));
+      const clampY = v => Math.max(VY0+.5, Math.min(VY1-.5, +v.toFixed(2)));
+      if(!drawTool){
+        const shapeEl = e.target.closest('[data-draw],[data-mark]');
+        selectedDraw = !shapeEl ? null : shapeEl.dataset.draw !== undefined ? {kind:'draw', index:+shapeEl.dataset.draw} : {kind:'mark', index:+shapeEl.dataset.mark};
+        render();
+        return;
+      }
+      if(drawTool==='text'){
+        const p = toLocal(e);
+        const txt = prompt('Testo da scrivere sul campo:', '');
+        if(txt && txt.trim()){ sc.marks = sc.marks || []; sc.marks.push({text:txt.trim(), x:clampX(p.x), y:clampY(p.y/YS)}); save('schemes'); }
+        render();
+        return;
+      }
+      const p0 = toLocal(e);
+      const draft = {type: drawTool.startsWith('arrow') ? 'arrow' : 'line', dashed: drawTool.endsWith('dash'), x1:clampX(p0.x), y1:clampY(p0.y/YS), x2:clampX(p0.x), y2:clampY(p0.y/YS)};
+      let moved = false;
+      const mv = ev => { const p = toLocal(ev); draft.x2 = clampX(p.x); draft.y2 = clampY(p.y/YS); moved = true; renderDraftLine(draft); };
+      const up = () => {
+        svg.removeEventListener('pointermove', mv); svg.removeEventListener('pointerup', up); svg.removeEventListener('pointercancel', up);
+        if(moved && Math.hypot(draft.x2-draft.x1, (draft.y2-draft.y1)*YS) > 1){ sc.draw = sc.draw || []; sc.draw.push(draft); save('schemes'); }
+        render();
+      };
+      svg.addEventListener('pointermove', mv); svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+      e.preventDefault();
+      return;
+    }
+  }
+
   const tokEl = e.target.closest('[data-move-token],[data-ball]');
-  if(tokEl && moveMode && isAdmin()){
+  if(tokEl && boardMode==='move' && isAdmin()){
     const svg = $('#board'); const sc = S.schemes.find(q=>q.id===openSchemeId); if(!svg||!sc) return;
     const isBall = !!tokEl.dataset.ball; const tk = isBall ? sc.ball : sc.tokens.find(q=>q.id===tokEl.dataset.moveToken);
     if(!isBall){ selectedToken = tk.id; }
