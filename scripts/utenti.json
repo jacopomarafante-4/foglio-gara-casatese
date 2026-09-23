@@ -1,0 +1,8 @@
+[
+  { "nome": "Nome1", "cognome": "Cognome1", "email": "scout1@esempio.it", "ruolo": "responsabile" },
+  { "nome": "Nome2", "cognome": "Cognome2", "email": "scout2@esempio.it", "ruolo": "responsabile" },
+  { "nome": "Nome3", "cognome": "Cognome3", "email": "scout3@esempio.it", "ruolo": "responsabile" },
+  { "nome": "Nome4", "cognome": "Cognome4", "email": "scout4@esempio.it", "ruolo": "responsabile" },
+  { "nome": "Nome5", "cognome": "Cognome5", "email": "scout5@esempio.it", "ruolo": "responsabile" },
+  { "nome": "Nome6", "cognome": "Cognome6", "email": "scout6@esempio.it", "ruolo": "responsabile" }
+]

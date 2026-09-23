@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Colori del club e caratteri: si usano come bg-blu, text-oro, font-display… */
+@theme {
+  --color-blu: #003da5;
+  --color-blu-scuro: #002a73;
+  --color-rosso: #c41e3a;
+  --color-oro: #d4af37;
+  --color-inchiostro: #0e1a2b;
+  --color-grigio: #5b6b80;
+  --color-linea: #d8dfe8;
+  --color-carta: #f5f7fa;
+
+  --font-sans: 'Barlow', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Barlow', sans-serif;
+}
+
+body {
+  background: var(--color-carta);
+  color: var(--color-inchiostro);
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-oro);
+  outline-offset: 2px;
+}
+
+/* Campi dei form: uguali in tutta l'app */
+.campo {
+  width: 100%;
+  border: 1px solid var(--color-linea);
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.75rem 0.875rem;
+  font-size: 1rem;
+}
+.campo:focus {
+  border-color: var(--color-blu);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(0 61 165 / 0.15);
+}
+
+.bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: var(--color-blu);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+}
+.bottone:hover { background: var(--color-blu-scuro); }
+.bottone:disabled { opacity: 0.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
