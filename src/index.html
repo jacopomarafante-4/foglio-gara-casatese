@@ -682,7 +682,12 @@ function viewConvocazioni(){
       <div><label class="f" for="cv_home">Sede</label><select id="cv_home" data-sheet="home"><option value="1" ${s.home?'selected':''}>Casa</option><option value="" ${!s.home?'selected':''}>Trasferta</option></select></div>
       <div><label class="f" for="cv_meettime">Orario ritrovo</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(s.meetTime)}"></div>
       <div><label class="f" for="cv_meetaddr">Indirizzo ritrovo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress)}" placeholder="Via, città"></div>
-      <div><label class="f" for="cv_maps">Link posizione campo</label><input id="cv_maps" data-sheet="mapsUrl" value="${esc(s.mapsUrl)}" placeholder="https://maps.app.goo.gl/..."></div>
+      <div><label class="f" for="cv_maps">Link posizione campo</label>
+        <div class="row" style="gap:6px;flex-wrap:nowrap">
+          <input id="cv_maps" data-sheet="mapsUrl" value="${esc(s.mapsUrl)}" placeholder="https://maps.app.goo.gl/..." style="flex:1">
+          <button type="button" class="btn small ghost" data-act="mapssearch" title="Cerca l'indirizzo su Google Maps in una nuova scheda">Cerca</button>
+        </div>
+      </div>
     </div>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note convocazione</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
     <h3>Giocatori <span class="note">(${count.CON||0} convocati)</span></h3>
@@ -1337,6 +1342,7 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'downloadconv': downloadConvocazione(); break;
+    case 'mapssearch': { const q = (S.sheet.meetAddress || S.sheet.venue || '').trim(); if(q) window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener'); else setStatus('Scrivi prima l\'indirizzo di ritrovo'); break; }
     case 'exportbackup': exportBackup(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
