@@ -46,14 +46,14 @@ python -m http.server 8000
 4. Il browser si apre automaticamente con hot-reload
 
 ### Ruoli
-- **Admin** (tu): crea squadre, gestisci rose, disegna schemi
-- **Mister** (collega): accede con link (`#squadra=CODE`), compila formazione
+- **Admin** (tu): PIN amministratore (+ login email fuori da Claude) — crea squadre, gestisce rose, disegna schemi
+- **Mister** (collega): apre lo stesso link base e digita il PIN della sua squadra — vede solo la propria rosa e formazione
 
 ## 📊 Dati
 
 I dati sono salvati in:
-- **Browser**: `localStorage` (fallback locale)
-- **Cloud** (opzionale): database Claude (sincronizzazione in tempo reale)
+- **Browser**: `localStorage` (fallback locale, o se aperto senza connessione a un backend)
+- **Cloud**: database Claude quando l'app gira dentro claude.ai, altrimenti Supabase (sincronizzazione in tempo reale) quando pubblicata come sito esterno (es. GitHub Pages)
 
 I file JSON in `data/` sono snapshot di prova.
 
@@ -76,9 +76,9 @@ Aggiungi nuove squadre dalla tab **Squadre** (admin only):
 1. Nome squadra (es. "Allievi U16")
 2. Categoria (es. "U16")
 3. Mister (es. "Collega")
-4. Codice accesso (es. "ALL-4P9M")
+4. PIN squadra, generato automaticamente (es. "4821"), rigenerabile in ogni momento
 
-Condividi il link: `app.html#squadra=ALL-4P9M`
+Condividi col mister il PIN e il link base dell'app: lo digita nella schermata di accesso e entra direttamente nella sua squadra.
 
 ## 📄 PDF
 
@@ -112,7 +112,7 @@ pip install reportlab pillow
 
 - **Dati non salvano?** Controlla la console del browser (F12 → Console)
 - **Logo non appare?** Assicurati che `casatese-logo.png` sia nella stessa cartella di `index.html`
-- **Link non funziona?** Apri la console e verifica che il codice squadra sia corretto
+- **Il mister non riesce a entrare?** Controlla il PIN squadra nella tab Squadre (puoi rigenerarlo se serve)
 
 ## 📅 Prossimi step
 

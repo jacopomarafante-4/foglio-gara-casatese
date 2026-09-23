@@ -184,7 +184,7 @@ let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
 /* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
    L'amministratore serve un PIN rapido + (fuori da Claude) un vero login Supabase legato alla tua email. */
 const ADMIN_PIN = '1611';
-let adminUnlocked = false, pinError = false, codeError = false, teamsLoaded = false;
+let adminUnlocked = false, gateError = false, teamsLoaded = false;
 try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
 const RUNNING_IN_CLAUDE = !!(window.claude && window.claude.use);
 const SUPABASE_URL = 'https://vxqpuwoqanvkpfzilrcc.supabase.co';
@@ -218,7 +218,7 @@ const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
 const LOCK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function lockNote(t){ return `<div class="lock">${LOCK_ICON}<div>${t}</div></div>`; }
-function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<6;i++) c+=a[Math.floor(Math.random()*a.length)]; return c.slice(0,3)+'-'+c.slice(3); }
+function genPin(){ let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(p===ADMIN_PIN || S.teams.some(t=>t.code===p)); return p; }
 let tab = 'squadre', selectedPlayer = null, openSchemeId = null, selectedToken = null;
 /* boardMode: 'assign' (compiti/giocatori) | 'move' (pedine) | 'draw' (frecce, linee, testi) */
 let boardMode = 'assign', drawTool = null, selectedDraw = null;
@@ -417,39 +417,32 @@ function viewGate(){
   if(!teamsLoaded){
     return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Caricamento…</p></section>`;
   }
-  let adminInner;
   if(!adminUnlocked){
-    adminInner = `<label class="f" for="pingate">PIN amministratore</label>
-      <input id="pingate" type="password" inputmode="numeric" autocomplete="off" placeholder="····">
-      ${pinError?'<p class="note" style="color:var(--red);margin-top:6px">PIN errato, riprova.</p>':''}
-      <div class="row" style="margin-top:10px"><button class="btn" data-act="pinsubmit">Entra come admin</button></div>`;
-  } else if(!RUNNING_IN_CLAUDE && supabaseClient && !supaSession){
-    adminInner = `<p class="hint">PIN corretto. Ora accedi con la tua email per confermare che sei tu — arriverà un link, nessuna password da ricordare.</p>
-      <label class="f" for="gateemail">Email amministratore</label>
-      <input id="gateemail" type="email" autocomplete="email" placeholder="tu@esempio.it">
-      <div class="row" style="margin-top:10px"><button class="btn" data-act="sendlink">Invia link di accesso</button></div>`;
-  } else {
-    adminInner = `<p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p>`;
+    return `<section class="panel" style="max-width:360px;margin:48px auto">
+      <h2>Accesso</h2>
+      <p class="hint">Inserisci il tuo PIN: quello della tua squadra se sei il mister, oppure il PIN amministratore.</p>
+      <label class="f" for="gatepin">PIN</label>
+      <input id="gatepin" type="password" inputmode="numeric" autocomplete="off" placeholder="····" autofocus>
+      ${gateError?'<p class="note" style="color:var(--red);margin-top:6px">PIN non valido.</p>':''}
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="gatesubmit">Entra</button></div>
+    </section>`;
   }
-  return `<section class="panel" style="max-width:380px;margin:48px auto 0">
-    <h2>Sei il mister?</h2>
-    <p class="hint">Inserisci il codice della tua squadra.</p>
-    <label class="f" for="teamcode">Codice squadra</label>
-    <input id="teamcode" autocomplete="off" placeholder="Es. U14-FA7C" style="text-transform:uppercase">
-    ${codeError?'<p class="note" style="color:var(--red);margin-top:6px">Codice non valido.</p>':''}
-    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="entercode">Entra</button></div>
-  </section>
-  <section class="panel" style="max-width:380px;margin:14px auto 0">
-    <h2>Sei l'amministratore?</h2>
-    ${adminInner}
-  </section>`;
+  if(!RUNNING_IN_CLAUDE && supabaseClient && !supaSession){
+    return `<section class="panel" style="max-width:360px;margin:48px auto">
+      <h2>Conferma amministratore</h2>
+      <p class="hint">PIN corretto. Ora accedi con la tua email per confermare che sei tu — arriverà un link, nessuna password da ricordare.</p>
+      <label class="f" for="gateemail">Email amministratore</label>
+      <input id="gateemail" type="email" autocomplete="email" placeholder="tu@esempio.it" autofocus>
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="sendlink">Invia link di accesso</button></div>
+    </section>`;
+  }
+  return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p></section>`;
 }
 function render(){
   if(!hashLocked && !adminAccessGranted()){
     $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
     $('#ctx').innerHTML = ''; $('#tabs').innerHTML = '';
     $('#view').innerHTML = viewGate();
-    $('#teamcode')?.focus();
     return;
   }
   if(!allowedTabs().includes(tab)) tab = isAdmin() ? 'squadre' : 'formazione';
@@ -476,7 +469,7 @@ function viewSquadre(){
         <div><label class="f">Mister</label><input data-team="${t.id}" data-tf="coach" value="${esc(t.coach)}" placeholder="Nome del mister"></div>
       </div>
       <div class="row" style="margin-top:12px;justify-content:space-between">
-        <div class="row"><span class="note">Codice di accesso</span><span class="code">${esc(t.code)}</span><button class="btn small ghost" data-teamcode="${t.id}">Rigenera</button></div>
+        <div class="row"><span class="note">PIN squadra</span><span class="code">${esc(t.code)}</span><button class="btn small ghost" data-teamcode="${t.id}">Rigenera</button></div>
         <div class="row">
           <button class="btn small" data-teamgo="${t.id}">Gestisci rosa</button>
           <button class="btn small" data-teamas="${t.id}">Vedi come mister</button>
@@ -1044,7 +1037,7 @@ document.addEventListener('click', e => {
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.mode==='move' || t.dataset.mode==='draw' || t.dataset.drawtool || t.dataset.teamdel || t.dataset.teamcode)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
-  if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genCode(); save('teams'); render(); } return; }
+  if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genPin(); save('teams'); render(); } return; }
   if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ curTeam = S.teams[0]?.id||null; subscribeTeam(); } else render(); } return; }
   if(t.dataset.pdel){ const id=t.dataset.pdel; S.players = S.players.filter(p=>p.id!==id); const l=S.sheet.lineup; Object.keys(l).forEach(k=>{if(l[k]===id) delete l[k]}); S.sheet.bench=S.sheet.bench.filter(b=>b!==id); save('roster'); save('sheet'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
@@ -1058,7 +1051,7 @@ document.addEventListener('click', e => {
   if(t.dataset.drawtool){ drawTool = drawTool===t.dataset.drawtool ? null : t.dataset.drawtool; selectedDraw=null; render(); return; }
   const sc = S.schemes.find(q=>q.id===openSchemeId);
   switch(act){
-    case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genCode()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
+    case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genPin()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), num:'', name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pnum]'); ins[ins.length-1]?.focus(); break;
     case 'bulk': {
       const lines = ($('#bulk').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
@@ -1081,25 +1074,19 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'exportbackup': exportBackup(); break;
-    case 'pinsubmit': {
-      const val = $('#pingate')?.value || '';
-      if(val === ADMIN_PIN){ adminUnlocked = true; pinError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} }
-      else pinError = true;
-      render();
-      break; }
-    case 'entercode': {
-      const val = ($('#teamcode')?.value || '').trim();
-      const tm = S.teams.find(x => (x.code||'').toLowerCase() === val.toLowerCase());
-      if(tm){ codeError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); }
-      else { codeError = true; render(); }
+    case 'gatesubmit': {
+      const val = ($('#gatepin')?.value || '').trim();
+      if(val === ADMIN_PIN){ adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break; }
+      const tm = S.teams.find(x => (x.code||'') === val);
+      if(tm){ gateError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); break; }
+      gateError = true; render();
       break; }
     case 'sendlink': sendMagicLink(($('#gateemail')?.value || '').trim()); break;
   }
 });
 document.addEventListener('keydown', e => {
   if(e.key !== 'Enter' || !e.target) return;
-  if(e.target.id === 'pingate'){ e.preventDefault(); $('[data-act="pinsubmit"]')?.click(); }
-  else if(e.target.id === 'teamcode'){ e.preventDefault(); $('[data-act="entercode"]')?.click(); }
+  if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
   else if(e.target.id === 'gateemail'){ e.preventDefault(); $('[data-act="sendlink"]')?.click(); }
 });
 document.addEventListener('input', e => {
