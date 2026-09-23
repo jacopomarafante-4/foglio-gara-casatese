@@ -78,16 +78,19 @@ summary{cursor:pointer;font-weight:600}
 /* Formazione board */
 .formwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 @media (min-width:820px){.formwrap{grid-template-columns:minmax(0,420px) minmax(0,1fr)}}
-.pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:10px;overflow:hidden;
-  background:repeating-linear-gradient(180deg,var(--grass-soft) 0 8.33%,var(--grass-2) 8.33% 16.66%);border:2px solid var(--grass)}
+.pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:14px;overflow:hidden;
+  background:repeating-linear-gradient(180deg,var(--grass-soft) 0 8.33%,var(--grass-2) 8.33% 16.66%);
+  border:3px solid var(--grass);box-shadow:0 6px 20px rgba(0,0,0,.18), inset 0 0 50px rgba(0,0,0,.10)}
 .pitch .ln{position:absolute;border:2px solid var(--grass);opacity:.55}
 .slot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;width:80px;touch-action:none}
-.slot .disc{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--cond);font-weight:700;font-size:20px;background:var(--ink);color:var(--paper);border:2px solid var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.slot.empty .disc{background:transparent;color:var(--ink);border:2px dashed var(--ink);box-shadow:none;opacity:.65}
-.slot .pname{font-size:12px;font-weight:700;line-height:1.1;text-align:center;background:var(--paper);padding:1px 5px;border-radius:5px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slot .sn{position:absolute;top:-6px;right:14px;font-size:10px;font-weight:700;background:var(--paper);color:var(--muted);border-radius:6px;padding:0 4px;border:1px solid var(--line)}
-.slot.hot .disc{box-shadow:0 0 0 3px var(--sel)}
-.slot .x{position:absolute;top:-8px;left:12px;width:20px;height:20px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0}
+.slot .disc{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--cond);font-weight:700;font-size:20px;
+  background:radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--brand) 70%, #fff), var(--brand) 55%, #12336f 100%);
+  color:#fff;border:2px solid rgba(255,255,255,.9);box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.35)}
+.slot.empty .disc{background:rgba(255,255,255,.35);color:var(--ink);border:2px dashed var(--ink);box-shadow:none;opacity:.7}
+.slot .pname{font-size:12px;font-weight:700;line-height:1.1;text-align:center;background:var(--paper);padding:2px 6px;border-radius:6px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.slot .sn{position:absolute;top:-6px;right:14px;font-size:10px;font-weight:800;background:var(--amber);color:var(--ink);border-radius:6px;padding:0 4px;border:1px solid rgba(0,0,0,.1);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.slot.hot .disc{box-shadow:0 0 0 3px var(--sel), 0 3px 8px rgba(0,0,0,.35)}
+.slot .x{position:absolute;top:-8px;left:12px;width:20px;height:20px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 /* Schemi */
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:4px}
 .scard{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--paper)}
@@ -104,16 +107,33 @@ summary{cursor:pointer;font-weight:600}
 .side{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
 .side.favore{background:#DDF0E2;color:#1E5A36}.side.sfavore{background:#F8DDE1;color:#8E0C22}
 .chk{width:22px;height:22px;accent-color:var(--grass)}
-.board{width:100%;display:block;border-radius:10px;border:2px solid var(--grass);background:var(--grass-soft);touch-action:none}
+.board{width:100%;display:block;border-radius:14px;border:3px solid var(--grass);background:var(--grass-soft);touch-action:none;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{border:0;background:var(--paper);padding:8px 14px;font-weight:600;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px;font-size:14px}
-.callrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line)}
+.convh3{font-family:var(--cond);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.convh3:first-of-type{margin-top:4px}
+.callist{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:4px}
+.callrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);border-left:4px solid transparent;background:var(--paper);transition:background .15s}
 .callrow:last-child{border-bottom:0}
+.callrow[data-status="CON"]{border-left-color:var(--grass);background:color-mix(in srgb, var(--grass) 7%, var(--paper))}
+.callrow[data-status="NC"]{border-left-color:var(--muted)}
+.callrow[data-status="INF"]{border-left-color:var(--red);background:color-mix(in srgb, var(--red) 7%, var(--paper))}
+.callrow[data-status="SQL"]{border-left-color:var(--ink)}
+.callrow[data-status="ND"]{border-left-color:var(--amber);background:color-mix(in srgb, var(--amber) 10%, var(--paper))}
 .callname{font-weight:600}
 .callseg button{padding:6px 9px;font-size:12px}
-.callseg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+.callseg button[data-callupstatus="CON"][aria-pressed="true"]{background:var(--grass);color:#fff}
+.callseg button[data-callupstatus="NC"][aria-pressed="true"]{background:var(--muted);color:#fff}
+.callseg button[data-callupstatus="INF"][aria-pressed="true"]{background:var(--red);color:#fff}
+.callseg button[data-callupstatus="SQL"][aria-pressed="true"]{background:var(--ink);color:#fff}
+.callseg button[data-callupstatus="ND"][aria-pressed="true"]{background:var(--amber);color:var(--ink)}
+.countchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.countchip b{font-family:var(--cond);font-size:15px;color:var(--ink)}
+.countchip[data-status="CON"]{border-color:var(--grass);color:var(--grass)}
+.countchip[data-status="INF"]{border-color:var(--red);color:var(--red)}
+.countchip[data-status="ND"]{border-color:var(--amber);color:#946400}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
 .tokpanel{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px}
@@ -661,6 +681,7 @@ function viewPartita(){
 
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
+const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
 function viewConvocazioni(){
   const s = S.sheet;
   if(!S.players.length) return `<section class="panel"><h2>Convocazioni</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
@@ -668,12 +689,13 @@ function viewConvocazioni(){
   const rows = sorted.map(p => {
     const cur = s.callup[p.id] || '';
     const btns = CALLUP_STATUSES.map(st => `<button data-callupid="${p.id}" data-callupstatus="${st}" aria-pressed="${cur===st}" title="${CALLUP_LABELS[st]}">${st}</button>`).join('');
-    return `<div class="callrow">
+    return `<div class="callrow" data-status="${cur}">
       <div class="callname">${esc(p.name)}</div>
       <div class="seg callseg" role="group" aria-label="Stato convocazione ${esc(p.name)}">${btns}</div>
     </div>`;
   }).join('');
   const count = CALLUP_STATUSES.reduce((o,st)=>{ o[st]=sorted.filter(p=>(s.callup[p.id]||'')===st).length; return o; }, {});
+  const chips = CALLUP_STATUSES.map(st => `<span class="countchip" data-status="${st}"><b>${count[st]||0}</b>${st}</span>`).join('');
   const nm = nextMatch();
   return `<section class="panel">
     <h2>Convocazioni</h2>
@@ -686,23 +708,36 @@ function viewConvocazioni(){
       <p class="hint" style="margin:6px 0 0">Oppure ignora e compila tu i campi qui sotto per un'altra partita (amichevole, recupero, ecc.).</p>
     </div>` : ''}
     <p class="hint">Questi dati finiscono nel foglio convocazione (PDF separato dal foglio gara), da mandare a giocatori e famiglie.</p>
+
+    <h3 class="convh3" style="margin-top:8px">Impegno</h3>
     <div class="grid">
-      <div><label class="f" for="cv_type">Tipo di impegno</label><select id="cv_type" data-sheet="convType"><option ${s.convType==='Campionato'?'selected':''}>Campionato</option><option ${s.convType==='Amichevole'?'selected':''}>Amichevole</option><option ${s.convType==='Coppa'?'selected':''}>Coppa</option><option ${s.convType==='Recupero'?'selected':''}>Recupero</option><option ${s.convType==='Torneo'?'selected':''}>Torneo</option></select></div>
+      <div><label class="f" for="cv_type">Tipo</label><select id="cv_type" data-sheet="convType"><option ${s.convType==='Campionato'?'selected':''}>Campionato</option><option ${s.convType==='Amichevole'?'selected':''}>Amichevole</option><option ${s.convType==='Coppa'?'selected':''}>Coppa</option><option ${s.convType==='Recupero'?'selected':''}>Recupero</option><option ${s.convType==='Torneo'?'selected':''}>Torneo</option></select></div>
       <div><label class="f" for="cv_home">Sede</label><select id="cv_home" data-sheet="home"><option value="1" ${s.home?'selected':''}>Casa</option><option value="" ${!s.home?'selected':''}>Trasferta</option></select></div>
-      <div><label class="f" for="cv_meettime">Orario ritrovo</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
-      <div><label class="f" for="cv_meetaddr">Indirizzo ritrovo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Via, città"></div>
-      <div><label class="f" for="cv_maps">Link posizione campo</label>
+    </div>
+
+    <h3 class="convh3">Ritrovo</h3>
+    <div class="grid">
+      <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
+      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Via, città"></div>
+      <div><label class="f" for="cv_maps">Link Google Maps</label>
         <div class="row" style="gap:6px;flex-wrap:nowrap">
           <input id="cv_maps" data-sheet="mapsUrl" value="${esc(defaultMapsUrl(s))}" placeholder="https://maps.app.goo.gl/..." style="flex:1">
           <button type="button" class="btn small ghost" data-act="mapssearch" title="Cerca l'indirizzo su Google Maps in una nuova scheda">Cerca</button>
         </div>
       </div>
     </div>
-    <div style="margin-top:12px"><label class="f" for="cv_notes">Note convocazione</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
-    <h3>Giocatori <span class="note">(${count.CON||0} convocati)</span></h3>
+    <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
+
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:26px;flex-wrap:wrap;gap:10px">
+      <h3 class="convh3" style="margin:0">Giocatori</h3>
+      <div class="row" style="gap:6px">${chips}</div>
+    </div>
     <p class="hint">Ordine alfabetico. Tocca lo stato per ciascun giocatore: <b>CON</b> convocato · <b>NC</b> non convocato · <b>INF</b> infortunato · <b>SQL</b> squalificato · <b>ND</b> non disponibile.</p>
-    ${rows}
-    <div class="row" style="margin-top:16px"><button class="btn primary" data-act="downloadconv">Scarica convocazione PDF</button></div>
+    <div class="callist">${rows}</div>
+    <div class="row" style="margin-top:16px;justify-content:space-between">
+      <button class="btn primary" data-act="downloadconv">Scarica convocazione PDF</button>
+      <button class="btn small ghost danger" data-act="resetconv">Svuota convocazioni</button>
+    </div>
   </section>`;
 }
 
@@ -1351,6 +1386,7 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'downloadconv': downloadConvocazione(); break;
+    case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.mapsUrl=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'mapssearch': { const q = (S.sheet.meetAddress || S.sheet.venue || '').trim(); if(q) window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener'); else setStatus('Scrivi prima l\'indirizzo di ritrovo'); break; }
     case 'exportbackup': exportBackup(); break;
     case 'gatesubmit': {
