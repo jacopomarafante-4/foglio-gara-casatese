@@ -623,6 +623,7 @@ function viewPartita(){
         <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}</div>
         <button class="btn small primary" data-act="usenext">Usa questa</button>
       </div>
+      <p class="hint" style="margin:6px 0 0">Oppure ignora e scrivi qui sotto i dati di un'altra partita (amichevole, recupero, ecc.).</p>
     </div>` : ''}
     <p class="hint">Questi dati finiscono nell'intestazione di ogni pagina del PDF.</p>
     <div class="grid">
