@@ -665,8 +665,17 @@ function viewConvocazioni(){
     </div>`;
   }).join('');
   const count = CALLUP_STATUSES.reduce((o,st)=>{ o[st]=sorted.filter(p=>(s.callup[p.id]||'')===st).length; return o; }, {});
+  const nm = nextMatch();
   return `<section class="panel">
     <h2>Convocazioni</h2>
+    ${nm ? `<div class="nextmatch">
+      <span class="note">Prossima partita in calendario</span>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
+        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}</div>
+        <button class="btn small primary" data-act="usenext">Usa questa</button>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Oppure ignora e compila tu i campi qui sotto per un'altra partita (amichevole, recupero, ecc.).</p>
+    </div>` : ''}
     <p class="hint">Questi dati finiscono nel foglio convocazione (PDF separato dal foglio gara), da mandare a giocatori e famiglie.</p>
     <div class="grid">
       <div><label class="f" for="cv_type">Tipo di impegno</label><select id="cv_type" data-sheet="convType"><option ${s.convType==='Campionato'?'selected':''}>Campionato</option><option ${s.convType==='Amichevole'?'selected':''}>Amichevole</option><option ${s.convType==='Coppa'?'selected':''}>Coppa</option><option ${s.convType==='Recupero'?'selected':''}>Recupero</option><option ${s.convType==='Torneo'?'selected':''}>Torneo</option></select></div>
