@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#EEF2EF; --paper:#FFFFFF; --ink:#15202B; --muted:#5B6875; --line:#D5DDD8;
@@ -180,6 +181,10 @@ function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',cat
 let S = {teams:[], players:[], schemes:[], sheet:defaultSheet()};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
+/* PIN admin: protegge l'ingresso come amministratore sul link pubblico (i mister non lo vedono, entrano col loro codice squadra) */
+const ADMIN_PIN = '1611';
+let adminUnlocked = false, pinError = false;
+try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
 const isAdmin = () => ROLE === 'admin';
 const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
@@ -264,8 +269,41 @@ function switchView(role, team){
   tab = isAdmin() ? 'squadre' : 'formazione';
   subscribeTeam(); window.scrollTo(0,0);
 }
+/* Fuori da Claude (es. GitHub Pages) il salvataggio condiviso passa da Supabase:
+   stessa interfaccia doc().set()/onSnapshot() usata sopra, tabella "docs" a chiave/valore. */
+const SUPABASE_URL = 'https://vxqpuwoqanvkpfzilrcc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4cXB1d29xYW52a3BmemlscmNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDg0NjksImV4cCI6MjEwNTcyNDQ2OX0.MIF-vt76o1jeuVuESFcrLf3lbXffu8P7aqtRd9k247o';
+function makeSupabaseDb(client){
+  return {
+    doc(path){
+      return {
+        async set(data){
+          const { error } = await client.from('docs').upsert({ path, data, updated_at: new Date().toISOString() });
+          if(error) throw error;
+        },
+        onSnapshot(onNext, onError){
+          let stopped = false;
+          client.from('docs').select('data').eq('path', path).maybeSingle()
+            .then(({data, error}) => { if(stopped) return; if(error){ onError && onError(error); return; } onNext({ exists: !!data, data: () => data && data.data }); })
+            .catch(e => { if(!stopped) onError && onError(e); });
+          const channel = client.channel('docs:'+path)
+            .on('postgres_changes', { event:'*', schema:'public', table:'docs', filter:`path=eq.${path}` }, payload => {
+              if(stopped) return;
+              if(payload.eventType === 'DELETE'){ onNext({ exists:false, data:()=>undefined }); return; }
+              onNext({ exists:true, data: () => payload.new.data });
+            })
+            .subscribe(status => { if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') onError && onError(new Error(status)); });
+          return () => { stopped = true; client.removeChannel(channel); };
+        }
+      };
+    }
+  };
+}
 async function initStore(){
   try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){ db = null; }
+  if(!db && window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY){
+    try{ db = makeSupabaseDb(window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)); }catch(e){ db = null; }
+  }
   try{ if(window.claude && window.claude.use) downloads = await window.claude.use('downloads'); }catch(e){ downloads = null; }
   if(db){
     let first = true;
@@ -340,7 +378,24 @@ function renderChrome(){
     : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span>`;
   $('#tabs').innerHTML = allowedTabs().map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('');
 }
+function viewPinGate(){
+  return `<section class="panel" style="max-width:340px;margin:48px auto">
+    <h2>Accesso amministratore</h2>
+    <p class="hint">Inserisci il PIN per gestire squadre, rose e schemi. Il tuo mister non deve fare nulla di tutto questo: entra col link della sua squadra.</p>
+    <label class="f" for="pingate">PIN</label>
+    <input id="pingate" type="password" inputmode="numeric" autocomplete="off" placeholder="····" autofocus>
+    ${pinError?'<p class="note" style="color:var(--red);margin-top:8px">PIN errato, riprova.</p>':''}
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="pinsubmit">Entra</button></div>
+  </section>`;
+}
 function render(){
+  if(isAdmin() && !hashLocked && !adminUnlocked){
+    $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
+    $('#ctx').innerHTML = ''; $('#tabs').innerHTML = '';
+    $('#view').innerHTML = viewPinGate();
+    $('#pingate')?.focus();
+    return;
+  }
   if(!allowedTabs().includes(tab)) tab = isAdmin() ? 'squadre' : 'formazione';
   renderChrome();
   const s = S.sheet;
@@ -611,10 +666,9 @@ function viewPdf(){
     <h2>PDF</h2>
     <p class="hint">A4 orizzontale: prima pagina con distinta e formazione, poi una pagina per ogni schema spuntato.</p>
     <div class="row">
-      <button class="btn primary" data-act="download" ${downloads?'':'disabled'}>Scarica PDF</button>
+      <button class="btn primary" data-act="download">Scarica PDF</button>
       <button class="btn" data-act="refresh">Aggiorna anteprima</button>
     </div>
-    ${downloads?'':'<p class="note" style="margin-top:8px">Il download si attiva quando la pagina è aperta dall\'app Claude o da claude.ai.</p>'}
     <div class="pages" id="pages"><p class="empty">Preparo l'anteprima…</p></div>
   </section>`;
 }
@@ -807,8 +861,13 @@ async function buildPreview(){
   box.innerHTML = '';
   makePages().forEach((c,i) => { c.setAttribute('aria-label', `Pagina ${i+1}`); box.appendChild(c); });
 }
+function browserDownload(filename, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 async function downloadPdf(){
-  if(!downloads) return;
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   setStatus('Creo il PDF…');
   await ensureFonts();
@@ -817,8 +876,11 @@ async function downloadPdf(){
   pages.forEach((c,i) => { if(i) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210); });
   const s = S.sheet;
   const name = [fmtDate(s.date).replace(/\//g,'_'), s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : '', 'FOGLIO_GARA'].filter(Boolean).join('_') + '.pdf';
-  try{ await downloads.save({filename:name, data:doc.output('blob')}); setStatus('PDF pronto'); }
-  catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
+  try{
+    if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
+    else browserDownload(name, doc.output('blob'));
+    setStatus('PDF pronto');
+  }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }
 
 /* ---------- Eventi ---------- */
@@ -865,7 +927,16 @@ document.addEventListener('click', e => {
     case 'delscheme': if(sc && confirm(`Eliminare lo schema "${sc.name}"?`)){ S.schemes = S.schemes.filter(q=>q!==sc); S.sheet.selected = S.sheet.selected.filter(i=>i!==sc.id); delete S.sheet.overrides[sc.id]; save('schemes'); save('sheet'); openSchemeId=null; render(); } break;
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
+    case 'pinsubmit': {
+      const val = $('#pingate')?.value || '';
+      if(val === ADMIN_PIN){ adminUnlocked = true; pinError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} }
+      else pinError = true;
+      render();
+      break; }
   }
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target && e.target.id === 'pingate'){ e.preventDefault(); $('[data-act="pinsubmit"]')?.click(); }
 });
 document.addEventListener('input', e => {
   const t = e.target;
