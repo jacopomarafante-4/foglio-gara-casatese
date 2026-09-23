@@ -690,7 +690,7 @@ function fieldSVG(){
   </g>
   <circle cx="0" cy="${Y(11)}" r=".3" fill="${g}"/>`;
 }
-function ballSVG(b, drag){ return `<g ${drag?'data-ball="1" style="cursor:grab"':''} transform="translate(${b.x} ${b.y*YS})"><circle r="1.15" fill="#fff" stroke="#15202B" stroke-width=".22"/><path d="M0 -.45 L.43 -.14 L.27 .37 L-.27 .37 L-.43 -.14Z" fill="#15202B"/></g>`; }
+function ballSVG(b, drag){ return `<g ${drag?'data-ball="1" style="cursor:grab"':''} transform="translate(${b.x} ${b.y*YS})">${drag?'<circle r="2.4" fill="transparent"/>':''}<circle r="1.15" fill="#fff" stroke="#15202B" stroke-width=".22"/><path d="M0 -.45 L.43 -.14 L.27 .37 L-.27 .37 L-.43 -.14Z" fill="#15202B"/></g>`; }
 function schemeThumb(sc){
   const rm = roleMap(sc);
   const mid = 'ah-'+sc.id;
@@ -750,6 +750,7 @@ function viewScheme(){
     const sel = selectedToken===t.id && moveMode;
     const lbl = p ? esc(p.num||'·') : t.slot;
     return `<g ${moveMode?`data-move-token="${t.id}" style="cursor:grab"`:`data-drop-token="${t.id}" style="cursor:pointer"`} transform="translate(${t.x} ${t.y*YS})">
+      <circle r="3" fill="transparent"/>
       ${sel?'<circle r="2.4" fill="none" stroke="#1F5FA8" stroke-width=".35"/>':''}
       <circle r="1.75" fill="${p?col:'#fff'}" stroke="${p?'#fff':col}" stroke-width="${p?.3:.3}" ${p?'':'stroke-dasharray=".6 .4"'}/>
       <text y=".62" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="1.85" fill="${p?'#fff':col}">${lbl}</text>
