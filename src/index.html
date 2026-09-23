@@ -79,7 +79,7 @@ summary{cursor:pointer;font-weight:600}
 .pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:10px;overflow:hidden;
   background:repeating-linear-gradient(180deg,var(--grass-soft) 0 8.33%,var(--grass-2) 8.33% 16.66%);border:2px solid var(--grass)}
 .pitch .ln{position:absolute;border:2px solid var(--grass);opacity:.55}
-.slot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;width:80px}
+.slot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;width:80px;touch-action:none}
 .slot .disc{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--cond);font-weight:700;font-size:20px;background:var(--ink);color:var(--paper);border:2px solid var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .slot.empty .disc{background:transparent;color:var(--ink);border:2px dashed var(--ink);box-shadow:none;opacity:.65}
 .slot .pname{font-size:12px;font-weight:700;line-height:1.1;text-align:center;background:var(--paper);padding:1px 5px;border-radius:5px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -610,9 +610,9 @@ function viewFormazione(){
   const slots = (FORMATIONS[s.formation]||[]).map(([n,bx,by]) => {
     const p = P(s.lineup[n]);
     const {x,y} = effSlot(s, n, bx, by);
-    return `<div class="slot ${p?'':'empty'}" data-drop-slot="${n}" style="left:${x}%;top:${y}%">
+    return `<div class="slot ${p?'':'empty'}" data-drop-slot="${n}" data-move-slot="${n}" style="left:${x}%;top:${y}%;cursor:grab">
       <span class="sn">${n}</span>
-      <span class="disc" data-move-slot="${n}" style="cursor:grab">${p ? esc(p.num||'·') : n}</span>
+      <span class="disc">${p ? esc(p.num||'·') : n}</span>
       ${p ? `<span class="pname">${esc(surname(p.name))}</span><button class="x" aria-label="Togli ${esc(p.name)}" data-clear-slot="${n}">×</button>` : ''}
     </div>`;
   }).join('');
@@ -1187,12 +1187,12 @@ document.addEventListener('pointerdown', e => {
   const chipEl = e.target.closest('[data-player]');
   if(chipEl){ dnd = {pid:chipEl.dataset.player, x:e.clientX, y:e.clientY, started:false, el:chipEl}; return; }
 
-  const slotHandle = e.target.closest('[data-move-slot]');
-  if(slotHandle && !selectedPlayer){
-    const pitch = $('#pitch'); const slotEl = slotHandle.closest('.slot');
-    if(pitch && slotEl){
-      const n = slotHandle.dataset.moveSlot;
-      slotHandle.setPointerCapture?.(e.pointerId);
+  const slotEl = e.target.closest('[data-move-slot]');
+  if(slotEl && !selectedPlayer && !e.target.closest('[data-clear-slot]')){
+    const pitch = $('#pitch');
+    if(pitch){
+      const n = slotEl.dataset.moveSlot;
+      slotEl.setPointerCapture?.(e.pointerId);
       let moved = false, finalX, finalY;
       const mv = ev => {
         const rect = pitch.getBoundingClientRect();
@@ -1202,11 +1202,11 @@ document.addEventListener('pointerdown', e => {
         finalX = x; finalY = y; moved = true;
       };
       const up = () => {
-        slotHandle.removeEventListener('pointermove', mv); slotHandle.removeEventListener('pointerup', up); slotHandle.removeEventListener('pointercancel', up);
+        slotEl.removeEventListener('pointermove', mv); slotEl.removeEventListener('pointerup', up); slotEl.removeEventListener('pointercancel', up);
         if(moved){ S.sheet.slotPos = S.sheet.slotPos || {}; S.sheet.slotPos[n] = {x:finalX, y:finalY}; save('sheet'); }
         render();
       };
-      slotHandle.addEventListener('pointermove', mv); slotHandle.addEventListener('pointerup', up); slotHandle.addEventListener('pointercancel', up);
+      slotEl.addEventListener('pointermove', mv); slotEl.addEventListener('pointerup', up); slotEl.addEventListener('pointercancel', up);
       e.preventDefault();
       return;
     }
