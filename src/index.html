@@ -60,9 +60,9 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-b
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 /* Rosa */
-.prow{display:grid;grid-template-columns:64px 1fr 40px;gap:8px;margin-bottom:8px;align-items:center}
-.prow .num{text-align:center;font-family:var(--cond);font-weight:700;font-size:20px}
-.prow .num.missing{border-color:var(--amber)}
+.prow{display:grid;grid-template-columns:40px 1fr 40px;gap:8px;margin-bottom:8px;align-items:center}
+.prow .num{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);font-family:var(--cond);font-weight:700;font-size:16px}
+.prow .num.missing{background:none;color:var(--muted);border:2px dashed var(--line)}
 .iconbtn{border:0;background:none;width:40px;height:40px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:20px}
 .iconbtn:hover{background:var(--bg)}
 details{margin-top:14px}
@@ -133,6 +133,7 @@ summary{cursor:pointer;font-weight:600}
 .ro-row{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);break-inside:avoid;-webkit-column-break-inside:avoid}
 .ro-row:last-child{border-bottom:0}
 .ro-row .n{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);font-family:var(--cond);font-weight:700;font-size:17px}
+.ro-row .n.off{background:none;color:var(--muted);border:2px dashed var(--line)}
 .ro-row .nm{font-weight:600}
 .cols2{columns:2 240px;column-gap:28px}
 .teamcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:var(--paper)}
@@ -385,6 +386,25 @@ async function initStore(){
 
 /* ---------- Logica assegnazioni ---------- */
 function slotOf(pid){ const l = S.sheet.lineup; return Object.keys(l).find(k => l[k]===pid); }
+/* Numero di maglia = per partita, non fisso: titolari = numero dello slot (1-11), panchina = 12+posizione. */
+function matchNum(pid){
+  const slot = slotOf(pid);
+  if(slot) return +slot;
+  const bi = (S.sheet.bench||[]).indexOf(pid);
+  return bi>=0 ? 12+bi : null;
+}
+function slotPriorityOrder(){
+  const list = FORMATIONS[S.sheet.formation] || [];
+  const rest = list.filter(([n]) => n!==1);
+  const shape = (S.sheet.formation||'').split('-').slice(1).map(Number).filter(n=>!isNaN(n));
+  const bands = []; let idx = 0;
+  shape.forEach(count => { bands.push(rest.slice(idx, idx+count)); idx += count; });
+  const byXDesc = arr => arr.slice().sort((a,b) => b[1]-a[1]);
+  const defense = bands[0] || [];
+  const attack = bands.length>1 ? bands[bands.length-1] : [];
+  const midfield = bands.slice(1,-1).flat();
+  return [1, ...byXDesc(defense).map(t=>t[0]), ...byXDesc(midfield).map(t=>t[0]), ...byXDesc(attack).map(t=>t[0])];
+}
 function assignSlot(slot, pid){
   const l = S.sheet.lineup;
   const prev = slotOf(pid);
@@ -436,7 +456,6 @@ function nameLayout(tokens){
   });
   return out;
 }
-function numLabel(p, slot){ return p && p.num ? String(p.num) : (p ? '·' : String(slot)); }
 
 /* ---------- Render ---------- */
 const TAB_NAMES = {squadre:'Squadre', rosa:'Rosa', partita:'Partita', formazione:'Formazione', piazzati:'Piazzati', pdf:'PDF'};
@@ -542,28 +561,29 @@ function viewSquadre(){
 
 function viewRosa(){
   if(!isAdmin()){
-    const rows = S.players.map(p => `<div class="ro-row"><span class="n">${esc(p.num||'?')}</span><span class="nm">${esc(p.name)}</span></div>`).join('');
+    const rows = S.players.map(p => { const n = matchNum(p.id); return `<div class="ro-row"><span class="n ${n?'':'off'}">${n||'–'}</span><span class="nm">${esc(p.name)}</span></div>`; }).join('');
     return `<section class="panel">
       <h2>Rosa</h2>
-      ${lockNote('La rosa la inserisce la società. Per aggiungere un giocatore o cambiare un numero, scrivi all\'amministratore.')}
+      ${lockNote('La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all\'amministratore.')}
+      <p class="hint">Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione.</p>
       <div class="cols2">${rows || '<p class="empty">La rosa non è ancora stata caricata.</p>'}</div>
     </section>`;
   }
   const rows = S.players.map(p => `
     <div class="prow">
-      <input class="num ${p.num?'':'missing'}" inputmode="numeric" aria-label="Numero di maglia" data-pnum="${p.id}" value="${esc(p.num)}" placeholder="N°">
+      <span class="num ${matchNum(p.id)?'':'missing'}">${matchNum(p.id)||'–'}</span>
       <input aria-label="Nome" data-pname="${p.id}" value="${esc(p.name)}" placeholder="Cognome">
       <button class="iconbtn" aria-label="Elimina ${esc(p.name)}" data-pdel="${p.id}">×</button>
     </div>`).join('');
   return `<section class="panel">
     <h2>Rosa · ${esc(TEAM()?.name||'')}</h2>
-    <p class="hint">Numero di maglia e cognome. I numeri servono per riempire formazione e schemi.</p>
+    <p class="hint">Solo il nome: il numero di maglia lo assegni in Formazione, cambia partita per partita (titolari 1-11, panchina 12+).</p>
     ${rows || '<p class="empty">Nessun giocatore. Aggiungili uno a uno o incolla un elenco.</p>'}
     <div class="row"><button class="btn" data-act="padd">Aggiungi giocatore</button></div>
     <details ${S.players.length?'':'open'}>
       <summary>Incolla un elenco</summary>
-      <p class="hint" style="margin-top:8px">Una riga per giocatore, per esempio <b>8 Brancaccio</b>. Va bene anche solo il cognome.</p>
-      <textarea id="bulk" placeholder="1 Alonge&#10;5 Vascaneau&#10;8 Brancaccio"></textarea>
+      <p class="hint" style="margin-top:8px">Un nome per riga, per esempio <b>Brancaccio</b>. Se incolli righe con un numero davanti va bene lo stesso, lo ignoriamo.</p>
+      <textarea id="bulk" placeholder="Alonge&#10;Vascaneau&#10;Brancaccio"></textarea>
       <div class="row" style="margin-top:8px"><button class="btn primary" data-act="bulk">Aggiungi all'elenco</button></div>
     </details>
   </section>`;
@@ -571,7 +591,7 @@ function viewRosa(){
 
 function viewPartita(){
   const s = S.sheet;
-  const opts = sel => `<option value="">Nessuno</option>` + S.players.map(p => `<option value="${p.id}" ${sel===p.id?'selected':''}>${esc((p.num?p.num+' ':'')+p.name)}</option>`).join('');
+  const opts = sel => `<option value="">Nessuno</option>` + S.players.map(p => { const n=matchNum(p.id); return `<option value="${p.id}" ${sel===p.id?'selected':''}>${esc((n?n+' ':'')+p.name)}</option>`; }).join('');
   const f = (k,l,t='text') => `<div><label class="f" for="f_${k}">${l}</label><input id="f_${k}" type="${t}" data-sheet="${k}" value="${esc(s[k])}"></div>`;
   return `<section class="panel">
     <h2>Partita</h2>
@@ -593,7 +613,8 @@ function chip(p, extra=''){
   if(slotOf(p.id)) cls.push('used');
   if(S.sheet.bench.includes(p.id)) cls.push('bench');
   if(selectedPlayer===p.id) cls.push('selected');
-  return `<button class="chip ${cls.join(' ')}" data-player="${p.id}" ${extra}><b>${esc(p.num||'?')}</b>${esc(p.name||'Senza nome')}</button>`;
+  const n = matchNum(p.id);
+  return `<button class="chip ${cls.join(' ')}" data-player="${p.id}" ${extra}><b>${n||'–'}</b>${esc(p.name||'Senza nome')}</button>`;
 }
 
 function pitchLines(){
@@ -615,15 +636,15 @@ function viewFormazione(){
     const {x,y} = effSlot(s, n, bx, by);
     return `<div class="slot ${p?'':'empty'}" data-drop-slot="${n}" data-move-slot="${n}" style="left:${x}%;top:${y}%;cursor:grab">
       <span class="sn">${n}</span>
-      <span class="disc">${p ? esc(p.num||'·') : n}</span>
+      <span class="disc">${n}</span>
       ${p ? `<span class="pname">${esc(surname(p.name))}</span><button class="x" aria-label="Togli ${esc(p.name)}" data-clear-slot="${n}">×</button>` : ''}
     </div>`;
   }).join('');
   const others = S.players.filter(p => !slotOf(p.id));
-  const bench = others.map(p => `<button class="chip ${s.bench.includes(p.id)?'bench':''}" data-bench="${p.id}" aria-pressed="${s.bench.includes(p.id)}"><b>${esc(p.num||'?')}</b>${esc(p.name)}</button>`).join('');
+  const bench = others.map(p => `<button class="chip ${s.bench.includes(p.id)?'bench':''}" data-bench="${p.id}" aria-pressed="${s.bench.includes(p.id)}"><b>${matchNum(p.id)||'–'}</b>${esc(p.name)}</button>`).join('');
   return `<section class="panel">
     <h2>Formazione</h2>
-    <p class="hint">Trascina un giocatore su una posizione, oppure toccalo e poi tocca la posizione. Trascina invece il numerino di una posizione per spostarla leggermente sul campo. Il numerino piccolo è il ruolo usato negli schemi.</p>
+    <p class="hint">Tocca un giocatore per metterlo nella prossima posizione libera (portiere, poi difesa, centrocampo, attacco, da destra a sinistra) — tocca di nuovo per toglierlo. Se vuoi scegliere tu il posto esatto, trascinalo su una posizione specifica. Trascina invece l'intera casella di una posizione per spostarla leggermente sul campo. Il numerino piccolo in alto è il ruolo usato negli schemi; il numero grande è quello di questa partita.</p>
     <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:14px">
       <div style="max-width:240px"><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation">${fopts}</select></div>
       ${hasSlotPos ? `<button class="btn small ghost" data-act="resetslotpos">Ripristina posizioni modulo</button>` : ''}
@@ -751,7 +772,7 @@ function viewScheme(){
     const {p, override} = tokenPlayer(sc, t);
     const col = tokColor(sc, t, rm);
     const sel = selectedToken===t.id && moveMode;
-    const lbl = p ? esc(p.num||'·') : t.slot;
+    const lbl = p ? (matchNum(p.id)||'·') : t.slot;
     return `<g ${moveMode?`data-move-token="${t.id}" style="cursor:grab"`:`data-drop-token="${t.id}" style="cursor:pointer"`} transform="translate(${t.x} ${t.y*YS})">
       <circle r="3" fill="transparent"/>
       ${sel?'<circle r="2.4" fill="none" stroke="#1F5FA8" stroke-width=".35"/>':''}
@@ -912,7 +933,7 @@ function coverPage(total){
   const row = (p, slot, isStarter) => {
     x.fillStyle = isStarter ? INK : GRASS;
     x.beginPath(); x.roundRect ? x.roundRect(36, y-rh*0.72, 36, rh*0.86, 5) : x.rect(36,y-rh*0.72,36,rh*0.86); x.fill();
-    T(x, p ? (p.num||'–') : '–', 54, y-rh*0.29+1, {size:Math.min(18,rh*0.7), weight:700, cond:true, align:'center', base:'middle', color:'#fff'});
+    T(x, p ? (matchNum(p.id)||'–') : '–', 54, y-rh*0.29+1, {size:Math.min(18,rh*0.7), weight:700, cond:true, align:'center', base:'middle', color:'#fff'});
     T(x, p ? p.name : 'Da assegnare', 82, y-rh*0.29+1, {size:Math.min(17,rh*0.66), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:250});
     const tag = p && (p.id===s.captain ? 'K' : p.id===s.vice ? 'VK' : '');
     if(tag){ x.fillStyle = '#E3A008'; x.beginPath(); x.arc(356, y-rh*0.29, 11, 0, 7); x.fill(); T(x, tag, 356, y-rh*0.29+1, {size:tag.length>1?10:13, weight:700, align:'center', base:'middle', color:INK}); }
@@ -936,7 +957,7 @@ function coverPage(total){
   (FORMATIONS[s.formation]||[]).forEach(([n,bx,by]) => {
     const {x:fx,y:fy} = effSlot(s, n, bx, by);
     const p = P(s.lineup[n]); const cx = px + fx/100*pw, cy = py + fy/100*ph;
-    disc(x, cx, cy, 19, INK, p ? (p.num||n) : n, {hollow:!p, size:21});
+    disc(x, cx, cy, 19, INK, p ? (matchNum(p.id)||n) : n, {hollow:!p, size:21});
     if(p){ T(x, surname(p.name), cx, cy+36, {size:14, weight:700, align:'center', halo:4, max:110}); }
     if(p && (p.id===s.captain||p.id===s.vice)){ const tg = p.id===s.captain?'K':'VK'; x.fillStyle='#E3A008'; x.beginPath(); x.arc(cx+17,cy-15,9,0,7); x.fill(); T(x,tg,cx+17,cy-14,{size:tg.length>1?8:11,weight:700,align:'center',base:'middle'}); }
   });
@@ -946,8 +967,8 @@ function coverPage(total){
   T(x, s.formation, rx, 196, {size:50, weight:700, cond:true});
   let ry = 240;
   const cap = P(s.captain), vice = P(s.vice);
-  if(cap){ T(x, 'Capitano', rx, ry, {size:14, color:MUTED}); T(x, `${cap.num?cap.num+' ':''}${cap.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
-  if(vice){ T(x, 'Vice capitano', rx, ry, {size:14, color:MUTED}); T(x, `${vice.num?vice.num+' ':''}${vice.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
+  if(cap){ const cn=matchNum(cap.id); T(x, 'Capitano', rx, ry, {size:14, color:MUTED}); T(x, `${cn?cn+' ':''}${cap.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
+  if(vice){ const vn=matchNum(vice.id); T(x, 'Vice capitano', rx, ry, {size:14, color:MUTED}); T(x, `${vn?vn+' ':''}${vice.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   const sel = s.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
   if(sel.length){
     ry += 8; T(x, 'Calci piazzati', rx, ry, {size:21, weight:700, cond:true}); ry += 26;
@@ -993,7 +1014,7 @@ function schemePage(sc, page, total){
   const rm = roleMap(sc); const r = 1.75*sx; const eTok = effTokens(sc); const nl = nameLayout(eTok);
   eTok.forEach(t => {
     const {p} = tokenPlayer(sc, t); const col = tokColor(sc, t, rm);
-    disc(x, X(t.x), Y(t.y), r, col, p ? (p.num||t.slot) : t.slot, {hollow:!p, size:21});
+    disc(x, X(t.x), Y(t.y), r, col, p ? (matchNum(p.id)||t.slot) : t.slot, {hollow:!p, size:21});
     if(t.tag) T(x, t.tag, X(t.x), Y(t.y)-r-7, {size:18, weight:700, align:'center', color:RED, halo:3});
     if(p){ const L2 = nl[t.id]; T(x, surname(p.name), X(t.x), Y(t.y)+r+(L2.low?29:14), {size:12.5, weight:700, align:'center', halo:3.5, max:Math.min(96, L2.span*sx-8)}); }
   });
@@ -1021,7 +1042,7 @@ function schemePage(sc, page, total){
     gy += lh;
     toks.slice().sort((a,b)=> (a.tag&&b.tag&&!isNaN(a.tag)&&!isNaN(b.tag)) ? a.tag-b.tag : a.slot-b.slot).forEach(t => {
       const {p, override} = tokenPlayer(sc, t);
-      disc(x, rx+24, gy-lh*0.3, Math.min(11, lh*0.42), col, p ? (p.num||t.slot) : t.slot, {hollow:!p, size:Math.min(13, lh*0.5)});
+      disc(x, rx+24, gy-lh*0.3, Math.min(11, lh*0.42), col, p ? (matchNum(p.id)||t.slot) : t.slot, {hollow:!p, size:Math.min(13, lh*0.5)});
       T(x, p ? p.name : `Ruolo ${t.slot} da assegnare`, rx+44, gy-lh*0.3+1, {size:Math.min(15.5, lh*0.62), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:rw-60});
       if(t.tag) T(x, t.tag, W-36, gy-lh*0.3+1, {size:Math.min(14,lh*.55), weight:700, color:RED, align:'right', base:'middle'});
       gy += lh;
@@ -1112,11 +1133,11 @@ document.addEventListener('click', e => {
   const sc = S.schemes.find(q=>q.id===openSchemeId);
   switch(act){
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genPin()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
-    case 'padd': S.players.push({id:uid('p'), num:'', name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pnum]'); ins[ins.length-1]?.focus(); break;
+    case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
     case 'bulk': {
       const lines = ($('#bulk').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
-      lines.forEach(l => { const m = l.match(/^(\d{1,3})\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), num:m?m[1]:'', name:(m?m[2]:l).trim()}); });
-      S.players.sort((a,b)=>(+a.num||999)-(+b.num||999)); save('roster'); render(); break; }
+      lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
+      save('roster'); render(); break; }
     case 'newmatch': if(confirm('Svuotare formazione, panchina e dati partita? Rosa e schemi restano.')){ const keep = S.sheet.selected; S.sheet = defaultSheet(); S.sheet.selected = keep; save('sheet'); render(); } break;
     case 'newscheme': {
       const b = BASES[$('#base').value];
@@ -1165,10 +1186,9 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if(!isAdmin() && (t.dataset.pnum || t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team)) return;
+  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team)) return;
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
-  if(t.dataset.pnum){ const p=P(t.dataset.pnum); if(p){ p.num=t.value.replace(/\D/g,'').slice(0,3); t.classList.toggle('missing',!p.num); save('roster'); } }
-  else if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save('roster'); } }
+  if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save('roster'); } }
   else if(t.dataset.sheet && t.tagName!=='SELECT'){ S.sheet[t.dataset.sheet]=t.value; save('sheet'); if(['team','opponent','date'].includes(t.dataset.sheet)) $('#matchline').textContent = (S.sheet.opponent?`${teamLabel()} contro ${S.sheet.opponent}`:'Nuova partita') + (S.sheet.date?`, ${fmtDate(S.sheet.date)}`:''); }
   else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk[t.dataset.tok]=t.value; save('schemes'); } }
@@ -1310,6 +1330,17 @@ document.addEventListener('pointerup', e => {
     if(slot) assignSlot(slot.dataset.dropSlot, d.pid);
     else if(tok){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[tok.dataset.dropToken] = d.pid; save('sheet'); }
     selectedPlayer = null; render();
+  } else if(tab==='formazione'){
+    const pid = d.pid;
+    const curSlot = slotOf(pid);
+    if(curSlot){ delete S.sheet.lineup[curSlot]; save('sheet'); }
+    else if(S.sheet.bench.includes(pid)){ S.sheet.bench = S.sheet.bench.filter(x=>x!==pid); save('sheet'); }
+    else {
+      const free = slotPriorityOrder().find(n => !S.sheet.lineup[n]);
+      if(free!=null) assignSlot(free, pid);
+      else { S.sheet.bench = [...S.sheet.bench, pid]; save('sheet'); }
+    }
+    render();
   } else {
     selectedPlayer = selectedPlayer===d.pid ? null : d.pid; render();
   }
