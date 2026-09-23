@@ -602,6 +602,12 @@ function nextMatch(){
   const today = new Date().toISOString().slice(0,10);
   return S.calendar.filter(m => m.date && m.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0] || null;
 }
+function minus75(t){
+  if(!/^\d{1,2}:\d{2}$/.test(t||'')) return '';
+  const [h,m] = t.split(':').map(Number);
+  let total = h*60+m-75; if(total<0) total += 1440;
+  return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+}
 function viewPartita(){
   const s = S.sheet;
   const A = isAdmin();
@@ -680,7 +686,7 @@ function viewConvocazioni(){
     <div class="grid">
       <div><label class="f" for="cv_type">Tipo di impegno</label><select id="cv_type" data-sheet="convType"><option ${s.convType==='Campionato'?'selected':''}>Campionato</option><option ${s.convType==='Amichevole'?'selected':''}>Amichevole</option><option ${s.convType==='Coppa'?'selected':''}>Coppa</option><option ${s.convType==='Recupero'?'selected':''}>Recupero</option><option ${s.convType==='Torneo'?'selected':''}>Torneo</option></select></div>
       <div><label class="f" for="cv_home">Sede</label><select id="cv_home" data-sheet="home"><option value="1" ${s.home?'selected':''}>Casa</option><option value="" ${!s.home?'selected':''}>Trasferta</option></select></div>
-      <div><label class="f" for="cv_meettime">Orario ritrovo</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(s.meetTime)}"></div>
+      <div><label class="f" for="cv_meettime">Orario ritrovo <span class="note">(preimpostato 75' prima)</span></label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(s.meetTime)}"></div>
       <div><label class="f" for="cv_meetaddr">Indirizzo ritrovo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress)}" placeholder="Via, città"></div>
       <div><label class="f" for="cv_maps">Link posizione campo</label>
         <div class="row" style="gap:6px;flex-wrap:nowrap">
@@ -1308,7 +1314,7 @@ document.addEventListener('click', e => {
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genPin()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
     case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
-    case 'usenext': { const nm = nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.home=!!nm.home; S.sheet.convType='Campionato'; save('sheet'); render(); } break; }
+    case 'usenext': { const nm = nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.home=!!nm.home; S.sheet.convType='Campionato'; S.sheet.meetTime=minus75(nm.time); S.sheet.meetAddress=nm.venue||''; save('sheet'); render(); } break; }
     case 'bulk': {
       const lines = ($('#bulk').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
       lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
@@ -1367,7 +1373,13 @@ document.addEventListener('input', e => {
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }
   if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save('roster'); } }
-  else if(t.dataset.sheet && t.tagName!=='SELECT'){ S.sheet[t.dataset.sheet]=t.value; save('sheet'); if(['team','opponent','date'].includes(t.dataset.sheet)) $('#matchline').textContent = (S.sheet.opponent?`${teamLabel()} contro ${S.sheet.opponent}`:'Nuova partita') + (S.sheet.date?`, ${fmtDate(S.sheet.date)}`:''); }
+  else if(t.dataset.sheet && t.tagName!=='SELECT'){
+    S.sheet[t.dataset.sheet]=t.value;
+    if(t.dataset.sheet==='time' && !S.sheet.meetTime) S.sheet.meetTime = minus75(t.value);
+    if(t.dataset.sheet==='venue' && !S.sheet.meetAddress) S.sheet.meetAddress = t.value;
+    save('sheet');
+    if(['team','opponent','date'].includes(t.dataset.sheet)) $('#matchline').textContent = (S.sheet.opponent?`${teamLabel()} contro ${S.sheet.opponent}`:'Nuova partita') + (S.sheet.date?`, ${fmtDate(S.sheet.date)}`:'');
+  }
   else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk[t.dataset.tok]=t.value; save('schemes'); } }
 });
