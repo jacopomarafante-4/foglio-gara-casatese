@@ -50,10 +50,10 @@ type CambioStato = {
 
 type Contatto = {
   id: string; tipo: string; nome: string | null; telefono: string | null; email: string | null;
-  consenso_privacy: boolean;
+  consenso_privacy: boolean; autore: Autore;
 };
 
-const chi = (a: Autore) => (a ? nomeCompleto(a) : 'Utente rimosso');
+const chi = (a: Autore) => (a ? nomeCompleto(a) : 'Autore non disponibile (utente rimosso o importazione storica)');
 
 export default async function SchedaGiocatore({
   params,
@@ -80,12 +80,12 @@ export default async function SchedaGiocatore({
     supabase.from('segnalazioni').select(`id, data, contesto, testo, voto, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('valutazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('storico_stati').select(`id, da_stato, a_stato, motivo, created_at, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
-    supabase.from('contatti').select('id, tipo, nome, telefono, email, consenso_privacy').eq('giocatore_id', id).order('created_at'),
+    supabase.from('contatti').select(`id, tipo, nome, telefono, email, consenso_privacy, ${autore}`).eq('giocatore_id', id).order('created_at'),
   ]);
   const segnalazioni = (segn.data as unknown as Segnalazione[]) ?? [];
   const valutazioni = (val.data as unknown as Valutazione[]) ?? [];
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];
-  const elencoContatti = (contatti.data as Contatto[]) ?? [];
+  const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
   const responsabile = vedeTutto(profilo.ruolo);
   const scrive = puoSegnalare(profilo.ruolo);
@@ -100,11 +100,12 @@ export default async function SchedaGiocatore({
       : null,
   }));
 
-  // Storia unica: segnalazioni, valutazioni e cambi di stato
+  // Storia unica: creazione scheda, segnalazioni, valutazioni e cambi di stato
   const storia = [
     ...segnalazioni.map((s) => ({ tipo: 'segnalazione' as const, quando: s.data, s })),
     ...valutazioni.map((v) => ({ tipo: 'valutazione' as const, quando: v.data, v })),
     ...cambi.filter((c) => c.da_stato).map((c) => ({ tipo: 'stato' as const, quando: c.created_at, c })),
+    ...cambi.filter((c) => !c.da_stato).map((c) => ({ tipo: 'creazione' as const, quando: c.created_at, c })),
   ].sort((a, b) => b.quando.localeCompare(a.quando));
 
   return (
@@ -213,6 +214,13 @@ export default async function SchedaGiocatore({
                   );
                 }
                 const c = e.c;
+                if (e.tipo === 'creazione') {
+                  return (
+                    <li key={`n${c.id}`} className="px-4 text-sm text-grigio">
+                      Scheda creata da {c.autore ? chi(c.autore) : 'importazione archivio storico'} – {dataBreve(c.created_at)}
+                    </li>
+                  );
+                }
                 return (
                   <li key={`c${c.id}`} className="px-4 text-sm text-grigio">
                     {chi(c.autore)} ha spostato da {c.da_stato && STATI[c.da_stato]} a{' '}
@@ -272,6 +280,7 @@ export default async function SchedaGiocatore({
                           <a href={`mailto:${c.email}`} className="block text-blu">{c.email}</a>
                         )}
                         {!c.consenso_privacy && <span className="block text-xs text-rosso">Consenso privacy non registrato</span>}
+                        <span className="block text-xs text-grigio">Aggiunto da {chi(c.autore)}</span>
                       </span>
                       <form action={eliminaContatto}>
                         <input type="hidden" name="id" value={g.id} />

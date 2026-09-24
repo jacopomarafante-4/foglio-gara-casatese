@@ -27,7 +27,7 @@ function normalizza(s) {
 }
 
 // --- Date -------------------------------------------------------------
-function dataNascitaDa(valoreData, anno) {
+function dataNascitaDa(valoreData) {
   const n = Number(valoreData);
   if (!Number.isFinite(n) || n <= 0) return null;
   if (n >= 1990 && n <= 2030) return null; // era solo l'anno digitato per errore nella cella data
@@ -194,7 +194,7 @@ async function importaGenerale() {
     risultato.perStato[esito.stato] = (risultato.perStato[esito.stato] ?? 0) + 1;
 
     const societaId = await trovaOCreaSocieta(r['SOCIETÀ']);
-    const dataNascita = dataNascitaDa(r.DATA, anno);
+    const dataNascita = dataNascitaDa(r.DATA);
     const ruolo = ruoloCampoDa(r.POSIZIONE);
     // Il vincolo "giocatore_identificabile" richiede cognome o descrizione: se manca il
     // cognome (solo nome di battesimo, es. open day) usiamo il nome come descrizione.
