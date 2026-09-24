@@ -3,11 +3,11 @@
 Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9c598bb6bb2c
 
 ## Da fare subito (sul tuo Mac)
-- [ ] `npm install`
-- [ ] Progetto Supabase (Frankfurt), iscrizioni pubbliche disattivate
-- [ ] Migrazioni 0001, 0002, 0003 eseguite in ordine
-- [ ] Coordinate esatte delle sedi (tabella `sedi`)
-- [ ] Account admin + 6 account del team (`npm run crea-utenti`)
+- [x] `npm install`
+- [x] Progetto Supabase (condiviso col Pannello Società), iscrizioni pubbliche disattivate
+- [x] Migrazioni 0001, 0002, 0003, 0004 eseguite in ordine
+- [ ] Coordinate esatte delle sedi (tabella `sedi`) — per ora quelle approssimative del comune
+- [x] Account admin (tuo); account scout/direttore del resto del team ancora da creare
 - [ ] Prova completa: segnalazione, valutazione, cambio stato, gara prenotata
 
 ## Fatto nel codice
@@ -19,9 +19,16 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Gare da vedere: squadre seguite, distanza da Casatenovo/Merate, "Ci vado io", importazione incollando
 
 ## Prossimi passi
-- [ ] Importazione dal Google Sheet: script `scripts/import-sheet/` (pulizia nomi, società e alias,
-      duplicati, Note 25/26 → stato ed esito, contatti nella tabella protetta)
-- [ ] Unione di due schede doppie (per i responsabili)
+- [x] Importazione dal Google Sheet: script `scripts/import-sheet/importa.mjs`. Importati 453
+      giocatori da "GENERALE 2024/2026" + 26 segnalazioni rapide da "A prima vista" (foglio
+      "Osservazione" vuoto, nessuna valutazione strutturata da importare). 8 righe scartate
+      per anno di nascita mancante (elenco stampato dallo script, da inserire a mano). NOTE
+      25/26 tradotte in stato/motivo di chiusura con una mappatura di ~60 frasi distinte:
+      da controllare a campione, specie le chiusure (`chiuso`) — testo originale sempre
+      conservato in `giocatori.note` per verifica.
+- [ ] Unione di due schede doppie (per i responsabili) — utile subito: nel foglio importato
+      c'erano quasi-doppioni con refusi (es. "Ilyass"/"Ilyasse Omari") non uniti in automatico
+      per prudenza (rischio di unire persone diverse)
 - [ ] Eventi: open day e provini con presenze ed esito
 - [ ] Vista a colonne per stato (kanban) per i responsabili
 - [ ] Lettura automatica delle gare da comunicati PDF / Tuttocampo
@@ -32,7 +39,9 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 ## Decisioni prese
 - **Scala voti**: resta 1–5 (già implementata ovunque; più veloce da compilare da telefono a bordo campo).
 - **Posizioni**: restano i 4 ruoli base (portiere, difensore, centrocampista, attaccante); si
-  passa alle linee 1°–3° solo se il gruppo lo chiede esplicitamente più avanti.
+  passa alle linee 1°–3° solo se il gruppo lo chiede esplicitamente più avanti. Nota: nel foglio
+  "A prima vista" alcune segnalazioni recenti usano già "1°/2°/3° linea" — segno che sul campo
+  la distinzione a volte serve; mappata verso i 4 ruoli base in fase di importazione.
 - **Conservazione dati giocatori chiusi**: nessuna cancellazione automatica per ora. Politica
   di massima: rivedere una volta l'anno i profili "chiuso" da più di 24 mesi e valutare se
   anonimizzare i contatti famiglia (nome/telefono in `contatti`), mantenendo lo storico
