@@ -1,14 +1,35 @@
-# 📋 Foglio Gara · Casatese Merate
+# 📋 Portale Academy Casatese Merate
 
-App web multi-squadra per gestione rosa, formazione e calci piazzati.
+Portale dell'allenatore, multi-squadra: rosa, calendario, gara (foglio gara, convocazioni, formazione, calci piazzati, tabellini), allenamento (presenze, test atletici) e statistiche.
+
+## 🧭 Aree
+
+| Area | Schede |
+|---|---|
+| Home | prossima partita, allenamento di oggi, cose da fare, numeri della stagione |
+| Squadra | Rosa (🧤 portieri), Calendario (campionato + amichevoli) |
+| Gara | Partita, Convocazioni, Formazione, Piazzati, Foglio gara PDF, Tabellini |
+| Allenamento | Presenze, Test atletici |
+| Statistiche | statistiche e report PDF (solo admin) |
+| Società (admin) | Squadre, PIN, backup |
+
+La scheda aperta resta nell'indirizzo (`#/formazione`, o `#squadra=PIN/formazione` per i mister): il tasto indietro funziona e si può mandare il link di una sezione.
 
 ## 📁 Struttura
 
 ```
 foglio-gara-casatese/
 ├── src/
-│   ├── index.html              ← App principale
-│   └── casatese-logo.png        ← Logo società
+│   ├── index.html              ← Pagina (carica css/ e js/ in ordine)
+│   ├── css/portale.css         ← Grafica
+│   ├── js/core.js              ← Dati, salvataggio, database, accesso
+│   ├── js/schede.js            ← Squadre, rosa, partita, convocazioni, formazione, piazzati
+│   ├── js/pdf.js               ← PDF foglio gara e convocazione
+│   ├── js/registro.js          ← Presenze, tabellini, test, statistiche, report
+│   ├── js/portale.js           ← Aree, Home, calendario
+│   ├── js/eventi.js            ← Tocchi, trascinamento, avvio
+│   ├── casatese-logo.png       ← Logo società
+│   └── figc-sgs-logo.png       ← Logo FIGC / Settore Giovanile
 ├── docs/
 │   └── Foglio_gara_presentazione_Casatese.pdf
 ├── scripts/
@@ -65,6 +86,10 @@ python -m http.server 8000
 L'app riconosce da sola se il database è già protetto; finché non lo è funziona come prima.
 I dati personali dei ragazzi (import presenze) stanno in `private/`, esclusa da git: il repository è pubblico.
 
+## 🛠️ Modifiche al codice
+
+I file in `src/js/` sono script normali (niente build) che condividono le variabili globali: vanno caricati nell'ordine di `index.html`. Dopo una modifica a un file CSS/JS aumenta il `?v=` nei tag di `index.html`, così i telefoni scaricano la versione nuova.
+
 ## 📊 Dati
 
 I dati sono salvati in:
@@ -76,7 +101,7 @@ I file JSON in `data/` sono snapshot di prova.
 ## 🎨 Personalizzazione
 
 ### Colori Casatese
-Nella sezione `<style>` di `src/index.html`:
+In `src/css/portale.css`:
 ```css
 --grass: #003DA5;      /* Blu ufficiale */
 --red: #C41E3A;        /* Rosso ufficiale */
