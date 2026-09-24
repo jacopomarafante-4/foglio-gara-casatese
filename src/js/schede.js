@@ -295,7 +295,7 @@ function viewFriendlies(){ /* in Squadra → Calendario */
     </div>`).join('');
   return `<section class="panel">
     <h3 style="margin-top:0">Amichevoli</h3>
-    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Gara → Partita e nei Tabellini.</p>
+    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Gara → Partita e nei Tabellini (Statistiche).</p>
     ${rows || '<p class="empty">Nessuna amichevole.</p>'}
     <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
   </section>`;

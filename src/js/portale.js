@@ -14,9 +14,9 @@ const AREA_ICONS = {
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
   {k:'squadra', label:'Squadra', tabs:['rosa','calendario']},
-  {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini']},
+  {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
-  {k:'statistiche', label:'Statistiche', tabs:['statistiche']},
+  {k:'statistiche', label:'Statistiche', tabs:['statistiche','tabellini']},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione',
@@ -150,7 +150,7 @@ function viewCalendario(){
     : `<div class="reglist">${cal.map(m => `<div class="regrow ${m.date && m.date < today ? 'past' : ''}"><div><b>${weekday(m.date)} ${fmtDate(m.date)}</b>${m.time?' · '+esc(m.time):''} · ${esc(m.home ? `${teamLabel()} - ${m.opponent||''}` : `${m.opponent||''} - ${teamLabel()}`)}</div><span class="note">${esc(m.venue||'')}</span></div>`).join('')}</div>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
-    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i Tabellini.</p>
+    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i Tabellini (Statistiche).</p>
     ${cal.length ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
   </section>
