@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# import-sheet: dati reali (nomi, contatti famiglie), mai su git
+scripts/import-sheet/dati/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
