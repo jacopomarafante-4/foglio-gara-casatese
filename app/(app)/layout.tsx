@@ -2,12 +2,27 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';
 import { esci } from '@/app/auth/actions';
+import { puoAccedere } from '@/lib/ruoli';
 import { Striscia } from '@/components/Striscia';
 import { NavLink } from '@/components/NavLink';
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const profilo = await getProfilo();
   if (!profilo) redirect('/login');
+
+  if (!puoAccedere(profilo.ruolo)) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-20">
+        <h1 className="font-display text-3xl font-bold">Accesso non disponibile</h1>
+        <p className="mt-3 text-grigio">
+          Il tuo ruolo non ha accesso a Scouting Hub. Per qualsiasi dubbio contatta l’admin.
+        </p>
+        <form action={esci} className="mt-6">
+          <button className="bottone">Esci</button>
+        </form>
+      </main>
+    );
+  }
 
   if (!profilo.attivo) {
     return (

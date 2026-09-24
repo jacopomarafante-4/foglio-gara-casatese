@@ -121,21 +121,19 @@ proxy.ts            protegge le pagine: senza login si torna al login
 
 ## Ruoli
 
-| Ruolo | Vede tutto | Contatti famiglie | Gestisce utenti |
-| --- | --- | --- | --- |
-| admin | sì | sì | sì |
-| responsabile | sì, e cambia gli stati e gestisce le gare | sì | no |
-| osservatore | tutte le schede; segnala, valuta, si prenota alle gare | solo quelli che inserisce | no |
-| mister | solo le proprie annate, in sola lettura | no | no |
+Solo admin, direttori e scout accedono a Scouting Hub. I mister hanno un account
+(condiviso con le altre app del club) ma **non vedono il pannello Scouting**.
 
-Per le annate di un mister:
-```sql
-update public.profiles set ruolo = 'mister', annate = '{2013,2014}' where email = 'mister@email.it';
-```
+| Ruolo | Accede | Vede tutto | Contatti famiglie | Gestisce utenti |
+| --- | --- | --- | --- | --- |
+| admin | sì | sì | sì | sì |
+| direttore | sì | sì, e cambia gli stati e gestisce le gare | sì | no |
+| scout | sì | tutte le schede; segnala, valuta, si prenota alle gare | solo quelli che inserisce | no |
+| mister | no | — | — | — |
 
 Per cambiare il ruolo di qualcuno (da SQL Editor):
 ```sql
-update public.profiles set ruolo = 'responsabile' where email = 'nome@email.it';
+update public.profiles set ruolo = 'direttore' where email = 'nome@email.it';
 ```
 
 ## Gare: come inserirle

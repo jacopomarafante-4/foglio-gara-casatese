@@ -21,7 +21,7 @@ const supabase = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const RUOLI = ['admin', 'responsabile', 'osservatore', 'mister'];
+const RUOLI = ['admin', 'direttore', 'scout', 'mister'];
 
 // Password temporanea leggibile: 10 caratteri + simbolo
 function passwordTemporanea() {

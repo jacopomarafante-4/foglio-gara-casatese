@@ -28,12 +28,22 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - Testi dell'interfaccia in italiano, frasi brevi, verbi chiari ("Salva report", non "Invia").
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
+## Ruoli
+`admin`, `direttore`, `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`).
+Solo admin/direttore/scout accedono all'app (`puoAccedere()` in `lib/ruoli.ts`,
+controllato in `app/(app)/layout.tsx`): i mister hanno un account (condiviso con
+altre app del club) ma vengono bloccati subito dopo il login, prima di vedere
+qualunque pagina. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
+`scout` = ex "osservatore" (segnala e valuta). Rinominati in 0004; se aggiungi
+codice che confronta stringhe di ruolo, usa i nomi nuovi.
+
 ## Modello dati (supabase/migrations)
 - 0001: `profiles` (ruolo, annate, attivo) + funzioni `mio_ruolo()`, `vede_tutto()`, `is_admin()`, `imposta_ruolo()`
 - 0002: `societa` (con `alias`), `giocatori` (cognome O descrizione obbligatori, `stato`),
   `contatti` (protetti), `segnalazioni`, `valutazioni` (4 aree 1–5), `storico_stati` (trigger);
-  funzioni `puo_segnalare()`, `puo_vedere_annata()`; solo admin/responsabili cambiano `stato` (trigger)
+  funzioni `puo_segnalare()`, `puo_vedere_annata()`; solo admin/direttori cambiano `stato` (trigger)
 - 0003: `sedi`, `squadre_seguite`, `gare` (casa/trasferta + coordinate), `gare_osservatori`
+- 0004: rinomina ruoli `responsabile`→`direttore`, `osservatore`→`scout`; blocco app dei mister
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

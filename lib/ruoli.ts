@@ -1,4 +1,4 @@
-export type Ruolo = 'admin' | 'responsabile' | 'osservatore' | 'mister';
+export type Ruolo = 'admin' | 'direttore' | 'scout' | 'mister';
 
 export type Profilo = {
   id: string;
@@ -12,14 +12,19 @@ export type Profilo = {
 
 export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
   admin: 'Admin',
-  responsabile: 'Responsabile scouting',
-  osservatore: 'Osservatore',
+  direttore: 'Direttore scouting',
+  scout: 'Scout',
   mister: 'Mister',
 };
 
+/** Ruoli che possono accedere al pannello Scouting Hub (i mister no, per ora) */
+export function puoAccedere(ruolo: Ruolo) {
+  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'scout';
+}
+
 /** Stessa regola della funzione SQL public.vede_tutto() */
 export function vedeTutto(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'responsabile';
+  return ruolo === 'admin' || ruolo === 'direttore';
 }
 
 export function nomeCompleto(p: Pick<Profilo, 'nome' | 'cognome' | 'email'>) {
