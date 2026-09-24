@@ -339,11 +339,10 @@ function viewConvocazioni(){
     <h3 class="convh3">Ritrovo</h3>
     <div class="grid">
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
-      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Es. Centro Sportivo Comunale, Casatenovo">
+      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Impianto o via, città">
         <a id="cv_mapslink" class="mapslink" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" ${mapsLink(s)?'':'hidden'}>📍 Apri in Google Maps</a>
       </div>
     </div>
-    <p class="hint" style="margin:6px 0 0">Il link a Google Maps si crea da solo dall'indirizzo e nel PDF l'indirizzo è cliccabile. Per centrare il campo scrivi il nome dell'impianto e la città, oppure via, numero civico e città (vanno bene anche le coordinate, es. 45.7012, 9.3871).</p>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
 
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:26px;flex-wrap:wrap;gap:10px">
