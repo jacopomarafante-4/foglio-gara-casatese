@@ -292,46 +292,68 @@ function testEditor(t){
 }
 
 /* ---------- Scheda Statistiche ---------- */
-function viewStatistiche(){
-  if(!S.players.length) return `<section class="panel"><h2>Statistiche</h2><p class="empty">Prima serve la rosa nella scheda Rosa.</p></section>`;
-  const {tr, gm, rows, team} = computeStats();
-  const kpi = (v, l, sub='') => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
-  const kpis = [
-    kpi(team.nT, 'Allenamenti', team.avgPresent!=null ? `media ${team.avgPresent.toFixed(1)} presenti` : ''),
-    kpi(pctTxt(team.avgPct), 'Presenza media', team.low ? `${team.low} sotto il ${LOW_ATT*100}%` : ''),
-    kpi(team.nG, 'Partite giocate', team.nScored ? `${team.w}V ${team.d}N ${team.l}P` : ''),
-    kpi(team.nScored ? `${team.gf}-${team.ga}` : '—', 'Gol fatti-subiti', team.nScored ? `${(team.gf/team.nScored).toFixed(1)} - ${(team.ga/team.nScored).toFixed(1)} a partita` : 'segna i gol nelle partite')
-  ].join('');
-  const bar = v => v==null ? '<span class="note">—</span>' : `<span class="pbar ${v<LOW_ATT?'low':''}"><i style="width:${Math.round(v*100)}%"></i></span><b>${pctTxt(v)}</b>`;
-  const trRows = rows.slice().sort((a,b)=>(b.pct??-1)-(a.pct??-1)).map(r => `<tr class="${r.pct!=null&&r.pct<LOW_ATT?'low':''}">
-      <td class="nm">${esc(r.p.name)}</td><td>${r.c.P}</td>${ABSENCES.map(a => `<td>${r.c[a.k]||''}</td>`).join('')}<td>${r.c.A||''}</td><td class="pc">${bar(r.pct)}</td></tr>`).join('');
-  const gmRows = rows.slice().sort((a,b)=>b.min-a.min).map(r => `<tr>
-      <td class="nm">${isGk(r.p.id)?'🧤 ':''}${esc(r.p.name)}</td><td>${r.pres}</td><td>${r.min}'</td><td>${pctTxt(r.minPct)}</td><td>${r.avg!=null?Math.round(r.avg)+"'":'—'}</td><td>${r.gol||''}</td><td>${r.gkGames ? r.gc : ''}</td></tr>`).join('');
-  const {months, per} = monthlyAttendance();
-  const moRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${months.map(m => { const o = per.get(p.id)?.[m]; const v = o && o.tot ? o.P/o.tot : null; return `<td class="${v!=null&&v<LOW_ATT?'lowc':''}">${pctTxt(v)}</td>`; }).join('')}</tr>`).join('');
-  const tests = S.reg.tests.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const tsRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${tests.map(t => `<td>${esc(testCell((t.res||{})[p.id]))||'<span class="note">—</span>'}</td>`).join('')}</tr>`).join('');
+/* Statistiche → Allenamento e Statistiche → Partite (con i tabellini) */
+function statHeader(title, kpis){
   return `<section class="panel">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
-      <h2>Statistiche · ${esc(TEAM()?.name||'')}</h2>
+      <h2>${title} · ${esc(TEAM()?.name||'')}</h2>
       <div class="row"><label class="f" for="statperiod" style="margin:0">Periodo</label><select id="statperiod" data-statperiod="1" style="width:auto">${periodOptions()}</select></div>
     </div>
     <div class="kpis">${kpis}</div>
     ${isAdmin() ? `<div class="row" style="margin-top:12px"><button class="btn primary" data-act="statspdf">Scarica report PDF</button><span class="note">Riepilogo, presenze giorno per giorno, minuti partita per partita, test.</span></div>` : ''}
-  </section>
+  </section>`;
+}
+const kpiBox = (v, l, sub='') => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
+function viewStatAllenamento(){
+  if(!S.players.length) return `<section class="panel"><h2>Statistiche allenamento</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
+  const {tr, rows, team} = computeStats();
+  const inj = rows.reduce((a,r) => a + r.c.INF, 0), absAll = rows.reduce((a,r) => a + r.absAll, 0);
+  const kpis = [
+    kpiBox(team.nT, 'Allenamenti', team.avgPresent!=null ? `media ${team.avgPresent.toFixed(1)} presenti` : ''),
+    kpiBox(pctTxt(team.avgPct), 'Presenza media'),
+    kpiBox(team.low, `Sotto il ${LOW_ATT*100}%`, team.low ? 'in rosso nella tabella' : ''),
+    kpiBox(absAll, 'Assenze', inj ? `di cui ${inj} per infortunio` : '')
+  ].join('');
+  const bar = v => v==null ? '<span class="note">—</span>' : `<span class="pbar ${v<LOW_ATT?'low':''}"><i style="width:${Math.round(v*100)}%"></i></span><b>${pctTxt(v)}</b>`;
+  const trRows = rows.slice().sort((a,b)=>(b.pct??-1)-(a.pct??-1)).map(r => `<tr class="${r.pct!=null&&r.pct<LOW_ATT?'low':''}">
+      <td class="nm">${esc(r.p.name)}</td><td>${r.c.P}</td>${ABSENCES.map(a => `<td>${r.c[a.k]||''}</td>`).join('')}<td>${r.c.A||''}</td><td class="pc">${bar(r.pct)}</td></tr>`).join('');
+  const {months, per} = monthlyAttendance();
+  const moRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${months.map(m => { const o = per.get(p.id)?.[m]; const v = o && o.tot ? o.P/o.tot : null; return `<td class="${v!=null&&v<LOW_ATT?'lowc':''}">${pctTxt(v)}</td>`; }).join('')}</tr>`).join('');
+  const tests = S.reg.tests.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const tsRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${tests.map(t => `<td>${esc(testCell((t.res||{})[p.id]))||'<span class="note">—</span>'}</td>`).join('')}</tr>`).join('');
+  return statHeader('Statistiche allenamento', kpis) + `
   <section class="panel">
-    <h3 class="convh3">Allenamenti</h3>
+    <h3 class="convh3">Presenze per giocatore</h3>
     ${tr.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Presenze">Pres.</th>${ABSENCES.map(a => `<th title="Assenze: ${a.l}">${a.l.split(' ')[0]}</th>`).join('')}<th title="Assenze senza motivo indicato">N.i.</th><th>Presenza</th></tr></thead><tbody>${trRows}</tbody></table></div>
       <p class="note" style="margin-top:6px">In rosso chi è sotto il ${LOW_ATT*100}% di presenze. Le assenze per infortunio non abbassano la percentuale. N.i. = assenza senza motivo indicato.</p>` : '<p class="empty">Nessun allenamento nel periodo.</p>'}
   </section>
-  <section class="panel">
-    <h3 class="convh3">Partite</h3>
-    ${gm.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Partite giocate (almeno 1 minuto)">Pres.</th><th>Minuti</th><th title="Minuti giocati sul totale disponibile">% min</th><th title="Minuti medi a partita giocata">Media</th><th>Gol</th><th title="Gol subiti da portiere">Subiti 🧤</th></tr></thead><tbody>${gmRows}</tbody></table></div>` : '<p class="empty">Nessuna partita giocata nel periodo.</p>'}
-  </section>
-  ${months.length > 1 ? `<section class="panel"><h3 class="convh3">Presenze allenamenti per mese</h3>
+  ${months.length > 1 ? `<section class="panel"><h3 class="convh3">Presenze per mese</h3>
     <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${months.map(m=>`<th>${monthLabel(m)}</th>`).join('')}</tr></thead><tbody>${moRows}</tbody></table></div></section>` : ''}
   ${tests.length ? `<section class="panel"><h3 class="convh3">Test atletici</h3>
     <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${tests.map(t=>`<th>${esc(t.name||'Test')}<br><span class="note">${fmtDate(t.date).slice(0,5)}</span></th>`).join('')}</tr></thead><tbody>${tsRows}</tbody></table></div></section>` : ''}`;
+}
+function viewStatPartite(){
+  if(!S.players.length) return `<section class="panel"><h2>Statistiche partite</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
+  if(curGame()) return registroPage('Tabellino', viewGames());
+  const {gm, rows, team} = computeStats();
+  const kpis = [
+    kpiBox(team.nG, 'Partite giocate', team.nScored ? `${team.w}V ${team.d}N ${team.l}P` : ''),
+    kpiBox(team.nScored ? `${team.gf}-${team.ga}` : '—', 'Gol fatti-subiti', team.nScored ? `${(team.gf/team.nScored).toFixed(1)} - ${(team.ga/team.nScored).toFixed(1)} a partita` : 'segna i gol nei tabellini'),
+    kpiBox(rows.filter(r => r.gol).length, 'Marcatori diversi'),
+    kpiBox(team.nScored ? gm.map(gameScore).filter(s => s && s.ga===0).length : '—', 'Porta inviolata')
+  ].join('');
+  const gmRows = rows.slice().sort((a,b)=>b.min-a.min).map(r => `<tr>
+      <td class="nm">${isGk(r.p.id)?'🧤 ':''}${esc(r.p.name)}</td><td>${r.pres}</td><td>${r.min}'</td><td>${pctTxt(r.minPct)}</td><td>${r.avg!=null?Math.round(r.avg)+"'":'—'}</td><td>${r.gol||''}</td><td>${r.gkGames ? r.gc : ''}</td></tr>`).join('');
+  return statHeader('Statistiche partite', kpis) + `
+  <section class="panel">
+    <h3 class="convh3">Giocatori</h3>
+    ${gm.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Partite giocate (almeno 1 minuto)">Pres.</th><th>Minuti</th><th title="Minuti giocati sul totale disponibile">% min</th><th title="Minuti medi a partita giocata">Media</th><th>Gol</th><th title="Gol subiti da portiere">Subiti 🧤</th></tr></thead><tbody>${gmRows}</tbody></table></div>` : '<p class="empty">Nessuna partita giocata nel periodo.</p>'}
+  </section>
+  <section class="panel">
+    <h3 class="convh3">Tabellini</h3>
+    <p class="hint" style="margin-bottom:0">Minuti, gol e gol subiti di ogni partita. Tocca una partita per compilarla.</p>
+    ${viewGames()}
+  </section>`;
 }
 
 /* ---------- Eventi registro e statistiche ---------- */

@@ -10,7 +10,7 @@ Portale dell'allenatore, multi-squadra: rosa, calendario, gara (foglio gara, con
 | Squadra | Rosa (🧤 portieri), Calendario (campionato + amichevoli) |
 | Gara | Partita, Convocazioni, Formazione, Piazzati, Foglio gara PDF |
 | Allenamento | Presenze, Test atletici |
-| Statistiche | Statistiche e report PDF (solo admin), Tabellini (minuti, gol, gol subiti per partita) |
+| Statistiche | Allenamento (presenze, per mese, test), Partite (giocatori + tabellini: minuti, gol, gol subiti); report PDF solo admin |
 | Società (admin) | Squadre, PIN, backup |
 
 La scheda aperta resta nell'indirizzo (`#/formazione`, o `#squadra=PIN/formazione` per i mister): il tasto indietro funziona e si può mandare il link di una sezione.

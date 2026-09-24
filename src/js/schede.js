@@ -139,8 +139,8 @@ function render(){
   else if(tab==='calendario') v.innerHTML = viewCalendario();
   else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
   else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
-  else if(tab==='tabellini'){ v.innerHTML = registroPage('Tabellini', viewGames(), curGame() ? '' : 'Minuti, gol e gol subiti di ogni partita.'); scrollGridsToEnd(); }
-  else if(tab==='statistiche') v.innerHTML = viewStatistiche();
+  else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
+  else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
 }
 
 function viewSquadre(){
@@ -295,7 +295,7 @@ function viewFriendlies(){ /* in Squadra → Calendario */
     </div>`).join('');
   return `<section class="panel">
     <h3 style="margin-top:0">Amichevoli</h3>
-    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Gara → Partita e nei Tabellini (Statistiche).</p>
+    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Gara → Partita e in Statistiche → Partite.</p>
     ${rows || '<p class="empty">Nessuna amichevole.</p>'}
     <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
   </section>`;

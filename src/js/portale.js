@@ -16,16 +16,18 @@ const AREAS = [
   {k:'squadra', label:'Squadra', tabs:['rosa','calendario']},
   {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
-  {k:'statistiche', label:'Statistiche', tabs:['statistiche','tabellini']},
+  {k:'statistiche', label:'Statistiche', tabs:['statallen','statpartite']},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione',
-  piazzati:'Piazzati', pdf:'Foglio gara PDF', tabellini:'Tabellini', allenamenti:'Presenze', test:'Test atletici', statistiche:'Statistiche', squadre:'Squadre'};
+  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre'};
+/* nomi delle schede di versioni precedenti (link salvati) */
+const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:'allenamenti'};
 const areaLast = {};
 const allowedAreas = () => AREAS.filter(a => !a.admin || isAdmin());
 function allowedTabs(){ return allowedAreas().flatMap(a => a.tabs); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
-function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); return m && TAB_NAMES[m[1]] ? m[1] : null; }
+function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
 const startTab = () => routeTab() || 'home';
 function writeRoute(push){
   const pin = ((location.hash||'').match(/squadra=([\w-]+)/)||[])[1];
@@ -97,7 +99,7 @@ function viewHome(){
       <div class="kpi"><b>${team.nG}</b><span>Partite</span></div>
       <div class="kpi"><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b><span>Gol fatti-subiti</span></div>
     </div>
-    <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="statistiche">Tutte le statistiche</button></div></div>`;
+    <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="statallen">Statistiche allenamento</button><button class="btn small" data-hgo="statpartite">Statistiche partite</button></div></div>`;
   return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${T0?.coach?' · Mister '+esc(T0.coach):''}</p></section>
     <div class="hgrid">${matchCard}${trCard}${todoCard}${numCard}</div>`;
 }
@@ -119,13 +121,13 @@ document.addEventListener('click', e => {
   }
   if(k==='tr'){ goTab('allenamenti'); openTrainingId = id; render(); return; }
   if(k==='opencal'){
-    goTab('tabellini');
+    goTab('statpartite');
     const m = allCalendar().find(x => x.id===id); if(!m) return;
     let g = S.reg.games.find(x => x.calId===m.id);
     if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; S.reg.games.push(g); save('registro'); }
     openGameId = g.id; render(); return;
   }
-  if(k==='opengm'){ goTab('tabellini'); openGameId = id; render(); return; }
+  if(k==='opengm'){ goTab('statpartite'); openGameId = id; render(); return; }
   goTab(k);
 });
 
@@ -150,7 +152,7 @@ function viewCalendario(){
     : `<div class="reglist">${cal.map(m => `<div class="regrow ${m.date && m.date < today ? 'past' : ''}"><div><b>${weekday(m.date)} ${fmtDate(m.date)}</b>${m.time?' · '+esc(m.time):''} · ${esc(m.home ? `${teamLabel()} - ${m.opponent||''}` : `${m.opponent||''} - ${teamLabel()}`)}</div><span class="note">${esc(m.venue||'')}</span></div>`).join('')}</div>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
-    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i Tabellini (Statistiche).</p>
+    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
     ${cal.length ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
   </section>
