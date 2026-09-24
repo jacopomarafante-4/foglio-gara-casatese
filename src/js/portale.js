@@ -131,6 +131,22 @@ document.addEventListener('click', e => {
   goTab(k);
 });
 
+/* ---------- Posizione esatta dei campi (salvata nel registro: la può impostare anche il mister) ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pinedit],[data-pinsave],[data-pindel],[data-pincancel]'); if(!b || !curTeam) return;
+  if(b.dataset.pinedit){ pinEditing = venueKey(b.dataset.pinedit); render(); $('#pin_in')?.focus(); return; }
+  if(b.dataset.pincancel){ pinEditing = null; render(); return; }
+  const R = S.reg; R.venues ||= {};
+  if(b.dataset.pindel){ delete R.venues[venueKey(b.dataset.pindel)]; pinEditing = null; save('registro'); render(); return; }
+  const v = b.dataset.pinsave, raw = ($('#pin_in')?.value || '').trim(), ll = parseLL(raw);
+  if(ll) R.venues[venueKey(v)] = {name:v, ll};
+  else if(/^https?:\/\/\S+$/.test(raw)) R.venues[venueKey(v)] = {name:v, url:raw};
+  else { setStatus('Coordinate non riconosciute'); $('#pin_in')?.focus(); return; }
+  pinEditing = null; save('registro'); render(); setStatus('Posizione del campo salvata');
+});
+document.addEventListener('change', e => { if(e.target.id==='cv_meetaddr') render(); });
+document.addEventListener('keydown', e => { if(e.target.id==='pin_in' && e.key==='Enter'){ e.preventDefault(); document.querySelector('[data-pinsave]')?.click(); } });
+
 /* ---------- Squadra → Calendario ---------- */
 function viewCalendario(){
   const A = isAdmin(), today = todayISO();
@@ -156,7 +172,18 @@ function viewCalendario(){
     ${cal.length ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
   </section>
-  ${viewFriendlies()}`;
+  ${viewFriendlies()}
+  ${viewVenues()}`;
+}
+function viewVenues(){
+  const vs = [...new Set(allCalendar().map(m => (m.venue||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'it'));
+  if(!vs.length) return '';
+  const n = vs.filter(v => venuePin(v)).length;
+  return `<section class="panel">
+    <h3 style="margin-top:0">Campi · posizione per Google Maps</h3>
+    <p class="hint">Con la posizione esatta salvata, il link di convocazioni e foglio convocazione porta dritto al cancello. ${n} campi su ${vs.length} impostati.</p>
+    <div class="reglist">${vs.map(v => `<div class="regrow venuerow"><div><b>${esc(v)}</b><div><a class="mapslink" href="${esc(venueUrl(v))}" target="_blank" rel="noopener">📍 Prova il link</a></div>${pinBox(v)}</div></div>`).join('')}</div>
+  </section>`;
 }
 
 /* ---------- Allenamento / Gara: pagine del registro ---------- */

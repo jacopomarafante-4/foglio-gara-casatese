@@ -228,6 +228,12 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 @media (max-width:560px){.brand{font-size:20px}}
 .tabs.hidden{display:none}
 .regrow.past{opacity:.6}
+.pinrow{margin-top:4px;font-size:13px}
+.pinok{color:var(--grass);font-weight:600}
+.linkbtn{border:0;background:none;padding:0;color:var(--sel);font-weight:600;font-size:13px;text-decoration:underline;cursor:pointer}
+.pinbox{margin-top:8px;padding:10px;border:1px dashed var(--line);border-radius:10px;display:grid;gap:8px}
+.pinbox .note{margin:0}
+.venuerow{align-items:flex-start}
 .hhead{margin:4px 0 12px}
 .hhead h2{margin-bottom:2px}
 .hhead .note{padding-left:16px}

@@ -229,11 +229,47 @@ function minus75(t){
 }
 function mapsSearchUrl(q){ return q ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q) : ''; }
 function defaultMeetTime(s){ return s.meetTime || minus75(s.time); }
-// Link Google Maps generato dall'indirizzo di ritrovo; coordinate "lat, lng" → pin esatto.
-function mapsLink(s){
-  const v = (s.meetAddress || s.venue || '').trim();
-  const ll = v.match(/^(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)$/);
-  return mapsSearchUrl(ll ? ll[1]+','+ll[2] : v);
+/* ---------- Campi: posizione esatta per Google Maps ----------
+   Il link parte dalla posizione salvata del campo (registro.venues, una volta per campo: vale per tutte le partite lì),
+   altrimenti da coordinate scritte nell'indirizzo, altrimenti da una ricerca col nome del campo ripulito. */
+const venueKey = v => (v||'').trim().toLowerCase().replace(/\s+/g, ' ');
+function parseLL(v){
+  const t = String(v||'');
+  const m = t.match(/^\s*(-?\d{1,2}\.\d+)\s*[,;\s]\s*(-?\d{1,3}\.\d+)\s*$/)                // 45.69, 9.40
+    || t.match(/!3d(-?\d{1,2}\.\d+)!4d(-?\d{1,3}\.\d+)/)                                         // link Google Maps (punto)
+    || t.match(/@(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/)                                             // link Google Maps (vista)
+    || t.match(/[?&](?:q|query|ll|destination)=(-?\d{1,2}\.\d+)(?:,|%2C)\s*(-?\d{1,3}\.\d+)/i);  // ?q=lat,lng
+  return m ? `${(+m[1]).toFixed(6)},${(+m[2]).toFixed(6)}` : null;
+}
+const venuePin = v => ((S.reg && S.reg.venues) || {})[venueKey(v)] || null;
+/* "C.S. Comunale Campo 2 - Cernusco Lombardone" → "Centro Sportivo Comunale, Cernusco Lombardone" */
+function venueQuery(v){
+  const i = v.lastIndexOf(' - ');
+  let name = i > 0 ? v.slice(0, i) : v, town = i > 0 ? v.slice(i + 3) : '';
+  name = name.replace(/\bC\.\s?S\./g, 'Centro Sportivo').replace(/\bCom\./g, 'Comunale').replace(/\bSport\./g, 'Sportivo')
+    .replace(/\s*(Campo\s*)?N\.\s*\d+/gi, '').replace(/\s+Campo\s+\d+$/i, '').trim();
+  town = town.replace(/\s*\(.*?\)/g, '').replace(/\s+Fraz\..*$/i, '').trim();
+  return town ? `${name}, ${town}` : name;
+}
+function venueUrl(v){
+  v = (v||'').trim(); if(!v) return '';
+  const pin = venuePin(v), ll = parseLL(v) || (pin && pin.ll);
+  if(ll) return 'https://www.google.com/maps/dir/?api=1&destination=' + ll;
+  if(pin && pin.url) return pin.url;
+  return mapsSearchUrl(venueQuery(v));
+}
+function mapsLink(s){ return venueUrl(s.meetAddress || s.venue); }
+let pinEditing = null;   // campo di cui si sta impostando la posizione
+function pinBox(v){
+  v = (v||'').trim(); if(!v || parseLL(v)) return '';
+  const pin = venuePin(v), open = pinEditing===venueKey(v);
+  const status = pin ? `<span class="pinok">📌 Posizione esatta salvata</span> <button class="linkbtn" data-pinedit="${esc(v)}">cambia</button>`
+    : `<button class="linkbtn" data-pinedit="${esc(v)}">📌 Imposta la posizione esatta del campo</button>`;
+  return `<div class="pinrow">${status}</div>${open ? `<div class="pinbox">
+      <div class="row" style="flex-wrap:nowrap"><input id="pin_in" value="${esc(pin ? (pin.ll||pin.url||'') : '')}" placeholder="45.6978, 9.4004" aria-label="Coordinate del cancello"><button class="btn small primary" data-pinsave="${esc(v)}">Salva</button></div>
+      <p class="note">Su Google Maps tieni premuto sul cancello d'ingresso: in alto compaiono le coordinate, copiale qui (va bene anche il link "Condividi"). Vale per tutte le partite su questo campo.</p>
+      <div class="row"><button class="btn small ghost" data-pincancel="1">Annulla</button>${pin ? `<button class="btn small ghost danger" data-pindel="${esc(v)}">Togli posizione</button>` : ''}</div>
+    </div>` : ''}`;
 }
 function viewPartita(){
   const s = S.sheet;
@@ -341,6 +377,7 @@ function viewConvocazioni(){
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
       <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Impianto o via, città">
         <a id="cv_mapslink" class="mapslink" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" ${mapsLink(s)?'':'hidden'}>📍 Apri in Google Maps</a>
+        ${pinBox(s.meetAddress || s.venue)}
       </div>
     </div>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
