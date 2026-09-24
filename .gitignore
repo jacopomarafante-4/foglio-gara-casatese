@@ -29,3 +29,6 @@ Thumbs.db
 
 # Local data (if saving to filesystem)
 /local-data/
+
+# Dati personali dei ragazzi: mai nel repository pubblico
+private/

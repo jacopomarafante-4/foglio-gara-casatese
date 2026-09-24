@@ -49,6 +49,22 @@ python -m http.server 8000
 - **Admin** (tu): PIN amministratore (+ login email fuori da Claude) — crea squadre, gestisce rose, disegna schemi
 - **Mister** (collega): apre lo stesso link base e digita il PIN della sua squadra — vede solo la propria rosa e formazione
 
+## 📈 Presenze e statistiche
+
+- **Presenze** (admin e mister): allenamenti (P presente · A assente · G giustificato · INF infortunato), partite (minuti, titolare, gol, cartellini, risultato) e test atletici (tempi mm:ss).
+- **Statistiche** (admin e mister, per la propria squadra): % presenze (gli infortuni non abbassano la %), presenze e minuti in partita, presenze per mese, test. Filtro per mese.
+- **Report PDF** (solo admin): riepilogo, presenze giorno per giorno, minuti partita per partita, presenze per mese e test.
+
+### 🔒 Sicurezza del database (Supabase)
+
+`supabase/sicurezza.sql` va eseguito una volta nel SQL Editor di Supabase. Dopo:
+- **admin** (login Supabase con la sua email): legge e scrive tutto;
+- **mister**: nessun accesso diretto alla tabella; l'app passa da funzioni che verificano il PIN e aprono solo i documenti della sua squadra (scrive solo foglio gara e registro presenze);
+- **senza PIN**: non si legge niente.
+
+L'app riconosce da sola se il database è già protetto; finché non lo è funziona come prima.
+I dati personali dei ragazzi (import presenze) stanno in `private/`, esclusa da git: il repository è pubblico.
+
 ## 📊 Dati
 
 I dati sono salvati in:

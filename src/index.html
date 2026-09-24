@@ -47,7 +47,7 @@ h3{font-family:var(--cond);font-weight:600;font-size:20px;margin:22px 0 8px}
 .hint{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:62ch}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
 .panel + .panel{margin-top:14px}
-input[type=text],input[type=date],input[type=time],input:not([type]),select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px}
+input[type=text],input[type=date],input[type=time],input[type=number],input:not([type]),select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px}
 textarea{min-height:90px;resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
 label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
@@ -114,6 +114,8 @@ summary{cursor:pointer;font-weight:600}
 .legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px;font-size:14px}
 .convh3{font-family:var(--cond);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .convh3:first-of-type{margin-top:4px}
+.mapslink{display:inline-block;margin-top:6px;font-size:14px;font-weight:600;color:#1A56C4;text-decoration:underline}
+@media (prefers-color-scheme:dark){.mapslink{color:#8AB4F8}}
 .callist{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:4px}
 .callrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);border-left:4px solid transparent;background:var(--paper);transition:background .15s}
 .callrow:last-child{border-bottom:0}
@@ -137,6 +139,53 @@ summary{cursor:pointer;font-weight:600}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
 .tokpanel{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px}
+/* Presenze e statistiche */
+.regseg{margin-top:4px}
+.regseg button{padding:8px 14px}
+.reglist{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px}
+.regrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+.regrow:last-child{border-bottom:0}
+.reglist .empty{padding:18px}
+.callrow[data-att="P"]{border-left-color:var(--grass);background:color-mix(in srgb, var(--grass) 7%, var(--paper))}
+.callrow[data-att="A"]{border-left-color:var(--red);background:color-mix(in srgb, var(--red) 7%, var(--paper))}
+.callrow[data-att="G"]{border-left-color:var(--amber);background:color-mix(in srgb, var(--amber) 10%, var(--paper))}
+.callrow[data-att="INF"]{border-left-color:#7A4FB5}
+.attseg button[data-attstatus="P"][aria-pressed="true"]{background:var(--grass);color:#fff}
+.attseg button[data-attstatus="A"][aria-pressed="true"]{background:var(--red);color:#fff}
+.attseg button[data-attstatus="G"][aria-pressed="true"]{background:var(--amber);color:var(--ink)}
+.attseg button[data-attstatus="INF"][aria-pressed="true"]{background:#7A4FB5;color:#fff}
+.attseg button{min-width:40px}
+.countchip[data-att="P"]{border-color:var(--grass);color:var(--grass)}
+.countchip[data-att="A"]{border-color:var(--red);color:var(--red)}
+.countchip[data-att="G"]{border-color:var(--amber);color:#946400}
+.gmrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);border-left:4px solid transparent}
+.gmrow:last-child{border-bottom:0}
+.gmrow.on{border-left-color:var(--grass);background:color-mix(in srgb, var(--grass) 6%, var(--paper))}
+.gmrow:has(> input){grid-template-columns:minmax(0,1fr) auto}
+.mini{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.mini input{width:62px;min-height:36px;padding:4px 6px;text-align:center}
+.tgl{border:1px solid var(--line);background:var(--paper);border-radius:8px;min-width:36px;height:36px;font-weight:700;cursor:pointer;opacity:.55}
+.tgl[aria-pressed="true"]{opacity:1;border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
+.tgl.st[aria-pressed="true"]{background:var(--grass);border-color:var(--grass);color:#fff}
+@media (max-width:560px){.gmrow{grid-template-columns:1fr auto auto}.gmrow > .row{grid-column:1 / -1;justify-content:flex-end}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+.kpi b{display:block;font-family:var(--cond);font-size:30px;line-height:1.05}
+.kpi span{display:block;font-size:13px;font-weight:600;color:var(--muted)}
+.kpi small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.stbl{width:100%;border-collapse:collapse;font-size:14px;white-space:nowrap}
+.stbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.stbl td{text-align:center;padding:7px 10px;border-bottom:1px solid var(--line)}
+.stbl tr:last-child td{border-bottom:0}
+.stbl .nm{text-align:left;font-weight:600;position:sticky;left:0;background:var(--paper)}
+.stbl th.nm{background:var(--bg)}
+.stbl tr.low .nm{color:var(--red)}
+.stbl td.lowc{color:var(--red);font-weight:700}
+.stbl td.pc{text-align:left;min-width:150px}
+.pbar{display:inline-block;width:80px;height:8px;border-radius:99px;background:var(--line);vertical-align:middle;margin-right:8px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--grass)}
+.pbar.low i{background:var(--red)}
 /* PDF */
 .pages{display:grid;gap:14px;margin-top:14px}
 .pages canvas{width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);background:#fff}
@@ -210,10 +259,11 @@ const BASES = {
   'punizione-sfavore':{name:'Punizione a sfavore', side:'sfavore', ball:{x:12,y:26}},
   'libero':{name:'Nuovo schema', side:'favore', ball:{x:0,y:30}}
 };
-function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{},home:true,convType:'Campionato',meetTime:'',meetAddress:'',mapsUrl:'',convNotes:'',callup:{}}}
+function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{},home:true,convType:'Campionato',meetTime:'',meetAddress:'',convNotes:'',callup:{}}}
 function effSlot(s, n, bx, by){ const o = (s.slotPos||{})[n]; return o ? {x:o.x, y:o.y} : {x:bx, y:by}; }
 
-let S = {teams:[], players:[], schemes:[], sheet:defaultSheet(), calendar:[]};
+function defaultReg(){return {trainings:[], games:[], tests:[]}}
+let S = {teams:[], players:[], schemes:[], sheet:defaultSheet(), calendar:[], reg:defaultReg()};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
 /* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
@@ -238,7 +288,11 @@ async function initAuth(){
     const { data } = await supabaseClient.auth.getSession();
     supaSession = data.session || null;
   }catch(e){}
-  supabaseClient.auth.onAuthStateChange((event, session) => { supaSession = session; render(); });
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    supaSession = session;
+    if(session && secureMode && !sharedSyncStarted){ db = makeSupabaseDb(supabaseClient); startSharedSync(); }
+    render();
+  });
   render();
 }
 async function adminLogin(password){
@@ -274,17 +328,18 @@ function surname(n){ return (n||'').trim(); }
 function setStatus(t){ $('#status').textContent = t; }
 
 /* ---------- Salvataggio ---------- */
-/* Condivisi: shared/teams, shared/schemes. Per squadra: roster/<id>, sheet/<id> */
+/* Condivisi: shared/teams, shared/schemes. Per squadra: roster/<id>, sheet/<id>, calendar/<id>, registro/<id> (presenze, partite, test) */
 function docPath(name, team=curTeam){ return (name==='teams'||name==='schemes') ? 'shared/'+name : name+'/'+team; }
 function payload(name){
   if(name==='teams') return {items:S.teams};
   if(name==='roster') return {players:S.players};
   if(name==='schemes') return {items:S.schemes};
   if(name==='calendar') return {matches:S.calendar};
+  if(name==='registro') return S.reg;
   return clone(S.sheet);
 }
 function save(name){
-  if(!isAdmin() && name!=='sheet') return;           // i mister scrivono solo il proprio foglio gara
+  if(!isAdmin() && name!=='sheet' && name!=='registro') return;   // i mister scrivono solo foglio gara e registro della propria squadra
   if(name!=='teams' && name!=='schemes' && !curTeam) return;
   const path = docPath(name), data = clone(payload(name));
   pending[path] = true; setStatus('Salvataggio…');
@@ -304,6 +359,7 @@ function applyDoc(name, data){
   else if(name==='roster') S.players = clone(data.players || []);
   else if(name==='schemes') S.schemes = clone(data.items || []);
   else if(name==='calendar') S.calendar = clone(data.matches || []);
+  else if(name==='registro') S.reg = Object.assign(defaultReg(), clone(data));
   else S.sheet = Object.assign(defaultSheet(), clone(data));
 }
 function resolveAccess(){
@@ -316,10 +372,11 @@ function resolveAccess(){
 }
 function subscribeTeam(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
-  S.players = []; S.sheet = defaultSheet(); S.calendar = [];
+  S.players = []; S.sheet = defaultSheet(); S.calendar = []; S.reg = defaultReg();
+  openTrainingId = openGameId = openTestId = null;
   if(curTeam){
     if(db){
-      ['roster','sheet','calendar'].forEach(n => {
+      ['roster','sheet','calendar','registro'].forEach(n => {
         const path = docPath(n);
         unsubs.push(db.doc(path).onSnapshot(snap => {
           if(pending[path]) return;
@@ -327,7 +384,7 @@ function subscribeTeam(){
         }, () => setStatus('Sincronizzazione in pausa')));
       });
     } else {
-      ['roster','sheet','calendar'].forEach(n => { try{ const v = localStorage.getItem('fg:'+docPath(n)); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
+      ['roster','sheet','calendar','registro'].forEach(n => { try{ const v = localStorage.getItem('fg:'+docPath(n)); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
     }
   }
   render();
@@ -344,6 +401,7 @@ async function logout(){
   if(supabaseClient){ try{ await supabaseClient.auth.signOut(); }catch(e){} }
   adminUnlocked = false; supaSession = null; gateError = false;
   try{ localStorage.removeItem('fg:adminpin'); }catch(e){}
+  if(secureMode){ history.replaceState(null, '', location.pathname + location.search); location.reload(); return; }
   ROLE = 'admin'; curTeam = null; hashLocked = false;
   S.players = []; S.sheet = defaultSheet();
   history.replaceState(null, '', location.pathname + location.search);
@@ -384,26 +442,88 @@ function makeSupabaseDb(client){
     }
   };
 }
+/* Database protetto (supabase/sicurezza.sql): i mister non leggono la tabella, passano da funzioni
+   che verificano il PIN e aprono solo i documenti della loro squadra. Niente realtime per loro:
+   i documenti si ricontrollano ogni 15 secondi. */
+let secureMode = false, sharedSyncStarted = false;
+const stableStr = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
+function makeCoachDb(client, pin){
+  const known = {};
+  const get = async path => { const { data, error } = await client.rpc('coach_get', { p_pin: pin, p_path: path }); if(error) throw error; return data; };
+  return {
+    doc(path){
+      return {
+        async set(data){
+          const { error } = await client.rpc('coach_set', { p_pin: pin, p_path: path, p_data: data });
+          if(error) throw error;
+          known[path] = stableStr(data);
+        },
+        async get(){ const d = await get(path); return { exists: d != null, data: () => d }; },
+        onSnapshot(onNext, onError){
+          let stopped = false;
+          const tick = async () => {
+            try{
+              const d = await get(path);
+              if(stopped) return;
+              const k = stableStr(d);
+              if(k !== known[path]){ known[path] = k; onNext({ exists: d != null, data: () => d }); }
+            }catch(e){ if(!stopped) onError && onError(e); }
+          };
+          tick(); const iv = setInterval(tick, 15000);
+          return () => { stopped = true; clearInterval(iv); };
+        }
+      };
+    }
+  };
+}
+/* Le funzioni del database protetto esistono? Se no, il database non è ancora stato protetto: comportamento di prima. */
+async function detectSecure(){
+  try{ const { error } = await supabaseClient.rpc('coach_team', { p_pin: '' }); return !error; }catch(e){ return false; }
+}
+async function coachLogin(pin){
+  let tm = null;
+  try{ const { data, error } = await supabaseClient.rpc('coach_team', { p_pin: pin }); if(!error) tm = data; }catch(e){}
+  if(!tm) return false;
+  db = makeCoachDb(supabaseClient, pin);
+  S.teams = [tm]; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = 'formazione';
+  if(!new RegExp('squadra=' + pin + '$').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin);
+  db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
+  setStatus('Sincronizzato');
+  subscribeTeam();
+  return true;
+}
+function startSharedSync(){
+  sharedSyncStarted = true;
+  let first = true;
+  db.doc('shared/schemes').onSnapshot(snap => { if(pending['shared/schemes']) return; if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
+  db.doc('shared/teams').onSnapshot(snap => {
+    if(pending['shared/teams']) return;
+    if(snap.exists) applyDoc('teams', snap.data());
+    teamsLoaded = true;
+    const before = curTeam, beforeRole = ROLE; resolveAccess();
+    if(first){ first = false; if(ROLE==='coach') tab = 'formazione'; subscribeTeam(); }
+    else if(before !== curTeam || beforeRole !== ROLE) subscribeTeam();
+    else render();
+  }, () => { teamsLoaded = true; setStatus('Sincronizzazione in pausa'); render(); });
+  setStatus('Sincronizzato');
+}
 async function initStore(){
   try{ if(RUNNING_IN_CLAUDE) db = await window.claude.use('db'); }catch(e){ db = null; }
-  if(!db && supabaseClient){
-    try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
-  }
   try{ if(RUNNING_IN_CLAUDE) downloads = await window.claude.use('downloads'); }catch(e){ downloads = null; }
-  if(db){
-    let first = true;
-    db.doc('shared/schemes').onSnapshot(snap => { if(pending['shared/schemes']) return; if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
-    db.doc('shared/teams').onSnapshot(snap => {
-      if(pending['shared/teams']) return;
-      if(snap.exists) applyDoc('teams', snap.data());
-      teamsLoaded = true;
-      const before = curTeam, beforeRole = ROLE; resolveAccess();
-      if(first){ first = false; if(ROLE==='coach') tab = 'formazione'; subscribeTeam(); }
-      else if(before !== curTeam || beforeRole !== ROLE) subscribeTeam();
-      else render();
-    }, () => { teamsLoaded = true; setStatus('Sincronizzazione in pausa'); render(); });
-    setStatus('Sincronizzato');
-  } else {
+  if(!db && supabaseClient){
+    secureMode = await detectSecure();
+    let session = null;
+    try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
+    if(session || !secureMode){
+      try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
+    } else {
+      const m = (location.hash||'').match(/squadra=([\w-]+)/i);
+      if(!(m && await coachLogin(m[1]))){ teamsLoaded = true; render(); }
+      return;
+    }
+  }
+  if(db){ if(!sharedSyncStarted) startSharedSync(); }
+  else {
     ['teams','schemes'].forEach(n => { try{ const v = localStorage.getItem('fg:shared/'+n); if(v) applyDoc(n, JSON.parse(v)); }catch(e){} });
     teamsLoaded = true;
     resolveAccess(); if(ROLE==='coach') tab = 'formazione';
@@ -486,8 +606,8 @@ function nameLayout(tokens){
 }
 
 /* ---------- Render ---------- */
-const TAB_NAMES = {squadre:'Squadre', rosa:'Rosa', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'PDF'};
-function allowedTabs(){ return isAdmin() ? ['squadre','rosa','partita','convocazioni','formazione','piazzati','pdf'] : ['rosa','partita','convocazioni','formazione','piazzati','pdf']; }
+const TAB_NAMES = {squadre:'Squadre', rosa:'Rosa', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'PDF', registro:'Presenze', statistiche:'Statistiche'};
+function allowedTabs(){ return isAdmin() ? ['squadre','rosa','partita','convocazioni','formazione','piazzati','pdf','registro','statistiche'] : ['rosa','partita','convocazioni','formazione','piazzati','pdf','registro','statistiche']; }
 function renderChrome(){
   const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.name)}${t.coach?' · '+esc(t.coach):''}</option>`).join('');
   $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
@@ -547,6 +667,8 @@ function render(){
   else if(tab==='formazione') v.innerHTML = viewFormazione();
   else if(tab==='piazzati') v.innerHTML = openSchemeId ? viewScheme() : viewSchemes();
   else if(tab==='pdf'){ v.innerHTML = viewPdf(); buildPreview(); }
+  else if(tab==='registro') v.innerHTML = viewRegistro();
+  else if(tab==='statistiche') v.innerHTML = viewStatistiche();
 }
 
 function viewSquadre(){
@@ -576,8 +698,8 @@ function viewSquadre(){
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
-      <div><b>Amministratore</b>Crea le squadre, inserisce le rose, carica e disegna gli schemi dei calci piazzati. Può aprire qualsiasi squadra.</div>
-      <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF.</div>
+      <div><b>Amministratore</b>Crea le squadre, inserisce le rose, carica e disegna gli schemi dei calci piazzati. Può aprire qualsiasi squadra e scaricare il report PDF delle statistiche.</div>
+      <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test e vede le statistiche della squadra.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>
   </section>
@@ -630,14 +752,11 @@ function minus75(t){
 }
 function mapsSearchUrl(q){ return q ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q) : ''; }
 function defaultMeetTime(s){ return s.meetTime || minus75(s.time); }
-function defaultMapsUrl(s){ return s.mapsUrl || mapsSearchUrl(s.meetAddress || s.venue); }
-// Link effettivo per il PDF: coordinate "lat, lng" → pin esatto; link senza https:// → completato.
+// Link Google Maps generato dall'indirizzo di ritrovo; coordinate "lat, lng" → pin esatto.
 function mapsLink(s){
-  const v = (s.mapsUrl||'').trim();
+  const v = (s.meetAddress || s.venue || '').trim();
   const ll = v.match(/^(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)$/);
-  if(ll) return mapsSearchUrl(ll[1]+','+ll[2]);
-  if(v && !/^https?:\/\//i.test(v)) return 'https://' + v;
-  return v || mapsSearchUrl(s.meetAddress || s.venue);
+  return mapsSearchUrl(ll ? ll[1]+','+ll[2] : v);
 }
 function viewPartita(){
   const s = S.sheet;
@@ -726,15 +845,11 @@ function viewConvocazioni(){
     <h3 class="convh3">Ritrovo</h3>
     <div class="grid">
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
-      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Via, città"></div>
-      <div><label class="f" for="cv_maps">Link Google Maps</label>
-        <div class="row" style="gap:6px;flex-wrap:nowrap">
-          <input id="cv_maps" data-sheet="mapsUrl" value="${esc(defaultMapsUrl(s))}" placeholder="https://maps.app.goo.gl/..." style="flex:1">
-          <button type="button" class="btn small ghost" data-act="mapssearch" title="Cerca l'indirizzo su Google Maps in una nuova scheda">Cerca</button>
-        </div>
-        <p class="hint" style="margin:4px 0 0">Per il punto esatto del campo: su Google Maps tieni premuto sul campo → Condividi → Copia link e incollalo qui (vanno bene anche le coordinate, es. 45.7012, 9.3871). Nel PDF il link è cliccabile.</p>
+      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Es. Centro Sportivo Comunale, Casatenovo">
+        <a id="cv_mapslink" class="mapslink" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" ${mapsLink(s)?'':'hidden'}>📍 Apri in Google Maps</a>
       </div>
     </div>
+    <p class="hint" style="margin:6px 0 0">Il link a Google Maps si crea da solo dall'indirizzo e nel PDF l'indirizzo è cliccabile. Per centrare il campo scrivi il nome dell'impianto e la città, oppure via, numero civico e città (vanno bene anche le coordinate, es. 45.7012, 9.3871).</p>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>
 
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:26px;flex-wrap:wrap;gap:10px">
@@ -1006,7 +1121,7 @@ function viewPdf(){
 /* ---------- Canvas: pagine PDF ---------- */
 const W = 1188, H = 840, K = 2.5;
 const INK = '#15202B', MUTED = '#5B6875', GRASS = '#2F6B45', G1 = '#E3EFE6', G2 = '#D8E9DD', RED = '#C8102E';
-const LABEL_BG = '#EEF1F4', LINE_C = '#D5DDD8';
+const LABEL_BG = '#EEF1F4', LINK_C = '#1A56C4', LINE_C = '#D5DDD8';
 function cv(){ const c = document.createElement('canvas'); c.width = W*K; c.height = H*K; const x = c.getContext('2d'); x.scale(K,K); x.fillStyle='#fff'; x.fillRect(0,0,W,H); return [c,x]; }
 function font(x, size, weight=600, cond=false){ x.font = `${weight} ${size}px ${cond?'"Barlow Condensed","Arial Narrow",Arial':'"Barlow",Arial'},sans-serif`; }
 function T(x, s, px, py, o={}){
@@ -1221,7 +1336,7 @@ async function exportBackup(){
   if(!db){ setStatus('Backup non disponibile'); return; }
   setStatus('Preparo il backup…');
   try{
-    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id, 'calendar/'+t.id])];
+    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id, 'calendar/'+t.id, 'registro/'+t.id])];
     const docs = {};
     for(const p of paths){
       const snap = await db.doc(p).get();
@@ -1276,17 +1391,16 @@ function convocazionePage(logoImg, figcImg){
   y += 26;
   cols.forEach(([,v],i) => { x.strokeStyle = LINE_C; x.strokeRect(mx+i*cw, y, cw, 30); T(x, v||'—', mx+i*cw+cw/2, y+15+1, {size:12.5, weight:600, align:'center', base:'middle', max:cw-10}); });
   y += 30;
-  cellRow('INDIRIZZO RITROVO', s.meetAddress || s.venue, 180, 32); y += 32;
-  const murl = mapsLink(s);
-  cellRow('POSIZIONE CAMPO', ' ', 180, 32);
+  const addr = s.meetAddress || s.venue, murl = mapsLink(s);
+  cellRow('INDIRIZZO RITROVO', murl ? ' ' : addr, 180, 32);
   if(murl){
-    const lx = mx+180+10, maxw = tw-180-20;
-    x.save(); x.beginPath(); x.rect(lx, y, maxw, 32); x.clip();
-    T(x, murl, lx, y+16+1, {size:11, weight:600, base:'middle', color:'#1A56C4', max:maxw});
-    const uw = Math.min(x.measureText(murl).width, maxw);
-    x.strokeStyle = '#1A56C4'; x.lineWidth = .8; x.beginPath(); x.moveTo(lx, y+23); x.lineTo(lx+uw, y+23); x.stroke(); x.restore();
+    const lx = mx+180+10, hintW = 130, maxw = tw-180-20-hintW;
+    T(x, addr, lx, y+16+1, {size:13, weight:600, base:'middle', color:LINK_C, max:maxw});
+    const uw = Math.min(x.measureText(addr).width, maxw);
+    x.strokeStyle = LINK_C; x.lineWidth = .8; x.beginPath(); x.moveTo(lx, y+24); x.lineTo(lx+uw, y+24); x.stroke();
+    T(x, 'Apri in Google Maps ›', PW-mx-10, y+16+1, {size:10.5, weight:600, base:'middle', align:'right', color:LINK_C});
     c.mapsLink = {x:mx+180, y, w:tw-180, h:32, url:murl, pw:PW, ph:PH};
-  } else T(x, '—', mx+180+10, y+16+1, {size:13, weight:600, base:'middle'});
+  }
   y += 32;
   cellRow('NOTE', s.convNotes, 180, 32); y += 32 + 22;
   const sorted = S.players.slice().sort((a,b)=>a.name.localeCompare(b.name,'it'));
@@ -1342,6 +1456,437 @@ async function downloadPdf(){
     if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
     else browserDownload(name, doc.output('blob'));
     setStatus('PDF pronto');
+  }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
+}
+
+/* ---------- Registro: presenze allenamenti, partite, test atletici ---------- */
+/* registro/<squadra> = {trainings:[{id,date,note,att:{pid:'P'|'A'|'G'|'INF'}}],
+   games:[{id,date,opponent,home,comp,dur,gf,ga,pl:{pid:{min,st,g,y,r}}}],
+   tests:[{id,date,name,res:{pid:{s,note}}}]}  — s = tempo in secondi */
+const ATT_STATUSES = ['P','A','G','INF'];
+const ATT_LABELS = {P:'Presente', A:'Assente', G:'Assente giustificato', INF:'Infortunato'};
+const MONTHS_IT = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const WEEKDAYS_IT = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const COMP_TYPES = ['Campionato','Amichevole','Coppa','Recupero','Torneo'];
+const LOW_ATT = 0.75;   // sotto il 75% di presenze il giocatore viene evidenziato
+/* % presenza = P / (P + A + G): le sedute saltate per infortunio non pesano sulla percentuale. */
+const attPct = (P, A, G) => (P+A+G) ? P/(P+A+G) : null;
+let regSub = 'allenamenti', openTrainingId = null, openGameId = null, openTestId = null, statPeriod = 'all';
+
+const todayISO = () => new Date().toISOString().slice(0,10);
+const byName = () => S.players.slice().sort((a,b) => a.name.localeCompare(b.name, 'it'));
+const weekday = d => d ? WEEKDAYS_IT[new Date(d+'T12:00:00').getDay()] : '';
+const monthLabel = ym => { const [y,m] = ym.split('-'); return `${MONTHS_IT[+m-1]} ${y}`; };
+const pctTxt = v => v==null ? '—' : Math.round(v*100)+'%';
+const numOr0 = v => +v || 0;
+function parseTime(v){
+  const m = String(v||'').trim().match(/^(\d{1,2})(?:\s*[:,.'’]\s*(\d{1,2}))?\s*["”]?$/);
+  if(!m) return null;
+  const sec = m[2]===undefined ? 0 : (m[2].length===1 ? +m[2]*10 : +m[2]);
+  return sec > 59 ? null : +m[1]*60 + sec;
+}
+const fmtTime = sec => `${Math.floor(sec/60)}'${String(sec%60).padStart(2,'0')}"`;
+const testCell = r => !r ? '' : (r.s!=null ? fmtTime(r.s) : (r.note||''));
+const gameTitle = g => (g.opponent ? (g.home ? `${teamLabel()} - ${g.opponent}` : `${g.opponent} - ${teamLabel()}`) : `Partita del ${fmtDate(g.date)}`);
+const hasScore = g => g.gf!=='' && g.gf!=null && g.ga!=='' && g.ga!=null;
+const curTraining = () => S.reg.trainings.find(x => x.id===openTrainingId);
+const curGame = () => S.reg.games.find(x => x.id===openGameId);
+const curTest = () => S.reg.tests.find(x => x.id===openTestId);
+
+/* Statistiche calcolate al volo dal registro, filtrate per periodo (stagione o mese). */
+function inPeriod(d){ return statPeriod==='all' || (d||'').startsWith(statPeriod); }
+function computeStats(){
+  const tr = S.reg.trainings.filter(t => inPeriod(t.date)).sort((a,b)=>a.date.localeCompare(b.date));
+  const gm = S.reg.games.filter(g => inPeriod(g.date)).sort((a,b)=>a.date.localeCompare(b.date));
+  const rows = byName().map(p => {
+    const c = {P:0, A:0, G:0, INF:0};
+    tr.forEach(t => { const st = (t.att||{})[p.id]; if(st in c) c[st]++; });
+    const regT = c.P + c.A + c.G + c.INF;
+    let pres = 0, tit = 0, min = 0, avail = 0, gol = 0, amm = 0, esp = 0;
+    gm.forEach(g => {
+      const x = (g.pl||{})[p.id] || {}, m = numOr0(x.min);
+      avail += numOr0(g.dur);
+      if(m > 0){ pres++; min += m; }
+      if(x.st) tit++;
+      gol += numOr0(x.g); amm += numOr0(x.y); esp += numOr0(x.r);
+    });
+    return {p, c, regT, pct: attPct(c.P, c.A, c.G), pres, tit, min, avail, minPct: avail ? min/avail : null, avg: pres ? min/pres : null, gol, amm, esp};
+  });
+  const withPct = rows.filter(r => r.pct!=null);
+  const scored = gm.filter(hasScore);
+  const team = {
+    nT: tr.length, nG: gm.length,
+    avgPct: withPct.length ? withPct.reduce((a,r)=>a+r.pct,0)/withPct.length : null,
+    avgPresent: tr.length ? tr.reduce((a,t)=>a+Object.values(t.att||{}).filter(v=>v==='P').length,0)/tr.length : null,
+    w: scored.filter(g=>+g.gf>+g.ga).length, d: scored.filter(g=>+g.gf===+g.ga).length, l: scored.filter(g=>+g.gf<+g.ga).length,
+    gf: scored.reduce((a,g)=>a+ +g.gf,0), ga: scored.reduce((a,g)=>a+ +g.ga,0), nScored: scored.length,
+    low: withPct.filter(r => r.pct < LOW_ATT).length
+  };
+  return {tr, gm, rows, team};
+}
+/* Presenze per mese: {mesi:[...], perPlayer: Map(pid -> {ym: {P, tot}})} */
+function monthlyAttendance(){
+  const months = [...new Set(S.reg.trainings.map(t => (t.date||'').slice(0,7)).filter(Boolean))].sort();
+  const per = new Map(S.players.map(p => [p.id, {}]));
+  S.reg.trainings.forEach(t => {
+    const ym = (t.date||'').slice(0,7);
+    Object.entries(t.att||{}).forEach(([pid, st]) => {
+      const o = per.get(pid); if(!o) return;
+      const m = o[ym] ||= {P:0, tot:0}; if(st!=='INF') m.tot++; if(st==='P') m.P++;
+    });
+  });
+  return {months, per};
+}
+function periodOptions(){
+  const ms = [...new Set([...S.reg.trainings, ...S.reg.games].map(x => (x.date||'').slice(0,7)).filter(Boolean))].sort();
+  return `<option value="all" ${statPeriod==='all'?'selected':''}>Tutta la stagione</option>` + ms.map(m => `<option value="${m}" ${statPeriod===m?'selected':''}>${monthLabel(m)}</option>`).join('');
+}
+
+/* ---------- Scheda Presenze ---------- */
+function viewRegistro(){
+  if(!S.players.length) return `<section class="panel"><h2>Presenze</h2><p class="empty">Prima serve la rosa nella scheda Rosa.</p></section>`;
+  const subs = [['allenamenti','Allenamenti'],['partite','Partite'],['test','Test atletici']];
+  const seg = `<div class="seg regseg" role="group" aria-label="Sezione registro">${subs.map(([k,l]) => `<button data-regsub="${k}" aria-pressed="${regSub===k}">${l}</button>`).join('')}</div>`;
+  const body = regSub==='partite' ? viewGames() : regSub==='test' ? viewTests() : viewTrainings();
+  return `<section class="panel"><h2>Presenze · ${esc(TEAM()?.name||'')}</h2>
+    <p class="hint">Registro della stagione: allenamenti, minuti in partita e test atletici. Le statistiche si aggiornano da sole.</p>
+    ${seg}${body}</section>`;
+}
+function viewTrainings(){
+  const t = curTraining();
+  if(t) return trainingEditor(t);
+  const list = S.reg.trainings.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t => {
+    const vals = Object.values(t.att||{}), n = vals.filter(v=>v==='P').length;
+    return `<div class="regrow"><div><b>${weekday(t.date)} ${fmtDate(t.date)}</b>${t.note?` <span class="note">· ${esc(t.note)}</span>`:''}</div>
+      <div class="row"><span class="countchip" data-status="CON"><b>${n}</b>/ ${vals.length} presenti</span><button class="btn small" data-opentr="${t.id}">Apri</button></div></div>`;
+  }).join('');
+  return `<div class="row" style="margin:14px 0 6px"><input type="date" id="newtrdate" value="${todayISO()}" style="width:auto"><button class="btn primary" data-act="tradd">Nuovo allenamento</button></div>
+    <p class="hint">Si parte con tutti presenti: tocca solo chi manca (A assente, G giustificato, INF infortunato).</p>
+    <div class="reglist">${list || '<p class="empty">Nessun allenamento registrato.</p>'}</div>`;
+}
+function trainingEditor(t){
+  const att = t.att ||= {};
+  const rows = byName().map(p => {
+    const cur = att[p.id] || '';
+    const btns = ATT_STATUSES.map(st => `<button data-attid="${p.id}" data-attstatus="${st}" aria-pressed="${cur===st}" title="${ATT_LABELS[st]}">${st}</button>`).join('');
+    return `<div class="callrow" data-att="${cur}"><div class="callname">${esc(p.name)}</div><div class="seg callseg attseg" role="group" aria-label="Presenza ${esc(p.name)}">${btns}</div></div>`;
+  }).join('');
+  const chips = ATT_STATUSES.map(st => `<span class="countchip" data-att="${st}"><b>${Object.values(att).filter(v=>v===st).length}</b>${st}</span>`).join('');
+  return `<div class="row" style="margin:14px 0 10px"><button class="btn small ghost" data-act="regback">← Tutti gli allenamenti</button></div>
+    <div class="grid">
+      <div><label class="f" for="tr_date">Data</label><input id="tr_date" type="date" data-trf="date" value="${esc(t.date)}"></div>
+      <div><label class="f" for="tr_note">Note (facoltative)</label><input id="tr_note" data-trf="note" value="${esc(t.note||'')}" placeholder="Es. seduta atletica"></div>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:16px"><div class="row" style="gap:6px">${chips}</div>
+      <div class="row"><button class="btn small" data-act="trallp">Tutti presenti</button><button class="btn small ghost danger" data-act="trdel">Elimina allenamento</button></div></div>
+    <div class="callist" style="margin-top:10px">${rows}</div>`;
+}
+function viewGames(){
+  const g = curGame();
+  if(g) return gameEditor(g);
+  const s = S.sheet;
+  const list = S.reg.games.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(g => {
+    const n = Object.values(g.pl||{}).filter(x => numOr0(x.min) > 0).length;
+    return `<div class="regrow"><div><b>${fmtDate(g.date)}</b> · ${esc(gameTitle(g))}${hasScore(g)?` <b>${esc(g.gf)}-${esc(g.ga)}</b>`:''} <span class="note">· ${esc(g.comp||'')}</span></div>
+      <div class="row"><span class="countchip"><b>${n}</b> in campo</span><button class="btn small" data-opengm="${g.id}">Apri</button></div></div>`;
+  }).join('');
+  return `<div class="row" style="margin:14px 0 6px">
+      <button class="btn primary" data-act="gmfromsheet" ${s.date?'':'disabled'} title="Usa avversario, data, titolari e panchina della scheda Partita/Formazione">Registra la partita del foglio gara${s.opponent?` (${esc(s.opponent)})`:''}</button>
+      <button class="btn" data-act="gmadd">Partita vuota</button></div>
+    <p class="hint">Dal foglio gara i titolari partono con i minuti pieni e la panchina a 0: correggi solo i cambi. Presenza in partita = almeno 1 minuto giocato.</p>
+    <div class="reglist">${list || '<p class="empty">Nessuna partita registrata.</p>'}</div>`;
+}
+function gameEditor(g){
+  const pl = g.pl ||= {};
+  const rows = byName().map(p => {
+    const x = pl[p.id] || {};
+    const tg = (k, lbl, title) => `<button class="tgl ${k}" data-gmtgl="${p.id}" data-k="${k}" aria-pressed="${!!x[k]}" title="${title}">${lbl}</button>`;
+    return `<div class="gmrow ${numOr0(x.min)>0?'on':''}">
+      <div class="callname">${esc(p.name)}</div>
+      <label class="mini">Min<input type="number" inputmode="numeric" min="0" max="130" data-gmp="${p.id}" data-k="min" value="${x.min??''}"></label>
+      <label class="mini">Gol<input type="number" inputmode="numeric" min="0" max="20" data-gmp="${p.id}" data-k="g" value="${x.g||''}"></label>
+      <div class="row" style="gap:4px">${tg('st','T','Titolare')}${tg('y','🟨','Ammonito')}${tg('r','🟥','Espulso')}</div>
+    </div>`;
+  }).join('');
+  return `<div class="row" style="margin:14px 0 10px"><button class="btn small ghost" data-act="regback">← Tutte le partite</button></div>
+    <div class="grid">
+      <div><label class="f" for="gm_date">Data</label><input id="gm_date" type="date" data-gmf="date" value="${esc(g.date)}"></div>
+      <div><label class="f" for="gm_opp">Avversario</label><input id="gm_opp" data-gmf="opponent" value="${esc(g.opponent||'')}"></div>
+      <div><label class="f" for="gm_home">Sede</label><select id="gm_home" data-gmf="home"><option value="1" ${g.home?'selected':''}>Casa</option><option value="" ${!g.home?'selected':''}>Trasferta</option></select></div>
+      <div><label class="f" for="gm_comp">Tipo</label><select id="gm_comp" data-gmf="comp">${COMP_TYPES.map(c=>`<option ${g.comp===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label class="f" for="gm_dur">Durata (minuti)</label><input id="gm_dur" type="number" inputmode="numeric" data-gmf="dur" value="${esc(g.dur)}"></div>
+      <div><label class="f">Risultato (noi - loro)</label><div class="row" style="flex-wrap:nowrap"><input type="number" inputmode="numeric" min="0" data-gmf="gf" value="${esc(g.gf??'')}" aria-label="Gol fatti"><span>-</span><input type="number" inputmode="numeric" min="0" data-gmf="ga" value="${esc(g.ga??'')}" aria-label="Gol subiti"></div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:16px"><span class="note">T = titolare · 🟨 ammonito · 🟥 espulso</span><button class="btn small ghost danger" data-act="gmdel">Elimina partita</button></div>
+    <div class="callist" style="margin-top:10px">${rows}</div>`;
+}
+function viewTests(){
+  const t = curTest();
+  if(t) return testEditor(t);
+  const list = S.reg.tests.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t => {
+    const n = Object.values(t.res||{}).filter(r => r.s!=null).length;
+    return `<div class="regrow"><div><b>${esc(t.name||'Test')}</b> · ${fmtDate(t.date)}</div>
+      <div class="row"><span class="countchip"><b>${n}</b> tempi</span><button class="btn small" data-opents="${t.id}">Apri</button></div></div>`;
+  }).join('');
+  return `<div class="row" style="margin:14px 0 6px"><button class="btn primary" data-act="tsadd">Nuovo test</button></div>
+    <p class="hint">Scrivi i tempi come 12:51 (minuti:secondi). Qualsiasi altra parola (es. "differenziato", "non svolto") resta come nota.</p>
+    <div class="reglist">${list || '<p class="empty">Nessun test registrato.</p>'}</div>`;
+}
+function testEditor(t){
+  const res = t.res ||= {};
+  const rows = byName().map(p => {
+    const r = res[p.id];
+    const v = r ? (r.s!=null ? `${Math.floor(r.s/60)}:${String(r.s%60).padStart(2,'0')}` : (r.note||'')) : '';
+    return `<div class="gmrow"><div class="callname">${esc(p.name)}</div><input data-tsr="${p.id}" value="${esc(v)}" placeholder="mm:ss" aria-label="Tempo ${esc(p.name)}" style="max-width:170px"></div>`;
+  }).join('');
+  return `<div class="row" style="margin:14px 0 10px"><button class="btn small ghost" data-act="regback">← Tutti i test</button></div>
+    <div class="grid">
+      <div><label class="f" for="ts_name">Test</label><input id="ts_name" data-tsf="name" value="${esc(t.name||'')}" list="testnames" placeholder="Es. 3 km"></div>
+      <div><label class="f" for="ts_date">Data</label><input id="ts_date" type="date" data-tsf="date" value="${esc(t.date)}"></div>
+    </div>
+    <datalist id="testnames">${[...new Set(['3 km','2 km','1 km', ...S.reg.tests.map(x=>x.name).filter(Boolean)])].map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn small ghost danger" data-act="tsdel">Elimina test</button></div>
+    <div class="callist" style="margin-top:10px">${rows}</div>`;
+}
+
+/* ---------- Scheda Statistiche ---------- */
+function viewStatistiche(){
+  if(!S.players.length) return `<section class="panel"><h2>Statistiche</h2><p class="empty">Prima serve la rosa nella scheda Rosa.</p></section>`;
+  const {tr, gm, rows, team} = computeStats();
+  const kpi = (v, l, sub='') => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
+  const kpis = [
+    kpi(team.nT, 'Allenamenti', team.avgPresent!=null ? `media ${team.avgPresent.toFixed(1)} presenti` : ''),
+    kpi(pctTxt(team.avgPct), 'Presenza media', team.low ? `${team.low} sotto il ${LOW_ATT*100}%` : ''),
+    kpi(team.nG, 'Partite', team.nScored ? `${team.w}V ${team.d}N ${team.l}P` : ''),
+    kpi(team.nScored ? `${team.gf}-${team.ga}` : '—', 'Gol fatti-subiti', team.nScored ? `${(team.gf/team.nScored).toFixed(1)} - ${(team.ga/team.nScored).toFixed(1)} a partita` : 'inserisci i risultati')
+  ].join('');
+  const bar = v => v==null ? '<span class="note">—</span>' : `<span class="pbar ${v<LOW_ATT?'low':''}"><i style="width:${Math.round(v*100)}%"></i></span><b>${pctTxt(v)}</b>`;
+  const trRows = rows.slice().sort((a,b)=>(b.pct??-1)-(a.pct??-1)).map(r => `<tr class="${r.pct!=null&&r.pct<LOW_ATT?'low':''}">
+      <td class="nm">${esc(r.p.name)}</td><td>${r.c.P}</td><td>${r.c.A}</td><td>${r.c.G}</td><td>${r.c.INF}</td><td class="pc">${bar(r.pct)}</td></tr>`).join('');
+  const gmRows = rows.slice().sort((a,b)=>b.min-a.min).map(r => `<tr>
+      <td class="nm">${esc(r.p.name)}</td><td>${r.pres}</td><td>${r.tit}</td><td>${r.min}'</td><td>${pctTxt(r.minPct)}</td><td>${r.avg!=null?Math.round(r.avg)+"'":'—'}</td><td>${r.gol||''}</td><td>${r.amm||''}</td><td>${r.esp||''}</td></tr>`).join('');
+  const {months, per} = monthlyAttendance();
+  const moRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${months.map(m => { const o = per.get(p.id)?.[m]; const v = o && o.tot ? o.P/o.tot : null; return `<td class="${v!=null&&v<LOW_ATT?'lowc':''}">${pctTxt(v)}</td>`; }).join('')}</tr>`).join('');
+  const tests = S.reg.tests.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const tsRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${tests.map(t => `<td>${esc(testCell((t.res||{})[p.id]))||'<span class="note">—</span>'}</td>`).join('')}</tr>`).join('');
+  return `<section class="panel">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <h2>Statistiche · ${esc(TEAM()?.name||'')}</h2>
+      <div class="row"><label class="f" for="statperiod" style="margin:0">Periodo</label><select id="statperiod" data-statperiod="1" style="width:auto">${periodOptions()}</select></div>
+    </div>
+    <div class="kpis">${kpis}</div>
+    ${isAdmin() ? `<div class="row" style="margin-top:12px"><button class="btn primary" data-act="statspdf">Scarica report PDF</button><span class="note">Riepilogo, presenze giorno per giorno, minuti partita per partita, test.</span></div>` : ''}
+  </section>
+  <section class="panel">
+    <h3 class="convh3">Allenamenti</h3>
+    ${tr.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Presente">P</th><th title="Assente">A</th><th title="Assente giustificato">G</th><th title="Infortunato">INF</th><th>Presenza</th></tr></thead><tbody>${trRows}</tbody></table></div>
+      <p class="note" style="margin-top:6px">In rosso chi è sotto il ${LOW_ATT*100}% di presenze. Le assenze per infortunio non abbassano la percentuale.</p>` : '<p class="empty">Nessun allenamento nel periodo.</p>'}
+  </section>
+  <section class="panel">
+    <h3 class="convh3">Partite</h3>
+    ${gm.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Partite giocate (almeno 1 minuto)">Pres.</th><th title="Da titolare">Tit.</th><th>Minuti</th><th title="Minuti giocati sul totale disponibile">% min</th><th title="Minuti medi a partita giocata">Media</th><th>Gol</th><th>🟨</th><th>🟥</th></tr></thead><tbody>${gmRows}</tbody></table></div>` : '<p class="empty">Nessuna partita nel periodo.</p>'}
+  </section>
+  ${months.length > 1 ? `<section class="panel"><h3 class="convh3">Presenze allenamenti per mese</h3>
+    <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${months.map(m=>`<th>${monthLabel(m)}</th>`).join('')}</tr></thead><tbody>${moRows}</tbody></table></div></section>` : ''}
+  ${tests.length ? `<section class="panel"><h3 class="convh3">Test atletici</h3>
+    <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${tests.map(t=>`<th>${esc(t.name||'Test')}<br><span class="note">${fmtDate(t.date).slice(0,5)}</span></th>`).join('')}</tr></thead><tbody>${tsRows}</tbody></table></div></section>` : ''}`;
+}
+
+/* ---------- Eventi registro e statistiche ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if(!t || !curTeam) return;
+  const R = S.reg, act = t.dataset.act;
+  if(t.dataset.regsub){ regSub = t.dataset.regsub; openTrainingId = openGameId = openTestId = null; render(); return; }
+  if(t.dataset.opentr){ openTrainingId = t.dataset.opentr; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.opengm){ openGameId = t.dataset.opengm; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.opents){ openTestId = t.dataset.opents; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.attid){ const tr = curTraining(); if(tr){ tr.att[t.dataset.attid] = t.dataset.attstatus; save('registro'); render(); } return; }
+  if(t.dataset.gmtgl){ const g = curGame(); if(g){ const x = g.pl[t.dataset.gmtgl] ||= {}; x[t.dataset.k] = x[t.dataset.k] ? 0 : 1; save('registro'); render(); } return; }
+  switch(act){
+    case 'regback': openTrainingId = openGameId = openTestId = null; render(); break;
+    case 'tradd': {
+      const date = $('#newtrdate')?.value || todayISO();
+      const ex = R.trainings.find(x => x.date===date);
+      if(ex){ openTrainingId = ex.id; render(); break; }
+      const tr = {id:uid('tr'), date, note:'', att:Object.fromEntries(S.players.map(p => [p.id,'P']))};
+      R.trainings.push(tr); openTrainingId = tr.id; save('registro'); render(); break; }
+    case 'trallp': { const tr = curTraining(); if(tr){ S.players.forEach(p => tr.att[p.id]='P'); save('registro'); render(); } break; }
+    case 'trdel': { const tr = curTraining(); if(tr && confirm(`Eliminare l'allenamento del ${fmtDate(tr.date)}?`)){ R.trainings = R.trainings.filter(x=>x!==tr); openTrainingId = null; save('registro'); render(); } break; }
+    case 'gmfromsheet': {
+      const s = S.sheet;
+      const ex = R.games.find(g => g.date===s.date && (g.opponent||'')===(s.opponent||''));
+      if(ex){ openGameId = ex.id; render(); break; }
+      const dur = 70, pl = {};
+      Object.values(s.lineup||{}).forEach(pid => { pl[pid] = {min:dur, st:1}; });
+      (s.bench||[]).forEach(pid => { pl[pid] ||= {min:0}; });
+      const g = {id:uid('gm'), date:s.date, opponent:s.opponent||'', home:!!s.home, comp:s.convType||'Campionato', dur, gf:'', ga:'', pl};
+      R.games.push(g); openGameId = g.id; save('registro'); render(); window.scrollTo(0,0); break; }
+    case 'gmadd': { const g = {id:uid('gm'), date:todayISO(), opponent:'', home:true, comp:'Campionato', dur:70, gf:'', ga:'', pl:{}}; R.games.push(g); openGameId = g.id; save('registro'); render(); break; }
+    case 'gmdel': { const g = curGame(); if(g && confirm(`Eliminare la partita del ${fmtDate(g.date)}?`)){ R.games = R.games.filter(x=>x!==g); openGameId = null; save('registro'); render(); } break; }
+    case 'tsadd': { const ts = {id:uid('ts'), date:todayISO(), name:'', res:{}}; R.tests.push(ts); openTestId = ts.id; save('registro'); render(); break; }
+    case 'tsdel': { const ts = curTest(); if(ts && confirm(`Eliminare il test "${ts.name||'Test'}" del ${fmtDate(ts.date)}?`)){ R.tests = R.tests.filter(x=>x!==ts); openTestId = null; save('registro'); render(); } break; }
+    case 'statspdf': if(isAdmin()) downloadStatsPdf(); break;
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if(!curTeam) return;
+  if(t.dataset.trf){ const tr = curTraining(); if(tr){ tr[t.dataset.trf] = t.value; save('registro'); } return; }
+  if(t.dataset.gmf){ const g = curGame(); if(g){ g[t.dataset.gmf] = t.dataset.gmf==='home' ? !!t.value : t.value; save('registro'); } return; }
+  if(t.dataset.gmp){
+    const g = curGame(); if(!g) return;
+    const x = g.pl[t.dataset.gmp] ||= {};
+    x[t.dataset.k] = t.value==='' ? '' : Math.max(0, +t.value||0);
+    t.closest('.gmrow')?.classList.toggle('on', numOr0(x.min) > 0);
+    save('registro'); return;
+  }
+  if(t.dataset.tsf){ const ts = curTest(); if(ts){ ts[t.dataset.tsf] = t.value; save('registro'); } return; }
+  if(t.dataset.tsr){
+    const ts = curTest(); if(!ts) return;
+    const v = t.value.trim(), sec = parseTime(v);
+    if(!v) delete ts.res[t.dataset.tsr];
+    else ts.res[t.dataset.tsr] = sec!=null ? {s:sec} : {note:v};
+    save('registro'); return;
+  }
+});
+document.addEventListener('change', e => {
+  if(e.target.dataset.statperiod){ statPeriod = e.target.value; render(); }
+});
+
+/* ---------- Report PDF statistiche (solo admin) ---------- */
+function reportHeader(x, imgs, title, sub){
+  const mx = 36, hh = 70, lw = 160, rw = 70;
+  if(imgs.figc){ const fh = lw*imgs.figc.height/imgs.figc.width; x.drawImage(imgs.figc, mx, 24+(hh-fh)/2, lw, fh); }
+  if(imgs.logo) x.drawImage(imgs.logo, W-mx-rw, 24, rw, rw);
+  const cx = W/2;
+  T(x, 'ACADEMY CASATESE MERATE', cx, 50, {size:26, weight:700, align:'center', max:700});
+  T(x, (TEAM()?.category || teamLabel()).toUpperCase(), cx, 78, {size:18, weight:700, align:'center', color:MUTED, max:700});
+  T(x, title, mx, 128, {size:24, weight:700, cond:true});
+  if(sub) T(x, sub, W-mx, 128, {size:13, color:MUTED, align:'right', max:600});
+  x.fillStyle = INK; x.fillRect(mx, 138, W-2*mx, 2);
+  return 154;
+}
+/* Tabella generica: cols [{t, w, al}], rows [[...]], fill(ri, ci, val) → colore cella o null */
+function drawTable(x, x0, y0, cols, rows, o={}){
+  const headH = o.headH || 24, rh = o.rh || 22, fs = o.fs || Math.min(12, rh*0.52);
+  const tw = cols.reduce((a,c)=>a+c.w, 0);
+  x.fillStyle = INK; x.fillRect(x0, y0, tw, headH);
+  let cx = x0;
+  cols.forEach(c => { T(x, c.t, c.al==='left' ? cx+8 : cx+c.w/2, y0+headH/2+1, {size:Math.min(11, headH*0.45), weight:700, base:'middle', align:c.al==='left'?'left':'center', color:'#fff', max:c.w-8}); cx += c.w; });
+  let y = y0 + headH;
+  rows.forEach((r, ri) => {
+    x.fillStyle = ri%2 ? '#F7F7F5' : '#fff'; x.fillRect(x0, y, tw, rh);
+    cx = x0;
+    cols.forEach((c, ci) => {
+      const f = o.fill && o.fill(ri, ci, r[ci]);
+      if(f){ x.fillStyle = f; x.fillRect(cx+1, y+1, c.w-2, rh-2); }
+      x.strokeStyle = LINE_C; x.lineWidth = 1; x.strokeRect(cx, y, c.w, rh);
+      const bold = o.bold && o.bold(ri, ci);
+      T(x, r[ci] ?? '', c.al==='left' ? cx+8 : cx+c.w/2, y+rh/2+1, {size:fs, weight:(ci===0||bold)?700:500, base:'middle', align:c.al==='left'?'left':'center', max:c.w-8, color:(o.color && o.color(ri,ci,r[ci])) || INK});
+      cx += c.w;
+    });
+    y += rh;
+  });
+  return y;
+}
+const chunk = (a, n) => a.length ? Array.from({length:Math.ceil(a.length/n)}, (_,i) => a.slice(i*n, i*n+n)) : [[]];
+const ATT_FILL = {P:'#DDEFE2', A:'#F6D5DA', G:'#FBEBC8', INF:'#E4D9F2'};
+function statsPages(imgs){
+  const {tr, gm, rows, team} = computeStats();
+  const period = statPeriod==='all' ? 'Tutta la stagione' : monthLabel(statPeriod);
+  const sub = `${period} · aggiornato al ${fmtDate(todayISO())}`;
+  const pages = [];
+  const players = byName(), mx = 36, tw = W - 2*mx;
+  const rhFor = (y, n) => Math.max(14, Math.min(26, (H - 50 - y) / Math.max(n,1)));
+  const foot = (x, i) => T(x, `Report statistiche · ${TEAM()?.name||""}`, mx, H-18, {size:11, color:MUTED});
+
+  // 1. Riepilogo
+  { const [c, x] = cv(); let y = reportHeader(x, imgs, 'Riepilogo statistiche', sub);
+    const k = [[team.nT, 'Allenamenti'], [pctTxt(team.avgPct), 'Presenza media'], [team.nG, 'Partite giocate'],
+               [team.nScored ? `${team.w}V ${team.d}N ${team.l}P` : '—', 'Risultati'], [team.nScored ? `${team.gf}-${team.ga}` : '—', 'Gol fatti-subiti'], [team.low, `Sotto il ${LOW_ATT*100}% presenze`]];
+    const kw = tw / k.length;
+    k.forEach(([v,l], i) => { x.strokeStyle = LINE_C; x.lineWidth = 1; x.strokeRect(mx+i*kw+4, y, kw-8, 56); T(x, v, mx+i*kw+kw/2, y+26, {size:22, weight:700, align:'center', cond:true}); T(x, l, mx+i*kw+kw/2, y+45, {size:11, color:MUTED, align:'center'}); });
+    y += 72;
+    const cols = [{t:'GIOCATORE', w:230, al:'left'}, {t:'ALL. P', w:66}, {t:'A', w:50}, {t:'G', w:50}, {t:'INF', w:50}, {t:'% PRES.', w:80},
+                  {t:'PARTITE', w:76}, {t:'TIT.', w:60}, {t:'MINUTI', w:80}, {t:'% MIN', w:72}, {t:'MEDIA', w:70}, {t:'GOL', w:56}, {t:'AMM.', w:56}, {t:'ESP.', w:56}];
+    const scale = tw / cols.reduce((a,c)=>a+c.w,0); cols.forEach(c => c.w *= scale);
+    const data = rows.map(r => [r.p.name, r.c.P, r.c.A, r.c.G, r.c.INF, pctTxt(r.pct), r.pres, r.tit, r.min, pctTxt(r.minPct), r.avg!=null?Math.round(r.avg)+"'":'—', r.gol||'', r.amm||'', r.esp||'']);
+    drawTable(x, mx, y, cols, data, {rh:rhFor(y+24, data.length), fill:(ri,ci) => ci===5 && rows[ri].pct!=null && rows[ri].pct<LOW_ATT ? '#F6D5DA' : null});
+    foot(x); pages.push(c); }
+
+  // 2. Presenze allenamenti giorno per giorno
+  chunk(tr, 24).forEach((part, pi, all) => {
+    const [c, x] = cv(); let y = reportHeader(x, imgs, 'Presenze allenamenti' + (all.length>1 ? ` (${pi+1}/${all.length})` : ''), sub);
+    if(!part.length){ T(x, 'Nessun allenamento registrato nel periodo.', mx, y+30, {size:15, color:MUTED}); foot(x); pages.push(c); return; }
+    const nameW = 200, totW = 52, dayW = Math.min(44, (tw - nameW - totW*4) / part.length);
+    const cols = [{t:'GIOCATORE', w:nameW, al:'left'}, ...part.map(t => ({t:fmtDate(t.date).slice(0,5), w:dayW})), {t:'P', w:totW}, {t:'A', w:totW}, {t:'G+INF', w:totW}, {t:'%', w:totW}];
+    const data = players.map(p => {
+      const st = part.map(t => (t.att||{})[p.id] || '');
+      const all2 = tr.map(t => (t.att||{})[p.id]).filter(Boolean);
+      const n = v => all2.filter(x=>x===v).length;
+      return [p.name, ...st, n('P'), n('A'), n('G')+n('INF'), pctTxt(attPct(n('P'), n('A'), n('G')))];
+    });
+    drawTable(x, mx, y, cols, data, {rh:rhFor(y+24, data.length), fs:11, fill:(ri,ci,v) => ci>0 && ci<=part.length ? ATT_FILL[v] || null : null});
+    T(x, 'P presente · A assente · G assente giustificato · INF infortunato (non conta nella %) · totali su tutto il periodo', mx, H-36, {size:11, color:MUTED});
+    foot(x); pages.push(c);
+  });
+
+  // 3. Minuti partita per partita
+  chunk(gm, 12).forEach((part, pi, all) => {
+    const [c, x] = cv(); let y = reportHeader(x, imgs, 'Minuti in partita' + (all.length>1 ? ` (${pi+1}/${all.length})` : ''), sub);
+    if(!part.length){ T(x, 'Nessuna partita registrata nel periodo.', mx, y+30, {size:15, color:MUTED}); foot(x); pages.push(c); return; }
+    const nameW = 200, totW = 62, gW = Math.min(70, (tw - nameW - totW*3) / part.length);
+    // intestazione su due righe: data + avversario/risultato
+    const cols = [{t:'GIOCATORE', w:nameW, al:'left'}, ...part.map(g => ({t:fmtDate(g.date).slice(0,5), w:gW})), {t:'PRES.', w:totW}, {t:'MINUTI', w:totW}, {t:'GOL', w:totW}];
+    let gx = mx + nameW;
+    part.forEach(g => { T(x, [g.opponent, hasScore(g) ? `${g.gf}-${g.ga}` : ''].filter(Boolean).join(' '), gx+gW/2, y+8, {size:9.5, align:'center', color:MUTED, max:gW-4}); gx += gW; });
+    y += 16;
+    const data = players.map(p => {
+      const r = rows.find(z => z.p.id===p.id);
+      return [p.name, ...part.map(g => { const v = (g.pl||{})[p.id] || {}; const m = numOr0(v.min); return m ? `${m}'${v.g?' ⚽'+(v.g>1?v.g:''):''}` : '—'; }), r.pres, r.min, r.gol||''];
+    });
+    drawTable(x, mx, y, cols, data, {rh:rhFor(y+24, data.length), fs:11,
+      fill:(ri,ci) => { if(ci===0 || ci>part.length) return null; const v = (part[ci-1].pl||{})[players[ri].id] || {}; return v.st ? '#DDEFE2' : (numOr0(v.min) ? '#EEF4FA' : null); },
+      color:(ri,ci,v) => v==='—' ? '#A0A8B0' : null});
+    T(x, 'In verde i titolari · minuti giocati per partita · ⚽ gol', mx, H-36, {size:11, color:MUTED});
+    foot(x); pages.push(c);
+  });
+
+  // 4. Presenze per mese + test atletici
+  { const [c, x] = cv(); let y = reportHeader(x, imgs, 'Presenze per mese e test atletici', sub);
+    const {months, per} = monthlyAttendance();
+    const tests = S.reg.tests.slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const half = (tw - 24) / 2;
+    if(months.length){
+      const mw = Math.min(70, (half - 170) / months.length);
+      const cols = [{t:'GIOCATORE', w:170, al:'left'}, ...months.map(m => ({t:monthLabel(m).toUpperCase(), w:mw}))];
+      const data = players.map(p => [p.name, ...months.map(m => { const o = per.get(p.id)?.[m]; return o && o.tot ? pctTxt(o.P/o.tot) : '—'; })]);
+      drawTable(x, mx, y, cols, data, {rh:rhFor(y+24, data.length), fs:11, fill:(ri,ci) => { if(!ci) return null; const o = per.get(players[ri].id)?.[months[ci-1]]; return o && o.tot && o.P/o.tot < LOW_ATT ? '#F6D5DA' : null; }});
+    } else T(x, 'Nessun allenamento registrato.', mx, y+20, {size:14, color:MUTED});
+    const tx = mx + half + 24;
+    if(tests.length){
+      const tw2 = Math.min(90, (half - 170) / tests.length);
+      const cols = [{t:'GIOCATORE', w:170, al:'left'}, ...tests.map(t => ({t:`${(t.name||'TEST').toUpperCase()} ${fmtDate(t.date).slice(0,5)}`, w:tw2}))];
+      const data = players.map(p => [p.name, ...tests.map(t => testCell((t.res||{})[p.id]) || '—')]);
+      drawTable(x, tx, y, cols, data, {rh:rhFor(y+24, data.length), fs:10.5, color:(ri,ci,v) => (ci && v && !/\d/.test(v)) ? MUTED : null});
+    } else T(x, 'Nessun test registrato.', tx, y+20, {size:14, color:MUTED});
+    foot(x); pages.push(c); }
+  return pages;
+}
+async function downloadStatsPdf(){
+  if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
+  setStatus('Creo il report…');
+  await ensureFonts();
+  const [logo, figc] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]);
+  const pages = statsPages({logo, figc});
+  const doc = new window.jspdf.jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  pages.forEach((c,i) => { if(i) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210); });
+  const name = ['REPORT', (TEAM()?.category || TEAM()?.name || '').replace(/[^\w]+/g,'_').toUpperCase(), statPeriod==='all' ? 'STAGIONE' : statPeriod, todayISO()].filter(Boolean).join('_') + '.pdf';
+  try{
+    if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
+    else browserDownload(name, doc.output('blob'));
+    setStatus('Report pronto');
   }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }
 
@@ -1409,12 +1954,16 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'downloadconv': downloadConvocazione(); break;
-    case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.mapsUrl=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
-    case 'mapssearch': { const q = (S.sheet.meetAddress || S.sheet.venue || '').trim(); if(q) window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener'); else setStatus('Scrivi prima l\'indirizzo di ritrovo'); break; }
+    case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'exportbackup': exportBackup(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(val === ADMIN_PIN){ adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break; }
+      if(secureMode){
+        setStatus('Accesso…');
+        coachLogin(val).then(ok => { gateError = !ok; setStatus(ok ? 'Sincronizzato' : ''); if(!ok) render(); });
+        break;
+      }
       const tm = S.teams.find(x => (x.code||'') === val);
       if(tm){ gateError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); break; }
       gateError = true; render();
@@ -1438,6 +1987,7 @@ document.addEventListener('input', e => {
   else if(t.dataset.sheet && t.tagName!=='SELECT'){
     S.sheet[t.dataset.sheet]=t.value;
     save('sheet');
+    if(t.dataset.sheet==='meetAddress'){ const a = $('#cv_mapslink'); if(a){ const u = mapsLink(S.sheet); a.href = u; a.hidden = !u; } }
     if(['team','opponent','date'].includes(t.dataset.sheet)) $('#matchline').textContent = (S.sheet.opponent?`${teamLabel()} contro ${S.sheet.opponent}`:'Nuova partita') + (S.sheet.date?`, ${fmtDate(S.sheet.date)}`:'');
   }
   else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
