@@ -207,6 +207,7 @@ summary{cursor:pointer;font-weight:600}
 .countchip[data-att="A"]{border-color:var(--red);color:var(--red)}
 .edhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .edhead h3{margin:0}
+.edhead > .grid{flex:1 1 100%}
 .matchcard{display:flex;flex-direction:column;gap:2px}
 .matchcard b{font-family:var(--cond);font-size:22px}
 .matchcard small{color:var(--muted);font-weight:600}
@@ -249,6 +250,7 @@ summary{cursor:pointer;font-weight:600}
 .cols2{columns:2 240px;column-gap:28px}
 .teamcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:var(--paper)}
 .nextmatch{background:var(--paper);border:2px solid var(--sel);border-radius:10px;padding:10px 12px;margin-bottom:14px}
+.teamcard.past{opacity:.7}
 .teamcard .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .teamcard .hd strong{font-family:var(--cond);font-size:21px;font-weight:700}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--bg);padding:4px 9px;border-radius:6px;border:1px solid var(--line);letter-spacing:.05em}
@@ -299,7 +301,7 @@ const BASES = {
 function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{},home:true,convType:'Campionato',meetTime:'',meetAddress:'',convNotes:'',callup:{}}}
 function effSlot(s, n, bx, by){ const o = (s.slotPos||{})[n]; return o ? {x:o.x, y:o.y} : {x:bx, y:by}; }
 
-function defaultReg(){return {trainings:[], games:[], tests:[], gk:[]}}
+function defaultReg(){return {trainings:[], games:[], tests:[], gk:[], friendlies:[]}}
 let S = {teams:[], players:[], schemes:[], sheet:defaultSheet(), calendar:[], reg:defaultReg()};
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
@@ -779,9 +781,12 @@ function viewRosa(){
   </section>`;
 }
 
+/* Calendario completo: partite ufficiali (le modifica solo l'admin) + amichevoli, salvate nel registro
+   della squadra così le può aggiungere anche il mister. */
+function allCalendar(){ return [...S.calendar, ...(S.reg.friendlies||[]).map(m => ({...m, friendly:true}))]; }
 function nextMatch(){
-  const today = new Date().toISOString().slice(0,10);
-  return S.calendar.filter(m => m.date && m.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0] || null;
+  const today = todayISO();
+  return allCalendar().filter(m => m.date && m.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0] || null;
 }
 function minus75(t){
   if(!/^\d{1,2}:\d{2}$/.test(t||'')) return '';
@@ -821,7 +826,7 @@ function viewPartita(){
     ${nm ? `<div class="nextmatch">
       <span class="note">Prossima partita in calendario</span>
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
-        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}</div>
+        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}${nm.friendly?' · <span class="note">amichevole</span>':''}</div>
         <button class="btn small primary" data-act="usenext">Usa questa</button>
       </div>
       <p class="hint" style="margin:6px 0 0">Oppure ignora e scrivi qui sotto i dati di un'altra partita (amichevole, recupero, ecc.).</p>
@@ -837,6 +842,7 @@ function viewPartita(){
     <div style="margin-top:12px"><label class="f" for="f_notes">Note per la squadra</label><textarea id="f_notes" data-sheet="notes">${esc(s.notes)}</textarea></div>
     <div class="row" style="margin-top:14px"><button class="btn ghost danger" data-act="newmatch">Nuova partita (svuota formazione e dati)</button></div>
   </section>
+  ${viewFriendlies()}
   ${A ? `<section class="panel">
     <h3 style="margin-top:0">Calendario</h3>
     <p class="hint">Le partite in programma per questa squadra: servono solo per la scorciatoia "Usa questa" qui sopra.</p>
@@ -845,6 +851,28 @@ function viewPartita(){
   </section>` : ''}`;
 }
 
+function viewFriendlies(){
+  const today = todayISO();
+  const rows = (S.reg.friendlies||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(m => `
+    <div class="teamcard ${m.date && m.date < today ? 'past' : ''}">
+      <div class="grid">
+        <div><label class="f">Data</label><input type="date" data-frid="${m.id}" data-frf="date" value="${esc(m.date||'')}"></div>
+        <div><label class="f">Ora</label><input type="time" data-frid="${m.id}" data-frf="time" value="${esc(m.time||'')}"></div>
+        <div><label class="f">Avversario</label><input data-frid="${m.id}" data-frf="opponent" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
+        <div><label class="f">Campo</label><input data-frid="${m.id}" data-frf="venue" value="${esc(m.venue||'')}" placeholder="Campo"></div>
+      </div>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+        <label class="row" style="gap:6px"><input type="checkbox" data-frid="${m.id}" data-frf="home" ${m.home?'checked':''}> In casa</label>
+        <button class="iconbtn" aria-label="Elimina amichevole" data-frdel="${m.id}">×</button>
+      </div>
+    </div>`).join('');
+  return `<section class="panel">
+    <h3 style="margin-top:0">Amichevoli</h3>
+    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario ("Usa questa" qui sopra) e nella tabella Partite della scheda Presenze.</p>
+    ${rows || '<p class="empty">Nessuna amichevole.</p>'}
+    <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
+  </section>`;
+}
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
@@ -868,7 +896,7 @@ function viewConvocazioni(){
     ${nm ? `<div class="nextmatch">
       <span class="note">Prossima partita in calendario</span>
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
-        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}</div>
+        <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}${nm.friendly?' · <span class="note">amichevole</span>':''}</div>
         <button class="btn small primary" data-act="usenext">Usa questa</button>
       </div>
       <p class="hint" style="margin:6px 0 0">Oppure ignora e compila tu i campi qui sotto per un'altra partita (amichevole, recupero, ecc.).</p>
@@ -1548,11 +1576,11 @@ const curTest = () => S.reg.tests.find(x => x.id===openTestId);
 
 /* ---------- Partite: calendario + registro ---------- */
 const isGk = pid => (S.reg.gk||[]).includes(pid);
-const calOf = g => g.calId ? S.calendar.find(m => m.id===g.calId) : null;
+const calOf = g => g.calId ? allCalendar().find(m => m.id===g.calId) : null;
 /* dati della partita: quelli del calendario hanno la precedenza (se il calendario cambia, la tabella segue) */
 function gameInfo(g){
   const m = calOf(g);
-  return m ? {date:m.date, opponent:m.opponent||'', home:!!m.home, comp:g.comp||'Campionato', venue:m.venue||''} : {date:g.date, opponent:g.opponent||'', home:!!g.home, comp:g.comp||'Amichevole', venue:''};
+  return m ? {date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly ? 'Amichevole' : (g.comp||'Campionato'), venue:m.venue||''} : {date:g.date, opponent:g.opponent||'', home:!!g.home, comp:g.comp||'Amichevole', venue:''};
 }
 const plGk = (g, pid) => { const x = (g.pl||{})[pid] || {}; return x.gk!=null ? !!x.gk : isGk(pid); };
 const gamePlayed = g => Object.values(g.pl||{}).some(x => numOr0(x.min) > 0);
@@ -1568,7 +1596,7 @@ const gameTitle = g => { const i = gameInfo(g); return i.opponent ? (i.home ? `$
 /* colonne della tabella partite: partite del calendario fino a oggi + la prossima, più quelle fuori calendario */
 function matchColumns(){
   const today = todayISO();
-  const cal = S.calendar.filter(m => m.date).sort((a,b) => a.date.localeCompare(b.date));
+  const cal = allCalendar().filter(m => m.date).sort((a,b) => a.date.localeCompare(b.date));
   const next = cal.find(m => m.date > today);
   const cols = cal.filter(m => m.date <= today || m===next).map(m => ({cal:m, game:S.reg.games.find(g => g.calId===m.id)}));
   S.reg.games.filter(g => !g.calId || !cal.some(m => m.id===g.calId)).forEach(g => cols.push({cal:null, game:g}));
@@ -1717,11 +1745,11 @@ function viewGames(){
     }).join('');
     return `<tr><th class="nm" scope="row">${isGk(p.id)?'🧤 ':''}${esc(p.name)}</th>${cells}<td class="tot">${pres}</td><td class="tot">${min}'</td><td class="tot">${gol||''}</td></tr>`;
   }).join('');
-  return `<div class="row regbar"><button class="btn" data-act="gmadd">+ Amichevole / fuori calendario</button></div>
+  return `<div class="row regbar"><button class="btn" data-act="gmadd">+ Amichevole</button><span class="note">finisce anche nel calendario della squadra</span></div>
     ${cols.length ? `<div class="tblwrap gridwrap"><table class="gtbl gms">
       <thead><tr><th class="nm">Giocatore</th>${head}<th class="tot">Pres.</th><th class="tot">Min</th><th class="tot">Gol</th></tr></thead>
       <tbody>${body}</tbody></table></div>
-      <p class="note legend2">Le partite arrivano dal Calendario: tocca una partita per segnare minuti, gol e gol subiti dal portiere. ⚽ gol · 🧤 gol subiti (portiere).</p>`
+      <p class="note legend2">Le partite arrivano dal Calendario (campionato e amichevoli): tocca una partita per segnare minuti, gol e gol subiti dal portiere. ⚽ gol · 🧤 gol subiti (portiere).</p>`
     : '<p class="empty">Nessuna partita: inserisci il calendario nella scheda Partita, oppure aggiungi un\'amichevole.</p>'}`;
 }
 function gameEditor(g){
@@ -1740,7 +1768,15 @@ function gameEditor(g){
       </div>
     </div>`;
   }).join('');
-  const header = cal
+  const header = cal && cal.friendly
+    ? `<div class="grid">
+        <div><label class="f" for="fr_date">Data</label><input id="fr_date" type="date" data-frid="${cal.id}" data-frf="date" value="${esc(cal.date)}"></div>
+        <div><label class="f" for="fr_time">Ora</label><input id="fr_time" type="time" data-frid="${cal.id}" data-frf="time" value="${esc(cal.time||'')}"></div>
+        <div><label class="f" for="fr_opp">Avversario</label><input id="fr_opp" data-frid="${cal.id}" data-frf="opponent" value="${esc(cal.opponent||'')}" placeholder="Es. Merate"></div>
+        <div><label class="f" for="fr_venue">Campo</label><input id="fr_venue" data-frid="${cal.id}" data-frf="venue" value="${esc(cal.venue||'')}" placeholder="Campo"></div>
+        <div><label class="f" for="fr_home">Sede</label><select id="fr_home" data-frid="${cal.id}" data-frf="home"><option value="1" ${cal.home?'selected':''}>Casa</option><option value="" ${!cal.home?'selected':''}>Trasferta</option></select></div>
+      </div>`
+    : cal
     ? `<div class="matchcard"><small>${esc(i.comp)} · ${weekday(i.date)} ${fmtDate(i.date)}${cal.time?' · '+esc(cal.time):''}</small><b>${esc(gameTitle(g))}</b>${i.venue?`<span class="note">${esc(i.venue)}</span>`:''}</div>`
     : `<div class="grid">
         <div><label class="f" for="gm_date">Data</label><input id="gm_date" type="date" data-gmf="date" value="${esc(g.date)}"></div>
@@ -1757,7 +1793,7 @@ function gameEditor(g){
     ${sheetMatch ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="gmfromsheet">Prendi titolari e panchina dalla Formazione</button><span class="note">i titolari partono con i minuti pieni, la panchina a 0</span></div>` : ''}
     <div class="callist" style="margin-top:12px">${rows}</div>
     <div class="row" style="margin-top:14px;justify-content:space-between"><div class="row"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo.</span></div>
-      <button class="btn small ghost danger" data-act="gmdel">${cal ? 'Svuota dati partita' : 'Elimina partita'}</button></div>`;
+      <button class="btn small ghost danger" data-act="gmdel">${cal && !cal.friendly ? 'Svuota dati partita' : 'Elimina partita'}</button></div>`;
 }
 function viewTests(){
   const t = curTest();
@@ -1832,6 +1868,7 @@ function viewStatistiche(){
 }
 
 /* ---------- Eventi registro e statistiche ---------- */
+function newFriendly(){ const f = {id:uid('am'), date:todayISO(), time:'', opponent:'', venue:'', home:true}; (S.reg.friendlies ||= []).push(f); return f; }
 function toggleGk(pid){ const a = S.reg.gk ||= []; S.reg.gk = a.includes(pid) ? a.filter(x => x!==pid) : [...a, pid]; save('registro'); render(); }
 document.addEventListener('click', e => {
   const t = e.target.closest('button');
@@ -1841,13 +1878,19 @@ document.addEventListener('click', e => {
   if(t.dataset.opentr){ openTrainingId = t.dataset.opentr; render(); window.scrollTo(0,0); return; }
   if(t.dataset.opengm){ openGameId = t.dataset.opengm; render(); window.scrollTo(0,0); return; }
   if(t.dataset.opencal){
-    const m = S.calendar.find(x => x.id===t.dataset.opencal); if(!m) return;
+    const m = allCalendar().find(x => x.id===t.dataset.opencal); if(!m) return;
     let g = R.games.find(x => x.calId===m.id);
-    if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; R.games.push(g); save('registro'); }
+    if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; R.games.push(g); save('registro'); }
     openGameId = g.id; render(); window.scrollTo(0,0); return;
   }
   if(t.dataset.opents){ openTestId = t.dataset.opents; render(); window.scrollTo(0,0); return; }
   if(t.dataset.gktoggle){ toggleGk(t.dataset.gktoggle); return; }
+  if(t.dataset.frdel){
+    const f = (R.friendlies||[]).find(x => x.id===t.dataset.frdel); if(!f) return;
+    const g = R.games.find(x => x.calId===f.id), hasData = g && gamePlayed(g);
+    if(!confirm(`Eliminare l'amichevole${f.opponent?' con '+f.opponent:''} del ${fmtDate(f.date)}?${hasData?' Si cancellano anche minuti e gol segnati.':''}`)) return;
+    R.friendlies = R.friendlies.filter(x => x!==f); R.games = R.games.filter(x => x.calId!==f.id); save('registro'); render(); return;
+  }
   if(t.dataset.attid){
     const tr = curTraining(); if(!tr) return;
     const pid = t.dataset.attid, cur = attOf(tr, pid);
@@ -1877,10 +1920,16 @@ document.addEventListener('click', e => {
       Object.values(s.lineup||{}).forEach(pid => { (g.pl[pid] ||= {}).min = dur; });
       (s.bench||[]).forEach(pid => { const x = g.pl[pid] ||= {}; if(x.min==null || x.min==='') x.min = 0; });
       save('registro'); render(); break; }
-    case 'gmadd': { const g = {id:uid('gm'), date:todayISO(), opponent:'', home:true, comp:'Amichevole', dur:DEFAULT_DUR, og:'', pl:{}}; R.games.push(g); openGameId = g.id; save('registro'); render(); window.scrollTo(0,0); break; }
+    case 'gmadd': {
+      const f = newFriendly();
+      const g = {id:uid('gm'), calId:f.id, date:f.date, opponent:'', home:true, comp:'Amichevole', dur:DEFAULT_DUR, og:'', pl:{}};
+      R.games.push(g); openGameId = g.id; save('registro'); render(); window.scrollTo(0,0); break; }
+    case 'fradd': newFriendly(); save('registro'); render(); break;
     case 'gmdel': {
       const g = curGame(); if(!g) break;
-      if(!confirm(g.calId ? `Cancellare minuti e gol di questa partita?` : `Eliminare la partita del ${fmtDate(g.date)}?`)) break;
+      const fr = (R.friendlies||[]).find(f => f.id===g.calId);
+      if(!confirm(fr ? `Eliminare l'amichevole del ${fmtDate(fr.date)} con minuti e gol?` : g.calId ? `Cancellare minuti e gol di questa partita?` : `Eliminare la partita del ${fmtDate(g.date)}?`)) break;
+      if(fr) R.friendlies = R.friendlies.filter(f => f!==fr);
       R.games = R.games.filter(x=>x!==g); openGameId = null; save('registro'); render(); break; }
     case 'tsadd': { const ts = {id:uid('ts'), date:todayISO(), name:'', res:{}}; R.tests.push(ts); openTestId = ts.id; save('registro'); render(); break; }
     case 'tsdel': { const ts = curTest(); if(ts && confirm(`Eliminare il test "${ts.name||'Test'}" del ${fmtDate(ts.date)}?`)){ R.tests = R.tests.filter(x=>x!==ts); openTestId = null; save('registro'); render(); } break; }
@@ -1891,6 +1940,11 @@ document.addEventListener('input', e => {
   const t = e.target;
   if(!curTeam) return;
   if(t.dataset.trf){ const tr = curTraining(); if(tr){ tr[t.dataset.trf] = t.value; save('registro'); } return; }
+  if(t.dataset.frid){
+    const f = (S.reg.friendlies||[]).find(x => x.id===t.dataset.frid); if(!f) return;
+    f[t.dataset.frf] = t.type==='checkbox' ? t.checked : (t.dataset.frf==='home' ? !!t.value : t.value);
+    save('registro'); return;
+  }
   if(t.dataset.gmf){
     const g = curGame(); if(!g) return;
     g[t.dataset.gmf] = t.dataset.gmf==='home' ? !!t.value : t.value;
@@ -2090,7 +2144,7 @@ document.addEventListener('click', e => {
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:genPin()}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
     case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
-    case 'usenext': { const nm = nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.home=!!nm.home; S.sheet.convType='Campionato'; save('sheet'); render(); } break; }
+    case 'usenext': { const nm = nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.home=!!nm.home; S.sheet.convType=nm.friendly?'Amichevole':'Campionato'; save('sheet'); render(); } break; }
     case 'bulk': {
       const lines = ($('#bulk').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
       lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
