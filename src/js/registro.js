@@ -57,13 +57,15 @@ function gameInfo(g){
   return m ? {date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly ? 'Amichevole' : (g.comp||'Campionato'), venue:m.venue||''} : {date:g.date, opponent:g.opponent||'', home:!!g.home, comp:g.comp||'Amichevole', venue:''};
 }
 const plGk = (g, pid) => { const x = (g.pl||{})[pid] || {}; return x.gk!=null ? !!x.gk : isGk(pid); };
-const gamePlayed = g => Object.values(g.pl||{}).some(x => numOr0(x.min) > 0);
+/* ha giocato: minuti > 0, oppure presenza senza minuti (pres: partite importate in cui i minuti non erano registrati) */
+const played = x => numOr0(x.min) > 0 || !!x.pres;
+const gamePlayed = g => Object.values(g.pl||{}).some(played);
 /* risultato calcolato: gol dei giocatori + autogol a favore / gol subiti dai portieri. Noto solo se è stato inserito qualcosa. */
 function gameScore(g){
   const pl = Object.entries(g.pl||{});
   const gf = pl.reduce((a,[,x]) => a + numOr0(x.g), 0) + numOr0(g.og);
   const ga = pl.reduce((a,[pid,x]) => a + (plGk(g,pid) ? numOr0(x.gc) : 0), 0);
-  const known = gf > 0 || pl.some(([pid,x]) => plGk(g,pid) && x.gc!=null && x.gc!=='' && numOr0(x.min) > 0);
+  const known = gf > 0 || pl.some(([pid,x]) => plGk(g,pid) && x.gc!=null && x.gc!=='' && played(x));
   return known ? {gf, ga} : null;
 }
 const gameTitle = g => { const i = gameInfo(g); return i.opponent ? (i.home ? `${teamLabel()} - ${i.opponent}` : `${i.opponent} - ${teamLabel()}`) : `Partita del ${fmtDate(i.date)}`; };
@@ -86,14 +88,15 @@ function computeStats(){
     const c = {P:0, A:0}; ABSENCES.forEach(a => c[a.k] = 0);
     tr.forEach(t => { const v = attOf(t, p.id); if(v in c) c[v]++; });
     const absAll = c.A + ABSENCES.reduce((a,x)=>a+c[x.k],0), absNoInj = absAll - c.INF;
-    let pres = 0, min = 0, avail = 0, gol = 0, gc = 0, gkGames = 0;
+    let pres = 0, presMin = 0, min = 0, avail = 0, gol = 0, gc = 0, gkGames = 0;
     gm.forEach(g => {
       const x = (g.pl||{})[p.id] || {}, m = numOr0(x.min);
-      avail += numOr0(g.dur) || DEFAULT_DUR;
-      if(m > 0){ pres++; min += m; if(plGk(g, p.id)){ gkGames++; gc += numOr0(x.gc); } }
+      if(!g.nomin) avail += numOr0(g.dur) || DEFAULT_DUR;   // partite senza minuti registrati: fuori dal calcolo dei minuti
+      if(played(x)){ pres++; if(plGk(g, p.id)){ gkGames++; gc += numOr0(x.gc); } }
+      if(m > 0){ presMin++; min += m; }
       gol += numOr0(x.g);
     });
-    return {p, c, absAll, reg: c.P + absAll, pct: attPct(c.P, absNoInj), pres, min, avail, minPct: avail ? min/avail : null, avg: pres ? min/pres : null, gol, gc, gkGames};
+    return {p, c, absAll, reg: c.P + absAll, pct: attPct(c.P, absNoInj), pres, min, avail, minPct: avail ? min/avail : null, avg: presMin ? min/presMin : null, gol, gc, gkGames};
   });
   const withPct = rows.filter(r => r.pct!=null);
   const scored = gm.map(gameScore).filter(Boolean);
@@ -205,8 +208,9 @@ function viewGames(){
     let pres = 0, min = 0, gol = 0;
     const cells = cols.map(({game}) => {
       const x = game ? (game.pl||{})[p.id] || {} : {}, m = numOr0(x.min);
-      if(m > 0){ pres++; min += m; } gol += numOr0(x.g);
-      if(!m) return `<td class="c-0">${game && gamePlayed(game) ? '–' : ''}</td>`;
+      if(played(x)) pres++; min += m; gol += numOr0(x.g);
+      if(!played(x)) return `<td class="c-0">${game && gamePlayed(game) ? '–' : ''}</td>`;
+      if(!m) return `<td class="c-m" title="Ha giocato, minuti non registrati">✓</td>`;
       const gk = plGk(game, p.id);
       return `<td class="c-m">${m}'${numOr0(x.g) ? `<span class="gl">⚽${x.g>1?x.g:''}</span>` : ''}${gk && x.gc!=null && x.gc!=='' ? `<span class="gc">🧤${x.gc}</span>` : ''}</td>`;
     }).join('');
@@ -225,11 +229,11 @@ function gameEditor(g){
   const sheetMatch = s.date && (s.date===i.date || (i.opponent && (s.opponent||'').trim().toLowerCase()===i.opponent.trim().toLowerCase()));
   const players = byName().sort((a,b) => plGk(g,b.id) - plGk(g,a.id));
   const rows = players.map(p => {
-    const x = pl[p.id] || {}, gk = plGk(g, p.id), on = numOr0(x.min) > 0;
+    const x = pl[p.id] || {}, gk = plGk(g, p.id), on = played(x);
     return `<div class="gmrow2 ${on?'on':''}">
       <div class="callname"><button class="gkbtn" data-gkgame="${p.id}" aria-pressed="${gk}" title="${gk?'In porta in questa partita':'Segna come portiere in questa partita'}">🧤</button>${esc(p.name)}</div>
       <div class="gmin">
-        <label class="mini">Minuti<input type="number" inputmode="numeric" min="0" max="130" data-gmp="${p.id}" data-k="min" value="${x.min??''}" placeholder="0"></label>
+        <label class="mini">Minuti<input type="number" inputmode="numeric" min="0" max="130" data-gmp="${p.id}" data-k="min" value="${x.min??''}" placeholder="${x.pres && !numOr0(x.min) ? '✓' : '0'}"></label>
         <label class="mini">Gol<input type="number" inputmode="numeric" min="0" max="20" data-gmp="${p.id}" data-k="g" value="${x.g||''}" placeholder="0"></label>
         ${gk ? `<label class="mini gcl">Subiti<input type="number" inputmode="numeric" min="0" max="30" data-gmp="${p.id}" data-k="gc" value="${x.gc??''}" placeholder="0"></label>` : ''}
       </div>
@@ -257,6 +261,7 @@ function gameEditor(g){
       <div><label class="f" for="gm_dur">Durata partita (minuti)</label><input id="gm_dur" type="number" inputmode="numeric" data-gmf="dur" value="${esc(g.dur ?? DEFAULT_DUR)}"></div>
       <div><label class="f" for="gm_og">Autogol a favore</label><input id="gm_og" type="number" inputmode="numeric" min="0" data-gmf="og" value="${esc(g.og||'')}" placeholder="0"></div>
     </div>
+    ${g.nomin ? `<p class="note" style="margin-top:12px">Per questa partita i minuti non sono stati registrati: ✓ = ha giocato. Se li conosci, scrivili.</p>` : ''}
     ${sheetMatch ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="gmfromsheet">Prendi titolari e panchina dalla Formazione</button><span class="note">i titolari partono con i minuti pieni, la panchina a 0</span></div>` : ''}
     <div class="callist" style="margin-top:12px">${rows}</div>
     <div class="row" style="margin-top:14px;justify-content:space-between"><div class="row"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo.</span></div>
@@ -444,7 +449,8 @@ document.addEventListener('input', e => {
     const g = curGame(); if(!g) return;
     const x = g.pl[t.dataset.gmp] ||= {};
     x[t.dataset.k] = t.value==='' ? '' : Math.max(0, +t.value||0);
-    t.closest('.gmrow2')?.classList.toggle('on', numOr0(x.min) > 0);
+    if(t.dataset.k==='min') delete x.pres;   // con i minuti scritti la presenza "senza minuti" non serve più
+    t.closest('.gmrow2')?.classList.toggle('on', played(x));
     save('registro'); refreshScore(g); return;
   }
   if(t.dataset.tsf){ const ts = curTest(); if(ts){ ts[t.dataset.tsf] = t.value; save('registro'); } return; }
@@ -554,14 +560,15 @@ function statsPages(imgs){
       const r = rows.find(z => z.p.id===p.id);
       return [(isGk(p.id)?'(P) ':'') + p.name, ...part.map(g => {
         const v = (g.pl||{})[p.id] || {}, m = numOr0(v.min);
-        if(!m) return '—';
+        if(!played(v)) return '—';
+        if(!m) return '✓';
         return `${m}'` + (numOr0(v.g) ? ` G${v.g}` : '') + (plGk(g, p.id) && v.gc!=null && v.gc!=='' ? ` S${v.gc}` : '');
       }), r.pres, r.min, r.gol||''];
     });
     drawTable(x, mx, y, cols, data, {rh:rhFor(y+24, data.length), fs:11,
-      fill:(ri,ci) => { if(ci===0 || ci>part.length) return null; const v = (part[ci-1].pl||{})[players[ri].id] || {}; return numOr0(v.g) ? '#DDEFE2' : (numOr0(v.min) ? '#EEF4FA' : null); },
+      fill:(ri,ci) => { if(ci===0 || ci>part.length) return null; const v = (part[ci-1].pl||{})[players[ri].id] || {}; return numOr0(v.g) ? '#DDEFE2' : (played(v) ? '#EEF4FA' : null); },
       color:(ri,ci,v) => v==='—' ? '#A0A8B0' : null});
-    T(x, "Minuti giocati · G gol segnati (in verde) · S gol subiti dal portiere · (P) portiere", mx, H-36, {size:11, color:MUTED});
+    T(x, "Minuti giocati · ✓ ha giocato, minuti non registrati · G gol segnati (in verde) · S gol subiti dal portiere · (P) portiere", mx, H-36, {size:11, color:MUTED});
     foot(x); pages.push(c);
   });
 
