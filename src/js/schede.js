@@ -260,12 +260,19 @@ function venueUrl(v){
 }
 function mapsLink(s){ return venueUrl(s.meetAddress || s.venue); }
 let pinEditing = null;   // campo di cui si sta impostando la posizione
-function pinBox(v){
+function pinBtn(v){
+  v = (v||'').trim(); if(!v || parseLL(v)) return '';
+  const pin = venuePin(v);
+  return `<button class="iconbtn2 ${pin?'on':''}" data-pinedit="${esc(v)}" title="${pin?'Posizione esatta salvata (tocca per cambiarla)':'Imposta la posizione esatta del campo'}" aria-label="Posizione esatta del campo">📌</button>`;
+}
+function pinBox(v, compact){
   v = (v||'').trim(); if(!v || parseLL(v)) return '';
   const pin = venuePin(v), open = pinEditing===venueKey(v);
-  const status = pin ? `<span class="pinok">📌 Posizione esatta salvata</span> <button class="linkbtn" data-pinedit="${esc(v)}">cambia</button>`
+  if(compact && !open) return '';
+  const status = compact ? '' : pin ? `<span class="pinok">📌 Posizione esatta salvata</span> <button class="linkbtn" data-pinedit="${esc(v)}">cambia</button>`
     : `<button class="linkbtn" data-pinedit="${esc(v)}">📌 Imposta la posizione esatta del campo</button>`;
-  return `<div class="pinrow">${status}</div>${open ? `<div class="pinbox">
+  return `${status ? `<div class="pinrow">${status}</div>` : ''}${open ? `<div class="pinbox">
+      ${compact ? `<b class="pinttl">📌 Posizione esatta del campo${pin ? ' · salvata' : ''}</b>` : ''}
       <div class="row" style="flex-wrap:nowrap"><input id="pin_in" value="${esc(pin ? (pin.ll||pin.url||'') : '')}" placeholder="45.6978, 9.4004" aria-label="Coordinate del cancello"><button class="btn small primary" data-pinsave="${esc(v)}">Salva</button></div>
       <p class="note">Su Google Maps tieni premuto sul cancello d'ingresso: in alto compaiono le coordinate, copiale qui (va bene anche il link "Condividi"). Vale per tutte le partite su questo campo.</p>
       <div class="row"><button class="btn small ghost" data-pincancel="1">Annulla</button>${pin ? `<button class="btn small ghost danger" data-pindel="${esc(v)}">Togli posizione</button>` : ''}</div>
@@ -375,9 +382,12 @@ function viewConvocazioni(){
     <h3 class="convh3">Ritrovo</h3>
     <div class="grid">
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
-      <div><label class="f" for="cv_meetaddr">Indirizzo</label><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Impianto o via, città">
-        <a id="cv_mapslink" class="mapslink" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" ${mapsLink(s)?'':'hidden'}>📍 Apri in Google Maps</a>
-        ${pinBox(s.meetAddress || s.venue)}
+      <div><label class="f" for="cv_meetaddr">Indirizzo</label>
+        <div class="addrrow"><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Impianto o via, città">
+          <a id="cv_mapslink" class="iconbtn2" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" title="Apri in Google Maps" aria-label="Apri in Google Maps" ${mapsLink(s)?'':'hidden'}>📍</a>
+          ${pinBtn(s.meetAddress || s.venue)}
+        </div>
+        ${pinBox(s.meetAddress || s.venue, true)}
       </div>
     </div>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>

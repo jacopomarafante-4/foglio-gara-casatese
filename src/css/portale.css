@@ -229,6 +229,13 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .tabs.hidden{display:none}
 .regrow.past{opacity:.6}
 .pinrow{margin-top:4px;font-size:13px}
+.addrrow{display:flex;gap:6px;align-items:center}
+.addrrow input{flex:1;min-width:0}
+.iconbtn2{flex:none;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:18px;text-decoration:none;cursor:pointer;filter:grayscale(.6);opacity:.8}
+.iconbtn2:hover{opacity:1;filter:none}
+.iconbtn2.on{filter:none;opacity:1;border-color:var(--grass);background:color-mix(in srgb, var(--grass) 14%, var(--bg))}
+a.iconbtn2{filter:none;opacity:1}
+.pinttl{font-size:13px}
 .pinok{color:var(--grass);font-weight:600}
 .linkbtn{border:0;background:none;padding:0;color:var(--sel);font-weight:600;font-size:13px;text-decoration:underline;cursor:pointer}
 .pinbox{margin-top:8px;padding:10px;border:1px dashed var(--line);border-radius:10px;display:grid;gap:8px}
