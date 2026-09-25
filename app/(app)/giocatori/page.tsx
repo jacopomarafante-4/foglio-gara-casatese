@@ -16,6 +16,7 @@ type Riga = {
   annata: number;
   ruolo: RuoloCampo | null;
   stato: StatoGiocatore;
+  osservato: boolean;
   societa: { nome: string } | null;
   segnalazioni: { count: number }[];
   valutazioni: { count: number }[];
@@ -37,7 +38,7 @@ export default async function Giocatori({
   let q = supabase
     .from('giocatori')
     .select(
-      'id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count), valutazioni(count)',
+      'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, societa(nome), segnalazioni(count), valutazioni(count)',
       { count: 'exact' },
     )
     .order('updated_at', { ascending: false })
@@ -51,6 +52,9 @@ export default async function Giocatori({
   if (stato) q = q.eq('stato', stato);
   else if (filtri.stato !== 'tutti') q = q.neq('stato', 'chiuso'); // di norma nascondi i chiusi
   if (filtri.societa) q = q.eq('societa_id', filtri.societa);
+  // Di norma solo i ragazzi osservati; "da distinta" = anche quelli visti solo nelle distinte (0014)
+  const conDistinte = filtri.chi === 'tutti';
+  if (!conDistinte) q = q.eq('osservato', true);
   const cerca = filtri.q ? perRicerca(filtri.q) : '';
   if (cerca) q = q.or(`cognome.ilike.%${cerca}%,nome.ilike.%${cerca}%,descrizione.ilike.%${cerca}%`);
 
@@ -86,7 +90,7 @@ export default async function Giocatori({
         </div>
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-6">
+      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-7">
         <input
           name="q"
           defaultValue={filtri.q}
@@ -112,13 +116,17 @@ export default async function Giocatori({
             <option key={v} value={v}>{e}</option>
           ))}
         </select>
+        <select name="chi" defaultValue={filtri.chi ?? ''} className="campo">
+          <option value="">Solo osservati</option>
+          <option value="tutti">Anche solo da distinta</option>
+        </select>
         <select name="societa" defaultValue={filtri.societa ?? ''} className="campo">
           <option value="">Tutte le società</option>
           {societa.map((s) => (
             <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
         </select>
-        <div className="col-span-2 flex gap-2 sm:col-span-6 sm:justify-end">
+        <div className="col-span-2 flex gap-2 sm:col-span-7 sm:justify-end">
           <Link href="/giocatori" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">
             Azzera
           </Link>
@@ -161,7 +169,11 @@ export default async function Giocatori({
                   <br />
                   {g.valutazioni[0]?.count ?? 0} valutazioni
                 </span>
-                <StatoBadge stato={g.stato} />
+                {g.osservato ? (
+                  <StatoBadge stato={g.stato} />
+                ) : (
+                  <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da distinta</span>
+                )}
               </Link>
             </li>
           ))}

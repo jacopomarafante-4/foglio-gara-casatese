@@ -84,7 +84,7 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0013_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+2. `supabase/migrations/0001_…` → `0014_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
    segnalazioni e PIN personali dei mister, permessi dei direttori
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.
@@ -98,6 +98,16 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
   Lo script stampa i PIN: consegnali di persona. L'admin li rivede in Portale → Società.
 - **Mister**: nessun account. L'admin li aggiunge sotto la loro squadra (Portale → Società → Squadre)
   e genera il PIN personale di ciascuno.
+
+## Distinte di gara (storico giocatori)
+Le distinte, anche di stagioni passate, costruiscono lo storico: squadre per stagione, partite, numeri di maglia.
+1. Ogni distinta diventa un file JSON in `scripts/import-distinte/dati/` (formato in cima allo script; cartella
+   esclusa da git perché contiene dati di minori: solo cognome, nome, data di nascita, numero).
+2. Simulazione: `node --env-file=.env.local scripts/import-distinte/importa.mjs` → riepilogo (nuovi, già presenti,
+   cambi di società, nomi da controllare).
+3. Importazione: stesso comando con `--conferma`.
+I ragazzi mai osservati restano "da distinta" (nascosti nell'archivio, filtro "Anche solo da distinta") e diventano
+osservati alla prima segnalazione.
 
 ## Pubblicazione su Vercel
 1. vercel.com → **Add New… → Project** → importa il repository GitHub `foglio-gara-casatese`.

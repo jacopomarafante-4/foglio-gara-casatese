@@ -35,3 +35,6 @@ npm-debug.log*
 # Dati personali dei ragazzi e delle famiglie: mai nel repository pubblico
 private/
 scripts/import-sheet/dati/
+
+# import-distinte: dati reali dalle distinte (minori), mai su git
+scripts/import-distinte/dati/

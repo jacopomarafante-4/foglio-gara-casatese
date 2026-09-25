@@ -101,6 +101,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0013: `giocatori.categoria` (solo se diversa da quella dell'annata). Squadra del giocatore = società + categoria;
   regole in `lib/categorie.ts` (età sportiva = anno di fine stagione − annata). La scheda mostra le prossime gare
   della sua squadra, il pannello Gare i giocatori segnalati di ogni partita (`giocatoriDellaGara` in `lib/gare.ts`)
+- 0014: distinte e storico. Un solo archivio: `giocatori.osservato` (false = visto solo nelle distinte, nascosto di norma;
+  diventa true con la prima segnalazione/valutazione/evento, trigger). `squadre` (società + categoria + stagione "2024/25"),
+  `distinte` (una per partita), `distinte_giocatori` (presenza, numero, titolare, capitano). Si importano con
+  `scripts/import-distinte/importa.mjs` da JSON in `scripts/import-distinte/dati/` (NON versionata: dati di minori;
+  solo cognome, nome, data di nascita, numero). Nell'archivio, colonne, Home e Gare contano solo gli osservati.
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

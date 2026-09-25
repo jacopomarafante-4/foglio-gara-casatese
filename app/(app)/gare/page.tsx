@@ -41,6 +41,7 @@ export default async function Gare({
         // `*`: la colonna categoria esiste solo dalla migrazione 0013
         .select('*')
         .in('societa_id', idSocieta)
+        .eq('osservato', true)
         .not('stato', 'in', '(chiuso,inserito)')
     : { data: [] };
   const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];

@@ -12,6 +12,7 @@ import { dataBreve, istanteTraOre } from '@/lib/utili';
 import { categoriaDaAnnata } from '@/lib/categorie';
 import { arricchisci, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara, type Sede } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
+import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
@@ -33,6 +34,7 @@ type Giocatore = {
   motivo_chiusura: string | null;
   rivedere_dal: string | null;
   categoria: string | null; // solo se diversa da quella dell'annata (0013)
+  osservato: boolean; // false = visto solo nelle distinte (0014)
   societa_id: string | null;
   note: string | null;
   creato_da: string | null;
@@ -85,13 +87,18 @@ export default async function SchedaGiocatore({
   const g = data as unknown as Giocatore;
 
   const autore = 'autore:profiles(nome, cognome, email)';
-  const [segn, val, storico, contatti, ev] = await Promise.all([
+  const [segn, val, storico, contatti, ev, pres] = await Promise.all([
     supabase.from('segnalazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('valutazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('storico_stati').select(`id, da_stato, a_stato, motivo, created_at, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
     supabase.from('contatti').select(`id, tipo, nome, telefono, email, consenso_privacy, ${autore}`).eq('giocatore_id', id).order('created_at'),
     supabase.from('eventi_giocatore').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
+    supabase
+      .from('distinte_giocatori')
+      .select('numero, titolare, capitano, squadra:squadre(categoria, stagione, societa(nome)), distinta:distinte(id, data, stagione, categoria, competizione, casa_nome, trasferta_nome, risultato)')
+      .eq('giocatore_id', id),
   ]);
+  const presenze = (pres.data as unknown as Presenza[]) ?? [];
   const eventi = (ev.data as unknown as Evento[]) ?? [];
 
   // Squadra di appartenenza e sue prossime gare (dal pannello Gare), se la società è nota
@@ -143,7 +150,13 @@ export default async function SchedaGiocatore({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-display text-4xl font-bold">{titolo}</h1>
-            <StatoBadge stato={g.stato} />
+            {g.osservato === false ? (
+              <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">
+                Solo da distinta: mai osservato
+              </span>
+            ) : (
+              <StatoBadge stato={g.stato} />
+            )}
           </div>
           <p className="mt-1 text-grigio">
             {[
@@ -228,6 +241,8 @@ export default async function SchedaGiocatore({
           </div>
         )}
       </section>
+
+      <StoricoGiocatore presenze={presenze} />
 
       <EventiGiocatore
         giocatoreId={g.id}

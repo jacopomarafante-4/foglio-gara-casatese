@@ -37,6 +37,7 @@ export default async function GiocatoriPerStato({
   let q = supabase
     .from('giocatori')
     .select('id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count)')
+    .eq('osservato', true) // i ragazzi visti solo nelle distinte non sono nella pipeline
     .order('updated_at', { ascending: false });
   const annata = Number(filtri.annata);
   if (Number.isInteger(annata) && annata > 0) q = q.eq('annata', annata);

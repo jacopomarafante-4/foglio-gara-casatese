@@ -34,7 +34,7 @@ export default async function Home() {
       .select('gara:gare!inner(id, data_ora, categoria, casa_nome, trasferta_nome)')
       .eq('profilo_id', profilo.id)
       .gte('gara.data_ora', istanteTraOre(-3)),
-    tutto ? supabase.from('giocatori').select('stato') : Promise.resolve({ data: null }),
+    tutto ? supabase.from('giocatori').select('stato').eq('osservato', true) : Promise.resolve({ data: null }),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
