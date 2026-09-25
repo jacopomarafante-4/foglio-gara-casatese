@@ -13,6 +13,10 @@ document.addEventListener('click', e => {
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel || t.dataset.coachpin || t.dataset.coachdel || t.dataset.coachadd || t.dataset.teamcodeoff)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; writeRoute(true); subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
+  /* Scout e dirigenti: account e codici passano da /api/staff (solo admin) */
+  if(t.dataset.staffpin && isAdmin()){ const x = staff.find(p => p.id===t.dataset.staffpin); if(x && (!x.pin || confirm(`Rigenerare il codice di ${x.nome||''} ${x.cognome||''}? Quello vecchio smette di funzionare.`))) staffAction({azione:'pin', id:x.id}); return; }
+  if(t.dataset.staffstato && isAdmin()){ staffAction({azione:'stato', id:t.dataset.staffstato, attivo:t.dataset.attivo==='1'}); return; }
+  if(t.dataset.staffadd && isAdmin()){ const inp = $('#staffnew_'+t.dataset.staffadd); const nome = (inp?.value||'').trim(); if(!nome){ inp?.focus(); return; } staffAction({azione:'crea', nome, ruolo:t.dataset.staffadd}); return; }
   /* Mister e PIN personali (solo admin, controllato sopra) */
   const coachOf = v => { const [tid, cid] = v.split(':'); const tm = S.teams.find(x => x.id===tid); return [tm, tm?.coaches?.find(c => c.id===cid)]; };
   if(t.dataset.coachpin){ const [tm, c] = coachOf(t.dataset.coachpin); if(c){ c.code = genPin(); save('teams'); render(); } return; }
@@ -95,6 +99,7 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Enter' || !e.target) return;
   if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
+  else if(e.target.id?.startsWith('staffnew_')){ e.preventDefault(); $(`[data-staffadd="${e.target.id.slice(9)}"]`)?.click(); }
   else if(e.target.id === 'gateuser' || e.target.id === 'gatepass'){ e.preventDefault(); $('[data-act="adminlogin"]')?.click(); }
 });
 document.addEventListener('input', e => {
@@ -114,6 +119,7 @@ document.addEventListener('input', e => {
   else if(t.dataset.tok && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk[t.dataset.tok]=t.value; save('schemes'); } }
 });
 document.addEventListener('change', e => {
+  if(e.target.dataset.staffname && isAdmin()){ const x = staff.find(p => p.id===e.target.dataset.staffname); const v = e.target.value.trim(); if(x && v && v !== [x.nome, x.cognome].filter(Boolean).join(' ')) staffAction({azione:'nome', id:x.id, nome:v}); return; }
   const t = e.target;
   if(t.dataset.asview){ const v = t.value; if(v==='admin') switchView('admin'); else switchView('coach', v.split(':')[1]); return; }
   if(t.dataset.curteam){ curTeam = t.value; openSchemeId = null; subscribeTeam(); return; }

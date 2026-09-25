@@ -16,6 +16,8 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
 - [ ] Migrazione **0008** (PIN personali dei mister; PIN del team solo all'admin) eseguita nel SQL Editor
 - [ ] Generare i PIN dei mister (Società → Squadre), consegnarli e poi disattivare i PIN di squadra
+- [ ] Generare i codici di scout e dirigenti (Società → Scouting e dirigenti)
+- [ ] Dirigenti: dare accesso anche al Portale di tutte le squadre? (oggi entrano in Scouting Hub e vedono tutto lo scouting)
 - [ ] PIN personale per scout e direttori (`scripts/crea-pin.mjs`, anche con `"ruolo": "direttore"`)
 - [ ] Prova l'ingresso unico con un PIN squadra vero e con un PIN personale vero
 

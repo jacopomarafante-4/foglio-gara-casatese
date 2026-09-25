@@ -36,7 +36,7 @@ chiudendo la scheda) e comunque dopo **6 ore** (`ORE_ACCESSO`).
 | Allenamento | Presenze, Test atletici |
 | Statistiche | Allenamento (presenze, per mese, test), Partite (minuti, gol, gol subiti); report PDF solo admin |
 | Scouting (solo mister) | Segnala un giocatore allo scouting del club (non vede l'archivio) |
-| Società (admin) | Squadre con i loro mister e i PIN personali, team scouting con i PIN, backup |
+| Società (admin) | Squadre con i loro mister, Scouting e Dirigenti: ognuno col suo codice personale; backup |
 
 La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indietro funziona.
 
@@ -85,7 +85,8 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
 ## Account
 - **Admin**: Authentication → Users → Add user (spunta Auto Confirm), poi
   `update public.profiles set ruolo = 'admin' where email = 'tua@email.it';`
-- **Scout e direttori**: elenco in un file JSON (`[{ nome, cognome, email, ruolo }]`, l'email
+- **Scout e dirigenti**: dal Portale → Società → "Scouting e dirigenti" (aggiungi, genera o rigenera
+  il codice, sospendi). In alternativa, per tanti insieme: elenco in un file JSON (`[{ nome, cognome, email, ruolo }]`, l'email
   può essere segnaposto), poi `node --env-file=.env.local scripts/crea-pin.mjs file.json`.
   Lo script stampa i PIN: consegnali di persona. L'admin li rivede in Portale → Società.
 - **Mister**: nessun account. L'admin li aggiunge sotto la loro squadra (Portale → Società → Squadre)
@@ -94,8 +95,9 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
 ## Pubblicazione su Vercel
 1. vercel.com → **Add New… → Project** → importa il repository GitHub `foglio-gara-casatese`.
 2. **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `PIN_ADMIN` (lo stesso di `.env.local`: è l'unico PIN admin, mai scriverlo nel codice).
-   **Non** serve `SUPABASE_SERVICE_ROLE_KEY`.
+   `PIN_ADMIN` (lo stesso di `.env.local`: è l'unico PIN admin, mai scriverlo nel codice),
+   `SUPABASE_SERVICE_ROLE_KEY` (serve al pannello Società per creare scout e dirigenti e generare i loro codici;
+   resta sul server, non va mai nel browser).
 3. **Deploy**. Da lì ogni `git push` su `main` ripubblica da solo.
 4. Manda ai mister e allo staff il nuovo indirizzo. Quando tutti usano quello, spegni GitHub Pages
    (GitHub → Settings → Pages → None).

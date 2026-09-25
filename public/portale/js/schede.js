@@ -189,7 +189,7 @@ function viewSquadre(){
     ${cards || '<p class="empty">Nessuna squadra ancora.</p>'}
     <div class="row" style="margin-top:14px"><button class="btn primary" data-act="teamadd">Aggiungi squadra</button></div>
   </section>
-  ${viewTeamScouting()}
+  ${viewStaff()}
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
@@ -204,33 +204,64 @@ function viewSquadre(){
     <button class="btn" data-act="exportbackup">Esporta backup</button>
   </section>`;
 }
-/* Team scouting (scout e direttori) con i PIN personali: letto dal database con la sessione admin
-   (profiles + codici_accesso, visibili solo all'admin dalla 0008). Prima stava nella Home di Scouting Hub. */
-let scoutTeam = null;
-function viewTeamScouting(){
+/* Scouting e Dirigenti, mostrati come le squadre: ogni persona col suo codice personale.
+   Elenco letto con la sessione admin (profiles + codici_accesso, visibili solo all'admin dalla 0008);
+   creare account e cambiare codici passa da /api/staff (il codice è anche la password dell'account). */
+let staff = null, staffBusy = false, staffMsg = '';
+function loadStaff(){
+  staff = 'loading';
+  Promise.all([
+    supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').in('ruolo', ['direttore','scout']).order('cognome'),
+    supabaseClient.from('codici_accesso').select('profilo_id, pin'),
+  ]).then(([p, c]) => {
+    const pin = new Map((c.data||[]).map(x => [x.profilo_id, x.pin]));
+    staff = (p.data||[]).map(x => ({...x, pin: pin.get(x.id) || ''}));
+    if(tab==='squadre') render();
+  }).catch(() => { staff = []; });
+}
+async function staffAction(body){
+  if(staffBusy) return; staffBusy = true; staffMsg = ''; render();
+  try{
+    const r = await fetch('/api/staff', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(body)});
+    const j = await r.json().catch(() => ({errore: 'Sessione scaduta: rientra dalla pagina d’ingresso.'}));
+    if(!r.ok || j.errore) staffMsg = j.errore || 'Operazione non riuscita.';
+  }catch(e){ staffMsg = 'Operazione non riuscita: controlla la connessione.'; }
+  staffBusy = false; loadStaff(); render();
+}
+function viewStaffGroup(ruolo){
+  const titolo = ruolo === 'scout' ? 'Scouting' : 'Dirigenti';
+  const chi = ruolo === 'scout' ? 'scout' : 'dirigente';
+  const persone = Array.isArray(staff) ? staff.filter(x => x.ruolo === ruolo) : [];
+  const righe = persone.map(x => `
+        <div class="coachrow staffrow${x.attivo ? '' : ' off'}">
+          <input data-staffname="${x.id}" value="${esc([x.nome, x.cognome].filter(Boolean).join(' '))}" placeholder="Nome e cognome" aria-label="Nome">
+          ${x.pin ? `<span class="code" title="Codice personale">${esc(x.pin)}</span>` : '<span class="nocode">Senza codice</span>'}
+          <button class="btn small ${x.pin?'ghost':'primary'}" data-staffpin="${x.id}" ${staffBusy?'disabled':''}>${x.pin ? 'Rigenera' : 'Genera codice'}</button>
+          <button class="btn small ghost" data-staffstato="${x.id}" data-attivo="${x.attivo ? '0' : '1'}" ${staffBusy?'disabled':''}>${x.attivo ? 'Sospendi' : 'Riattiva'}</button>
+        </div>`).join('');
+  return `
+    <div class="teamcard">
+      <div class="hd">
+        <div><strong>${titolo}</strong><span class="stat"> · ${ruolo === 'scout' ? 'entrano in Scouting Hub' : 'a capo di squadre e scout'}</span></div>
+        ${ruolo === 'scout' ? '<div class="row"><a class="btn small" href="/home">Apri Scouting Hub</a></div>' : ''}
+      </div>
+      <div class="coachlist">
+        <div class="coachhd">${ruolo === 'scout' ? 'Scout' : 'Dirigenti'}</div>
+        ${staff === 'loading' ? '<p class="note">Caricamento…</p>' : righe || `<p class="note">Nessun ${chi}.</p>`}
+        <div class="addrow"><input id="staffnew_${ruolo}" placeholder="Nome e cognome del nuovo ${chi}" aria-label="Nuovo ${chi}">
+          <button class="btn small ghost" data-staffadd="${ruolo}" ${staffBusy?'disabled':''}>+ Aggiungi ${chi}</button></div>
+      </div>
+    </div>`;
+}
+function viewStaff(){
   if(!supabaseClient || !sessionOk(supaSession)) return '';
-  if(scoutTeam === null){
-    scoutTeam = 'loading';
-    Promise.all([
-      supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').in('ruolo', ['direttore','scout']).order('ruolo').order('cognome'),
-      supabaseClient.from('codici_accesso').select('profilo_id, pin'),
-    ]).then(([p, c]) => {
-      const pin = new Map((c.data||[]).map(x => [x.profilo_id, x.pin]));
-      scoutTeam = (p.data||[]).map(x => ({...x, pin: pin.get(x.id) || ''}));
-      if(tab==='squadre') render();
-    }).catch(() => { scoutTeam = []; });
-  }
-  const righe = Array.isArray(scoutTeam) ? scoutTeam.map(x => `<tr>
-      <td class="nm">${esc([x.nome, x.cognome].filter(Boolean).join(' ') || x.email)}</td>
-      <td>${x.ruolo==='direttore' ? 'Direttore' : 'Scout'}</td>
-      <td>${x.pin ? `<span class="code">${esc(x.pin)}</span>` : '–'}</td>
-      <td>${x.attivo ? 'Attivo' : 'Sospeso'}</td></tr>`).join('') : '';
+  if(staff === null) loadStaff();
   return `<section class="panel">
-    <h3 style="margin-top:0">Team scouting</h3>
-    <p class="hint">Scout e direttori entrano in Scouting Hub con il loro PIN personale. Solo tu vedi i PIN.</p>
-    ${scoutTeam === 'loading' ? '<p class="note">Caricamento…</p>'
-      : righe ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Nome</th><th>Ruolo</th><th>PIN</th><th>Stato</th></tr></thead><tbody>${righe}</tbody></table></div>`
-      : '<p class="note">Nessuno scout o direttore.</p>'}
+    <h2>Scouting e dirigenti</h2>
+    <p class="hint">Ogni scout e ogni dirigente entra dalla pagina d'ingresso con il suo codice personale. Solo tu vedi i codici.</p>
+    ${staffMsg ? `<p class="esito ko" role="alert">${esc(staffMsg)}</p>` : ''}
+    ${viewStaffGroup('scout')}
+    ${viewStaffGroup('direttore')}
   </section>`;
 }
 

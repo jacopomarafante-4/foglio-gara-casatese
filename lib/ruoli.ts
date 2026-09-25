@@ -12,7 +12,7 @@ export type Profilo = {
 
 export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
   admin: 'Admin',
-  direttore: 'Direttore scouting',
+  direttore: 'Dirigente',
   scout: 'Scout',
   mister: 'Mister',
 };

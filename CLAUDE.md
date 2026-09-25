@@ -28,7 +28,11 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `supabase/sicurezza.sql`: admin per email, mister solo via funzioni `coach_*` col PIN.
 - Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, solo admin);
   `code` sulla squadra = vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo.
-  `coach_team()` non restituisce mai PIN. La tabella del team scouting con i PIN sta in Società (solo admin).
+  `coach_team()` non restituisce mai PIN.
+- Società (solo admin): squadre con i mister, poi "Scouting" (scout) e "Dirigenti" (ruolo `direttore`)
+  mostrati come squadre, ognuno col suo codice. Account e codici di scout/dirigenti via `POST /api/staff`
+  (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
+- Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area.
 - `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
   (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
   senza accesso valido torna a `/`. Fuori (vecchio GitHub Pages) usa ancora la sua schermata: PIN squadra
@@ -54,12 +58,13 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
   (`0002_...sql`); mai modificare una migrazione già eseguita.
 - I contatti delle famiglie (quasi tutti minorenni) vanno in una tabella separata leggibile solo
   da admin e responsabile. Nessun dato non tecnico o sensibile nelle note.
-- La service role key si usa solo negli script in `scripts/`, mai nel codice dell'app.
+- La service role key si usa negli script in `scripts/` e, nell'app, SOLO in `app/api/staff/route.ts`
+  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è l'admin). Mai nel browser.
 - Testi dell'interfaccia in italiano, frasi brevi, verbi chiari ("Salva report", non "Invia").
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
 ## Ruoli
-`admin`, `direttore`, `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`).
+`admin`, `direttore` (in interfaccia "Dirigente": a capo di squadre e scout), `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`).
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
