@@ -40,7 +40,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Vista a colonne per stato (kanban) per i responsabili
 - [ ] Lettura automatica delle gare da comunicati PDF / Tuttocampo
 - [ ] Pubblicazione su Vercel (vedi README): variabili `NEXT_PUBLIC_SUPABASE_URL`,
-      `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN` (un PIN nuovo: il vecchio 1611 è nel JS pubblico);
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN` (già caricate);
       poi mandare ai mister il nuovo indirizzo e spegnere GitHub Pages
 - [ ] **Messaggi interni** tra i profili (vedi sotto)
 - [ ] PWA installabile (icona sul telefono), export Excel

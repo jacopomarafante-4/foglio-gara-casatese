@@ -93,24 +93,25 @@ function viewGate(){
   if(!adminUnlocked){
     return `<section class="panel" style="max-width:360px;margin:48px auto">
       <h2>Accesso</h2>
-      <p class="hint">Inserisci il tuo PIN: quello della tua squadra se sei il mister, oppure il PIN amministratore.</p>
+      <p class="hint">Inserisci il PIN della tua squadra.</p>
       <label class="f" for="gatepin">PIN</label>
       <input id="gatepin" type="password" inputmode="numeric" autocomplete="off" placeholder="····" autofocus>
       ${gateError?'<p class="note" style="color:var(--red);margin-top:6px">PIN non valido.</p>':''}
       <div class="row" style="margin-top:10px"><button class="btn primary" data-act="gatesubmit">Entra</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="gateadmin">Sei l'amministratore? Accedi con email e password</button></div>
     </section>`;
   }
   if(!RUNNING_IN_CLAUDE && supabaseClient && !supaSession){
     return `<section class="panel" style="max-width:360px;margin:48px auto">
-      <h2>Conferma amministratore</h2>
-      <p class="hint">PIN corretto. Ora accedi con nome utente e password.</p>
+      <h2>Accesso amministratore</h2>
+      <p class="hint">Accedi con la password del tuo account.</p>
       <div class="grid">
         <div><label class="f" for="gateuser">Nome utente</label><input id="gateuser" autocomplete="username" placeholder="Es. Jacopo" autofocus></div>
         <div><label class="f" for="gatepass">Password</label><input id="gatepass" type="password" autocomplete="current-password"></div>
       </div>
       ${gateError?'<p class="note" style="color:var(--red);margin-top:8px">Accesso non riuscito, controlla la password.</p>':''}
       <div class="row" style="margin-top:10px"><button class="btn primary" data-act="adminlogin">Accedi</button></div>
-      <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="gateback">← Non sei tu? Torna al PIN</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="gateback">← Sei un mister? Torna al PIN</button></div>
     </section>`;
   }
   return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p></section>`;

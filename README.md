@@ -93,7 +93,7 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
 ## Pubblicazione su Vercel
 1. vercel.com → **Add New… → Project** → importa il repository GitHub `foglio-gara-casatese`.
 2. **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `PIN_ADMIN` (scegline uno **nuovo**: il vecchio PIN del Portale è scritto nel codice pubblico).
+   `PIN_ADMIN` (lo stesso di `.env.local`: è l'unico PIN admin, mai scriverlo nel codice).
    **Non** serve `SUPABASE_SERVICE_ROLE_KEY`.
 3. **Deploy**. Da lì ogni `git push` su `main` ripubblica da solo.
 4. Manda ai mister e allo staff il nuovo indirizzo. Quando tutti usano quello, spegni GitHub Pages

@@ -28,7 +28,8 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `supabase/sicurezza.sql`: admin per email, mister solo via funzioni `coach_*` col PIN.
 - `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
   (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
-  senza accesso valido torna a `/`. Fuori (vecchio GitHub Pages) usa ancora il suo accesso a PIN.
+  senza accesso valido torna a `/`. Fuori (vecchio GitHub Pages) usa ancora la sua schermata: PIN squadra
+  per i mister, email e password per l'admin. Nessun PIN admin nel codice (repository pubblico).
 - Colori e caratteri uguali a `app/globals.css`; il verde resta solo per il campo e "presente".
 
 ## Chi sviluppa

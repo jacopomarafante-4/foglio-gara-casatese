@@ -71,7 +71,6 @@ document.addEventListener('click', e => {
     case 'segnala': inviaSegnalazione(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
-      if(val === ADMIN_PIN){ adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break; }
       if(secureMode){
         setStatus('Accesso…');
         coachLogin(val).then(ok => { gateError = !ok; setStatus(ok ? 'Sincronizzato' : ''); if(!ok) render(); });
@@ -82,6 +81,7 @@ document.addEventListener('click', e => {
       gateError = true; render();
       break; }
     case 'adminlogin': adminLogin($('#gatepass')?.value || ''); break;
+    case 'gateadmin': adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break;
     case 'gateback': adminUnlocked = false; gateError = false; try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
     case 'logout': logout(); break;
   }

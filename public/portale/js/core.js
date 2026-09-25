@@ -28,8 +28,9 @@ let S = {teams:[], players:[], schemes:[], sheet:defaultSheet(), calendar:[], re
 /* Ruoli: 'admin' vede tutto e modifica rose, schemi e squadre; 'coach' vede solo la sua squadra */
 let ROLE = 'admin', curTeam = null, hashLocked = false, unsubs = [];
 /* Accesso: i mister entrano digitando il codice squadra sulla schermata iniziale (oppure via link #squadra=CODICE).
-   L'amministratore serve un PIN rapido + (fuori da Claude) un vero login Supabase legato alla tua email. */
-const ADMIN_PIN = '1611';
+   L'amministratore: nell'app unica il PIN admin lo chiede la pagina d'ingresso (PIN_ADMIN, solo sul server);
+   qui, fuori dall'app unica, sceglie "accesso amministratore" e fa il login Supabase con email e password.
+   Nessun PIN admin nel codice: il repository è pubblico. */
 const ADMIN_EMAIL = 'jacopo.marafante@gmail.com';
 let adminUnlocked = false, gateError = false, teamsLoaded = false;
 try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
@@ -128,7 +129,7 @@ const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
 const LOCK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function lockNote(t){ return `<div class="lock">${LOCK_ICON}<div>${t}</div></div>`; }
-function genPin(){ let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(p===ADMIN_PIN || S.teams.some(t=>t.code===p)); return p; }
+function genPin(){ let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(S.teams.some(t=>t.code===p)); return p; }
 let tab = 'home', selectedPlayer = null, openSchemeId = null, selectedToken = null;
 /* boardMode: 'assign' (compiti/giocatori) | 'move' (pedine) | 'draw' (frecce, linee, testi) */
 let boardMode = 'assign', drawTool = null, selectedDraw = null;
