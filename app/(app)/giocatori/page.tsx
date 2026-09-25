@@ -2,8 +2,11 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
-import { annateDisponibili, RUOLI_CAMPO, STATI, valoreValido, type RuoloCampo, type StatoGiocatore } from '@/lib/tipi';
-import { perRicerca } from '@/lib/utili';
+import {
+  annateDisponibili, GIUDIZI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type RuoloCampo, type StatoGiocatore,
+} from '@/lib/tipi';
+import { dataOraBreve, istanteTraOre, perRicerca } from '@/lib/utili';
+import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
 import { StatoBadge } from '@/components/StatoBadge';
 import { elencoSocieta } from '@/lib/societa';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
@@ -17,10 +20,30 @@ type Riga = {
   ruolo: RuoloCampo | null;
   stato: StatoGiocatore;
   osservato: boolean;
+  categoria: string | null;
+  societa_id: string | null;
   societa: { nome: string } | null;
-  segnalazioni: { count: number }[];
-  valutazioni: { count: number }[];
+  valutazioni: { tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string }[];
 };
+
+type GaraBreve = {
+  id: string; data_ora: string; ora_da_definire: boolean | null; categoria: string;
+  casa_id: string | null; trasferta_id: string | null; casa_nome: string; trasferta_nome: string;
+};
+
+const COLORI_GIUDIZIO: Record<Giudizio, string> = {
+  da_prendere: 'bg-blu text-white',
+  da_rivedere: 'bg-oro/25 text-inchiostro',
+  non_a_livello: 'bg-rosso/10 text-rosso',
+};
+
+/** Media delle 4 aree su tutte le valutazioni, e giudizio dell'ultima */
+function sintesiValutazioni(v: Riga['valutazioni']) {
+  if (!v.length) return null;
+  const media = v.reduce((s, x) => s + (x.tecnica + x.motoria + x.tattica + x.mentale) / 4, 0) / v.length;
+  const ultima = [...v].sort((a, b) => b.data.localeCompare(a.data))[0];
+  return { media, giudizio: ultima.giudizio, quante: v.length };
+}
 
 const PER_PAGINA = 30;
 
@@ -38,7 +61,8 @@ export default async function Giocatori({
   let q = supabase
     .from('giocatori')
     .select(
-      'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, societa(nome), segnalazioni(count), valutazioni(count)',
+      'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, categoria, societa_id, societa(nome), ' +
+        'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data)',
       { count: 'exact' },
     )
     .order('updated_at', { ascending: false })
@@ -61,6 +85,22 @@ export default async function Giocatori({
   const giocatori = (data as unknown as Riga[]) ?? [];
   const totale = count ?? giocatori.length;
   const totalePagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
+
+  // Prossima gara della squadra di ogni giocatore (società + categoria), nei prossimi 60 giorni
+  const idSocieta = [...new Set(giocatori.map((g) => g.societa_id).filter(Boolean))] as string[];
+  const { data: gareData } = idSocieta.length
+    ? await supabase
+        .from('gare')
+        .select('id, data_ora, ora_da_definire, categoria, casa_id, trasferta_id, casa_nome, trasferta_nome')
+        .or(`casa_id.in.(${idSocieta.join(',')}),trasferta_id.in.(${idSocieta.join(',')})`)
+        .gte('data_ora', istanteTraOre(-2))
+        .lte('data_ora', istanteTraOre(24 * 60))
+        .order('data_ora')
+        .limit(3000)
+    : { data: [] };
+  const gare = (gareData as GaraBreve[] | null) ?? [];
+  const prossimaGara = (g: Riga) => (g.societa_id ? gare.find((x) => giocaInGara(g, x)) : undefined);
+  const valuta = puoSegnalare(profilo.ruolo);
 
   const paramsPagina = (p: number) => {
     const sp = new URLSearchParams(
@@ -144,37 +184,97 @@ export default async function Giocatori({
           )}
         </div>
       ) : (
-        <ul className="divide-y divide-linea overflow-hidden rounded-xl border border-linea bg-white">
-          {giocatori.map((g) => (
-            <li key={g.id}>
-              <Link href={`/giocatori/${g.id}`} className="flex items-center gap-4 px-4 py-3 hover:bg-carta">
-                <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-blu/10 font-display text-lg font-bold text-blu">
-                  {String(g.annata).slice(2)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">
-                    {[g.cognome, g.nome].filter(Boolean).join(' ') || (
-                      <span className="italic">{g.descrizione}</span>
+        <div className="overflow-hidden rounded-xl border border-linea bg-white">
+          {/* Intestazione delle colonne (da tablet in su; da telefono ogni riga è una scheda) */}
+          <div className="hidden grid-cols-[4.5rem_minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-4 border-b border-linea bg-carta px-4 py-2 text-xs font-semibold uppercase tracking-wide text-grigio md:grid">
+            <span>Anno</span>
+            <span>Giocatore</span>
+            <span>Squadra attuale</span>
+            <span>Valutazione</span>
+            <span>Prossima gara</span>
+          </div>
+          <ul className="divide-y divide-linea">
+            {giocatori.map((g) => {
+              const nome = [g.cognome, g.nome].filter(Boolean).join(' ');
+              const categoria = g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0];
+              const v = sintesiValutazioni(g.valutazioni);
+              const gara = prossimaGara(g);
+              const inCasa = gara && gara.casa_id === g.societa_id;
+              return (
+                <li
+                  key={g.id}
+                  className="relative grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 px-4 py-3 hover:bg-carta md:grid-cols-[4.5rem_minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] md:items-center md:gap-4"
+                >
+                  {/* Tutta la riga apre la scheda; "Valuta" resta un pulsante a parte */}
+                  <Link href={`/giocatori/${g.id}`} className="absolute inset-0" aria-label={`Apri ${nome || g.descrizione || 'giocatore'}`} />
+
+                  <span className="row-span-4 grid h-12 place-items-center self-start rounded-lg bg-blu/10 font-display text-lg font-bold text-blu md:row-span-1 md:self-center">
+                    {g.annata}
+                  </span>
+
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">
+                      {nome || <span className="italic">{g.descrizione}</span>}
+                    </span>
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-grigio">
+                      {g.ruolo ? RUOLI_CAMPO[g.ruolo] : 'Ruolo da completare'}
+                      {g.osservato ? (
+                        <StatoBadge stato={g.stato} />
+                      ) : (
+                        <span className="rounded-full border border-linea px-2 py-0.5 text-xs font-semibold">Da distinta</span>
+                      )}
+                    </span>
+                  </span>
+
+                  <span className="min-w-0 text-sm">
+                    <span className="block truncate font-medium">{g.societa?.nome ?? <span className="text-grigio">Società da completare</span>}</span>
+                    <span className="block truncate text-grigio">{categoria}</span>
+                  </span>
+
+                  <span className="min-w-0 text-sm">
+                    {v ? (
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-display text-xl font-bold text-blu" title={`Media di ${v.quante} ${v.quante === 1 ? 'valutazione' : 'valutazioni'} (1–5)`}>
+                          {v.media.toFixed(1).replace('.', ',')}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[v.giudizio]}`}>
+                          {GIUDIZI[v.giudizio]}
+                        </span>
+                      </span>
+                    ) : valuta ? (
+                      <Link
+                        href={`/giocatori/${g.id}/valuta`}
+                        className="relative z-10 inline-block rounded-lg border border-blu px-3 py-1.5 text-sm font-semibold text-blu hover:bg-blu/5"
+                      >
+                        Valuta
+                      </Link>
+                    ) : (
+                      <span className="text-grigio">Da valutare</span>
                     )}
                   </span>
-                  <span className="block truncate text-sm text-grigio">
-                    {[g.ruolo && RUOLI_CAMPO[g.ruolo], g.societa?.nome].filter(Boolean).join(' – ') || 'Ruolo e società da completare'}
+
+                  <span className="min-w-0 text-sm">
+                    {gara ? (
+                      <>
+                        <span className="block font-medium first-letter:uppercase">
+                          {gara.ora_da_definire
+                            ? `${dataOraBreve(gara.data_ora).split(',')[0]} · ora da definire`
+                            : dataOraBreve(gara.data_ora)}
+                        </span>
+                        <span className="block truncate text-grigio">
+                          {inCasa ? 'In casa con ' : 'In trasferta a '}
+                          {inCasa ? gara.trasferta_nome : gara.casa_nome}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-grigio">{g.societa_id ? 'Nessuna gara in calendario' : '–'}</span>
+                    )}
                   </span>
-                </span>
-                <span className="hidden text-right text-xs text-grigio sm:block">
-                  {g.segnalazioni[0]?.count ?? 0} segnalazioni
-                  <br />
-                  {g.valutazioni[0]?.count ?? 0} valutazioni
-                </span>
-                {g.osservato ? (
-                  <StatoBadge stato={g.stato} />
-                ) : (
-                  <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da distinta</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       {totalePagine > 1 && (
