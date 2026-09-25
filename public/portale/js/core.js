@@ -89,7 +89,15 @@ const cookieStorage = {
 };
 const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, IN_APP_UNICA ? { auth: { storage: cookieStorage } } : undefined) : null;
 /* Nell'app unica la stessa sessione può essere di uno scout: qui conta solo quella dell'admin */
-const sessionOk = s => !!s && (!IN_APP_UNICA || ((s.user?.email || '').toLowerCase() === ADMIN_EMAIL && accessoRecente(loginTime(s))));
+/* Nell'app unica la sessione conta per il Portale se è dell'admin o di un dirigente (ruolo direttore, sola lettura) */
+let staffRole = null, readOnly = false;
+const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
+const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore')));
+async function loadStaffRole(s){
+  staffRole = null;
+  if(!s || isAdminSession(s)) return;
+  try{ const { data } = await supabaseClient.from('profiles').select('ruolo, attivo').eq('id', s.user.id).single(); if(data?.attivo) staffRole = data.ruolo; }catch(e){}
+}
 /* Ora dell'ultimo login, dal token (claim "amr"): resta la stessa anche quando il token si rinnova */
 function loginTime(s){
   try{ const p = JSON.parse(atob(s.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return Math.max(0, ...(p.amr || []).map(a => a.timestamp || 0)); }catch(e){ return 0; }
@@ -109,7 +117,7 @@ async function initAuth(){
   }catch(e){}
   supabaseClient.auth.onAuthStateChange((event, session) => {
     supaSession = session;
-    if(sessionOk(session) && secureMode && !sharedSyncStarted){ db = makeSupabaseDb(supabaseClient); startSharedSync(); }
+    if(isAdminSession(session) && sessionOk(session) && secureMode && !sharedSyncStarted){ db = makeSupabaseDb(supabaseClient); startSharedSync(); }
     render();
   });
   render();
@@ -171,6 +179,12 @@ function payload(name){
   return clone(S.sheet);
 }
 function save(name){
+  /* Sola lettura (dirigenti): niente salvataggio, si ricarica il dato vero e si annulla la modifica */
+  if(readOnly){
+    setStatus('Sola lettura: nessuna modifica');
+    db?.doc(docPath(name)).get().then(snap => { applyDoc(name, snap.data()); render(); }).catch(() => {});
+    return;
+  }
   if(!isAdmin() && name!=='sheet' && name!=='registro') return;   // i mister scrivono solo foglio gara e registro della propria squadra
   if(name!=='teams' && name!=='schemes' && !curTeam) return;
   const path = docPath(name), data = clone(payload(name));
@@ -311,6 +325,33 @@ function makeCoachDb(client, pin){
     }
   };
 }
+/* Dirigenti: leggono i documenti di tutte le squadre (dirigente_get, migrazione 0009, senza PIN) e non scrivono.
+   Aggiornamento ogni 15 secondi, come per i mister. */
+function makeDirigenteDb(client){
+  const known = {};
+  const get = async path => { const { data, error } = await client.rpc('dirigente_get', { p_path: path }); if(error) throw error; return data; };
+  return {
+    doc(path){
+      return {
+        async set(){ throw new Error('Sola lettura'); },
+        async get(){ const d = await get(path); return { exists: d != null, data: () => d }; },
+        onSnapshot(onNext, onError){
+          let stopped = false;
+          const tick = async () => {
+            try{
+              const d = await get(path);
+              if(stopped) return;
+              const k = stableStr(d);
+              if(k !== known[path]){ known[path] = k; onNext({ exists: d != null, data: () => d }); }
+            }catch(e){ if(!stopped) onError && onError(e); }
+          };
+          tick(); const iv = setInterval(tick, 15000);
+          return () => { stopped = true; clearInterval(iv); };
+        }
+      };
+    }
+  };
+}
 /* Le funzioni del database protetto esistono? Se no, il database non è ancora stato protetto: comportamento di prima. */
 async function detectSecure(){
   try{ const { error } = await supabaseClient.rpc('coach_team', { p_pin: '' }); return !error; }catch(e){ return false; }
@@ -349,8 +390,10 @@ async function initStore(){
     secureMode = await detectSecure();
     let session = null;
     try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
-    if(IN_APP_UNICA) supaSession = session;
-    if(sessionOk(session) || !secureMode){
+    if(IN_APP_UNICA){ supaSession = session; await loadStaffRole(session); }
+    if(sessionOk(session) && staffRole === 'direttore'){
+      db = makeDirigenteDb(supabaseClient); readOnly = true;   // dirigente: tutte le squadre, sola lettura
+    } else if(sessionOk(session) || !secureMode){
       try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
     } else {
       const pin = teamPinFromUrl();

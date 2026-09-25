@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
-import { vedeTutto } from '@/lib/ruoli';
+import { gestisce } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import { squadreSeguite } from '@/lib/gare';
 import { dataOraBreve, istanteTraOre } from '@/lib/utili';
@@ -21,7 +21,7 @@ export default async function GestioneGare({
   searchParams: Promise<{ ok?: string; errore?: string }>;
 }) {
   const profilo = (await getProfilo())!;
-  if (!vedeTutto(profilo.ruolo)) redirect('/gare');
+  if (!gestisce(profilo.ruolo)) redirect('/gare');
 
   const { ok, errore } = await searchParams;
   const supabase = await createClient();

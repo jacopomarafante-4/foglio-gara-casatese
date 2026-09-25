@@ -324,3 +324,5 @@ a.iconbtn2{filter:none;opacity:1}
 @media (max-width:560px){.staffrow{grid-template-columns:minmax(0,1fr) auto auto}}
 .demo select,.ctx select{max-width:100%;min-width:0;text-overflow:ellipsis}
 .demo select{flex:1 1 160px}
+.badge.dir{background:#fff;color:var(--brand)}
+a.areabtn{text-decoration:none}

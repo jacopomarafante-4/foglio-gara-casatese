@@ -8,8 +8,8 @@ import '@fontsource/barlow-condensed/700.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Scouting Hub',
-  description: 'Segnalazioni e valutazioni del team scouting',
+  title: 'Portale Academy Casatese Merate',
+  description: 'Squadre, gare, allenamenti e scouting del settore giovanile',
 };
 
 export const viewport: Viewport = {

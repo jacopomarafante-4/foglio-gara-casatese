@@ -76,11 +76,11 @@ function nameLayout(tokens){
 /* ---------- Render ---------- */
 function renderChrome(){
   const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
-  $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
-  $('#demo').classList.toggle('hidden', hashLocked);
+  $('#demo').innerHTML = hashLocked || readOnly ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
+  $('#demo').classList.toggle('hidden', hashLocked || readOnly);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}${IN_APP_UNICA?'<a class="logout" href="/home">Scouting Hub</a>':''}<button class="logout" data-act="logout">Esci</button>`
+    ? `${readOnly ? '<span class="badge dir" title="Vedi tutto, senza modificare">Dirigente · sola lettura</span>' : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla scelta dei pannelli solo per l'admin: il mister resterebbe senza squadra
   if(IN_APP_UNICA && isAdmin()) $('#homelink').href = '/'; else $('#homelink').removeAttribute('href');

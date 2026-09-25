@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
-import { nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
+import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
   AREE, GIUDIZI, MOTIVI_CHIUSURA, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili,
@@ -90,9 +90,10 @@ export default async function SchedaGiocatore({
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];
   const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
-  const direttore = vedeTutto(profilo.ruolo);
+  const gestore = gestisce(profilo.ruolo);
+  const tutto = vedeTutto(profilo.ruolo); // i dirigenti vedono anche i contatti, senza modificare
   const scrive = puoSegnalare(profilo.ruolo);
-  const modifica = direttore || (scrive && g.creato_da === profilo.id);
+  const modifica = gestore || (scrive && g.creato_da === profilo.id);
   const societa = modifica ? await elencoSocieta(supabase) : [];
 
   const titolo = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Giocatore';
@@ -243,7 +244,7 @@ export default async function SchedaGiocatore({
 
         <aside className="space-y-6">
           {/* Stato */}
-          {direttore && (
+          {gestore && (
             <form action={cambiaStato} className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Cambia stato</h2>
               <input type="hidden" name="id" value={g.id} />
@@ -268,11 +269,11 @@ export default async function SchedaGiocatore({
           )}
 
           {/* Contatti */}
-          {scrive && (
+          {(scrive || tutto) && (
             <section className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Contatti</h2>
               <p className="text-xs text-grigio">
-                Visibili solo ad admin e direttori{direttore ? '' : ' (e a te, per quelli che inserisci)'}.
+                Visibili solo ad admin e dirigenti{tutto ? '' : ' (e a te, per quelli che inserisci)'}.
               </p>
               {elencoContatti.length > 0 && (
                 <ul className="divide-y divide-linea text-sm">
@@ -290,34 +291,38 @@ export default async function SchedaGiocatore({
                         {!c.consenso_privacy && <span className="block text-xs text-rosso">Consenso privacy non registrato</span>}
                         <span className="block text-xs text-grigio">Aggiunto da {chi(c.autore)}</span>
                       </span>
-                      <form action={eliminaContatto}>
-                        <input type="hidden" name="id" value={g.id} />
-                        <input type="hidden" name="contatto_id" value={c.id} />
-                        <button className="text-xs text-grigio hover:text-rosso" aria-label="Elimina contatto">Elimina</button>
-                      </form>
+                      {scrive && (
+                        <form action={eliminaContatto}>
+                          <input type="hidden" name="id" value={g.id} />
+                          <input type="hidden" name="contatto_id" value={c.id} />
+                          <button className="text-xs text-grigio hover:text-rosso" aria-label="Elimina contatto">Elimina</button>
+                        </form>
+                      )}
                     </li>
                   ))}
                 </ul>
               )}
-              <details>
-                <summary className="cursor-pointer text-sm font-semibold text-blu">Aggiungi contatto</summary>
-                <form action={aggiungiContatto} className="mt-3 space-y-3">
-                  <input type="hidden" name="id" value={g.id} />
-                  <select name="tipo" className="campo" defaultValue="genitore">
-                    <option value="genitore">Genitore</option>
-                    <option value="giocatore">Giocatore</option>
-                    <option value="altro">Altro</option>
-                  </select>
-                  <input name="nome" placeholder="Nome (es. mamma Laura)" className="campo" />
-                  <input name="telefono" type="tel" placeholder="Telefono" className="campo" />
-                  <input name="email" type="email" placeholder="Email" className="campo" />
-                  <label className="flex items-start gap-2 text-sm">
-                    <input type="checkbox" name="consenso" className="mt-1" />
-                    La famiglia ha dato il consenso al trattamento dei dati
-                  </label>
-                  <button className="bottone w-full">Salva contatto</button>
-                </form>
-              </details>
+              {scrive && (
+                <details>
+                  <summary className="cursor-pointer text-sm font-semibold text-blu">Aggiungi contatto</summary>
+                  <form action={aggiungiContatto} className="mt-3 space-y-3">
+                    <input type="hidden" name="id" value={g.id} />
+                    <select name="tipo" className="campo" defaultValue="genitore">
+                      <option value="genitore">Genitore</option>
+                      <option value="giocatore">Giocatore</option>
+                      <option value="altro">Altro</option>
+                    </select>
+                    <input name="nome" placeholder="Nome (es. mamma Laura)" className="campo" />
+                    <input name="telefono" type="tel" placeholder="Telefono" className="campo" />
+                    <input name="email" type="email" placeholder="Email" className="campo" />
+                    <label className="flex items-start gap-2 text-sm">
+                      <input type="checkbox" name="consenso" className="mt-1" />
+                      La famiglia ha dato il consenso al trattamento dei dati
+                    </label>
+                    <button className="bottone w-full">Salva contatto</button>
+                  </form>
+                </details>
+              )}
             </section>
           )}
 

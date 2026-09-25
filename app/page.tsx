@@ -7,9 +7,9 @@ import { Striscia } from '@/components/Striscia';
 
 /**
  * Pagina d'ingresso unica: tutti digitano il PIN e il PIN dice chi sei
- * (mister → Portale squadre, scout/direttore → Scouting Hub, admin → email e password).
+ * (mister → Portale squadre, scout → Scouting, dirigente → sceglie, admin → email e password).
  * Il PIN si chiede sempre, anche se c'è già una sessione aperta (niente accesso automatico):
- * solo l'admin già entrato vede la scelta tra i due pannelli.
+ * solo l'admin o un dirigente già entrati vedono la scelta tra i due pannelli.
  */
 export default async function Ingresso({
   searchParams,
@@ -17,7 +17,8 @@ export default async function Ingresso({
   searchParams: Promise<{ next?: string }>;
 }) {
   const [{ next }, profilo] = await Promise.all([searchParams, getProfilo()]);
-  const admin = profilo?.ruolo === 'admin';
+  // Admin e dirigenti già entrati scelgono il pannello; tutti gli altri vedono il PIN
+  const admin = profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo);
 
   return (
     <main className="flex min-h-dvh flex-col">
@@ -42,7 +43,7 @@ export default async function Ingresso({
               <span className="mt-2 block text-grigio">Squadre, rose, gare, presenze e statistiche.</span>
             </a>
             <Link href="/home" className="block rounded-2xl border border-linea bg-white p-6 hover:border-blu">
-              <span className="block font-display text-3xl font-bold leading-tight">Scouting Hub</span>
+              <span className="block font-display text-3xl font-bold leading-tight">Scouting</span>
               <span className="mt-2 block text-grigio">Segnalazioni, valutazioni e gare da vedere.</span>
             </Link>
             <form action={esci}>

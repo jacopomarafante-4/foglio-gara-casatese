@@ -19,7 +19,8 @@ Tutti entrano da `/` digitando **solo il PIN**. Il PIN dice chi sei:
 | PIN | Dove si entra |
 |---|---|
 | PIN **del mister** (4 cifre, generato dall'admin in Portale → Società → Squadre) | Portale squadre, solo la sua squadra |
-| PIN **personale** (6 cifre, creato con `scripts/crea-pin.mjs`) | Scouting Hub (scout e direttori) |
+| Codice **personale** di uno scout (6 cifre, generato dall'admin in Società) | Scouting |
+| Codice **personale** di un dirigente (6 cifre) | sceglie Portale o Scouting: vede tutto, **non modifica niente** |
 | PIN **admin** (variabile `PIN_ADMIN`) | poi email e password → Portale squadre; da `/` si sceglie anche Scouting Hub |
 
 Niente accesso automatico: il PIN si rimette quando si chiude il browser (per i mister anche
@@ -77,8 +78,8 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0008_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
-   segnalazioni e PIN personali dei mister
+2. `supabase/migrations/0001_…` → `0009_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+   segnalazioni e PIN personali dei mister, dirigenti in sola lettura
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.
 

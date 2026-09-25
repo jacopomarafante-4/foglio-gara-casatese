@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
-import { puoSegnalare, vedeTutto } from '@/lib/ruoli';
+import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { arricchisci, SELECT_GARA, squadreSeguite, type Gara, type Sede } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
 import { istanteTraOre } from '@/lib/utili';
@@ -57,7 +57,7 @@ export default async function Gare({
             {scoperte > 0 && <> – <strong className="text-inchiostro">{scoperte} senza osservatore</strong></>}
           </p>
         </div>
-        {vedeTutto(profilo.ruolo) && (
+        {gestisce(profilo.ruolo) && (
           <Link href="/gare/gestione" className="bottone">Gestisci gare e squadre</Link>
         )}
       </div>
@@ -97,7 +97,7 @@ export default async function Gare({
       {gare.length === 0 ? (
         <div className="rounded-xl border border-dashed border-linea p-10 text-center text-grigio">
           Nessuna gara con questi filtri.
-          {vedeTutto(profilo.ruolo) && (
+          {gestisce(profilo.ruolo) && (
             <>
               {' '}
               <Link href="/gare/gestione" className="font-medium text-blu underline">Aggiungi le gare</Link>{' '}
