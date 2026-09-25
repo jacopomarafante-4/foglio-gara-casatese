@@ -135,8 +135,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0021: `nome_proprio()` + trigger `giocatori_nomi`: cognome e nome dei giocatori sempre "Rossi", "Maria Elena",
   "D'Angelo" (anche da importazioni e Portale); stessa regola di `maiuscoleIniziali()` in `lib/utili.ts`
 
-Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--conferma]` le ricava da OpenStreetMap
-(Nominatim, 1 richiesta al secondo) per le società senza `lat`, dall'indirizzo del campo o dal centro del paese.
+Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--tutte] [--conferma]` le ricava da
+OpenStreetMap (`scripts/lib/luoghi.mjs`: Nominatim, 1 richiesta al secondo, posizione accettata solo se nel comune giusto)
+dall'indirizzo del campo o dal centro del paese. `portale.mjs` fa lo stesso per le gare dell'Academy (`gare.lat/lon`).
+Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come nel calendario/comunicato), `address`, `ll`
+("lat,lon"); le convocazioni li leggono dal calendario (`luogoPartita()` in `schede.js`), il ritrovo (`meetAddress`) solo se altrove.
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).
