@@ -5,7 +5,7 @@ import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import {
   annateDisponibili, GIUDIZI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
-import { dataOraBreve, istanteTraOre, perRicerca } from '@/lib/utili';
+import { dataBreve, dataOraBreve, istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
 import { StatoBadge } from '@/components/StatoBadge';
 import { elencoSocieta } from '@/lib/societa';
@@ -42,7 +42,7 @@ function sintesiValutazioni(v: Riga['valutazioni']) {
   if (!v.length) return null;
   const media = v.reduce((s, x) => s + (x.tecnica + x.motoria + x.tattica + x.mentale) / 4, 0) / v.length;
   const ultima = [...v].sort((a, b) => b.data.localeCompare(a.data))[0];
-  return { media, giudizio: ultima.giudizio, quante: v.length };
+  return { media, giudizio: ultima.giudizio, data: ultima.data, quante: v.length };
 }
 
 const PER_PAGINA = 30;
@@ -184,96 +184,90 @@ export default async function Giocatori({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-linea bg-white">
-          {/* Intestazione delle colonne (da tablet in su; da telefono ogni riga è una scheda) */}
-          <div className="hidden grid-cols-[4.5rem_minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-4 border-b border-linea bg-carta px-4 py-2 text-xs font-semibold uppercase tracking-wide text-grigio md:grid">
-            <span>Anno</span>
-            <span>Giocatore</span>
-            <span>Squadra attuale</span>
-            <span>Valutazione</span>
-            <span>Prossima gara</span>
-          </div>
-          <ul className="divide-y divide-linea">
-            {giocatori.map((g) => {
-              const nome = [g.cognome, g.nome].filter(Boolean).join(' ');
-              const categoria = g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0];
-              const v = sintesiValutazioni(g.valutazioni);
-              const gara = prossimaGara(g);
-              const inCasa = gara && gara.casa_id === g.societa_id;
-              return (
-                <li
-                  key={g.id}
-                  className="relative grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 px-4 py-3 hover:bg-carta md:grid-cols-[4.5rem_minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] md:items-center md:gap-4"
-                >
-                  {/* Tutta la riga apre la scheda; "Valuta" resta un pulsante a parte */}
-                  <Link href={`/giocatori/${g.id}`} className="absolute inset-0" aria-label={`Apri ${nome || g.descrizione || 'giocatore'}`} />
-
-                  <span className="row-span-4 grid h-12 place-items-center self-start rounded-lg bg-blu/10 font-display text-lg font-bold text-blu md:row-span-1 md:self-center">
-                    {g.annata}
-                  </span>
-
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">
-                      {nome || <span className="italic">{g.descrizione}</span>}
-                    </span>
-                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-grigio">
-                      {g.ruolo ? RUOLI_CAMPO[g.ruolo] : 'Ruolo da completare'}
-                      {g.osservato ? (
+        // Tabella a righe singole: da telefono scorre in orizzontale. Tutte le celle aprono la scheda,
+        // tranne il pulsante "Valuta"
+        <div className="overflow-x-auto rounded-xl border border-linea bg-white">
+          <table className="w-full whitespace-nowrap text-left text-sm">
+            <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">
+              <tr>
+                {['Anno', 'Giocatore', 'Ruolo', 'Stato', 'Società', 'Categoria', 'Valutazione', 'Ultima val.', 'Prossima gara'].map((t) => (
+                  <th key={t} scope="col" className="px-3 py-2 font-semibold">{t}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-linea">
+              {giocatori.map((g) => {
+                const nome = [g.cognome, g.nome].filter(Boolean).join(' ');
+                const categoria = g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0];
+                const v = sintesiValutazioni(g.valutazioni);
+                const gara = prossimaGara(g);
+                const inCasa = gara && gara.casa_id === g.societa_id;
+                const href = `/giocatori/${g.id}`;
+                const cella = (contenuto: React.ReactNode, extra = '') => (
+                  <td className={`p-0 ${extra}`}>
+                    <Link href={href} tabIndex={-1} className="block px-3 py-2.5">{contenuto}</Link>
+                  </td>
+                );
+                return (
+                  <tr key={g.id} className="hover:bg-carta">
+                    {cella(g.annata, 'font-semibold text-blu')}
+                    <td className="p-0">
+                      <Link href={href} className="block max-w-56 truncate px-3 py-2.5 font-semibold">
+                        {nome || <span className="italic">{g.descrizione}</span>}
+                      </Link>
+                    </td>
+                    {cella(g.ruolo ? RUOLI_CAMPO[g.ruolo] : <span className="text-grigio">–</span>)}
+                    {cella(
+                      g.osservato ? (
                         <StatoBadge stato={g.stato} />
                       ) : (
-                        <span className="rounded-full border border-linea px-2 py-0.5 text-xs font-semibold">Da distinta</span>
-                      )}
-                    </span>
-                  </span>
-
-                  <span className="min-w-0 text-sm">
-                    <span className="block truncate font-medium">{g.societa?.nome ?? <span className="text-grigio">Società da completare</span>}</span>
-                    <span className="block truncate text-grigio">{categoria}</span>
-                  </span>
-
-                  <span className="min-w-0 text-sm">
+                        <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da distinta</span>
+                      ),
+                    )}
+                    {cella(<span className="block max-w-48 truncate">{g.societa?.nome ?? <span className="text-grigio">–</span>}</span>)}
+                    {cella(categoria)}
                     {v ? (
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="font-display text-xl font-bold text-blu" title={`Media di ${v.quante} ${v.quante === 1 ? 'valutazione' : 'valutazioni'} (1–5)`}>
-                          {v.media.toFixed(1).replace('.', ',')}
-                        </span>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[v.giudizio]}`}>
-                          {GIUDIZI[v.giudizio]}
-                        </span>
-                      </span>
-                    ) : valuta ? (
-                      <Link
-                        href={`/giocatori/${g.id}/valuta`}
-                        className="relative z-10 inline-block rounded-lg border border-blu px-3 py-1.5 text-sm font-semibold text-blu hover:bg-blu/5"
-                      >
-                        Valuta
-                      </Link>
+                      cella(
+                        <span className="flex items-center gap-2">
+                          <span className="font-semibold text-blu" title={`Media di ${v.quante} ${v.quante === 1 ? 'valutazione' : 'valutazioni'} (1–5)`}>
+                            {v.media.toFixed(1).replace('.', ',')}
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[v.giudizio]}`}>
+                            {GIUDIZI[v.giudizio]}
+                          </span>
+                        </span>,
+                      )
                     ) : (
-                      <span className="text-grigio">Da valutare</span>
+                      <td className="px-3 py-1.5">
+                        {valuta ? (
+                          <Link href={`${href}/valuta`} className="inline-block rounded-lg border border-blu px-3 py-1 font-semibold text-blu hover:bg-blu/5">
+                            Valuta
+                          </Link>
+                        ) : (
+                          <span className="text-grigio">Da valutare</span>
+                        )}
+                      </td>
                     )}
-                  </span>
-
-                  <span className="min-w-0 text-sm">
-                    {gara ? (
-                      <>
-                        <span className="block font-medium first-letter:uppercase">
-                          {gara.ora_da_definire
-                            ? `${dataOraBreve(gara.data_ora).split(',')[0]} · ora da definire`
-                            : dataOraBreve(gara.data_ora)}
+                    {cella(v ? dataBreve(v.data) : <span className="text-grigio">–</span>)}
+                    {cella(
+                      gara ? (
+                        <span>
+                          <span className="first-letter:uppercase">
+                            {gara.ora_da_definire ? `${dataOraBreve(gara.data_ora).split(',')[0]} · ora da definire` : dataOraBreve(gara.data_ora)}
+                          </span>
+                          <span className="text-grigio">
+                            {' · '}{inCasa ? `in casa con ${gara.trasferta_nome}` : `a ${gara.casa_nome}`}
+                          </span>
                         </span>
-                        <span className="block truncate text-grigio">
-                          {inCasa ? 'In casa con ' : 'In trasferta a '}
-                          {inCasa ? gara.trasferta_nome : gara.casa_nome}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-grigio">{g.societa_id ? 'Nessuna gara in calendario' : '–'}</span>
+                      ) : (
+                        <span className="text-grigio">{g.societa_id ? 'Nessuna in calendario' : '–'}</span>
+                      ),
                     )}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
