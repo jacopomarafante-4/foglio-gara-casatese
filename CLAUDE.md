@@ -99,7 +99,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0010: direttori leggono e scrivono `docs` (Portale) e vedono `codici_accesso`; tolta `dirigente_get()`
 - 0011: direttori solo in lettura su `docs` (Portale)
 - 0012: `eventi_giocatore` (open day, provini: presenza, esito) nella scheda del giocatore; `doppioni_esclusi`;
-  `unisci_giocatori()` (solo admin) — ricerca dei doppioni in `lib/doppioni.ts`, pagina `/giocatori/doppioni`;
+  `unisci_giocatori()` (admin e direttori, 0018) — ricerca dei doppioni in `lib/doppioni.ts`, pagina `/giocatori/doppioni`;
+  unione in blocco dagli script: `scripts/unisci-giocatori.mjs private/<file>.json [--conferma]` (tiene la scheda più
+  completa, riempie i campi vuoti, unisce i contatti con stesso telefono/email, differenze nelle note);
   vista a colonne per stato `/giocatori/stati`
 - 0013: `giocatori.categoria` (solo se diversa da quella dell'annata). Squadra del giocatore = società + categoria;
   regole in `lib/categorie.ts` (età sportiva = anno di fine stagione − annata). La scheda mostra le prossime gare
