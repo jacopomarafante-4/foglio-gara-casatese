@@ -29,14 +29,14 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
 - Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, solo admin);
   `code` sulla squadra = vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo.
   `coach_team()` non restituisce mai PIN.
-- Società (solo admin): squadre con i mister, poi "Scouting" (scout) e "Dirigenti" (ruolo `direttore`)
-  mostrati come squadre, ognuno col suo codice. Account e codici di scout/dirigenti via `POST /api/staff`
+- Società (admin e direttori): squadre con i mister, poi "Scouting" (scout) e "Direttori" mostrati come
+  squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff`
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
 - Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area.
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
   `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
-- Dirigenti nel Portale: `readOnly`, tutte le squadre via `dirigente_get()` (0009), niente Società;
-  `save()` non scrive e ricarica il dato vero.
+- Direttori nel Portale: come l'admin (tabella `docs` aperta ai direttori dalla 0010), compresa Società;
+  la sessione vale per il Portale se è dell'admin (`ADMIN_EMAIL`) o di un direttore (`staffRole`).
 - `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
   (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
   senza accesso valido torna a `/`. Fuori (vecchio GitHub Pages) usa ancora la sua schermata: PIN squadra
@@ -63,14 +63,14 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - I contatti delle famiglie (quasi tutti minorenni) vanno in una tabella separata leggibile solo
   da admin e responsabile. Nessun dato non tecnico o sensibile nelle note.
 - La service role key si usa negli script in `scripts/` e, nell'app, SOLO in `app/api/staff/route.ts`
-  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è l'admin). Mai nel browser.
+  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è admin o direttore). Mai nel browser.
 - Testi dell'interfaccia in italiano, frasi brevi, verbi chiari ("Salva report", non "Invia").
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
 ## Ruoli
-`admin`, `direttore` (in interfaccia "Dirigente": a capo di squadre e scout, **sola lettura** ovunque dalla 0009),
+`admin`, `direttore` (a capo di squadre e scout: nel Portale e in Società lavora come l'admin, nello Scouting **sola lettura**),
 `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`). In `lib/ruoli.ts`: `vedeTutto()` = leggere tutto
-(admin, dirigenti), `gestisce()` = modificare stati, gare, dati di tutti (solo admin), `puoSegnalare()` = admin e scout.
+(admin, direttori), `gestisce()` = modificare stati, gare, dati di tutti nello Scouting (solo admin), `puoSegnalare()` = admin e scout.
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
@@ -89,8 +89,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0007: segnalazioni dei mister dal Portale: `coach_segnala()`, `coach_societa()`, `mister_for_pin()`,
   colonne `segnalazioni.squadra` e `giocatori.segnalato_da_squadra` (firma "<mister> · <categoria>")
 - 0008: PIN personali dei mister (`team_for_pin`, `coach_team` riscritte); `codici_accesso` leggibile solo dall'admin
-- 0009: dirigenti in sola lettura (`puo_segnalare()` senza direttore, scritture di gestione solo `is_admin()`),
-  `dirigente_get()` per leggere le squadre del Portale senza PIN
+- 0009: direttori in sola lettura nello Scouting (`puo_segnalare()` senza direttore, scritture di gestione solo `is_admin()`)
+- 0010: direttori leggono e scrivono `docs` (Portale) e vedono `codici_accesso`; tolta `dirigente_get()`
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

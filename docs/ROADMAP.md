@@ -12,12 +12,14 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Coordinate esatte delle sedi (tabella `sedi`) — per ora quelle approssimative del comune
 - [x] Account admin (tuo); account scout/direttore del resto del team ancora da creare
 - [ ] Prova completa: segnalazione, valutazione, cambio stato, gara prenotata
-- [ ] Migrazione **0006** (accesso col solo PIN per scout/direttori) eseguita nel SQL Editor
-- [ ] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
-- [ ] Migrazione **0008** (PIN personali dei mister; PIN del team solo all'admin) eseguita nel SQL Editor
+- [x] Migrazione **0006** (accesso col solo PIN per scout/direttori) eseguita nel SQL Editor
+- [x] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
+- [x] Migrazione **0008** (PIN personali dei mister; PIN del team solo all'admin) eseguita nel SQL Editor
 - [ ] Generare i PIN dei mister (Società → Squadre), consegnarli e poi disattivare i PIN di squadra
-- [ ] Generare i codici di scout e dirigenti (Società → Scouting e dirigenti)
-- [ ] Migrazione **0009** (dirigenti: vedono tutto, non modificano niente) eseguita nel SQL Editor
+- [x] Direttori creati: Federico Salomoni, Massimo Carbone, Luca Balzarotti, Jacopo Marafante
+- [ ] Consegnare i PIN di scout e direttori (Società)
+- [x] Migrazione **0009** (direttori in sola lettura nello Scouting) eseguita nel SQL Editor
+- [ ] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [ ] PIN personale per scout e direttori (`scripts/crea-pin.mjs`, anche con `"ruolo": "direttore"`)
