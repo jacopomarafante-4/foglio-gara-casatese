@@ -102,8 +102,6 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
 3. **Deploy**, oppure dal terminale del progetto `vercel --prod`. `vercel.json` dice a Vercel che è un'app
    Next.js (senza, pubblicherebbe solo i file di `public/`). Per ripubblicare da solo a ogni `git push`:
    vercel.com → progetto → Settings → Git → collega il repository (serve dare a Vercel l'accesso a GitHub).
-4. Manda ai mister e allo staff il nuovo indirizzo. Quando tutti usano quello, spegni GitHub Pages
-   (GitHub → Settings → Pages → None).
 
 ## Comandi utili
 

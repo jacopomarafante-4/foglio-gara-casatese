@@ -48,7 +48,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Vista a colonne per stato (kanban) per i responsabili
 - [ ] Lettura automatica delle gare da comunicati PDF / Tuttocampo
 - [x] Pubblicata su Vercel: https://academy-casatese.vercel.app
-- [ ] Mandare il nuovo indirizzo a mister, scout e direttori; poi spegnere GitHub Pages
+- [x] Tutti usano il nuovo indirizzo; GitHub Pages spento (settembre 2026)
 - [ ] (Facoltativo) Collegare GitHub a Vercel per pubblicare da solo a ogni modifica
 - [ ] **Messaggi interni** tra i profili (vedi sotto)
 - [ ] PWA installabile (icona sul telefono), export Excel
