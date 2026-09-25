@@ -8,15 +8,18 @@ export function fineStagione(oggi = new Date()) {
   return oggi.getMonth() >= 6 ? oggi.getFullYear() + 1 : oggi.getFullYear();
 }
 
-/** Categoria in cui gioca di norma un'annata, nella stagione che finisce in `fine` */
+/** Categoria in cui gioca di norma un'annata, nella stagione che finisce in `fine`,
+ *  sempre con l'anno: "Under 17 - 2010", "Esordienti - 2014" */
 export function categoriaDaAnnata(annata: number, fine = fineStagione()) {
   const eta = fine - annata;
-  if (eta >= 18) return 'Juniores';
-  if (eta >= 14) return `Under ${eta}`;
-  if (eta >= 12) return 'Esordienti';
-  if (eta >= 10) return 'Pulcini';
-  if (eta >= 8) return 'Primi calci';
-  return 'Piccoli amici';
+  const nome =
+    eta >= 18 ? 'Juniores'
+    : eta >= 14 ? `Under ${eta}`
+    : eta >= 12 ? 'Esordienti'
+    : eta >= 10 ? 'Pulcini'
+    : eta >= 8 ? 'Primi calci'
+    : 'Piccoli amici';
+  return `${nome} - ${annata}`;
 }
 
 type Intervallo = { min: number; max: number };

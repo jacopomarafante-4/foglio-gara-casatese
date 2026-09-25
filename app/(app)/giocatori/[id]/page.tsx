@@ -158,7 +158,9 @@ export default async function SchedaGiocatore({
             <span className="font-semibold">
               {g.societa?.nome ?? 'società da completare'} · {categoria}
             </span>
-            {g.categoria && <span className="text-sm text-grigio"> (annata {g.annata}, gioca sotto/sopra età)</span>}
+            {g.categoria && !g.categoria.includes(String(g.annata)) && (
+              <span className="text-sm text-grigio"> (annata {g.annata}, gioca sotto/sopra età)</span>
+            )}
           </p>
           {g.cognome && g.descrizione && <p className="mt-1 text-sm italic text-grigio">{g.descrizione}</p>}
           {g.stato === 'chiuso' && g.motivo_chiusura && (
