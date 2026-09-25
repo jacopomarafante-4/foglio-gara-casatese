@@ -326,3 +326,5 @@ a.iconbtn2{filter:none;opacity:1}
 .demo select{flex:1 1 160px}
 .badge.dir{background:#fff;color:var(--brand)}
 a.areabtn{text-decoration:none}
+/* Da telefono l'intestazione non resta fissa: occuperebbe un quarto dello schermo */
+@media (max-width:560px){.top{position:static}}

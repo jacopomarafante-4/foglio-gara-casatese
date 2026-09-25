@@ -75,7 +75,7 @@ function nameLayout(tokens){
 
 /* ---------- Render ---------- */
 function renderChrome(){
-  const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
+  const opts = `<option value="admin" ${isAdmin()?'selected':''}>${staffRole === 'direttore' ? 'Direttore' : 'Amministratore'} (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
   $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
   $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
