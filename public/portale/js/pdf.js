@@ -4,6 +4,15 @@
 const W = 1188, H = 840, K = 2.5;
 const INK = '#15202B', MUTED = '#5B6875', GRASS = '#2F6B45', G1 = '#E3EFE6', G2 = '#D8E9DD', RED = '#C8102E';
 const LABEL_BG = '#EEF1F4', LINK_C = '#1A56C4', LINE_C = '#D5DDD8';
+/* Colori del club (come app/globals.css e la striscia dell'app) */
+const BLU = '#003DA5', BLU_SCURO = '#002A73', ORO = '#D4AF37', ROSSO_CLUB = '#C41E3A', CARTA = '#F3F6FA';
+let pdfLogo = null;   // logo del club, caricato prima di disegnare le pagine (loadLogo)
+function rrect(x, px, py, w, h, r){ x.beginPath(); if(x.roundRect) x.roundRect(px, py, w, h, r); else x.rect(px, py, w, h); }
+function striscia(x, px, py, w, h){
+  x.fillStyle = BLU; x.fillRect(px, py, w*6/9, h);
+  x.fillStyle = ORO; x.fillRect(px + w*6/9, py, w/9, h);
+  x.fillStyle = ROSSO_CLUB; x.fillRect(px + w*7/9, py, w*2/9, h);
+}
 function cv(){ const c = document.createElement('canvas'); c.width = W*K; c.height = H*K; const x = c.getContext('2d'); x.scale(K,K); x.fillStyle='#fff'; x.fillRect(0,0,W,H); return [c,x]; }
 function font(x, size, weight=600, cond=false){ x.font = `${weight} ${size}px ${cond?'"Barlow Condensed","Arial Narrow",Arial':'"Barlow",Arial'},sans-serif`; }
 function T(x, s, px, py, o={}){
@@ -30,14 +39,25 @@ function wrap(x, s, px, py, maxW, lh, o={}, maxLines=99){
 }
 function header(x, title, sub, page, total){
   const s = S.sheet;
-  T(x, title, 36, 70, {size:40, weight:700, cond:true, max:700});
-  if(sub) T(x, sub, 36, 98, {size:17, weight:500, color:MUTED, max:700});
-  const right = [s.opponent ? `${teamLabel()} contro ${s.opponent}` : teamLabel(),
-    [fmtDate(s.date), s.time].filter(Boolean).join(' ore '), [luogoPartita(s).venue, s.category].filter(Boolean).join(', ')].filter(Boolean);
-  right.forEach((r,i) => T(x, r, W-36, 52+i*22, {size:i?15:19, weight:i?500:700, align:'right', color:i?MUTED:INK, max:400}));
-  x.fillStyle = INK; x.fillRect(36, 116, W-72, 3);
-  x.fillStyle = GRASS; x.fillRect(36, 116, 90, 3);
-  T(x, `${page} / ${total}`, W-36, H-18, {size:12, color:MUTED, align:'right'});
+  // Fascia blu con logo, titolo e dati della partita; sotto la striscia blu-oro-rosso
+  x.fillStyle = BLU_SCURO; x.fillRect(0, 0, W, 104);
+  striscia(x, 0, 104, W, 7);
+  let tx = 36;
+  if(pdfLogo){
+    x.fillStyle = '#fff'; rrect(x, 30, 14, 76, 76, 14); x.fill();
+    x.drawImage(pdfLogo, 36, 20, 64, 64);
+    tx = 124;
+  }
+  T(x, title, tx, 58, {size:38, weight:700, cond:true, color:'#fff', max:560});
+  if(sub) T(x, sub, tx, 86, {size:16, weight:500, color:'#C9D6EE', max:560});
+  const luogo = luogoPartita(s);
+  const right = [s.opponent ? (s.home ? `${teamLabel()} – ${s.opponent}` : `${s.opponent} – ${teamLabel()}`) : teamLabel(),
+    [fmtDate(s.date), s.time].filter(Boolean).join(' · ore '), [luogo.venue, s.category].filter(Boolean).join(' · ')].filter(Boolean);
+  right.forEach((r,i) => T(x, r, W-36, 40+i*24, {size:i?15:21, weight:i?500:700, align:'right', color:i?'#C9D6EE':'#fff', cond:!i, max:470}));
+  // Piè di pagina
+  x.fillStyle = LINE_C; x.fillRect(36, H-26, W-72, 1);
+  T(x, 'Academy Casatese Merate · Foglio gara', 36, H-9, {size:12, weight:600, color:MUTED});
+  T(x, `${page} / ${total}`, W-36, H-9, {size:12, color:MUTED, align:'right'});
 }
 function disc(x, cx, cy, r, fill, label, o={}){
   x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2);
@@ -70,8 +90,10 @@ function coverPage(total){
   const rows = st.length + bench.length;
   const rh = Math.min(27, (H-150-60-60)/Math.max(rows,1));
   let y = 158;
+  let zebra = 0;
   const row = (p, slot, isStarter) => {
-    x.fillStyle = isStarter ? INK : GRASS;
+    if(zebra++ % 2 === 0){ x.fillStyle = CARTA; rrect(x, 30, y-rh*0.8, 350, rh, 6); x.fill(); }
+    x.fillStyle = isStarter ? BLU_SCURO : GRASS;
     x.beginPath(); x.roundRect ? x.roundRect(36, y-rh*0.72, 36, rh*0.86, 5) : x.rect(36,y-rh*0.72,36,rh*0.86); x.fill();
     T(x, p ? (matchNum(p.id)||'–') : '–', 54, y-rh*0.29+1, {size:Math.min(18,rh*0.7), weight:700, cond:true, align:'center', base:'middle', color:'#fff'});
     T(x, p ? p.name : 'Da assegnare', 82, y-rh*0.29+1, {size:Math.min(17,rh*0.66), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:250});
@@ -79,9 +101,9 @@ function coverPage(total){
     if(tag){ x.fillStyle = '#E3A008'; x.beginPath(); x.arc(356, y-rh*0.29, 11, 0, 7); x.fill(); T(x, tag, 356, y-rh*0.29+1, {size:tag.length>1?10:13, weight:700, align:'center', base:'middle', color:INK}); }
     y += rh;
   };
-  T(x, 'Titolari', 36, 146, {size:21, weight:700, cond:true}); y = 146 + rh + 4;
+  T(x, 'Titolari', 36, 146, {size:21, weight:700, cond:true, color:BLU_SCURO}); y = 146 + rh + 4;
   st.forEach(({slot,p}) => row(p, slot, true));
-  y += 18; T(x, 'Panchina', 36, y, {size:21, weight:700, cond:true}); y += rh + 4;
+  y += 18; zebra = 0; T(x, 'Panchina', 36, y, {size:21, weight:700, cond:true, color:BLU_SCURO}); y += rh + 4;
   if(bench.length) bench.forEach(p => row(p, null, false)); else T(x, 'Nessun giocatore in panchina', 36, y-8, {size:14, color:MUTED});
   // Campo
   const ph = H-150-52, pw = ph*68/105, px = 400 + (440-pw)/2 + 20, py = 146;
@@ -101,22 +123,24 @@ function coverPage(total){
     if(p){ T(x, surname(p.name), cx, cy+36, {size:14, weight:700, align:'center', halo:4, max:110}); }
     if(p && (p.id===s.captain||p.id===s.vice)){ const tg = p.id===s.captain?'K':'VK'; x.fillStyle='#E3A008'; x.beginPath(); x.arc(cx+17,cy-15,9,0,7); x.fill(); T(x,tg,cx+17,cy-14,{size:tg.length>1?8:11,weight:700,align:'center',base:'middle'}); }
   });
-  // Colonna destra
+  // Colonna destra, in un riquadro
   const rx = 890;
+  x.fillStyle = CARTA; rrect(x, rx-18, 128, W-36-(rx-18), H-128-48, 12); x.fill();
+  x.fillStyle = BLU; x.fillRect(rx-18, 128+12, 4, 56);
   T(x, 'Modulo', rx, 150, {size:15, weight:600, color:MUTED});
-  T(x, s.formation, rx, 196, {size:50, weight:700, cond:true});
+  T(x, s.formation, rx, 196, {size:50, weight:700, cond:true, color:BLU_SCURO});
   let ry = 240;
   const cap = P(s.captain), vice = P(s.vice);
   if(cap){ const cn=matchNum(cap.id); T(x, 'Capitano', rx, ry, {size:14, color:MUTED}); T(x, `${cn?cn+' ':''}${cap.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   if(vice){ const vn=matchNum(vice.id); T(x, 'Vice capitano', rx, ry, {size:14, color:MUTED}); T(x, `${vn?vn+' ':''}${vice.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   const sel = s.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
   if(sel.length){
-    ry += 8; T(x, 'Calci piazzati', rx, ry, {size:21, weight:700, cond:true}); ry += 26;
+    ry += 8; T(x, 'Calci piazzati', rx, ry, {size:21, weight:700, cond:true, color:BLU_SCURO}); ry += 26;
     sel.forEach((q,i) => { if(ry > 600) return; T(x, `p. ${i+2}`, rx, ry, {size:13, color:MUTED}); T(x, q.name + (q.subtitle?`, ${q.subtitle}`:''), rx+42, ry, {size:15, weight:600, max:220}); ry += 22; });
   }
   if(s.notes){
-    ry += 16; T(x, 'Note', rx, ry, {size:21, weight:700, cond:true}); ry += 24;
-    wrap(x, s.notes, rx, ry, 262, 20, {size:15, weight:500}, Math.max(1, Math.floor((H-50-ry)/20)));
+    ry += 16; T(x, 'Note', rx, ry, {size:21, weight:700, cond:true, color:BLU_SCURO}); ry += 24;
+    wrap(x, s.notes, rx, ry, 262, 20, {size:15, weight:500}, Math.max(1, Math.floor((H-60-ry)/20)));
   }
   return c;
 }
@@ -162,8 +186,9 @@ function schemePage(sc, page, total){
   let ny = oy + fh + 30;
   if(sc.note) { const n = wrap(x, sc.note, 36, ny, fw, 26, {size:22, weight:700, cond:true}, 3); ny += n*26 + 4; }
   if(sc.legend) T(x, sc.legend, 36, ny, {size:15, weight:500, color:MUTED, max:fw});
-  // Pannello compiti
+  // Pannello compiti, in un riquadro
   const rx = 790, rw = W-36-rx;
+  x.fillStyle = CARTA; rrect(x, rx-16, 128, rw+16, H-128-48, 12); x.fill();
   x.fillStyle = fav ? '#DDF0E2' : '#F8DDE1';
   x.beginPath(); x.roundRect ? x.roundRect(rx, 140, 110, 30, 15) : x.rect(rx,140,110,30); x.fill();
   T(x, fav ? 'A favore' : 'A sfavore', rx+55, 156, {size:17, weight:700, cond:true, align:'center', base:'middle', color:fav?'#1E5A36':'#8E0C22'});
@@ -173,7 +198,7 @@ function schemePage(sc, page, total){
   const lines = sc.tokens.length + entries.length*1.6;
   const lh = Math.min(26, (H-60-200)/Math.max(lines,1));
   let gy = 206;
-  T(x, 'Compiti', rx, 198, {size:24, weight:700, cond:true});
+  T(x, 'Compiti', rx, 198, {size:24, weight:700, cond:true, color:BLU_SCURO});
   gy = 232;
   entries.forEach(([role, toks]) => {
     const col = rm.get(role) || INK;
@@ -204,6 +229,7 @@ function ensureFonts(){
 }
 async function buildPreview(){
   await ensureFonts();
+  pdfLogo = await loadLogo();
   const box = $('#pages'); if(!box) return;
   box.innerHTML = '';
   makePages().forEach((c,i) => { c.setAttribute('aria-label', `Pagina ${i+1}`); box.appendChild(c); });
@@ -334,6 +360,7 @@ async function downloadPdf(){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   setStatus('Creo il PDF…');
   await ensureFonts();
+  pdfLogo = await loadLogo();
   const pages = makePages();
   const doc = new window.jspdf.jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
   pages.forEach((c,i) => { if(i) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210); });
