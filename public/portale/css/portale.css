@@ -320,7 +320,7 @@ a.iconbtn2{filter:none;opacity:1}
 .addrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .teamcard .hd a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 @media (max-width:560px){.addrow{grid-template-columns:1fr}}
-.staffrow{grid-template-columns:minmax(0,1fr) auto auto auto}
+.staffrow{grid-template-columns:minmax(0,1fr) auto auto minmax(40px,auto)}
 @media (max-width:560px){.staffrow{grid-template-columns:minmax(0,1fr) auto auto}}
 .demo select,.ctx select{max-width:100%;min-width:0;text-overflow:ellipsis}
 .demo select{flex:1 1 160px}

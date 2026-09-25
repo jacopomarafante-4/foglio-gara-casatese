@@ -19,15 +19,15 @@ const AREE = [
   { k: 'allenamento', etichetta: 'Allenamento', href: '/portale/#/allenamenti' },
   { k: 'statistiche', etichetta: 'Statistiche', href: '/portale/#/statallen' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
-  { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre', soloAdmin: true },
+  { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre' },
 ];
 
-/** Admin e dirigenti vedono tutte le aree; gli scout hanno solo lo Scouting, quindi niente barra */
+/** Admin e direttori vedono tutte le aree; gli scout hanno solo lo Scouting, quindi niente barra */
 export function Aree({ ruolo }: { ruolo: Ruolo }) {
   if (ruolo !== 'admin' && ruolo !== 'direttore') return null;
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
-      {AREE.filter((a) => !a.soloAdmin || ruolo === 'admin').map((a) => {
+      {AREE.map((a) => {
         const attiva = a.k === 'scouting';
         return (
           <a

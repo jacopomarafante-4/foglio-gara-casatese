@@ -76,11 +76,11 @@ function nameLayout(tokens){
 /* ---------- Render ---------- */
 function renderChrome(){
   const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
-  $('#demo').innerHTML = hashLocked || readOnly ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
-  $('#demo').classList.toggle('hidden', hashLocked || readOnly);
+  $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
+  $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `${readOnly ? '<span class="badge dir" title="Vedi tutto, senza modificare">Dirigente · sola lettura</span>' : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
+    ? `${staffRole === 'direttore' ? '<span class="badge dir">Direttore</span>' : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla scelta dei pannelli solo per l'admin: il mister resterebbe senza squadra
   if(IN_APP_UNICA && isAdmin()) $('#homelink').href = '/'; else $('#homelink').removeAttribute('href');
@@ -184,16 +184,16 @@ function viewSquadre(){
     </div>`;
   }).join('');
   return `<section class="panel">
-    <h2>Squadre e mister</h2>
-    <p class="hint">Solo tu vedi questa pagina. Ogni mister entra dalla pagina d'ingresso con il suo PIN personale e trova solo la sua squadra.</p>
+    <h2>Squadre, scouting e direttori</h2>
+    <p class="hint">La vedete solo tu e i direttori. Ognuno entra dalla pagina d'ingresso con il suo PIN personale: i mister trovano solo la loro squadra, gli scout lo Scouting.</p>
     ${cards || '<p class="empty">Nessuna squadra ancora.</p>'}
     <div class="row" style="margin-top:14px"><button class="btn primary" data-act="teamadd">Aggiungi squadra</button></div>
+    ${viewStaff()}
   </section>
-  ${viewStaff()}
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
-      <div><b>Amministratore</b>Crea le squadre e i PIN dei mister, inserisce le rose, carica e disegna gli schemi dei calci piazzati. Può aprire qualsiasi squadra e scaricare il report PDF delle statistiche.</div>
+      <div><b>Amministratore e direttori</b>Creano le squadre e i PIN di mister, scout e direttori, inseriscono le rose, caricano e disegnano gli schemi dei calci piazzati. Aprono qualsiasi squadra e scaricano il report PDF delle statistiche. Nello Scouting i direttori guardano soltanto.</div>
       <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test, vede le statistiche e segnala giocatori allo scouting.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>
@@ -204,10 +204,11 @@ function viewSquadre(){
     <button class="btn" data-act="exportbackup">Esporta backup</button>
   </section>`;
 }
-/* Scouting e Dirigenti, mostrati come le squadre: ogni persona col suo codice personale.
-   Elenco letto con la sessione admin (profiles + codici_accesso, visibili solo all'admin dalla 0008);
-   creare account e cambiare codici passa da /api/staff (il codice è anche la password dell'account). */
+/* Scouting e Direttori, mostrati come le squadre: ogni persona col suo PIN personale.
+   Elenco letto con la sessione di admin/direttore (profiles + codici_accesso, 0010);
+   creare account e cambiare PIN passa da /api/staff (il PIN è anche la password dell'account). */
 let staff = null, staffBusy = false, staffMsg = '';
+const staffAdding = {};
 function loadStaff(){
   staff = 'loading';
   Promise.all([
@@ -225,44 +226,48 @@ async function staffAction(body){
     const r = await fetch('/api/staff', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(body)});
     const j = await r.json().catch(() => ({errore: 'Sessione scaduta: rientra dalla pagina d’ingresso.'}));
     if(!r.ok || j.errore) staffMsg = j.errore || 'Operazione non riuscita.';
+    else if(body.azione === 'crea') staffAdding[body.ruolo] = false;
   }catch(e){ staffMsg = 'Operazione non riuscita: controlla la connessione.'; }
   staffBusy = false; loadStaff(); render();
 }
-function viewStaffGroup(ruolo){
-  const titolo = ruolo === 'scout' ? 'Scouting' : 'Dirigenti';
-  const chi = ruolo === 'scout' ? 'scout' : 'dirigente';
+function viewStaffCard(ruolo){
+  const scout = ruolo === 'scout';
+  const chi = scout ? 'scout' : 'direttore';
   const persone = Array.isArray(staff) ? staff.filter(x => x.ruolo === ruolo) : [];
-  const righe = persone.map(x => `
+  const dis = staffBusy ? 'disabled' : '';
+  const righe = persone.map(x => {
+    const nome = [x.nome, x.cognome].filter(Boolean).join(' ');
+    return `
         <div class="coachrow staffrow${x.attivo ? '' : ' off'}">
-          <input data-staffname="${x.id}" value="${esc([x.nome, x.cognome].filter(Boolean).join(' '))}" placeholder="Nome e cognome" aria-label="Nome">
-          ${x.pin ? `<span class="code" title="Codice personale">${esc(x.pin)}</span>` : '<span class="nocode">Senza codice</span>'}
-          <button class="btn small ${x.pin?'ghost':'primary'}" data-staffpin="${x.id}" ${staffBusy?'disabled':''}>${x.pin ? 'Rigenera' : 'Genera codice'}</button>
-          <button class="btn small ghost" data-staffstato="${x.id}" data-attivo="${x.attivo ? '0' : '1'}" ${staffBusy?'disabled':''}>${x.attivo ? 'Sospendi' : 'Riattiva'}</button>
-        </div>`).join('');
+          <input data-staffname="${x.id}" value="${esc(nome)}" placeholder="Nome e cognome" aria-label="Nome">
+          ${!x.attivo ? '<span class="nocode">Sospeso</span>' : x.pin ? `<span class="code" title="PIN personale">${esc(x.pin)}</span>` : '<span class="nocode">Senza PIN</span>'}
+          ${x.attivo ? `<button class="btn small ${x.pin?'ghost':'primary'}" data-staffpin="${x.id}" ${dis}>${x.pin ? 'Rigenera' : 'Genera PIN'}</button>` : '<span></span>'}
+          ${x.attivo ? `<button class="iconbtn" aria-label="Sospendi ${esc(nome)}" title="Sospendi l'accesso" data-staffstato="${x.id}" data-attivo="0" ${dis}>×</button>`
+                     : `<button class="btn small ghost" data-staffstato="${x.id}" data-attivo="1" ${dis}>Riattiva</button>`}
+        </div>`;
+  }).join('');
   return `
     <div class="teamcard">
       <div class="hd">
-        <div><strong>${titolo}</strong><span class="stat"> · ${ruolo === 'scout' ? 'entrano in Scouting Hub' : 'a capo di squadre e scout'}</span></div>
-        ${ruolo === 'scout' ? '<div class="row"><a class="btn small" href="/home">Apri Scouting Hub</a></div>' : ''}
+        <div><strong>${scout ? 'Scouting' : 'Direttori'}</strong><span class="stat"> · ${scout ? 'Academy Casatese Merate' : 'a capo di squadre e scout'}</span></div>
+        ${scout ? '<div class="row"><a class="btn small" href="/home">Apri Scouting</a></div>' : ''}
       </div>
       <div class="coachlist">
-        <div class="coachhd">${ruolo === 'scout' ? 'Scout' : 'Dirigenti'}</div>
-        ${staff === 'loading' ? '<p class="note">Caricamento…</p>' : righe || `<p class="note">Nessun ${chi}.</p>`}
-        <div class="addrow"><input id="staffnew_${ruolo}" placeholder="Nome e cognome del nuovo ${chi}" aria-label="Nuovo ${chi}">
-          <button class="btn small ghost" data-staffadd="${ruolo}" ${staffBusy?'disabled':''}>+ Aggiungi ${chi}</button></div>
+        <div class="coachhd">${scout ? 'Scout' : 'Direttori'}</div>
+        ${staff === 'loading' ? '<p class="note">Caricamento…</p>' : righe || `<p class="note">Nessun ${chi}: aggiungilo e genera il suo PIN.</p>`}
+        ${staffAdding[ruolo]
+          ? `<div class="addrow"><input id="staffnew_${ruolo}" placeholder="Nome e cognome del nuovo ${chi}" aria-label="Nuovo ${chi}">
+               <button class="btn small primary" data-staffadd="${ruolo}" ${dis}>Crea e genera PIN</button></div>`
+          : `<button class="btn small ghost" data-staffnew="${ruolo}">+ Aggiungi ${chi}</button>`}
       </div>
     </div>`;
 }
 function viewStaff(){
   if(!supabaseClient || !sessionOk(supaSession)) return '';
   if(staff === null) loadStaff();
-  return `<section class="panel">
-    <h2>Scouting e dirigenti</h2>
-    <p class="hint">Ogni scout e ogni dirigente entra dalla pagina d'ingresso con il suo codice personale. Solo tu vedi i codici.</p>
-    ${staffMsg ? `<p class="esito ko" role="alert">${esc(staffMsg)}</p>` : ''}
-    ${viewStaffGroup('scout')}
-    ${viewStaffGroup('direttore')}
-  </section>`;
+  return `${staffMsg ? `<p class="esito ko" role="alert" style="margin-top:14px">${esc(staffMsg)}</p>` : ''}
+    ${viewStaffCard('scout')}
+    ${viewStaffCard('direttore')}`;
 }
 
 const gkBtn = p => `<button class="gkbtn" data-gktoggle="${p.id}" aria-pressed="${isGk(p.id)}" title="${isGk(p.id)?'Portiere (tocca per togliere)':'Segna come portiere'}">🧤</button>`;

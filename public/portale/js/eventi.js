@@ -13,9 +13,13 @@ document.addEventListener('click', e => {
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel || t.dataset.coachpin || t.dataset.coachdel || t.dataset.coachadd || t.dataset.teamcodeoff)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; writeRoute(true); subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
-  /* Scout e dirigenti: account e codici passano da /api/staff (solo admin) */
+  /* Scout e direttori: account e PIN passano da /api/staff (admin e direttori) */
   if(t.dataset.staffpin && isAdmin()){ const x = staff.find(p => p.id===t.dataset.staffpin); if(x && (!x.pin || confirm(`Rigenerare il codice di ${x.nome||''} ${x.cognome||''}? Quello vecchio smette di funzionare.`))) staffAction({azione:'pin', id:x.id}); return; }
-  if(t.dataset.staffstato && isAdmin()){ staffAction({azione:'stato', id:t.dataset.staffstato, attivo:t.dataset.attivo==='1'}); return; }
+  if(t.dataset.staffstato && isAdmin()){
+    const x = staff.find(p => p.id===t.dataset.staffstato), riattiva = t.dataset.attivo==='1';
+    if(x && (riattiva || confirm(`Sospendere ${x.nome||''} ${x.cognome||''}? Non potrà più entrare finché non lo riattivi.`))) staffAction({azione:'stato', id:x.id, attivo:riattiva});
+    return; }
+  if(t.dataset.staffnew && isAdmin()){ staffAdding[t.dataset.staffnew] = true; render(); $('#staffnew_'+t.dataset.staffnew)?.focus(); return; }
   if(t.dataset.staffadd && isAdmin()){ const inp = $('#staffnew_'+t.dataset.staffadd); const nome = (inp?.value||'').trim(); if(!nome){ inp?.focus(); return; } staffAction({azione:'crea', nome, ruolo:t.dataset.staffadd}); return; }
   /* Mister e PIN personali (solo admin, controllato sopra) */
   const coachOf = v => { const [tid, cid] = v.split(':'); const tm = S.teams.find(x => x.id===tid); return [tm, tm?.coaches?.find(c => c.id===cid)]; };

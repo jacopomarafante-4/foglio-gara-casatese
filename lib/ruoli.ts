@@ -12,7 +12,7 @@ export type Profilo = {
 
 export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
   admin: 'Admin',
-  direttore: 'Dirigente',
+  direttore: 'Direttore',
   scout: 'Scout',
   mister: 'Mister',
 };
@@ -22,7 +22,7 @@ export function puoAccedere(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'scout';
 }
 
-/** Pannello che si apre dopo l'accesso: l'admin gestisce le squadre, i dirigenti scelgono
+/** Pannello che si apre dopo l'accesso: l'admin gestisce le squadre, i direttori scelgono
  *  tra Portale e Scouting (pagina d'ingresso), gli scout vanno allo Scouting */
 export function pannelloIniziale(ruolo: Ruolo) {
   if (ruolo === 'admin') return '/portale/';
@@ -30,7 +30,7 @@ export function pannelloIniziale(ruolo: Ruolo) {
   return '/home';
 }
 
-/** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi (i dirigenti solo in lettura) */
+/** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi (i direttori, nello Scouting, solo in lettura) */
 export function vedeTutto(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore';
 }
@@ -40,7 +40,7 @@ export function nomeCompleto(p: Pick<Profilo, 'nome' | 'cognome' | 'email'>) {
   return n || p.email;
 }
 
-/** Stessa regola della funzione SQL public.puo_segnalare() (0009): i dirigenti guardano soltanto */
+/** Stessa regola della funzione SQL public.puo_segnalare() (0009): i direttori nello Scouting guardano soltanto */
 export function puoSegnalare(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'scout';
 }

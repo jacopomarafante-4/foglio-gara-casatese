@@ -91,7 +91,7 @@ export default async function SchedaGiocatore({
   const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
   const gestore = gestisce(profilo.ruolo);
-  const tutto = vedeTutto(profilo.ruolo); // i dirigenti vedono anche i contatti, senza modificare
+  const tutto = vedeTutto(profilo.ruolo); // i direttori vedono anche i contatti, senza modificare
   const scrive = puoSegnalare(profilo.ruolo);
   const modifica = gestore || (scrive && g.creato_da === profilo.id);
   const societa = modifica ? await elencoSocieta(supabase) : [];
@@ -273,7 +273,7 @@ export default async function SchedaGiocatore({
             <section className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Contatti</h2>
               <p className="text-xs text-grigio">
-                Visibili solo ad admin e dirigenti{tutto ? '' : ' (e a te, per quelli che inserisci)'}.
+                Visibili solo ad admin e direttori{tutto ? '' : ' (e a te, per quelli che inserisci)'}.
               </p>
               {elencoContatti.length > 0 && (
                 <ul className="divide-y divide-linea text-sm">

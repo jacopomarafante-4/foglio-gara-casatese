@@ -27,7 +27,7 @@ const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'P
 const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:'allenamenti'};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
-const allowedAreas = () => AREAS.filter(a => (!a.admin || (isAdmin() && !readOnly)) && (!a.coach || !isAdmin()));
+const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
 function allowedTabs(){ return allowedAreas().flatMap(a => a.tabs); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
@@ -51,7 +51,7 @@ window.addEventListener('popstate', () => {
 function renderNav(){
   const cur = areaOf(tab);
   const icon = k => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AREA_ICONS[k]}</svg>`;
-  /* Admin e dirigenti: l'area Scouting apre lo Scouting (pagine Next.js), allo stesso posto nella barra */
+  /* Admin e direttori: l'area Scouting apre lo Scouting (pagine Next.js), allo stesso posto nella barra */
   const scoutingLink = IN_APP_UNICA && isAdmin() ? `<a class="areabtn" href="/home">${icon('scouting')}<span>Scouting</span></a>` : '';
   const aree = allowedAreas();
   $('#areanav').innerHTML = aree.map(a => `<button class="areabtn" data-area="${a.k}" aria-current="${a===cur?'page':'false'}">

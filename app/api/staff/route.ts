@@ -1,6 +1,6 @@
-// Gestione di scout e dirigenti dal Portale (Società), solo per l'admin:
+// Gestione di scout e direttori dal Portale (Società), per admin e direttori:
 // crea l'account, genera o rigenera il codice personale (= password dell'account),
-// cambia il nome, sospende o riattiva. Il Portale chiama POST /api/staff con la sessione admin.
+// cambia il nome, sospende o riattiva. Il Portale chiama POST /api/staff con la sessione di chi è entrato.
 import { randomInt } from 'node:crypto';
 import { getProfilo } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/servizio';
@@ -35,7 +35,7 @@ async function nuovoCodice(db: Servizio) {
   throw new Error('Nessun codice libero trovato');
 }
 
-/** Solo scout e dirigenti: l'admin non si gestisce da qui */
+/** Solo scout e direttori: l'admin non si gestisce da qui */
 async function staffEsistente(db: Servizio, id: string) {
   const { data } = await db.from('profiles').select('id, nome, cognome, ruolo').eq('id', id).maybeSingle();
   return data && RUOLI_STAFF.includes(data.ruolo) ? data : null;
@@ -43,7 +43,8 @@ async function staffEsistente(db: Servizio, id: string) {
 
 export async function POST(request: Request) {
   const profilo = await getProfilo();
-  if (!profilo || profilo.ruolo !== 'admin' || !profilo.attivo) return errore('Solo l’admin.', 403);
+  if (!profilo || !profilo.attivo || (profilo.ruolo !== 'admin' && profilo.ruolo !== 'direttore'))
+    return errore('Solo admin e direttori.', 403);
 
   let r: Richiesta;
   try {
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
   }
 
   if (r.azione === 'stato') {
+    if (persona.id === profilo.id) return errore('Non puoi sospendere te stesso.');
     await db.from('profiles').update({ attivo: Boolean(r.attivo) }).eq('id', persona.id);
     return Response.json({ ok: true });
   }

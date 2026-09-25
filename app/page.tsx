@@ -7,9 +7,9 @@ import { Striscia } from '@/components/Striscia';
 
 /**
  * Pagina d'ingresso unica: tutti digitano il PIN e il PIN dice chi sei
- * (mister → Portale squadre, scout → Scouting, dirigente → sceglie, admin → email e password).
+ * (mister → Portale squadre, scout → Scouting, direttore → sceglie, admin → email e password).
  * Il PIN si chiede sempre, anche se c'è già una sessione aperta (niente accesso automatico):
- * solo l'admin o un dirigente già entrati vedono la scelta tra i due pannelli.
+ * solo l'admin o un direttore già entrati vedono la scelta tra i due pannelli.
  */
 export default async function Ingresso({
   searchParams,
@@ -17,7 +17,7 @@ export default async function Ingresso({
   searchParams: Promise<{ next?: string }>;
 }) {
   const [{ next }, profilo] = await Promise.all([searchParams, getProfilo()]);
-  // Admin e dirigenti già entrati scelgono il pannello; tutti gli altri vedono il PIN
+  // Admin e direttori già entrati scelgono il pannello; tutti gli altri vedono il PIN
   const admin = profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo);
 
   return (

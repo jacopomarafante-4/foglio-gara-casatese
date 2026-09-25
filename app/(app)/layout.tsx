@@ -38,7 +38,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   }
 
   const etichetta =
-    profilo.ruolo === 'admin' ? 'Admin' : profilo.ruolo === 'direttore' ? 'Dirigente · sola lettura' : 'Scout';
+    profilo.ruolo === 'admin' ? 'Admin' : profilo.ruolo === 'direttore' ? 'Direttore · sola lettura' : 'Scout';
 
   // Stessa intestazione del Portale squadre (public/portale): lo Scouting è un'area come le altre
   return (
