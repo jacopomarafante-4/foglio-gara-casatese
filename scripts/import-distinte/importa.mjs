@@ -93,6 +93,8 @@ function trovaGiocatore(r) {
 // --- Simulazione / importazione -----------------------------------------------
 const riepilogo = { distinte: 0, societaNuove: new Set(), nuovi: 0, esistenti: 0, dubbi: [], cambiSocieta: [] };
 const toccati = new Set();
+/** Per ogni ragazzo: società prima dell'importazione e società nelle distinte di questo lotto (con la data) */
+const primaDi = new Map(), viste = new Map();
 
 for (const d of distinte) {
   if (!d.data || !d.categoria || !Array.isArray(d.squadre) || d.squadre.length !== 2) {
@@ -108,7 +110,10 @@ for (const d of distinte) {
     let soc = trovaSocieta(sq.societa);
     if (!soc) {
       riepilogo.societaNuove.add(sq.societa.trim());
-      if (CONFERMA) { soc = (await db.from('societa').insert({ nome: sq.societa.trim() }).select('id, nome, alias').single()).data; societa.push(soc); }
+      // In simulazione la società nuova esiste solo in memoria (serve al riepilogo dei cambi)
+      soc = CONFERMA ? (await db.from('societa').insert({ nome: sq.societa.trim() }).select('id, nome, alias').single()).data
+                     : { id: `nuova:${norm(sq.societa)}`, nome: sq.societa.trim(), alias: [] };
+      societa.push(soc);
     }
     if (CONFERMA && soc) {
       const { data: esiste } = await db.from('squadre').select('id').eq('societa_id', soc.id).ilike('categoria', d.categoria).eq('stagione', stagione).maybeSingle();
@@ -136,7 +141,9 @@ for (const d of distinte) {
         socRagazzo = trovaSocieta(r.societa);
         if (!socRagazzo) {
           riepilogo.societaNuove.add(r.societa.trim());
-          if (CONFERMA) { socRagazzo = (await db.from('societa').insert({ nome: r.societa.trim() }).select('id, nome, alias').single()).data; societa.push(socRagazzo); }
+          socRagazzo = CONFERMA ? (await db.from('societa').insert({ nome: r.societa.trim() }).select('id, nome, alias').single()).data
+                                : { id: `nuova:${norm(r.societa)}`, nome: r.societa.trim(), alias: [] };
+          societa.push(socRagazzo);
         }
       }
       const { g, come, dubbio } = trovaGiocatore(r);
@@ -144,19 +151,20 @@ for (const d of distinte) {
       let id = g?.id;
       if (g) {
         riepilogo.esistenti++;
-        if (socRagazzo && g.societa_id && g.societa_id !== socRagazzo.id) riepilogo.cambiSocieta.push(`${g.cognome} ${g.nome ?? ''}: ${societa.find((s) => s.id === g.societa_id)?.nome ?? '?'} → ${socRagazzo.nome} (${d.data})`);
+        if (!primaDi.has(g.id)) primaDi.set(g.id, { societa_id: g.societa_id, nome: `${g.cognome} ${g.nome ?? ''}`.trim(), nuovo: !!g._nuovo });
         if (CONFERMA && !g.data_nascita && r.data_nascita) await db.from('giocatori').update({ data_nascita: r.data_nascita }).eq('id', g.id);
       } else {
         riepilogo.nuovi++;
-        if (CONFERMA) {
-          const annata = Number(r.data_nascita?.slice(0, 4) ?? r.annata);
-          const nuovo = { cognome: maiuscole(r.cognome), nome: maiuscole(r.nome), annata, data_nascita: r.data_nascita ?? null,
-            societa_id: socRagazzo?.id ?? null, osservato: false };
-          id = (await db.from('giocatori').insert(nuovo).select('id').single()).data.id;
-          const k = norm(nuovo.cognome) + '|' + norm(nuovo.nome);
-          const rec = { id, ...nuovo }; giocatori.push(rec); perNome.set(k, [...(perNome.get(k) ?? []), rec]);
-        }
+        const annata = Number(r.data_nascita?.slice(0, 4) ?? r.annata);
+        const nuovo = { cognome: maiuscole(r.cognome), nome: maiuscole(r.nome), annata, data_nascita: r.data_nascita ?? null,
+          societa_id: socRagazzo?.id ?? null, osservato: false };
+        // In simulazione il nuovo ragazzo resta solo in memoria, così nelle distinte successive viene riconosciuto
+        id = CONFERMA ? (await db.from('giocatori').insert(nuovo).select('id').single()).data.id : `nuovo-${giocatori.length}`;
+        const k = norm(nuovo.cognome) + '|' + norm(nuovo.nome);
+        const rec = { id, ...nuovo, _nuovo: true }; giocatori.push(rec); perNome.set(k, [...(perNome.get(k) ?? []), rec]);
+        primaDi.set(id, { societa_id: null, nome: `${nuovo.cognome} ${nuovo.nome ?? ''}`.trim(), nuovo: true });
       }
+      if (id) viste.set(id, [...(viste.get(id) ?? []), { data: d.data, societa: socRagazzo }]);
       if (CONFERMA && id && distintaId) {
         await db.from('distinte_giocatori').upsert({ distinta_id: distintaId, giocatore_id: id, squadra_id: idSquadra[sq.lato ?? (sq === casa ? 'casa' : 'trasferta')] ?? null,
           societa_id: socRagazzo?.id ?? null, numero: r.numero ?? null, titolare: r.titolare ?? null, capitano: !!r.capitano }, { onConflict: 'distinta_id,giocatore_id' });
@@ -173,6 +181,19 @@ if (CONFERMA) {
     const ultima = (data ?? []).filter((x) => x.distinta).sort((a, b) => b.distinta.data.localeCompare(a.distinta.data))[0];
     const soc = ultima?.societa_id ?? ultima?.squadra?.societa_id;
     if (soc) await db.from('giocatori').update({ societa_id: soc }).eq('id', id);
+  }
+}
+
+// Cambi di società: società di prima ↔ società della distinta più recente (di questo lotto o già in archivio)
+for (const [id, lotto] of viste) {
+  const prima = primaDi.get(id);
+  if (!prima || prima.nuovo || !prima.societa_id) continue;
+  const ultimaLotto = [...lotto].sort((a, b) => b.data.localeCompare(a.data))[0];
+  const { data: gia } = await db.from('distinte_giocatori').select('distinta:distinte(data)').eq('giocatore_id', id);
+  const ultimaArchivio = (gia ?? []).map((x) => x.distinta?.data).filter(Boolean).sort().pop();
+  if (ultimaArchivio && ultimaArchivio > ultimaLotto.data) continue; // c'è già una distinta più recente
+  if (ultimaLotto.societa && ultimaLotto.societa.id !== prima.societa_id) {
+    riepilogo.cambiSocieta.push(`${prima.nome}: ${societa.find((s) => s.id === prima.societa_id)?.nome ?? '?'} → ${ultimaLotto.societa.nome} (${ultimaLotto.data})`);
   }
 }
 

@@ -19,22 +19,45 @@ export type Presenza = {
   } | null;
 };
 
-/** Storico dalle distinte: stagione per stagione, squadra, categoria e partite giocate */
+const meseAnno = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('it-IT', { month: 'short', year: 'numeric', timeZone: 'Europe/Rome' });
+
+/** Società per cui era tesserato quel giorno: quella indicata in distinta, altrimenti quella della squadra */
+const appartenenzaDi = (p: Presenza) => p.appartenenza?.nome ?? p.squadra?.societa?.nome ?? '—';
+
+/** Percorso tra le società nel tempo: tratti consecutivi con la stessa società di appartenenza */
+function percorso(presenze: Presenza[]) {
+  const ordinate = [...presenze].sort((a, b) => a.distinta!.data.localeCompare(b.distinta!.data));
+  const tratti: { societa: string; dal: string; al: string }[] = [];
+  for (const p of ordinate) {
+    const soc = appartenenzaDi(p), d = p.distinta!.data;
+    const ultimo = tratti[tratti.length - 1];
+    if (ultimo && ultimo.societa === soc) ultimo.al = d;
+    else tratti.push({ societa: soc, dal: d, al: d });
+  }
+  return tratti;
+}
+
+/** Storico dalle distinte: stagione per stagione, squadra, categoria e partite giocate.
+ *  Non si sovrascrive mai: ogni distinta resta con la squadra e la società di quel giorno. */
 export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
   const valide = presenze.filter((p) => p.distinta);
-  // Una riga per stagione + squadra (un ragazzo può cambiare squadra a metà stagione)
-  const gruppi = new Map<string, { stagione: string; societa: string; categoria: string; partite: Presenza[] }>();
+  // Un gruppo per stagione + squadra + società di appartenenza: se cambia società (anche a metà
+  // stagione, o gioca in prestito) i periodi restano separati
+  const gruppi = new Map<string, { stagione: string; societa: string; categoria: string; appartenenza: string; partite: Presenza[] }>();
   for (const p of valide) {
     const stagione = p.distinta!.stagione;
     const societa = p.squadra?.societa?.nome ?? '—';
     const categoria = p.squadra?.categoria ?? p.distinta!.categoria;
-    const k = `${stagione}|${societa}|${categoria}`;
-    if (!gruppi.has(k)) gruppi.set(k, { stagione, societa, categoria, partite: [] });
+    const appartenenza = appartenenzaDi(p);
+    const k = `${stagione}|${societa}|${categoria}|${appartenenza}`;
+    if (!gruppi.has(k)) gruppi.set(k, { stagione, societa, categoria, appartenenza, partite: [] });
     gruppi.get(k)!.partite.push(p);
   }
   const elenco = [...gruppi.values()]
     .map((g) => ({ ...g, partite: g.partite.sort((a, b) => b.distinta!.data.localeCompare(a.distinta!.data)) }))
-    .sort((a, b) => b.stagione.localeCompare(a.stagione) || b.partite[0].distinta!.data.localeCompare(a.partite[0].distinta!.data));
+    .sort((a, b) => b.partite[0].distinta!.data.localeCompare(a.partite[0].distinta!.data));
+  const tratti = percorso(valide);
 
   return (
     <section className="rounded-xl border border-linea bg-white p-5">
@@ -45,6 +68,19 @@ export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
       {elenco.length === 0 ? (
         <p className="mt-3 text-grigio">Nessuna distinta con questo giocatore.</p>
       ) : (
+        <>
+        <p className="mt-2 text-sm">
+          <span className="text-grigio">Percorso: </span>
+          {tratti.map((t, i) => (
+            <span key={`${t.societa}${t.dal}`}>
+              {i > 0 && <span className="text-grigio"> → </span>}
+              <strong>{t.societa}</strong>{' '}
+              <span className="text-grigio">
+                ({i === tratti.length - 1 ? `da ${meseAnno(t.dal)}` : meseAnno(t.dal) === meseAnno(t.al) ? meseAnno(t.dal) : `${meseAnno(t.dal)} – ${meseAnno(t.al)}`})
+              </span>
+            </span>
+          ))}
+        </p>
         <ul className="mt-3 divide-y divide-linea">
           {elenco.map((g, i) => {
             const numeri = [...new Set(g.partite.map((p) => p.numero).filter((n) => n !== null))];
@@ -57,8 +93,10 @@ export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
                     <span className="text-grigio"> · </span>
                     <span className="font-semibold">{g.societa}</span>
                     <span className="text-grigio"> · {g.categoria}</span>
+                    {g.appartenenza !== g.societa && <span className="text-grigio"> · tesserato con {g.appartenenza}</span>}
                     <span className="block text-sm text-grigio sm:ml-6 sm:inline">
                       {g.partite.length} {g.partite.length === 1 ? 'partita' : 'partite'}
+                      {g.partite.length > 1 && ` dal ${dataBreve(g.partite[g.partite.length - 1].distinta!.data)} al ${dataBreve(g.partite[0].distinta!.data)}`}
                       {titolare > 0 && ` (${titolare} da titolare)`}
                       {numeri.length > 0 && ` · numero ${numeri.join(', ')}`}
                     </span>
@@ -79,7 +117,6 @@ export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
                             {p.titolare === true && ' · titolare'}
                             {p.titolare === false && ' · panchina'}
                             {p.capitano && ' · capitano'}
-                            {p.appartenenza && p.appartenenza.nome !== g.societa && ` · tesserato con ${p.appartenenza.nome}`}
                           </span>
                         </li>
                       );
@@ -90,6 +127,7 @@ export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
             );
           })}
         </ul>
+        </>
       )}
     </section>
   );
