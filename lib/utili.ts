@@ -32,7 +32,7 @@ export function intero(formData: FormData, chiave: string): number | null {
   return Number.isInteger(n) ? n : null;
 }
 
-/** "Cognome Nome" con le iniziali maiuscole */
+/** "Cognome Nome" con le iniziali maiuscole (stessa regola di public.nome_proprio(), 0021) */
 export function maiuscoleIniziali(s: string | null) {
   if (!s) return null;
   return s.toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, (_, a, b) => a + b.toUpperCase());
