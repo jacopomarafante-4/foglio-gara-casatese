@@ -522,6 +522,8 @@ Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigener
 <h2>4. Lo Scouting</h2>
 {fig('s-scheda', '''<ul>
 <li><b>Giocatori</b>: archivio con ricerca e filtri; "Anche solo da distinta" mostra anche i ragazzi letti dalle distinte.
+Per ogni giocatore: anno, ruolo, stato, squadra, valutazione (o il pulsante <b>Valuta</b>) e prossima gara. Da computer
+si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da telefono con "Ordina per" nei filtri.
 <b>Per stato</b> mostra la pipeline a colonne.</li>
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>

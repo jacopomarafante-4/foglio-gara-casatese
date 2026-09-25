@@ -191,8 +191,14 @@ export default async function SchedaGiocatore({
       <section className="rounded-xl border border-linea bg-white p-5">
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-2xl font-bold">Valutazioni</h2>
-          <span className="text-sm text-grigio">
-            {valutazioni.length ? `media di ${valutazioni.length}` : 'ancora nessuna'}
+          <span className="text-right text-sm text-grigio">
+            {valutazioni.length ? (
+              <>
+                media di {valutazioni.length} · <strong className="text-inchiostro">ultima il {dataBreve(valutazioni[0].data)}</strong>
+              </>
+            ) : (
+              'ancora nessuna'
+            )}
           </span>
         </div>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
