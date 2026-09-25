@@ -16,7 +16,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
 - [x] Migrazione **0008** (PIN personali dei mister; PIN del team solo all'admin) eseguita nel SQL Editor
 - [x] PIN personali dei 5 mister generati, PIN di squadra disattivati
-- [x] Direttori creati: Federico Salomoni, Massimo Carbone, Luca Balzarotti, Jacopo Marafante
+- [x] Direttori creati (4)
 - [ ] Consegnare i PIN di scout e direttori (Società)
 - [x] Migrazione **0009** (direttori in sola lettura nello Scouting) eseguita nel SQL Editor
 - [x] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor

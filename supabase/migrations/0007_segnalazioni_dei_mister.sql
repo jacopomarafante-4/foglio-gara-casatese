@@ -7,9 +7,9 @@
 -- Dal Portale possono SOLO segnalare un giocatore (niente lettura dell'archivio):
 -- una funzione verifica il PIN (public.team_for_pin, da sicurezza.sql) e salva
 -- la segnalazione firmata col nome del mister e la categoria della squadra
--- (es. "Luca Ponzoni · Under 15"; solo la categoria se si entra col PIN di squadra).
+-- (es. "Mario Rossi · Under 15"; solo la categoria se si entra col PIN di squadra).
 
-alter table public.segnalazioni add column if not exists squadra text;   -- es. "Luca Ponzoni · Under 15" (autore_id vuoto)
+alter table public.segnalazioni add column if not exists squadra text;   -- es. "Mario Rossi · Under 15" (autore_id vuoto)
 alter table public.giocatori    add column if not exists segnalato_da_squadra text;
 
 -- Nome di società confrontabile: minuscole, senza accenti, spazi e punteggiatura
