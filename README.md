@@ -20,7 +20,7 @@ Tutti entrano da `/` digitando **solo il PIN**. Il PIN dice chi sei:
 |---|---|
 | PIN **del mister** (4 cifre, generato dall'admin in Portale → Società → Squadre) | Portale squadre, solo la sua squadra |
 | PIN **personale** di uno scout (6 cifre, generato in Società) | Scouting |
-| PIN **personale** di un direttore (6 cifre) | sceglie Portale o Scouting: nel Portale e in Società lavora come l'admin, nello Scouting guarda soltanto |
+| PIN **personale** di un direttore (6 cifre) | sceglie Portale o Scouting: vede tutte le squadre, Società e lo Scouting, **non modifica niente** |
 | PIN **admin** (variabile `PIN_ADMIN`) | poi email e password → Portale squadre; da `/` si sceglie anche Scouting Hub |
 
 Niente accesso automatico: il PIN si rimette quando si chiude il browser (per i mister anche
@@ -37,7 +37,7 @@ chiudendo la scheda) e comunque dopo **6 ore** (`ORE_ACCESSO`).
 | Allenamento | Presenze, Test atletici |
 | Statistiche | Allenamento (presenze, per mese, test), Partite (minuti, gol, gol subiti); report PDF solo admin |
 | Scouting (solo mister) | Segnala un giocatore allo scouting del club (non vede l'archivio) |
-| Società (admin e direttori) | Squadre con i loro mister, Scouting e Direttori: ognuno col suo PIN personale; backup |
+| Società (admin; i direttori la vedono) | Squadre con i loro mister, Scouting e Direttori: ognuno col suo PIN personale; backup |
 
 La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indietro funziona.
 
@@ -78,7 +78,7 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0010_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+2. `supabase/migrations/0001_…` → `0011_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
    segnalazioni e PIN personali dei mister, permessi dei direttori
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.

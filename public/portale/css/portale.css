@@ -335,3 +335,8 @@ a.areabtn{text-decoration:none}
 .pickhd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
 .pickhd b{font-family:var(--cond);font-size:22px}
 .pickbox .chip{cursor:pointer}
+/* Direttori in sola lettura: niente pulsanti di gestione */
+.ro [data-act="teamadd"],.ro [data-coachpin],.ro [data-coachdel],.ro [data-coachadd],.ro [data-teamdel],.ro [data-teamcodeoff],
+.ro [data-staffpin],.ro [data-staffstato],.ro [data-staffnew],.ro [data-staffadd],.ro [data-act="padd"],.ro [data-act="bulk"],
+.ro [data-pdel],.ro [data-act="newscheme"],.ro [data-act="caladd"],.ro [data-caldel],.ro .teamedit,.ro [data-act="exportbackup"]{display:none!important}
+.ro #view input[readonly],.ro #view textarea[readonly]{background:var(--bg);cursor:default}
