@@ -33,7 +33,7 @@ function header(x, title, sub, page, total){
   T(x, title, 36, 70, {size:40, weight:700, cond:true, max:700});
   if(sub) T(x, sub, 36, 98, {size:17, weight:500, color:MUTED, max:700});
   const right = [s.opponent ? `${teamLabel()} contro ${s.opponent}` : teamLabel(),
-    [fmtDate(s.date), s.time].filter(Boolean).join(' ore '), [s.venue, s.category].filter(Boolean).join(', ')].filter(Boolean);
+    [fmtDate(s.date), s.time].filter(Boolean).join(' ore '), [luogoPartita(s).venue, s.category].filter(Boolean).join(', ')].filter(Boolean);
   right.forEach((r,i) => T(x, r, W-36, 52+i*22, {size:i?15:19, weight:i?500:700, align:'right', color:i?MUTED:INK, max:400}));
   x.fillStyle = INK; x.fillRect(36, 116, W-72, 3);
   x.fillStyle = GRASS; x.fillRect(36, 116, 90, 3);
@@ -273,17 +273,23 @@ function convocazionePage(logoImg, figcImg){
   y += 26;
   cols.forEach(([,v],i) => { x.strokeStyle = LINE_C; x.strokeRect(mx+i*cw, y, cw, 30); T(x, v||'—', mx+i*cw+cw/2, y+15+1, {size:12.5, weight:600, align:'center', base:'middle', max:cw-10}); });
   y += 30;
-  const addr = s.meetAddress || s.venue, murl = mapsLink(s);
-  cellRow('INDIRIZZO RITROVO', murl ? ' ' : addr, 180, 32);
-  if(murl){
-    const lx = mx+180+10, hintW = 130, maxw = tw-180-20-hintW;
-    T(x, addr, lx, y+16+1, {size:13, weight:600, base:'middle', color:LINK_C, max:maxw});
-    const uw = Math.min(x.measureText(addr).width, maxw);
-    x.strokeStyle = LINK_C; x.lineWidth = .8; x.beginPath(); x.moveTo(lx, y+24); x.lineTo(lx+uw, y+24); x.stroke();
-    T(x, 'Apri in Google Maps ›', PW-mx-10, y+16+1, {size:10.5, weight:600, base:'middle', align:'right', color:LINK_C});
-    c.mapsLink = {x:mx+180, y, w:tw-180, h:32, url:murl, pw:PW, ph:PH};
-  }
-  y += 32;
+  // Campo di gioco (come nel calendario ufficiale / comunicato) e ritrovo, ciascuno col suo link a Google Maps
+  c.mapsLinks = [];
+  const linkRow = (label, testo, url) => {
+    cellRow(label, url ? ' ' : testo, 180, 32);
+    if(url){
+      const lx = mx+180+10, hintW = 130, maxw = tw-180-20-hintW;
+      T(x, testo, lx, y+16+1, {size:13, weight:600, base:'middle', color:LINK_C, max:maxw});
+      const uw = Math.min(x.measureText(testo).width, maxw);
+      x.strokeStyle = LINK_C; x.lineWidth = .8; x.beginPath(); x.moveTo(lx, y+24); x.lineTo(lx+uw, y+24); x.stroke();
+      T(x, 'Apri in Google Maps ›', PW-mx-10, y+16+1, {size:10.5, weight:600, base:'middle', align:'right', color:LINK_C});
+      c.mapsLinks.push({x:mx+180, y, w:tw-180, h:32, url, pw:PW, ph:PH});
+    }
+    y += 32;
+  };
+  const luogo = luogoPartita(s), ritrovo = (s.meetAddress||'').trim();
+  linkRow('CAMPO DI GIOCO', testoLuogo(luogo), luogoUrl(luogo));
+  linkRow('RITROVO', ritrovo || 'Al campo di gioco', ritrovo ? venueUrl(ritrovo) : '');
   cellRow('NOTE', s.convNotes, 180, 32); y += 32 + 22;
   const sorted = S.players.slice().sort((a,b)=>a.name.localeCompare(b.name,'it'));
   const statW = 74, nameW = tw - statW*5;
@@ -315,8 +321,7 @@ async function downloadConvocazione(){
   const page = convocazionePage(logoImg, figcImg);
   const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:true});
   doc.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
-  const ml = page.mapsLink;
-  if(ml){ const kx = 210/ml.pw, ky = 297/ml.ph; doc.link(ml.x*kx, ml.y*ky, ml.w*kx, ml.h*ky, {url: ml.url}); }
+  for(const ml of page.mapsLinks || []){ const kx = 210/ml.pw, ky = 297/ml.ph; doc.link(ml.x*kx, ml.y*ky, ml.w*kx, ml.h*ky, {url: ml.url}); }
   const s = S.sheet;
   const name = [fmtDate(s.date).replace(/\//g,'_'), s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : '', 'CONVOCAZIONE'].filter(Boolean).join('_') + '.pdf';
   try{

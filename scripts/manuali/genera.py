@@ -284,7 +284,11 @@ compaiono anche qui.</p>''', 'Rosa')}
 tocca <span class="k">Usa questa</span> e i campi si compilano da soli.</p>
 {fig('p-convocazioni', '''<h3>Convocazioni</h3><ol class="passi">
 <li>Tocca <span class="k">Usa questa</span> per prendere la prossima partita dal calendario.</li>
-<li>Controlla <b>orario e indirizzo del ritrovo</b>: si propongono da soli; il segnaposto apre Google Maps.</li>
+<li><b>Campo di gioco</b>: è scritto esattamente come nel calendario ufficiale o nell'ultimo comunicato, con l'indirizzo,
+e si aggiorna da solo se un comunicato lo cambia. Il segnaposto 📍 apre Google Maps; con 📌 puoi salvare il punto esatto
+del cancello, che vale per tutte le partite su quel campo.</li>
+<li><b>Ritrovo</b>: l'orario si propone da solo; scrivi l'indirizzo solo se vi trovate altrove (es. al centro sportivo per
+partire insieme). Se lo lasci vuoto, nella convocazione c'è "Al campo di gioco".</li>
 <li>Per ogni giocatore scegli lo stato: <span class="k">CON</span> convocato, <span class="k">NC</span> non convocato,
 <span class="k">INF</span> infortunato, <span class="k">SQL</span> squalificato, <span class="k">ND</span> non disponibile.</li>
 <li>In fondo tocca <span class="k">Scarica convocazione PDF</span>: il foglio da mandare a ragazzi e famiglie.</li></ol>''', 'Convocazioni')}

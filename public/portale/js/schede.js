@@ -351,7 +351,25 @@ function venueUrl(v){
   if(pin && pin.url) return pin.url;
   return mapsSearchUrl(venueQuery(v));
 }
-function mapsLink(s){ return venueUrl(s.meetAddress || s.venue); }
+/* Campo di gioco della partita del foglio: sempre quello del calendario (scritto come nel calendario ufficiale o nel
+   comunicato, con indirizzo e coordinate: import-calendari/portale.mjs). Se la partita non è in calendario, quello del foglio. */
+function luogoPartita(s){
+  const opp = (s.opponent||'').trim().toLowerCase();
+  const m = s.date ? allCalendar().find(x => x.date===s.date && (x.opponent||'').trim().toLowerCase()===opp) : null;
+  return m ? {venue:m.venue||'', address:m.address||'', ll:m.ll||''} : {venue:s.venue||'', address:s.address||'', ll:s.venueLL||''};
+}
+const testoLuogo = l => [l.venue, l.address].filter(Boolean).join(', ');
+/* Link Google Maps del campo: posizione del cancello salvata dal mister (📌), se no coordinate del calendario, se no ricerca */
+function luogoUrl(l){
+  if(!l.venue) return '';
+  const pin = venuePin(l.venue);
+  if(pin && pin.ll) return 'https://www.google.com/maps/dir/?api=1&destination=' + pin.ll;
+  if(pin && pin.url) return pin.url;
+  if(l.ll) return 'https://www.google.com/maps/dir/?api=1&destination=' + l.ll;
+  return mapsSearchUrl([venueQuery(l.venue), l.address].filter(Boolean).join(', '));
+}
+/* Dove andare: il ritrovo, se il mister ne ha scritto uno diverso, se no il campo di gioco */
+function mapsLink(s){ return (s.meetAddress||'').trim() ? venueUrl(s.meetAddress) : luogoUrl(luogoPartita(s)); }
 let pinEditing = null;   // campo di cui si sta impostando la posizione
 function pinBtn(v){
   v = (v||'').trim(); if(!v || parseLL(v)) return '';
@@ -472,15 +490,24 @@ function viewConvocazioni(){
       <div><label class="f" for="cv_home">Sede</label><select id="cv_home" data-sheet="home"><option value="1" ${s.home?'selected':''}>Casa</option><option value="" ${!s.home?'selected':''}>Trasferta</option></select></div>
     </div>
 
+    <h3 class="convh3">Campo di gioco</h3>
+    ${(() => { const l = luogoPartita(s), u = luogoUrl(l); return l.venue ? `
+    <div class="addrrow luogo">
+      <div class="luogotxt"><b>${esc(l.venue)}</b>${l.address ? `<br><span>${esc(l.address)}</span>` : ''}</div>
+      ${u ? `<a class="iconbtn2" href="${esc(u)}" target="_blank" rel="noopener" title="Apri in Google Maps" aria-label="Apri in Google Maps">📍</a>` : ''}
+      ${pinBtn(l.venue)}
+    </div>
+    ${pinBox(l.venue, true)}
+    <p class="note">Come scritto nel calendario ufficiale o nell'ultimo comunicato: si aggiorna da solo.</p>`
+      : `<p class="note">Campo non indicato: scrivilo nel calendario della squadra.</p>`; })()}
+
     <h3 class="convh3">Ritrovo</h3>
     <div class="grid">
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
-      <div><label class="f" for="cv_meetaddr">Indirizzo</label>
-        <div class="addrrow"><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress || s.venue)}" placeholder="Impianto o via, città">
+      <div><label class="f" for="cv_meetaddr">Indirizzo del ritrovo</label>
+        <div class="addrrow"><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress||'')}" placeholder="Al campo di gioco (scrivi solo se è altrove)">
           <a id="cv_mapslink" class="iconbtn2" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" title="Apri in Google Maps" aria-label="Apri in Google Maps" ${mapsLink(s)?'':'hidden'}>📍</a>
-          ${pinBtn(s.meetAddress || s.venue)}
         </div>
-        ${pinBox(s.meetAddress || s.venue, true)}
       </div>
     </div>
     <div style="margin-top:12px"><label class="f" for="cv_notes">Note</label><textarea id="cv_notes" data-sheet="convNotes">${esc(s.convNotes)}</textarea></div>

@@ -117,7 +117,7 @@ document.addEventListener('click', e => {
   if(k==='prep' || k==='conv'){
     const nm = nextMatch(), s = S.sheet;
     if(nm && !(s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase())){
-      s.opponent = nm.opponent||''; s.date = nm.date||''; s.time = nm.time||''; s.venue = nm.venue||''; s.home = !!nm.home; s.convType = nm.friendly ? 'Amichevole' : 'Campionato'; save('sheet');
+      s.opponent = nm.opponent||''; s.date = nm.date||''; s.time = nm.time||''; s.venue = nm.venue||''; s.address = nm.address||''; s.venueLL = nm.ll||''; s.home = !!nm.home; s.convType = nm.friendly ? 'Amichevole' : 'Campionato'; save('sheet');
     }
     goTab(k==='prep' ? 'partita' : 'convocazioni'); return;
   }
