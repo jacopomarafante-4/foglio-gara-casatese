@@ -87,9 +87,9 @@ export default async function SchedaGiocatore({
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];
   const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
-  const responsabile = vedeTutto(profilo.ruolo);
+  const direttore = vedeTutto(profilo.ruolo);
   const scrive = puoSegnalare(profilo.ruolo);
-  const modifica = responsabile || (scrive && g.creato_da === profilo.id);
+  const modifica = direttore || (scrive && g.creato_da === profilo.id);
   const societa = modifica ? await elencoSocieta(supabase) : [];
 
   const titolo = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Giocatore';
@@ -235,7 +235,7 @@ export default async function SchedaGiocatore({
 
         <aside className="space-y-6">
           {/* Stato */}
-          {responsabile && (
+          {direttore && (
             <form action={cambiaStato} className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Cambia stato</h2>
               <input type="hidden" name="id" value={g.id} />
@@ -264,7 +264,7 @@ export default async function SchedaGiocatore({
             <section className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Contatti</h2>
               <p className="text-xs text-grigio">
-                Visibili solo ad admin e responsabili{responsabile ? '' : ' (e a te, per quelli che inserisci)'}.
+                Visibili solo ad admin e direttori{direttore ? '' : ' (e a te, per quelli che inserisci)'}.
               </p>
               {elencoContatti.length > 0 && (
                 <ul className="divide-y divide-linea text-sm">
