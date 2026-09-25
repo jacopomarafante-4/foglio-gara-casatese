@@ -107,6 +107,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   diversa dalla squadra). Si importano con
   `scripts/import-distinte/importa.mjs` da JSON in `scripts/import-distinte/dati/` (NON versionata: dati di minori;
   solo cognome, nome, data di nascita, numero, società). Nell'archivio, colonne, Home e Gare contano solo gli osservati.
+- 0015: blocco PIN a raffica: `pin_errati`, `controlla_blocco_pin()` (30 PIN sbagliati in 10 minuti → errore PT429
+  per tutti), `team_for_pin`/`email_per_pin`/`coach_get`/`coach_societa` ora `volatile`
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).
@@ -114,6 +116,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - Date e ore sempre in fuso `Europe/Rome` (`istanteItaliano`, `dataOraBreve` in lib/utili.ts);
   per "adesso" nei componenti server usa `istanteTraOre()` (la regola di lint vieta `Date.now()` nel render).
 - Tipi SQL ↔ TypeScript allineati in `lib/tipi.ts`: se aggiungi uno stato, aggiornalo in entrambi.
+
+## Backup
+`npm run backup` (scripts/backup.mjs) → `private/backup/`; attività settimanale di macOS (LaunchAgent
+`it.academycasatese.backup`, lunedì 9:00). Se aggiungi una tabella, aggiungila anche all'elenco `TABELLE` dello script.
 
 ## Stato
 Vedi `docs/ROADMAP.md`.

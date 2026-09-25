@@ -22,6 +22,7 @@
 // =====================================================================
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,7 +33,7 @@ if (!url || !serviceKey) {
 }
 const db = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const CONFERMA = process.argv.includes('--conferma');
-const DATI = new URL('./dati/', import.meta.url).pathname;
+const DATI = fileURLToPath(new URL('./dati/', import.meta.url)); // (gli spazi nel percorso restano spazi)
 
 // --- Utilità (come lib/utili.ts e lib/doppioni.ts) --------------------------
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');

@@ -258,6 +258,7 @@ async function inviaSegnalazione(){
   segInvio = false;
   if(!error){ segEsito = {ok:true, msg:'Segnalazione inviata allo scouting. Grazie!'}; segDraft = {data: todayISO()}; }
   else if(error.code === 'PGRST202') segEsito = {ok:false, msg:'Funzione non ancora attiva: chiedi all’admin di eseguire la migrazione 0007.'};
+  else if(error.code === 'PT429') segEsito = {ok:false, msg:'Troppi PIN sbagliati in poco tempo: riprova tra qualche minuto.'};
   else if(error.code === '28000') segEsito = {ok:false, msg:'PIN della squadra non più valido: rientra dalla pagina d’ingresso.'};
   else segEsito = {ok:false, msg: error.message || 'Segnalazione non inviata, riprova.'};
   render(); window.scrollTo(0,0);

@@ -84,7 +84,7 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0014_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+2. `supabase/migrations/0001_…` → `0015_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
    segnalazioni e PIN personali dei mister, permessi dei direttori
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.
@@ -109,6 +109,14 @@ Le distinte, anche di stagioni passate, costruiscono lo storico: squadre per sta
 I ragazzi mai osservati restano "da distinta" (nascosti nell'archivio, filtro "Anche solo da distinta") e diventano
 osservati alla prima segnalazione.
 
+## Backup
+`npm run backup` esporta tutto il database in `private/backup/AAAA-MM-GG_HHMM/` (una cartella per tabella in JSON;
+esclusa da git). Tiene gli ultimi 12. Il Mac lo lancia da solo **ogni lunedì alle 9** (o al primo risveglio dopo):
+attività `~/Library/LaunchAgents/it.academycasatese.backup.plist`, registro in `private/backup/backup.log`.
+Per fermarla: `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/it.academycasatese.backup.plist`.
+Le password non si esportano (gli account si ricreano; i dati restano). Per un backup anche fuori dal Mac:
+copia ogni tanto `private/backup/` su un disco o un cloud privato, oppure passa al piano Pro di Supabase.
+
 ## Pubblicazione su Vercel
 1. vercel.com → **Add New… → Project** → importa il repository GitHub `foglio-gara-casatese`.
 2. **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
@@ -128,6 +136,7 @@ osservati alla prima segnalazione.
 | `npm run lint` | Controlla lo stile del codice |
 | `npm run build` | Prova la versione di produzione |
 | `npm run crea-utenti` | Crea account con password da `scripts/utenti.json` |
+| `npm run backup` | Esporta tutto il database in `private/backup/` |
 | `npm run deck` | Rigenera il PDF di presentazione (Python: `pip install reportlab pillow`) |
 
 ## Struttura delle cartelle

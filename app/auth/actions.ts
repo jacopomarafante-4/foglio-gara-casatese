@@ -49,15 +49,20 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     return { vai };
   }
 
+  // Troppi PIN sbagliati in poco tempo: il database blocca le verifiche per qualche minuto (0015)
+  const BLOCCO = { errore: 'Troppi PIN sbagliati da parte di qualcuno: riprova tra qualche minuto.' };
+
   // PIN di un mister o della squadra: il Portale apre la squadra dal link (#squadra=PIN)
-  const { data: squadra } = await supabase.rpc('coach_team', { p_pin: pin });
+  const { data: squadra, error: erroreSquadra } = await supabase.rpc('coach_team', { p_pin: pin });
+  if (erroreSquadra?.code === 'PT429') return BLOCCO;
   if (squadra) {
     await supabase.auth.signOut({ scope: 'local' }); // su un telefono condiviso non resta aperto un altro account
     return { vai: `/portale/#squadra=${encodeURIComponent(pin)}` };
   }
 
   // PIN personale: il PIN è anche la password dell'account
-  const { data: email } = await supabase.rpc('email_per_pin', { p_pin: pin });
+  const { data: email, error: errorePin } = await supabase.rpc('email_per_pin', { p_pin: pin });
+  if (errorePin?.code === 'PT429') return BLOCCO;
   if (typeof email === 'string' && email) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pin });
     if (!error) {
