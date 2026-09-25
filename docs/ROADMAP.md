@@ -21,7 +21,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0009** (direttori in sola lettura nello Scouting) eseguita nel SQL Editor
 - [x] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
 - [x] Migrazione **0011** (direttori: nel Portale solo in lettura) eseguita nel SQL Editor
-- [ ] Migrazione **0012** (eventi del giocatore, doppioni) eseguita nel SQL Editor
+- [x] Migrazione **0012** (eventi del giocatore, doppioni) eseguita nel SQL Editor
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [x] PIN personali per scout e direttori (si generano in Società)
