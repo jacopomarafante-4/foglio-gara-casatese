@@ -15,11 +15,11 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0006** (accesso col solo PIN per scout/direttori) eseguita nel SQL Editor
 - [x] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
 - [x] Migrazione **0008** (PIN personali dei mister; PIN del team solo all'admin) eseguita nel SQL Editor
-- [ ] Generare i PIN dei mister (Società → Squadre), consegnarli e poi disattivare i PIN di squadra
+- [x] PIN personali dei 5 mister generati, PIN di squadra disattivati
 - [x] Direttori creati: Federico Salomoni, Massimo Carbone, Luca Balzarotti, Jacopo Marafante
 - [ ] Consegnare i PIN di scout e direttori (Società)
 - [x] Migrazione **0009** (direttori in sola lettura nello Scouting) eseguita nel SQL Editor
-- [ ] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
+- [x] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [ ] PIN personale per scout e direttori (`scripts/crea-pin.mjs`, anche con `"ruolo": "direttore"`)
@@ -47,9 +47,9 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Eventi: open day e provini con presenze ed esito
 - [ ] Vista a colonne per stato (kanban) per i responsabili
 - [ ] Lettura automatica delle gare da comunicati PDF / Tuttocampo
-- [ ] Pubblicazione su Vercel (vedi README): variabili `NEXT_PUBLIC_SUPABASE_URL`,
-      `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN` (già caricate);
-      poi mandare ai mister il nuovo indirizzo e spegnere GitHub Pages
+- [x] Pubblicata su Vercel: https://academy-casatese.vercel.app
+- [ ] Mandare il nuovo indirizzo a mister, scout e direttori; poi spegnere GitHub Pages
+- [ ] (Facoltativo) Collegare GitHub a Vercel per pubblicare da solo a ogni modifica
 - [ ] **Messaggi interni** tra i profili (vedi sotto)
 - [ ] PWA installabile (icona sul telefono), export Excel
 - [ ] Gestione utenti dall'app (oggi da script o SQL)

@@ -7,7 +7,7 @@ Un'unica app web per il settore giovanile, con due pannelli:
 - **Scouting Hub**: segnalazioni dal campo, report a 4 aree (Tecnica, Motoria, Tattica, Mentale),
   pipeline dei giocatori, gare da vedere. Per scout, direttori e admin.
 
-Stack: **Next.js 16 + Supabase + Tailwind CSS**, pubblicata su **Vercel**.
+Stack: **Next.js 16 + Supabase + Tailwind CSS**, pubblicata su **Vercel**: **https://academy-casatese.vercel.app**
 Il Portale squadre è JavaScript senza build dentro `public/portale/`.
 
 ---
@@ -99,7 +99,9 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
    `PIN_ADMIN` (lo stesso di `.env.local`: è l'unico PIN admin, mai scriverlo nel codice),
    `SUPABASE_SERVICE_ROLE_KEY` (serve al pannello Società per creare scout e dirigenti e generare i loro codici;
    resta sul server, non va mai nel browser).
-3. **Deploy**. Da lì ogni `git push` su `main` ripubblica da solo.
+3. **Deploy**, oppure dal terminale del progetto `vercel --prod`. `vercel.json` dice a Vercel che è un'app
+   Next.js (senza, pubblicherebbe solo i file di `public/`). Per ripubblicare da solo a ogni `git push`:
+   vercel.com → progetto → Settings → Git → collega il repository (serve dare a Vercel l'accesso a GitHub).
 4. Manda ai mister e allo staff il nuovo indirizzo. Quando tutti usano quello, spegni GitHub Pages
    (GitHub → Settings → Pages → None).
 
