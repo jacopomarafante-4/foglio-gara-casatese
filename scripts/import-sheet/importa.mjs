@@ -249,7 +249,9 @@ async function importaPrimaVista() {
     const societaId = await trovaOCreaSocieta(r['Società']);
     const testo = String(r['Altre Info varie'] ?? '').trim() || 'Nessuna nota aggiuntiva.';
     const dataVisita = (() => {
-      const d = new Date(r['Informazioni cronologiche']);
+      const n = Number(r['Informazioni cronologiche']);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      const d = new Date(Math.round((n - 25569) * 86400 * 1000)); // serial Excel -> data reale
       return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
     })();
 

@@ -20,6 +20,8 @@ type Riga = {
   valutazioni: { count: number }[];
 };
 
+const PER_PAGINA = 30;
+
 export default async function Giocatori({
   searchParams,
 }: {
@@ -29,13 +31,16 @@ export default async function Giocatori({
   const profilo = (await getProfilo())!;
   const supabase = await createClient();
 
+  const pagina = Math.max(1, Number(filtri.pagina) || 1);
+
   let q = supabase
     .from('giocatori')
     .select(
       'id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count), valutazioni(count)',
+      { count: 'exact' },
     )
     .order('updated_at', { ascending: false })
-    .limit(300);
+    .range((pagina - 1) * PER_PAGINA, pagina * PER_PAGINA - 1);
 
   const annata = Number(filtri.annata);
   if (Number.isInteger(annata) && annata > 0) q = q.eq('annata', annata);
@@ -48,8 +53,18 @@ export default async function Giocatori({
   const cerca = filtri.q ? perRicerca(filtri.q) : '';
   if (cerca) q = q.or(`cognome.ilike.%${cerca}%,nome.ilike.%${cerca}%,descrizione.ilike.%${cerca}%`);
 
-  const [{ data, error }, societa] = await Promise.all([q, elencoSocieta(supabase)]);
+  const [{ data, error, count }, societa] = await Promise.all([q, elencoSocieta(supabase)]);
   const giocatori = (data as unknown as Riga[]) ?? [];
+  const totale = count ?? giocatori.length;
+  const totalePagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
+
+  const paramsPagina = (p: number) => {
+    const sp = new URLSearchParams(
+      Object.entries(filtri).filter(([, v]) => v !== undefined) as [string, string][],
+    );
+    sp.set('pagina', String(p));
+    return `?${sp.toString()}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -57,8 +72,9 @@ export default async function Giocatori({
         <div>
           <h1 className="font-display text-4xl font-bold">Giocatori</h1>
           <p className="text-grigio">
-            {giocatori.length} {giocatori.length === 1 ? 'giocatore' : 'giocatori'}
+            {totale} {totale === 1 ? 'giocatore' : 'giocatori'}
             {!stato && filtri.stato !== 'tutti' && ' (esclusi i chiusi)'}
+            {totalePagine > 1 && ` – pagina ${pagina} di ${totalePagine}`}
           </p>
         </div>
         {puoSegnalare(profilo.ruolo) && (
@@ -146,6 +162,22 @@ export default async function Giocatori({
             </li>
           ))}
         </ul>
+      )}
+
+      {totalePagine > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          {pagina > 1 ? (
+            <Link href={paramsPagina(pagina - 1)} className="rounded-lg border border-linea px-4 py-2 text-sm font-medium hover:border-blu">
+              ‹ Precedenti
+            </Link>
+          ) : <span />}
+          <span className="text-sm text-grigio">Pagina {pagina} di {totalePagine}</span>
+          {pagina < totalePagine ? (
+            <Link href={paramsPagina(pagina + 1)} className="rounded-lg border border-linea px-4 py-2 text-sm font-medium hover:border-blu">
+              Successivi ›
+            </Link>
+          ) : <span />}
+        </div>
       )}
     </div>
   );

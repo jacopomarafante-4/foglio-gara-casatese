@@ -135,7 +135,7 @@ export default async function Home() {
                     </p>
                     <p className="line-clamp-2 text-sm">{s.testo}</p>
                     <p className="mt-1 text-xs text-grigio">
-                      {s.autore ? nomeCompleto(s.autore) : 'Utente rimosso'} – {dataBreve(s.data)}
+                      {s.autore ? nomeCompleto(s.autore) : 'Autore non disponibile'} – {dataBreve(s.data)}
                     </p>
                   </Link>
                 </li>
