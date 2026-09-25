@@ -30,6 +30,12 @@ export type Gara = {
   lat: number | null;
   lon: number | null;
   fonte: string | null;
+  /** Dai calendari: 'calendario' finché un comunicato non la conferma o la varia */
+  stato: 'calendario' | 'confermata' | 'variata' | null;
+  comunicato: string | null;
+  ora_da_definire: boolean | null;
+  girone: string | null;
+  giornata: number | null;
   casa: (Coord & { campo: string | null; indirizzo: string | null }) | null;
   gare_osservatori: {
     profilo_id: string;
@@ -65,6 +71,7 @@ export type GaraArricchita = Gara & {
 
 export const SELECT_GARA =
   'id, data_ora, categoria, casa_nome, trasferta_nome, casa_id, trasferta_id, campo, indirizzo, lat, lon, fonte, ' +
+  'stato, comunicato, ora_da_definire, girone, giornata, ' +
   'casa:societa!gare_casa_id_fkey(lat, lon, campo, indirizzo), ' +
   'gare_osservatori(profilo_id, profilo:profiles(nome, cognome, email))';
 
@@ -88,14 +95,16 @@ export function arricchisci(g: Gara, sede: Sede | null, seguite: SquadraSeguita[
     (s) =>
       s.attiva &&
       (s.societa_id === g.casa_id || s.societa_id === g.trasferta_id) &&
-      (!s.categoria || normalizza(s.categoria) === cat),
+      // "Under 17" segue anche "Under 17 Regionali"
+      (!s.categoria || cat.startsWith(normalizza(s.categoria))),
   );
 
   const mappa =
     lat !== null && lon !== null
       ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
       : indirizzo
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(indirizzo)}`
+        // il nome del campo finisce col paese ("… - CERNUSCO LOMBARDONE"): serve alla ricerca
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([indirizzo, campo?.split(' - ').pop()].filter(Boolean).join(', '))}`
         : null;
 
   return {

@@ -6,10 +6,13 @@ import { arricchisci, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara
 import { GaraCard } from '@/components/GaraCard';
 import { istanteTraOre } from '@/lib/utili';
 
+const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14'];
+const LIMITE = 1000;
+
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ sede?: string; km?: string; periodo?: string; tutte?: string }>;
+  searchParams: Promise<{ sede?: string; km?: string; periodo?: string; tutte?: string; categoria?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
@@ -19,32 +22,40 @@ export default async function Gare({
   const giorni = filtri.periodo === 'tutte' ? null : 7;
   const soloSeguite = filtri.tutte !== '1';
 
-  // Da 3 ore fa (gare appena iniziate) ai prossimi N giorni
-  let q = supabase.from('gare').select(SELECT_GARA).gte('data_ora', istanteTraOre(-3)).order('data_ora');
-  if (giorni) q = q.lte('data_ora', istanteTraOre(giorni * 24));
+  const categoria = CATEGORIE.includes(filtri.categoria ?? '') ? filtri.categoria! : '';
 
-  const [{ data: sediData }, seguite, { data: gareData, error }] = await Promise.all([
+  // Prima le società che interessano: squadre seguite e società dei giocatori segnalati ancora aperti.
+  // Con i calendari le gare sono migliaia: si caricano solo quelle che servono.
+  const [{ data: sediData }, seguite, { data: giocatoriData }] = await Promise.all([
     supabase.from('sedi').select('id, nome, lat, lon').order('id'),
     squadreSeguite(supabase),
-    q,
+    supabase
+      .from('giocatori')
+      // `*`: la colonna categoria esiste solo dalla migrazione 0013
+      .select('*')
+      .not('societa_id', 'is', null)
+      .eq('osservato', true)
+      .not('stato', 'in', '(chiuso,inserito)'),
   ]);
+  const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];
+  const interessano = [...new Set([
+    ...seguite.filter((s) => s.attiva).map((s) => s.societa_id),
+    ...giocatori.map((g) => g.societa_id).filter((x): x is string => !!x),
+  ])];
+
+  // Da 3 ore fa (gare appena iniziate) ai prossimi N giorni
+  let q = supabase.from('gare').select(SELECT_GARA).gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(LIMITE);
+  if (giorni) q = q.lte('data_ora', istanteTraOre(giorni * 24));
+  if (categoria) q = q.ilike('categoria', `${categoria}%`);
+  if (soloSeguite) {
+    const elenco = interessano.join(',');
+    q = q.or(`casa_id.in.(${elenco}),trasferta_id.in.(${elenco})`);
+  }
+  const { data: gareData, error } = soloSeguite && !interessano.length ? { data: [], error: null } : await q;
 
   const sedi = (sediData as Sede[]) ?? [];
   const sede = sedi.find((s) => String(s.id) === filtri.sede) ?? sedi[0] ?? null;
-
-  // Giocatori segnalati delle società che giocano queste gare
   const tutteLeGare = (gareData as unknown as Gara[]) ?? [];
-  const idSocieta = [...new Set(tutteLeGare.flatMap((g) => [g.casa_id, g.trasferta_id]).filter((x): x is string => !!x))];
-  const { data: giocatoriData } = idSocieta.length
-    ? await supabase
-        .from('giocatori')
-        // `*`: la colonna categoria esiste solo dalla migrazione 0013
-        .select('*')
-        .in('societa_id', idSocieta)
-        .eq('osservato', true)
-        .not('stato', 'in', '(chiuso,inserito)')
-    : { data: [] };
-  const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];
 
   const gare = tutteLeGare
     .map((g) => ({ ...arricchisci(g, sede, seguite), giocatori: giocatoriDellaGara(g, giocatori) }))
@@ -68,6 +79,7 @@ export default async function Gare({
           <h1 className="font-display text-4xl font-bold">Gare da vedere</h1>
           <p className="text-grigio">
             {gare.length} gare
+            {tutteLeGare.length === LIMITE && ' (le prime mille: restringi i filtri)'}
             {scoperte > 0 && <> – <strong className="text-inchiostro">{scoperte} senza osservatore</strong></>}
           </p>
         </div>
@@ -76,7 +88,7 @@ export default async function Gare({
         )}
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-5">
+      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-6">
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Distanza da</span>
           <select name="sede" defaultValue={sede ? String(sede.id) : ''} className="campo">
@@ -103,7 +115,16 @@ export default async function Gare({
             <option value="1">Tutte le gare</option>
           </select>
         </label>
-        <button className="bottone col-span-2 self-end sm:col-span-1">Aggiorna</button>
+        <label className="block">
+          <span className="mb-1 block text-xs text-grigio">Categoria</span>
+          <select name="categoria" defaultValue={categoria} className="campo">
+            <option value="">Tutte</option>
+            {CATEGORIE.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <button className="bottone self-end">Aggiorna</button>
       </form>
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}

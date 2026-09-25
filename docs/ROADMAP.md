@@ -27,7 +27,9 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0015** (blocco dei PIN a raffica) eseguita nel SQL Editor
 - [x] Manuali: generale, mister, scout, direttori (`npm run manuali`)
 - [x] Backup settimanale automatico sul Mac (`npm run backup`)
-- [ ] Importare le distinte (anche stagioni passate) e i calendari/accoppiamenti dei gironi
+- [ ] Importare le distinte (anche stagioni passate)
+- [x] Calendari dei gironi 2026/27 (LND, Bergamo, Monza, Lecco) nelle Gare, "Da calendario"
+- [ ] Comunicati settimanali: gare confermate o variate ("C.U. n. …")
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [x] PIN personali per scout e direttori (si generano in Società)

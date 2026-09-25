@@ -156,12 +156,21 @@ document.addEventListener('change', e => { if(e.target.id==='cv_meetaddr') rende
 document.addEventListener('keydown', e => { if(e.target.id==='pin_in' && e.key==='Enter'){ e.preventDefault(); document.querySelector('[data-pinsave]')?.click(); } });
 
 /* ---------- Squadra → Calendario ---------- */
+/* Partite collegate ai calendari ufficiali (scripts/import-calendari/portale.mjs): "da calendario"
+   finché un comunicato non le conferma o varia */
+function calStato(m){
+  if(m.stato==='confermata') return `<span class="note">Confermata${m.comunicato?' · '+esc(m.comunicato):''}</span>`;
+  if(m.stato==='variata') return `<span class="note"><b>Variata</b>${m.comunicato?' · '+esc(m.comunicato):''}</span>`;
+  if(m.stato==='calendario') return '<span class="note">Da calendario</span>';
+  return '';
+}
 function viewCalendario(){
   const A = isAdmin(), today = todayISO();
   const cal = S.calendar.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const official = A
     ? cal.map(m => `
       <div class="teamcard">
+        ${calStato(m)}
         <div class="grid">
           <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
           <div><label class="f">Ora</label><input type="time" data-calf="time" data-calid="${m.id}" value="${esc(m.time||'')}"></div>
@@ -173,7 +182,7 @@ function viewCalendario(){
           <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
         </div>
       </div>`).join('')
-    : `<div class="reglist">${cal.map(m => `<div class="regrow ${m.date && m.date < today ? 'past' : ''}"><div><b>${weekday(m.date)} ${fmtDate(m.date)}</b>${m.time?' · '+esc(m.time):''} · ${esc(m.home ? `${teamLabel()} - ${m.opponent||''}` : `${m.opponent||''} - ${teamLabel()}`)}</div><span class="note">${esc(m.venue||'')}</span></div>`).join('')}</div>`;
+    : `<div class="reglist">${cal.map(m => `<div class="regrow ${m.date && m.date < today ? 'past' : ''}"><div><b>${weekday(m.date)} ${fmtDate(m.date)}</b>${m.time?' · '+esc(m.time):''} · ${esc(m.home ? `${teamLabel()} - ${m.opponent||''}` : `${m.opponent||''} - ${teamLabel()}`)}</div><span class="note">${esc(m.venue||'')}</span>${calStato(m)}</div>`).join('')}</div>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
     <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>

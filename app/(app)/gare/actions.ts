@@ -111,7 +111,7 @@ export async function importaGare(formData: FormData) {
   if (daSalvare.length) {
     const { error } = await supabase
       .from('gare')
-      .upsert(daSalvare, { onConflict: 'data_ora,casa_nome,trasferta_nome' });
+      .upsert(daSalvare, { onConflict: 'data_ora,categoria,casa_nome,trasferta_nome' });
     if (error) esito({ errore: `Gare non salvate: ${error.message}` });
   }
 

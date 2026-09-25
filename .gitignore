@@ -39,3 +39,6 @@ scripts/import-sheet/dati/
 # import-distinte: dati reali dalle distinte (minori), mai su git
 scripts/import-distinte/dati/
 scripts/manuali/*.html
+
+# import-calendari: PDF e JSON dei calendari (grandi, si rigenerano)
+scripts/import-calendari/dati/

@@ -12,9 +12,14 @@ export function GaraCard({
   mioId: string;
   puoPrenotarsi: boolean;
 }) {
-  const ora = new Date(gara.data_ora).toLocaleTimeString('it-IT', {
-    timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit',
-  });
+  const ora = gara.ora_da_definire
+    ? null
+    : new Date(gara.data_ora).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+  const stato =
+    gara.stato === 'confermata' ? { testo: `Confermata · ${gara.comunicato ?? 'comunicato'}`, classe: 'bg-blu/10 text-blu' }
+    : gara.stato === 'variata' ? { testo: `Variata · ${gara.comunicato ?? 'comunicato'}`, classe: 'bg-oro/20 text-inchiostro' }
+    : gara.stato === 'calendario' ? { testo: 'Da calendario', classe: 'bg-carta text-grigio' }
+    : null;
   const seguiteId = new Set(gara.seguite.map((s) => s.societa_id));
   const ciVado = gara.osservatori.some((o) => o.id === mioId);
   const giocatori = gara.giocatori ?? [];
@@ -25,14 +30,25 @@ export function GaraCard({
       className={`flex gap-4 rounded-xl border bg-white p-4 ${scoperta ? 'border-oro' : 'border-linea'}`}
     >
       <div className="w-16 shrink-0 text-center">
-        <div className="font-display text-2xl font-bold leading-none">{ora}</div>
+        {ora ? (
+          <div className="font-display text-2xl font-bold leading-none">{ora}</div>
+        ) : (
+          <div className="text-xs font-semibold leading-tight text-grigio">ora da definire</div>
+        )}
         <div className="mt-1 text-xs text-grigio">
           {gara.distanza !== null ? `${gara.distanza} km` : 'km ?'}
         </div>
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-grigio">{gara.categoria}</p>
+        <p className="flex flex-wrap items-center gap-x-2 text-sm text-grigio">
+          <span>
+            {gara.categoria}
+            {gara.girone && ` · girone ${gara.girone}`}
+            {gara.giornata && ` · ${gara.giornata}ª giornata`}
+          </span>
+          {stato && <span className={`rounded px-1.5 py-0.5 text-xs font-semibold ${stato.classe}`}>{stato.testo}</span>}
+        </p>
         <h3 className="font-display text-xl font-bold leading-tight">
           <span className={gara.casa_id && seguiteId.has(gara.casa_id) ? 'text-blu' : ''}>{gara.casa_nome}</span>
           {' – '}

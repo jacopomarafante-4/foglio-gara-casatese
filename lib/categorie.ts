@@ -32,10 +32,11 @@ export function etaDaCategoria(testo: string | null | undefined, fine = fineStag
   // Annate scritte per esteso: sono le più precise
   const anni = [...t.matchAll(/\b(19[89]\d|20[0-3]\d)\b/g)].map((m) => fine - Number(m[1]));
   if (anni.length) return { min: Math.min(...anni), max: Math.max(...anni) };
+  const n = normalizza(t);
+  // "Under 19 Juniores": ci giocano 18 e 19 anni
+  if (n.includes('juniores') || n.includes('primavera')) return { min: 18, max: 19 };
   const under = t.match(/\b(?:u|under)\s*-?\s*(\d{1,2})\b/);
   if (under) return { min: Number(under[1]), max: Number(under[1]) };
-  const n = normalizza(t);
-  if (n.includes('juniores') || n.includes('primavera')) return { min: 18, max: 19 };
   if (n.includes('allievi')) return n.includes('fascia b') || /\bb\b/.test(t) ? { min: 16, max: 16 } : { min: 16, max: 17 };
   if (n.includes('giovanissimi')) return n.includes('fascia b') || /\bb\b/.test(t) ? { min: 14, max: 14 } : { min: 14, max: 15 };
   if (n.includes('esordienti')) return { min: 12, max: 13 };

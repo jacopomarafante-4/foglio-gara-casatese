@@ -109,6 +109,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   solo cognome, nome, data di nascita, numero, società). Nell'archivio, colonne, Home e Gare contano solo gli osservati.
 - 0015: blocco PIN a raffica: `pin_errati`, `controlla_blocco_pin()` (30 PIN sbagliati in 10 minuti → errore PT429
   per tutti), `team_for_pin`/`email_per_pin`/`coach_get`/`coach_societa` ora `volatile`
+- 0016: calendari nelle gare: `stagione`, `girone`, `giornata`, `turno`, `stato` ('calendario'/'confermata'/'variata'),
+  `comunicato` ("C.U. n. 12 del …"), `precedente` (valori prima della variazione), `ora_da_definire`, `codice_campo`,
+  `chiave` unica; `gara_unica` ora comprende la categoria. Importazione: `scripts/import-calendari/` (`prepara.py` legge i
+  PDF con pdfplumber e abbina i nomi all'elenco campi del girone; `importa.mjs` simula, `--conferma` scrive; reimportando
+  non tocca le gare già confermate/variate). Il pannello Gare carica solo le gare delle società che interessano.
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

@@ -107,7 +107,7 @@ export default async function SchedaGiocatore({
     ? await Promise.all([
         supabase.from('gare').select(SELECT_GARA)
           .or(`casa_id.eq.${g.societa_id},trasferta_id.eq.${g.societa_id}`)
-          .gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(30),
+          .gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(80),
         supabase.from('sedi').select('id, nome, lat, lon').order('id'),
         squadreSeguite(supabase),
       ])
