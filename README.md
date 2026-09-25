@@ -35,6 +35,7 @@ chiudendo la scheda) e comunque dopo **6 ore** (`ORE_ACCESSO`).
 | Gara | Partita, Convocazioni, Formazione, Piazzati, Foglio gara PDF |
 | Allenamento | Presenze, Test atletici |
 | Statistiche | Allenamento (presenze, per mese, test), Partite (minuti, gol, gol subiti); report PDF solo admin |
+| Scouting (solo mister) | Segnala un giocatore allo scouting del club (non vede l'archivio) |
 | Società (admin) | Squadre, PIN, backup |
 
 La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indietro funziona.
@@ -76,7 +77,8 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0006_…` — tabelle e permessi di Scouting Hub e accesso col PIN
+2. `supabase/migrations/0001_…` → `0007_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+   segnalazioni dei mister dal Portale
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.
 

@@ -144,6 +144,7 @@ function render(){
   else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
   else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
   else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
+  else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
 }
 

@@ -30,11 +30,13 @@ type Giocatore = {
   rivedere_dal: string | null;
   note: string | null;
   creato_da: string | null;
+  segnalato_da_squadra: string | null;
   societa: { nome: string } | null;
 };
 
 type Segnalazione = {
   id: string; data: string; contesto: string | null; testo: string; voto: number | null; autore: Autore;
+  squadra: string | null; // segnalazione di un mister dal Portale squadre
 };
 
 type Valutazione = {
@@ -69,7 +71,8 @@ export default async function SchedaGiocatore({
 
   const { data } = await supabase
     .from('giocatori')
-    .select('id, cognome, nome, descrizione, annata, data_nascita, ruolo, piede, stato, motivo_chiusura, rivedere_dal, note, creato_da, societa(nome)')
+    // `*` e non l'elenco dei campi: segnalato_da_squadra esiste solo dopo la migrazione 0007
+    .select('*, societa(nome)')
     .eq('id', id)
     .maybeSingle();
   if (!data) notFound();
@@ -77,7 +80,7 @@ export default async function SchedaGiocatore({
 
   const autore = 'autore:profiles(nome, cognome, email)';
   const [segn, val, storico, contatti] = await Promise.all([
-    supabase.from('segnalazioni').select(`id, data, contesto, testo, voto, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
+    supabase.from('segnalazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('valutazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('storico_stati').select(`id, da_stato, a_stato, motivo, created_at, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
     supabase.from('contatti').select(`id, tipo, nome, telefono, email, consenso_privacy, ${autore}`).eq('giocatore_id', id).order('created_at'),
@@ -183,7 +186,7 @@ export default async function SchedaGiocatore({
                   return (
                     <li key={`s${s.id}`} className="rounded-xl border border-linea bg-white p-4">
                       <p className="text-sm text-grigio">
-                        Segnalazione di {chi(s.autore)} – {dataBreve(s.data)}
+                        Segnalazione di {s.autore || !s.squadra ? chi(s.autore) : `Mister ${s.squadra}`} – {dataBreve(s.data)}
                         {s.contesto && ` – ${s.contesto}`}
                         {s.voto && <span className="ml-2 font-semibold text-inchiostro">voto {s.voto}/5</span>}
                       </p>
@@ -217,7 +220,12 @@ export default async function SchedaGiocatore({
                 if (e.tipo === 'creazione') {
                   return (
                     <li key={`n${c.id}`} className="px-4 text-sm text-grigio">
-                      Scheda creata da {c.autore ? chi(c.autore) : 'importazione archivio storico'} – {dataBreve(c.created_at)}
+                      Scheda creata da{' '}
+                      {c.autore
+                        ? chi(c.autore)
+                        : g.segnalato_da_squadra
+                          ? `Mister ${g.segnalato_da_squadra}`
+                          : 'importazione archivio storico'} – {dataBreve(c.created_at)}
                     </li>
                   );
                 }

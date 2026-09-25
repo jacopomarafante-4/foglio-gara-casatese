@@ -71,6 +71,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0004: rinomina ruoli `responsabile`→`direttore`, `osservatore`→`scout`; blocco app dei mister
 - 0005: `codici_accesso` (PIN degli account personali, leggibili da admin/direttori)
 - 0006: `email_per_pin()` per l'accesso col solo PIN
+- 0007: segnalazioni dei mister dal Portale: `coach_segnala()`, `coach_societa()` (col PIN squadra),
+  colonne `segnalazioni.squadra` e `giocatori.segnalato_da_squadra` (autore = "Mister <squadra>")
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

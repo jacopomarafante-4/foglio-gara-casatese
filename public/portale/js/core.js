@@ -265,6 +265,7 @@ function makeSupabaseDb(client){
    che verificano il PIN e aprono solo i documenti della loro squadra. Niente realtime per loro:
    i documenti si ricontrollano ogni 15 secondi. */
 let secureMode = false, sharedSyncStarted = false;
+let coachPin = null; /* PIN della squadra del mister entrato (serve per segnalare allo scouting) */
 const stableStr = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 function makeCoachDb(client, pin){
   const known = {};
@@ -303,7 +304,7 @@ async function coachLogin(pin){
   let tm = null;
   try{ const { data, error } = await supabaseClient.rpc('coach_team', { p_pin: pin }); if(!error) tm = data; }catch(e){}
   if(!tm) return false;
-  db = makeCoachDb(supabaseClient, pin);
+  db = makeCoachDb(supabaseClient, pin); coachPin = pin;
   S.teams = [tm]; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
   if(!IN_APP_UNICA && !new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
   db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));

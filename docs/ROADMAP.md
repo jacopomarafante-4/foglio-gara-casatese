@@ -13,6 +13,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Account admin (tuo); account scout/direttore del resto del team ancora da creare
 - [ ] Prova completa: segnalazione, valutazione, cambio stato, gara prenotata
 - [ ] Migrazione **0006** (accesso col solo PIN per scout/direttori) eseguita nel SQL Editor
+- [ ] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
 - [ ] PIN personale per scout e direttori (`scripts/crea-pin.mjs`, anche con `"ruolo": "direttore"`)
 - [ ] Prova l'ingresso unico con un PIN squadra vero e con un PIN personale vero
 

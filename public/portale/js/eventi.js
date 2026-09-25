@@ -6,6 +6,7 @@ document.addEventListener('click', e => {
   if(!t) return;
   if(t.dataset.tab){ goTab(t.dataset.tab); return; }
   if(t.dataset.area){ const a = AREAS.find(x => x.k===t.dataset.area); if(a) goTab(areaLast[a.k] || a.tabs[0]); return; }
+  if(t.dataset.segvoto){ segDraft.voto = segDraft.voto === t.dataset.segvoto ? '' : t.dataset.segvoto; render(); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
   const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','exportbackup','caladd'];
@@ -67,6 +68,7 @@ document.addEventListener('click', e => {
     case 'downloadconv': downloadConvocazione(); break;
     case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'exportbackup': exportBackup(); break;
+    case 'segnala': inviaSegnalazione(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(val === ADMIN_PIN){ adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break; }
@@ -91,6 +93,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
+  if(t.dataset.seg){ segDraft[t.dataset.seg] = t.value; return; }
   if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid)) return;
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }

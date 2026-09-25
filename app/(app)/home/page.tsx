@@ -10,6 +10,7 @@ type UltimaSegnalazione = {
   data: string;
   testo: string;
   autore: { nome: string | null; cognome: string | null; email: string } | null;
+  squadra: string | null; // segnalazione di un mister dal Portale squadre
   giocatore: { id: string; cognome: string | null; nome: string | null; descrizione: string | null; annata: number } | null;
 };
 
@@ -27,7 +28,7 @@ export default async function Home() {
   const [ultime, mieGare, conteggi, team, pin] = await Promise.all([
     supabase
       .from('segnalazioni')
-      .select('id, data, testo, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
+      .select('*, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
       .order('created_at', { ascending: false })
       .limit(6),
     supabase
@@ -135,7 +136,7 @@ export default async function Home() {
                     </p>
                     <p className="line-clamp-2 text-sm">{s.testo}</p>
                     <p className="mt-1 text-xs text-grigio">
-                      {s.autore ? nomeCompleto(s.autore) : 'Autore non disponibile'} – {dataBreve(s.data)}
+                      {s.autore ? nomeCompleto(s.autore) : s.squadra ? `Mister ${s.squadra}` : 'Autore non disponibile'} – {dataBreve(s.data)}
                     </p>
                   </Link>
                 </li>

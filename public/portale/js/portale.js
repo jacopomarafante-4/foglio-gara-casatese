@@ -9,6 +9,7 @@ const AREA_ICONS = {
   gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
   allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
   statistiche:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
 const AREAS = [
@@ -17,14 +18,16 @@ const AREAS = [
   {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
   {k:'statistiche', label:'Statistiche', tabs:['statallen','statpartite']},
+  {k:'scouting', label:'Scouting', tabs:['segnala'], coach:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione',
-  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre'};
+  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre', segnala:'Segnala un giocatore'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:'allenamenti'};
 const areaLast = {};
-const allowedAreas = () => AREAS.filter(a => !a.admin || isAdmin());
+/* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
+const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
 function allowedTabs(){ return allowedAreas().flatMap(a => a.tabs); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
@@ -190,4 +193,67 @@ function viewVenues(){
 function registroPage(title, body, hint){
   if(!S.players.length) return `<section class="panel"><h2>${title}</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
   return `<section class="panel"><h2>${title} · ${esc(TEAM()?.name||'')}</h2>${hint?`<p class="hint">${hint}</p>`:''}${body}</section>`;
+}
+
+/* ---------- Scouting: il mister segnala un giocatore allo scouting del club ----------
+   Passa dalla funzione coach_segnala (col PIN della squadra, migrazione 0007): il mister
+   manda la segnalazione ma non vede l'archivio. La bozza resta in segDraft mentre si scrive,
+   così gli aggiornamenti che ridisegnano la pagina non cancellano niente. */
+let segDraft = {data: todayISO()}, segEsito = null, segInvio = false, societaNomi = null;
+const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampista:'Centrocampista', attaccante:'Attaccante'};
+/* stesso elenco di annateDisponibili() in lib/tipi.ts */
+function annateScouting(){ const a = new Date().getFullYear(); return Array.from({length:16}, (_, i) => String(a - 5 - i)); }
+function viewSegnala(){
+  if(!coachPin) return `<h2>Segnala un giocatore</h2><section class="panel"><p class="empty">La segnalazione si fa entrando col PIN della squadra.</p></section>`;
+  if(societaNomi === null){
+    societaNomi = [];
+    supabaseClient.rpc('coach_societa', {p_pin: coachPin}).then(({data}) => { if(Array.isArray(data)){ societaNomi = data; if(tab==='segnala') render(); } });
+  }
+  const d = segDraft;
+  const inp = (k, attrs='') => `<input id="sg_${k}" data-seg="${k}" value="${esc(d[k]||'')}" ${attrs}>`;
+  return `<h2>Segnala un giocatore</h2>
+  <p class="hint">Hai visto un ragazzo interessante? Mandalo allo scouting del club. Se non sai il nome, descrivilo: lo completeranno loro.</p>
+  ${segEsito ? `<p class="esito ${segEsito.ok?'ok':'ko'}" role="${segEsito.ok?'status':'alert'}">${esc(segEsito.msg)}</p>` : ''}
+  <section class="panel segform">
+    <div class="grid">
+      <div><label class="f" for="sg_annata">Annata *</label><select id="sg_annata" data-seg="annata"><option value="">Scegli</option>${annateScouting().map(a => `<option ${a===d.annata?'selected':''}>${a}</option>`).join('')}</select></div>
+      <div><label class="f" for="sg_ruolo">Ruolo</label><select id="sg_ruolo" data-seg="ruolo"><option value="">Non so</option>${Object.entries(RUOLI_SCOUTING).map(([v,l]) => `<option value="${v}" ${v===d.ruolo?'selected':''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <label class="f" for="sg_societa">Società</label>
+    ${inp('societa', 'list="sg_elenco" autocomplete="off"')}<datalist id="sg_elenco">${societaNomi.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    <div class="grid">
+      <div><label class="f" for="sg_cognome">Cognome</label>${inp('cognome', 'autocomplete="off" autocapitalize="words"')}</div>
+      <div><label class="f" for="sg_nome">Nome</label>${inp('nome', 'autocomplete="off" autocapitalize="words"')}</div>
+    </div>
+    <label class="f" for="sg_descrizione">Come riconoscerlo</label>
+    ${inp('descrizione', 'autocomplete="off" placeholder="Es. N.8, biondo, mancino"')}
+    <p class="note">Obbligatorio se manca il cognome.</p>
+    <label class="f" for="sg_testo">Cosa hai visto *</label>
+    <textarea id="sg_testo" data-seg="testo" rows="5">${esc(d.testo||'')}</textarea>
+    <span class="f">Prima impressione (facoltativa)</span>
+    <div class="seg" role="group" aria-label="Voto da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" data-segvoto="${n}" aria-pressed="${String(n)===d.voto}">${n}</button>`).join('')}</div>
+    <p class="note">1 = non a livello · 5 = da prendere subito</p>
+    <div class="grid">
+      <div><label class="f" for="sg_contesto">Partita o occasione</label>${inp('contesto', 'placeholder="Es. Cambiaghese–Vibe, U12"')}</div>
+      <div><label class="f" for="sg_data">Data</label>${inp('data', 'type="date"')}</div>
+    </div>
+    <button class="btn primary segsend" data-act="segnala" ${segInvio?'disabled':''}>${segInvio ? 'Invio…' : 'Invia allo scouting'}</button>
+  </section>`;
+}
+async function inviaSegnalazione(){
+  if(segInvio) return;
+  const d = segDraft;
+  const manca = !d.annata ? 'Indica l’annata.'
+    : !(d.cognome||'').trim() && !(d.descrizione||'').trim() ? 'Serve il cognome oppure una descrizione per riconoscerlo.'
+    : !(d.testo||'').trim() ? 'Scrivi cosa hai visto: è la parte più importante.' : '';
+  if(manca){ segEsito = {ok:false, msg:manca}; render(); window.scrollTo(0,0); return; }
+  segInvio = true; render();
+  let error = null;
+  try{ ({ error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d}})); }catch(e){ error = e; }
+  segInvio = false;
+  if(!error){ segEsito = {ok:true, msg:'Segnalazione inviata allo scouting. Grazie!'}; segDraft = {data: todayISO()}; }
+  else if(error.code === 'PGRST202') segEsito = {ok:false, msg:'Funzione non ancora attiva: chiedi all’admin di eseguire la migrazione 0007.'};
+  else if(error.code === '28000') segEsito = {ok:false, msg:'PIN della squadra non più valido: rientra dalla pagina d’ingresso.'};
+  else segEsito = {ok:false, msg: error.message || 'Segnalazione non inviata, riprova.'};
+  render(); window.scrollTo(0,0);
 }

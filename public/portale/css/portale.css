@@ -299,3 +299,13 @@ a.iconbtn2{filter:none;opacity:1}
 .rolebox b{font-family:var(--cond);font-size:17px;display:block;margin-bottom:4px}
 .ro-field{padding:8px 0}
 .ro-field .v{font-weight:600}
+/* Scouting: segnalazione del mister */
+.segform .f{display:block;margin-top:14px}
+.segform span.f{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.segform .grid .f{margin-top:14px}
+.segform .note{margin:4px 0 0}
+.segform .seg button{min-width:48px;min-height:44px}
+.segsend{width:100%;margin-top:20px}
+.esito{border-radius:8px;padding:10px 14px;font-weight:600;margin:0 0 14px}
+.esito.ok{background:color-mix(in srgb, var(--grass) 12%, var(--paper));color:var(--grass);border:1px solid var(--grass)}
+.esito.ko{background:color-mix(in srgb, var(--red) 10%, var(--paper));color:var(--red);border:1px solid var(--red)}
