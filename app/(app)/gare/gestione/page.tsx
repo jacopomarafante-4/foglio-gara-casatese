@@ -5,7 +5,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import { squadreSeguite } from '@/lib/gare';
-import { dataOraBreve, istanteTraOre } from '@/lib/utili';
+import { dataOraBreve, istanteTraOre, normalizza } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import {
@@ -18,30 +18,40 @@ const ESEMPIO = `27/09/2026;15:30;U13 Provinciali;Cambiaghese;Vibe Ronchese;Comu
 export default async function GestioneGare({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; errore?: string }>;
+  searchParams: Promise<{ ok?: string; errore?: string; campo?: string }>;
 }) {
   const profilo = (await getProfilo())!;
   if (!gestisce(profilo.ruolo)) redirect('/gare');
 
-  const { ok, errore } = await searchParams;
+  const { ok, errore, campo: cercaCampo } = await searchParams;
   const supabase = await createClient();
   const [seguite, societa, { data: prossime }] = await Promise.all([
     squadreSeguite(supabase),
     elencoSocieta(supabase),
+    // Solo le gare inserite a mano (quelle dei calendari hanno la chiave)
     supabase
       .from('gare')
       .select('id, data_ora, categoria, casa_nome, trasferta_nome')
+      .is('chiave', null)
       .gte('data_ora', istanteTraOre(0))
       .order('data_ora')
       .limit(60),
   ]);
-  const senzaCampo = societa.filter((s) => s.lat === null);
+  const senzaCampo = societa.filter((s) => s.lat === null).length;
+  const cerca = normalizza(cercaCampo ?? '');
+  const trovate = cerca
+    ? societa.filter((s) => [s.nome, ...(s.alias ?? [])].some((n) => normalizza(n).includes(cerca))).slice(0, 20)
+    : [];
 
   return (
     <div className="space-y-10">
       <div>
         <Link href="/gare" className="text-sm text-grigio hover:text-blu">‹ Gare da vedere</Link>
-        <h1 className="mt-2 font-display text-4xl font-bold">Gestisci gare e squadre</h1>
+        <h1 className="mt-2 font-display text-4xl font-bold">Squadre e gare</h1>
+        <p className="mt-1 max-w-2xl text-grigio">
+          Le gare dei campionati arrivano già dai calendari ufficiali e dai comunicati. Qui scegli le squadre da seguire,
+          aggiungi le gare che nei calendari non ci sono e completi i campi delle società.
+        </p>
       </div>
 
       <Avviso ok={ok} errore={errore} />
@@ -50,7 +60,10 @@ export default async function GestioneGare({
       <section className="grid gap-6 lg:grid-cols-2">
         <div>
           <h2 className="font-display text-2xl font-bold">Squadre da seguire</h2>
-          <p className="text-sm text-grigio">Le loro gare compaiono in evidenza nella pagina Gare.</p>
+          <p className="text-sm text-grigio">
+            Le loro gare compaiono in “Da seguire” nella pagina Gare, anche senza giocatori segnalati.
+            Quelle delle squadre con giocatori segnalati ci sono già in automatico.
+          </p>
           {seguite.length === 0 ? (
             <p className="mt-3 text-grigio">Nessuna squadra ancora.</p>
           ) : (
@@ -82,8 +95,13 @@ export default async function GestioneGare({
               ))}
             </datalist>
           </Etichetta>
-          <Etichetta testo="Categoria" aiuto="Scrivila come nelle gare (es. U13 Provinciali). Vuota = tutte.">
-            <input name="categoria" className="campo" />
+          <Etichetta testo="Categoria">
+            <select name="categoria" className="campo">
+              <option value="">Tutte le categorie</option>
+              {['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14', 'Esordienti', 'Pulcini'].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </Etichetta>
           <Etichetta testo="Perché la seguiamo">
             <input name="motivo" className="campo" placeholder="Es. Due 2013 da rivedere" />
@@ -95,10 +113,10 @@ export default async function GestioneGare({
       {/* Importazione */}
       <section className="grid gap-6 lg:grid-cols-2">
         <form action={importaGare} className="space-y-3">
-          <h2 className="font-display text-2xl font-bold">Aggiungi gare</h2>
+          <h2 className="font-display text-2xl font-bold">Gare fuori calendario</h2>
           <p className="text-sm text-grigio">
-            Una gara per riga, colonne separate da punto e virgola o copiate da Excel. Le ultime tre colonne sono facoltative.
-            Se una gara esiste già viene aggiornata.
+            Tornei, amichevoli, Esordienti e Pulcini, campionati di cui non abbiamo il calendario. Una gara per riga,
+            colonne separate da punto e virgola o copiate da Excel; le ultime tre sono facoltative.
           </p>
           <textarea name="gare" rows={8} required className="campo font-mono text-sm" placeholder={ESEMPIO} />
           <Etichetta testo="Fonte (facoltativa)">
@@ -127,9 +145,10 @@ export default async function GestioneGare({
 
       {/* Prossime gare */}
       <section>
-        <h2 className="font-display text-2xl font-bold">Prossime gare inserite</h2>
+        <h2 className="font-display text-2xl font-bold">Gare inserite a mano</h2>
+        <p className="text-sm text-grigio">Le prossime. Quelle dei calendari ufficiali non si eliminano da qui.</p>
         {!prossime?.length ? (
-          <p className="mt-2 text-grigio">Nessuna gara in programma.</p>
+          <p className="mt-2 text-grigio">Nessuna gara inserita a mano in programma.</p>
         ) : (
           <ul className="mt-3 divide-y divide-linea rounded-xl border border-linea bg-white text-sm">
             {prossime.map((g) => (
@@ -156,15 +175,22 @@ export default async function GestioneGare({
           Inserisci il campo di casa una volta sola: servirà per tutte le gare future.
           Coordinate: su Google Maps tasto destro sul campo, poi clic sui numeri per copiarli.
         </p>
-        {senzaCampo.length > 0 && (
-          <p className="mt-2 text-sm"><strong>{senzaCampo.length}</strong> società senza coordinate.</p>
-        )}
+        <p className="mt-2 text-sm">
+          <strong>{senzaCampo}</strong> società su {societa.length} senza coordinate: per loro la distanza è “km ?”.
+        </p>
+        <form method="GET" className="mt-3 flex max-w-lg gap-2">
+          <input name="campo" defaultValue={cercaCampo ?? ''} placeholder="Cerca una società" className="campo h-12 py-0" />
+          <button className="bottone h-12 px-6">Cerca</button>
+        </form>
+        {cerca && trovate.length === 0 && <p className="mt-3 text-grigio">Nessuna società trovata.</p>}
         <div className="mt-3 space-y-2">
-          {[...senzaCampo, ...societa.filter((s) => s.lat !== null)].map((s) => (
-            <details key={s.id} className="rounded-xl border border-linea bg-white px-4 py-3">
+          {trovate.map((s) => (
+            <details key={s.id} open={trovate.length === 1} className="rounded-xl border border-linea bg-white px-4 py-3">
               <summary className="cursor-pointer">
                 <span className="font-semibold">{s.nome}</span>{' '}
-                <span className="text-sm text-grigio">{s.lat !== null ? s.campo ?? 'coordinate inserite' : 'campo da inserire'}</span>
+                <span className="text-sm text-grigio">
+                  {s.campo ?? 'campo da inserire'}{s.lat === null ? ' · senza coordinate' : ''}
+                </span>
               </summary>
               <form action={aggiornaCampo} className="mt-3 grid gap-3 sm:grid-cols-4">
                 <input type="hidden" name="id" value={s.id} />

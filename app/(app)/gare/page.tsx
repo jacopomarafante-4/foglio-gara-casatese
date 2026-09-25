@@ -84,14 +84,15 @@ export default async function Gare({
           </p>
         </div>
         {gestisce(profilo.ruolo) && (
-          <Link href="/gare/gestione" className="bottone">Gestisci gare e squadre</Link>
+          <Link href="/gare/gestione" className="bottone">Squadre e gare</Link>
         )}
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Filtri: tutti alti uguali (h-12), testi corti per non essere tagliati */}
+      <form method="GET" className="grid grid-cols-2 items-end gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]">
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Distanza da</span>
-          <select name="sede" defaultValue={sede ? String(sede.id) : ''} className="campo">
+          <select name="sede" defaultValue={sede ? String(sede.id) : ''} className="campo h-12 py-0">
             {sedi.map((s) => (
               <option key={s.id} value={s.id}>{s.nome}</option>
             ))}
@@ -99,33 +100,36 @@ export default async function Gare({
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Entro km</span>
-          <input type="number" name="km" min={1} max={200} defaultValue={km} className="campo" />
+          <input type="number" name="km" min={1} max={200} defaultValue={km} className="campo h-12 py-0" />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Periodo</span>
-          <select name="periodo" defaultValue={giorni ? '' : 'tutte'} className="campo">
-            <option value="">Prossimi 7 giorni</option>
-            <option value="tutte">Tutte le prossime</option>
+          <select name="periodo" defaultValue={giorni ? '' : 'tutte'} className="campo h-12 py-0">
+            <option value="">7 giorni</option>
+            <option value="tutte">Tutte</option>
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-grigio">Squadre</span>
-          <select name="tutte" defaultValue={soloSeguite ? '' : '1'} className="campo">
-            <option value="">Seguite o con giocatori segnalati</option>
-            <option value="1">Tutte le gare</option>
+          <span className="mb-1 block text-xs text-grigio" title="Squadre seguite o con giocatori segnalati">Gare</span>
+          <select name="tutte" defaultValue={soloSeguite ? '' : '1'} className="campo h-12 py-0">
+            <option value="">Da seguire</option>
+            <option value="1">Tutte</option>
           </select>
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Categoria</span>
-          <select name="categoria" defaultValue={categoria} className="campo">
+          <select name="categoria" defaultValue={categoria} className="campo h-12 py-0">
             <option value="">Tutte</option>
             {CATEGORIE.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </label>
-        <button className="bottone self-end">Aggiorna</button>
+        <button className="bottone col-span-2 h-12 px-6 sm:col-span-1">Aggiorna</button>
       </form>
+      <p className="-mt-3 text-xs text-grigio">
+        “Da seguire” = gare delle squadre seguite o con giocatori segnalati.
+      </p>
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}
 
@@ -135,8 +139,8 @@ export default async function Gare({
           {gestisce(profilo.ruolo) && (
             <>
               {' '}
-              <Link href="/gare/gestione" className="font-medium text-blu underline">Aggiungi le gare</Link>{' '}
-              o le squadre da seguire.
+              <Link href="/gare/gestione" className="font-medium text-blu underline">Aggiungi squadre da seguire</Link>{' '}
+              o gare fuori calendario.
             </>
           )}
         </div>

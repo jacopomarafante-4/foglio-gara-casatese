@@ -444,7 +444,10 @@ altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito co
 <h2>6. Gare da vedere</h2>
 {fig('s-gare', '''<ul>
 <li>Le gare dei prossimi giorni, dalla più vicina, con la <b>distanza</b> da Casatenovo o Merate.</li>
-<li><b>Filtri</b>: sede, entro quanti km, periodo, "Seguite o con giocatori segnalati" oppure "Tutte le gare", categoria.</li>
+<li><b>Filtri</b>: sede, entro quanti km, periodo (7 giorni o tutte), gare "Da seguire" (squadre seguite o con giocatori
+segnalati) oppure "Tutte", categoria.</li>
+<li><b>Squadre e gare</b> (admin e direttori): squadre da seguire, gare fuori calendario (tornei, amichevoli, Esordienti,
+Pulcini) e campi delle società. Le gare dei calendari ufficiali non si eliminano.</li>
 <li>Le gare vengono dai <b>calendari ufficiali</b> dei gironi. <b>Da calendario</b> = data, ora e campo previsti, ancora da
 verificare; <b>Confermata · C.U. n. …</b> = confermata dal comunicato ufficiale; <b>Variata · C.U. n. …</b> = data, ora o campo
 cambiati dal comunicato. Controlla sempre prima di partire.</li>

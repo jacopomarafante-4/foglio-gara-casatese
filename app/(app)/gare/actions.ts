@@ -124,8 +124,10 @@ export async function importaGare(formData: FormData) {
 export async function eliminaGara(formData: FormData) {
   const id = testo(formData, 'id');
   const supabase = await createClient();
-  const { error } = await supabase.from('gare').delete().eq('id', id);
+  // Solo le gare inserite a mano: quelle dei calendari ufficiali (con chiave) non si cancellano da qui
+  const { data, error } = await supabase.from('gare').delete().eq('id', id).is('chiave', null).select('id');
   if (error) esito({ errore: `Gara non eliminata: ${error.message}` });
+  if (!data?.length) esito({ errore: 'Si possono eliminare solo le gare inserite a mano.' });
   esito({ ok: 'Gara eliminata.' });
 }
 
