@@ -46,13 +46,19 @@ function effPos(sc, t){
   const o = ed && ed.tokens && ed.tokens[t.id];
   return o ? {x:o.x, y:o.y} : {x:t.x, y:t.y};
 }
-function effTokens(sc){ return sc.tokens.map(t => ({...t, ...effPos(sc,t)})); }
+/* Compito ed etichetta cambiati dal mister solo per questa partita (schemeEdits[id].roles[tokenId] = {role, tag}) */
+function effRole(sc, t){
+  const ed = (S.sheet.schemeEdits||{})[sc.id];
+  const r = ed && ed.roles && ed.roles[t.id];
+  return r ? {role: r.role ?? t.role, tag: r.tag ?? t.tag} : {};
+}
+function effTokens(sc){ return sc.tokens.map(t => ({...t, ...effPos(sc,t), ...effRole(sc,t)})); }
 function effBall(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.ball) || sc.ball; }
 function effDraw(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.draw) || []; }
 function effMarks(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.marks) || []; }
 function roleMap(scheme){
   const m = new Map();
-  scheme.tokens.forEach(t => { const r = (t.role||'').trim(); if(r && !m.has(r)) m.set(r, ROLE_COLORS[m.size % ROLE_COLORS.length]); });
+  effTokens(scheme).forEach(t => { const r = (t.role||'').trim(); if(r && !m.has(r)) m.set(r, ROLE_COLORS[m.size % ROLE_COLORS.length]); });
   return m;
 }
 function tokColor(scheme, t, rm){ return rm.get((t.role||'').trim()) || '#15202B'; }
@@ -630,7 +636,7 @@ function viewSchemes(){
   const bopts = Object.entries(BASES).map(([k,b]) => `<option value="${k}">${b.name}</option>`).join('');
   return `<section class="panel">
     <h2>Calci piazzati</h2>
-    ${A ? '<p class="hint">Database comune a tutte le squadre: quello che crei o modifichi qui lo vedono tutti i mister.</p>' : lockNote('Gli schemi sono comuni a tutte le squadre e li carica l\'amministratore. Tu scegli quali stampare, assegni i giocatori e puoi anche spostare pedine o disegnare frecce solo per la tua partita: nessuna di queste modifiche cambia lo schema per gli altri.')}
+    ${A ? '<p class="hint">Database comune a tutte le squadre: quello che crei o modifichi qui lo vedono tutti i mister.</p>' : lockNote('Gli schemi sono comuni a tutte le squadre e li carica l\'amministratore. Tu scegli quali stampare, assegni i giocatori e, solo per la tua partita, puoi cambiare i compiti, spostare pedine o disegnare frecce: nessuna di queste modifiche cambia lo schema per gli altri.')}
     <p class="hint">Tocca uno schema per selezionarlo per questa partita: solo per quelli selezionati potrai assegnare compiti e giocatori. I giocatori si riempiono comunque in automatico dalla formazione, in base al numero di ruolo.</p>
     <div class="sgrid">${cards || '<p class="empty">Ancora nessuno schema.</p>'}</div>
   </section>
@@ -718,6 +724,22 @@ function compitiList(sc, rm){
   }).join('');
   return righe ? `<div class="scompiti">${righe}</div>` : '';
 }
+/* Mister, modalità Pedine: compito ed etichetta della pedina toccata, solo per questa partita */
+function misterTokPanel(sc, roles){
+  const t = effTokens(sc).find(q => q.id===selectedToken);
+  const base = sc.tokens.find(q => q.id===selectedToken);
+  if(!t) return `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne il compito. Le modifiche restano solo su questa partita, non toccano lo schema condiviso con gli altri mister.</p>`;
+  const cambiato = (t.role||'') !== (base.role||'') || (t.tag||'') !== (base.tag||'');
+  return `<div class="tokpanel">
+    <p class="note" style="margin:0 0 8px">Pedina ${t.slot}: compito solo per questa partita.</p>
+    <div class="grid">
+      <div><label class="f">Compito</label><input data-etok="role" list="rolelist" value="${esc(t.role)}" placeholder="Es. Marcatura"></div>
+      <div><label class="f">Etichetta rossa</label><input data-etok="tag" value="${esc(t.tag)}" placeholder="Es. 1 o M"></div>
+    </div>
+    <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+    ${cambiato ? `<div class="row" style="margin-top:10px"><button class="btn small" data-act="resetrole">Torna al compito dello schema (${esc(base.role||'nessuno')})</button></div>` : ''}
+  </div>`;
+}
 function viewScheme(){
   const sc = S.schemes.find(s => s.id===openSchemeId);
   if(!sc){ openSchemeId=null; return viewSchemes(); }
@@ -744,7 +766,7 @@ function viewScheme(){
   const st = A ? sc.tokens.find(t => t.id===selectedToken) : null;
   const roles = [...new Set(S.schemes.flatMap(s => s.tokens.map(t => t.role).filter(Boolean)))];
   const slotOpts = n => Array.from({length:11},(_,i)=>`<option ${i+1===n?'selected':''}>${i+1}</option>`).join('');
-  const hasEdits = !!(S.sheet.schemeEdits && S.sheet.schemeEdits[sc.id] && (Object.keys(S.sheet.schemeEdits[sc.id].tokens||{}).length || (S.sheet.schemeEdits[sc.id].draw||[]).length || (S.sheet.schemeEdits[sc.id].marks||[]).length || S.sheet.schemeEdits[sc.id].ball));
+  const hasEdits = !!(S.sheet.schemeEdits && S.sheet.schemeEdits[sc.id] && (Object.keys(S.sheet.schemeEdits[sc.id].tokens||{}).length || Object.keys(S.sheet.schemeEdits[sc.id].roles||{}).length || (S.sheet.schemeEdits[sc.id].draw||[]).length || (S.sheet.schemeEdits[sc.id].marks||[]).length || S.sheet.schemeEdits[sc.id].ball));
   const selShape = drawMode && selectedDraw && selectedDraw.kind==='draw' ? (selectedDraw.layer==='base' ? sc.draw[selectedDraw.index] : schemeEdit(sc).draw[selectedDraw.index]) : null;
   const selMark = drawMode && selectedDraw && selectedDraw.kind==='mark' ? (selectedDraw.layer==='base' ? sc.marks[selectedDraw.index] : schemeEdit(sc).marks[selectedDraw.index]) : null;
   let panel;
@@ -759,7 +781,7 @@ function viewScheme(){
       <div class="row" style="margin-top:10px"><button class="btn small danger" data-act="deltok">Elimina pedina</button></div>
     </div>` : (A
       ? `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne ruolo e compito: aggiorni lo schema condiviso, lo vedono tutti i mister.</p>`
-      : `<p class="note" style="margin-top:10px">Trascina pedine e pallone: le modifiche restano solo su questa partita, non toccano lo schema condiviso con gli altri mister.</p>`);
+      : misterTokPanel(sc, roles));
   } else if(drawMode){
     const toolBtns = DRAW_TOOLS.map(([k,label]) => `<button data-drawtool="${k}" aria-pressed="${drawTool===k}">${label}</button>`).join('');
     panel = `<div class="tokpanel">

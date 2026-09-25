@@ -193,9 +193,9 @@ function schemePage(sc, page, total){
   x.beginPath(); x.roundRect ? x.roundRect(rx, 140, 110, 30, 15) : x.rect(rx,140,110,30); x.fill();
   T(x, fav ? 'A favore' : 'A sfavore', rx+55, 156, {size:17, weight:700, cond:true, align:'center', base:'middle', color:fav?'#1E5A36':'#8E0C22'});
   const groups = new Map();
-  sc.tokens.forEach(t => { const k = (t.role||'').trim() || 'Altri'; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(t); });
+  eTok.forEach(t => { const k = (t.role||'').trim() || 'Altri'; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(t); });
   const entries = [...groups.entries()].sort((a,b) => (a[0]==='Altri') - (b[0]==='Altri'));
-  const lines = sc.tokens.length + entries.length*1.6;
+  const lines = eTok.length + entries.length*1.6;
   const lh = Math.min(26, (H-60-200)/Math.max(lines,1));
   let gy = 206;
   T(x, 'Compiti', rx, 198, {size:24, weight:700, cond:true, color:BLU_SCURO});
@@ -209,7 +209,7 @@ function schemePage(sc, page, total){
       const {p, override} = tokenPlayer(sc, t);
       disc(x, rx+24, gy-lh*0.3, Math.min(11, lh*0.42), col, p ? (matchNum(p.id)||t.slot) : t.slot, {hollow:!p, size:Math.min(13, lh*0.5)});
       T(x, p ? surname(p.name) + (override ? ' *' : '') : `Ruolo ${t.slot} da assegnare`, rx+44, gy-lh*0.3+1, {size:Math.min(15.5, lh*0.62), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:rw-60});
-      if(t.tag) T(x, t.tag, W-36, gy-lh*0.3+1, {size:Math.min(14,lh*.55), weight:700, color:RED, align:'right', base:'middle'});
+      if(t.tag) T(x, t.tag, W-52, gy-lh*0.3+1, {size:Math.min(14,lh*.55), weight:700, color:RED, align:'right', base:'middle'});
       gy += lh;
     });
     gy += lh*0.5;

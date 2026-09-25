@@ -67,6 +67,7 @@ document.addEventListener('click', e => {
     case 'addtok': if(sc){ const n={id:uid('t'), slot:1, x:0, y:30, role:'', tag:''}; sc.tokens.push(n); selectedToken=n.id; save('schemes'); render(); } break;
     case 'deltok': if(sc){ sc.tokens = sc.tokens.filter(q=>q.id!==selectedToken); selectedToken=null; save('schemes'); render(); } break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
+    case 'resetrole': if(sc && selectedToken){ const ed = schemeEdit(sc); if(ed.roles) delete ed.roles[selectedToken]; save('sheet'); render(); } break;
     case 'resetedits': if(sc){ delete (S.sheet.schemeEdits||{})[sc.id]; save('sheet'); render(); } break;
     case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
     case 'deldraw': if(sc && selectedDraw){
@@ -126,6 +127,7 @@ document.addEventListener('input', e => {
     save('sheet');
     if(t.dataset.sheet==='meetAddress'){ const a = $('#cv_mapslink'); if(a){ const u = mapsLink(S.sheet); a.href = u; a.hidden = !u; } }
   }
+  else if(t.dataset.etok){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc && selectedToken){ const ed = schemeEdit(sc); ((ed.roles ||= {})[selectedToken] ||= {})[t.dataset.etok] = t.value; save('sheet'); } }
   else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk[t.dataset.tok]=t.value; save('schemes'); } }
 });
@@ -140,7 +142,7 @@ document.addEventListener('change', e => {
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
   else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }
-  else if(t.dataset.tok==='role'){ render(); }
+  else if(t.dataset.tok==='role' || t.dataset.etok){ render(); }
 });
 
 /* Drag giocatori (mouse e touch) */
