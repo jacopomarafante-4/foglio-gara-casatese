@@ -135,6 +135,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0021: `nome_proprio()` + trigger `giocatori_nomi`: cognome e nome dei giocatori sempre "Rossi", "Maria Elena",
   "D'Angelo" (anche da importazioni e Portale); stessa regola di `maiuscoleIniziali()` in `lib/utili.ts`
 
+Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--conferma]` le ricava da OpenStreetMap
+(Nominatim, 1 richiesta al secondo) per le società senza `lat`, dall'indirizzo del campo o dal centro del paese.
+
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).
 - Società sempre tramite `trovaOCreaSocieta()` (lib/societa.ts), mai insert diretti: evita i doppioni.

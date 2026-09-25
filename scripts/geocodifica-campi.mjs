@@ -24,11 +24,12 @@ const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Paesi possibili dal nome del campo: "C.S.COMUNALE N. 1 (E.A) - VIMERCATE" → ["VIMERCATE"];
  *  senza trattino ("C.S.COMUNALE N. 1 VIMERCATE") si provano le ultime due parole e l'ultima */
 function paesi(campo) {
-  const t = (campo ?? '').replace(/\(.*?\)/g, ' ').replace(/\b(FRAZ|LOC|LOCALITA)\b.*$/i, '').replace(/\s+/g, ' ').trim();
+  let t = (campo ?? '').replace(/\(.*?\)/g, ' ').replace(/\b(FRAZ|FRAZIONE|FR|LOC|LOCALITA|Q\.?RE)\b.*$/i, '').replace(/\s+/g, ' ').trim();
   if (!t) return [];
-  if (t.includes(' - ')) return [t.split(' - ').pop().trim()];
-  const parole = t.split(' ').filter((w) => /^[A-ZÀ-Ú']{3,}$/i.test(w) && !/^(COMUNALE|CAMPO|SPORTIVO|CENTRO|STADIO|ORATORIO|PARROCCHIALE)$/i.test(w));
-  return [...new Set([parole.slice(-2).join(' '), parole.slice(-1)[0]].filter(Boolean))];
+  if (t.includes(' - ')) t = t.split(' - ').pop().trim();
+  // via le parole del campo ("CAMPO N.1", "E.A."): restano i nomi, di cui si provano le ultime tre, due e una
+  const parole = t.split(/[\s/]+/).filter((w) => /^[A-ZÀ-Ú']{2,}$/i.test(w) && !/^(COMUNALE|CAMPO|SPORTIVO|CENTRO|STADIO|ORATORIO|PARROCCHIALE|EA|N)$/i.test(w));
+  return [...new Set([parole.slice(-3).join(' '), parole.slice(-2).join(' '), parole.slice(-1)[0]].filter(Boolean))];
 }
 const paese = (campo) => paesi(campo)[0] ?? '';
 /** "VIA DEGLI ATLETI,1" → "Via degli Atleti 1" (Nominatim trova meglio senza sigle e virgole attaccate) */
@@ -60,6 +61,8 @@ for (const [i, s] of lista.entries()) {
   try {
     for (const x of tutti) if (!c && s.indirizzo) { c = await cerca(`${via(s.indirizzo)}, ${x}, Lombardia`); tipo = 'indirizzo'; }
     for (const x of tutti) if (!c) { c = await cerca(`${x}, Lombardia`); tipo = 'paese'; }
+    // Società fuori regione (es. Castelvetro Piacentino): senza "Lombardia"
+    for (const x of tutti) if (!c) { c = await cerca(x); tipo = 'paese'; }
   } catch (e) {
     console.error(`❌ ${e.message}: mi fermo (rilancia più tardi, riparte da dove era arrivato)`);
     break;
