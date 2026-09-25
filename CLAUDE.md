@@ -114,6 +114,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `chiave` unica; `gara_unica` ora comprende la categoria. Importazione: `scripts/import-calendari/` (`prepara.py` legge i
   PDF con pdfplumber e abbina i nomi all'elenco campi del girone; `importa.mjs` simula, `--conferma` scrive; reimportando
   non tocca le gare già confermate/variate). Il pannello Gare carica solo le gare delle società che interessano.
+  Comunicati settimanali: PDF in `private/comunicati/`, `comunicati.py` legge le tabelle "GARA VARIATA" e le regole
+  "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
+  `portale.mjs`. Confermata = gara tra la data del C.U. e la domenica dopo, non variata dal C.U. del suo ente
+  (CRL per regionali/élite, delegazione per i provinciali). Le coppe si ignorano.
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

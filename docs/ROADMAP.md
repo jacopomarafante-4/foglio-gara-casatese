@@ -29,7 +29,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Backup settimanale automatico sul Mac (`npm run backup`)
 - [ ] Importare le distinte (anche stagioni passate)
 - [x] Calendari dei gironi 2026/27 (LND, Bergamo, Monza, Lecco) nelle Gare, "Da calendario"
-- [ ] Comunicati settimanali: gare confermate o variate ("C.U. n. …")
+- [x] Comunicati settimanali: gare confermate o variate ("C.U. n. …") — `scripts/import-calendari/comunicati.py`
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [x] PIN personali per scout e direttori (si generano in Società)
