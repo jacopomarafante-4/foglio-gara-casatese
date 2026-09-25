@@ -205,9 +205,9 @@ export default async function SchedaGiocatore({
 
       {/* Prossime gare della sua squadra (caricate nel pannello Gare) */}
       <section className="rounded-xl border border-linea bg-white p-5">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
           <h2 className="font-display text-2xl font-bold">Prossime gare</h2>
-          <span className="text-right text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
+          <span className="text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
         </div>
         {!g.societa_id ? (
           <p className="mt-3 text-grigio">Aggiungi la società nei dati del giocatore per vedere le sue gare.</p>
