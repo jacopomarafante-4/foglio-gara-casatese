@@ -10,7 +10,7 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Progetto Supabase (condiviso col Pannello Società), iscrizioni pubbliche disattivate
 - [x] Migrazioni 0001, 0002, 0003, 0004 eseguite in ordine
 - [ ] Coordinate esatte delle sedi (tabella `sedi`) — per ora quelle approssimative del comune
-- [x] Account admin (tuo); account scout/direttore del resto del team ancora da creare
+- [x] Account admin (tuo), scout e direttori
 - [ ] Prova completa: segnalazione, valutazione, cambio stato, gara prenotata
 - [x] Migrazione **0006** (accesso col solo PIN per scout/direttori) eseguita nel SQL Editor
 - [x] Migrazione **0007** (i mister segnalano dal Portale: area Scouting) eseguita nel SQL Editor
@@ -22,8 +22,8 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
-- [ ] PIN personale per scout e direttori (`scripts/crea-pin.mjs`, anche con `"ruolo": "direttore"`)
-- [ ] Prova l'ingresso unico con un PIN squadra vero e con un PIN personale vero
+- [x] PIN personali per scout e direttori (si generano in Società)
+- [x] Ingresso unico provato online con PIN veri (mister, scout, direttore)
 
 ## Fatto nel codice
 - [x] Accesso, ruoli, permessi nel database, cambio password
