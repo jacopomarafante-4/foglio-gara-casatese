@@ -40,7 +40,7 @@ function writeRoute(push){
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
   tab = t; areaLast[areaOf(t).k] = t;
-  selectedPlayer = null; if(t!=='piazzati') openSchemeId = null;
+  selectedPlayer = null; slotPick = null; if(t!=='piazzati') openSchemeId = null;
   openTrainingId = openGameId = openTestId = null;
   writeRoute(true); render(); window.scrollTo(0,0);
 }

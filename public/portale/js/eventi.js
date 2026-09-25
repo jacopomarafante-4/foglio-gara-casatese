@@ -7,6 +7,12 @@ document.addEventListener('click', e => {
   if(t.dataset.tab){ goTab(t.dataset.tab); return; }
   if(t.dataset.area){ const a = AREAS.find(x => x.k===t.dataset.area); if(a) goTab(areaLast[a.k] || a.tabs[0]); return; }
   if(t.dataset.segvoto){ segDraft.voto = segDraft.voto === t.dataset.segvoto ? '' : t.dataset.segvoto; render(); return; }
+  /* Scelta del giocatore per una posizione toccata sul campo. Il telefono manda un "clic" subito dopo il tocco
+     che ha aperto l'elenco: se arriva nel primo mezzo secondo lo ignoriamo (chiuderebbe o sceglierebbe per sbaglio) */
+  if((t.dataset.pickplayer || t.dataset.pickclear !== undefined || t.dataset.pickclose !== undefined) && Date.now() - slotPickAt < 450) return;
+  if(t.dataset.pickplayer){ if(slotPick != null) assignSlot(slotPick, t.dataset.pickplayer); slotPick = null; render(); return; }
+  if(t.dataset.pickclear !== undefined){ if(slotPick != null){ delete S.sheet.lineup[slotPick]; save('sheet'); } slotPick = null; render(); return; }
+  if(t.dataset.pickclose !== undefined){ slotPick = null; render(); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
   const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','exportbackup','caladd'];
@@ -101,6 +107,7 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && slotPick != null){ slotPick = null; render(); return; }
   if(e.key !== 'Enter' || !e.target) return;
   if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
   else if(e.target.id?.startsWith('staffnew_')){ e.preventDefault(); $(`[data-staffadd="${e.target.id.slice(9)}"]`)?.click(); }
@@ -159,6 +166,7 @@ document.addEventListener('pointerdown', e => {
       const up = () => {
         slotEl.removeEventListener('pointermove', mv); slotEl.removeEventListener('pointerup', up); slotEl.removeEventListener('pointercancel', up);
         if(moved){ S.sheet.slotPos = S.sheet.slotPos || {}; S.sheet.slotPos[n] = {x:finalX, y:finalY}; save('sheet'); }
+        else { slotPick = n; slotPickAt = Date.now(); }   // solo un tocco: si sceglie il giocatore per questa posizione
         render();
       };
       slotEl.addEventListener('pointermove', mv); slotEl.addEventListener('pointerup', up); slotEl.addEventListener('pointercancel', up);
@@ -244,7 +252,15 @@ document.addEventListener('pointermove', e => {
   if(!dnd) return;
   if(!dnd.started && Math.hypot(e.clientX-dnd.x, e.clientY-dnd.y) > 8){
     dnd.started = true; dnd.ghost = dnd.el.cloneNode(true); dnd.ghost.classList.add('ghost-chip'); document.body.appendChild(dnd.ghost);
+    /* Vicino al bordo alto o basso la pagina scorre da sola: così si raggiunge il campo anche quando è fuori dallo schermo */
+    const d0 = dnd;
+    d0.scroller = setInterval(() => {
+      const y = d0.lastY ?? 0, m = 80;
+      const v = y < m ? -(m - y) / 3 : y > innerHeight - m ? (y - (innerHeight - m)) / 3 : 0;
+      if(v) window.scrollBy(0, v);
+    }, 16);
   }
+  dnd.lastY = e.clientY;
   if(dnd.started){
     dnd.ghost.style.left = e.clientX+'px'; dnd.ghost.style.top = e.clientY+'px';
     document.querySelectorAll('.slot.hot').forEach(s=>s.classList.remove('hot'));
@@ -253,7 +269,7 @@ document.addEventListener('pointermove', e => {
 });
 document.addEventListener('pointerup', e => {
   if(!dnd) return;
-  const d = dnd; dnd = null;
+  const d = dnd; dnd = null; clearInterval(d.scroller);
   if(d.started){
     d.ghost.remove();
     const under = document.elementFromPoint(e.clientX, e.clientY);
@@ -276,7 +292,7 @@ document.addEventListener('pointerup', e => {
     selectedPlayer = selectedPlayer===d.pid ? null : d.pid; render();
   }
 });
-document.addEventListener('pointercancel', () => { if(dnd?.ghost) dnd.ghost.remove(); dnd = null; });
+document.addEventListener('pointercancel', () => { if(dnd){ clearInterval(dnd.scroller); dnd.ghost?.remove(); } dnd = null; });
 
 render();
 ensureFonts();

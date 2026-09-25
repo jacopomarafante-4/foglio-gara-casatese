@@ -511,6 +511,27 @@ function pitchLines(){
   <div class="ln" style="left:36.5%;right:36.5%;bottom:-2px;height:5.2%"></div>`;
 }
 
+/* Posizione del campo toccata: si apre l'elenco per scegliere chi metterci (comodo da telefono,
+   dove campo e giocatori non stanno insieme sullo schermo e il trascinamento non arriva) */
+let slotPick = null, slotPickAt = 0;   // slotPickAt: quando si è aperto (per ignorare il "clic fantasma" del tocco)
+function viewSlotPicker(){
+  const s = S.sheet;
+  if(slotPick == null || !(FORMATIONS[s.formation]||[]).some(([n]) => String(n) === String(slotPick))) return '';
+  const ora = P(s.lineup[slotPick]);
+  const liberi = S.players.filter(p => !slotOf(p.id)), inCampo = S.players.filter(p => slotOf(p.id) && p.id !== s.lineup[slotPick]);
+  const btn = p => `<button class="chip" data-pickplayer="${p.id}"><b>${matchNum(p.id)||'–'}</b>${esc(p.name)}</button>`;
+  return `<div class="picker" role="dialog" aria-modal="true" aria-label="Scegli il giocatore per la posizione ${slotPick}">
+    <button class="pickback" data-pickclose aria-label="Chiudi"></button>
+    <div class="pickbox">
+      <div class="pickhd"><div><b>Posizione ${esc(slotPick)}</b>${ora ? `<span class="note"> · ora: ${esc(ora.name)}</span>` : ''}</div>
+        <button class="btn small ghost" data-pickclose>Chiudi</button></div>
+      ${ora ? '<button class="btn small danger" data-pickclear>Togli dal campo</button>' : ''}
+      <div class="coachhd" style="margin-top:12px">Da mettere in campo</div>
+      <div class="tray">${liberi.map(btn).join('') || '<span class="note">Tutti i giocatori sono già in campo.</span>'}</div>
+      ${inCampo.length ? `<div class="coachhd" style="margin-top:12px">Già in campo (si spostano qui)</div><div class="tray">${inCampo.map(btn).join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
 function viewFormazione(){
   const s = S.sheet;
   if(!S.players.length) return `<section class="panel"><h2>Formazione</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
@@ -529,13 +550,13 @@ function viewFormazione(){
   const bench = others.map(p => `<button class="chip ${s.bench.includes(p.id)?'bench':''}" data-bench="${p.id}" aria-pressed="${s.bench.includes(p.id)}"><b>${matchNum(p.id)||'–'}</b>${esc(p.name)}</button>`).join('');
   return `<section class="panel">
     <h2>Formazione</h2>
-    <p class="hint">Tocca un giocatore per metterlo nella prossima posizione libera (portiere, poi difesa, centrocampo, attacco, da destra a sinistra) — tocca di nuovo per toglierlo. Se vuoi scegliere tu il posto esatto, trascinalo su una posizione specifica. Trascina invece l'intera casella di una posizione per spostarla leggermente sul campo. Il numerino piccolo in alto è il ruolo usato negli schemi; il numero grande è quello di questa partita.</p>
+    <p class="hint"><b>Tocca una posizione sul campo</b> per scegliere chi metterci. Oppure tocca un giocatore per metterlo nella prossima posizione libera (portiere, poi difesa, centrocampo, attacco, da destra a sinistra) — tocca di nuovo per toglierlo — o trascinalo su una posizione specifica. Trascina invece l'intera casella di una posizione per spostarla leggermente sul campo. Il numerino piccolo in alto è il ruolo usato negli schemi; il numero grande è quello di questa partita.</p>
     <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:14px">
       <div style="max-width:240px"><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation">${fopts}</select></div>
       ${hasSlotPos ? `<button class="btn small ghost" data-act="resetslotpos">Ripristina posizioni modulo</button>` : ''}
     </div>
     <div class="formwrap">
-      <div class="pitch" id="pitch">${pitchLines()}${slots}</div>
+      <div class="pitch" id="pitch">${pitchLines()}${slots}</div>${viewSlotPicker()}
       <div>
         <h3 style="margin-top:0">Giocatori</h3>
         <div class="tray">${S.players.map(p => chip(p)).join('')}</div>
