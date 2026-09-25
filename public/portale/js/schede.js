@@ -160,7 +160,7 @@ function render(){
       if(el.type === 'checkbox' || el.type === 'radio') el.disabled = true; else el.readOnly = true;
     });
     // anche le tendine che cambiano dati (modulo, capitano, tipo gara…); restano libere quelle per guardare
-    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf]').forEach(el => {
+    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf], select[data-atok]').forEach(el => {
       el.disabled = true; el.title = 'Sola lettura';
     });
   }
@@ -724,6 +724,35 @@ function compitiList(sc, rm){
   }).join('');
   return righe ? `<div class="scompiti">${righe}</div>` : '';
 }
+/* Modalità Assegna: per ogni compito le sue pedine, e per ognuna la tendina con la rosa.
+   Prima voce = "Dalla formazione" (chi gioca con quel numero di ruolo); scegliere un altro giocatore
+   lo cambia solo in questo schema (*). Il compito si cambia nella stessa riga: il mister solo per
+   la sua partita, l'admin nello schema comune. */
+function assegnaList(sc, rm, roles){
+  const A = isAdmin();
+  const rosa = S.players.slice().sort((a,b) => (matchNum(a.id)||99) - (matchNum(b.id)||99) || a.name.localeCompare(b.name,'it'));
+  const gruppi = new Map();
+  effTokens(sc).forEach(t => { const k = (t.role||'').trim() || 'Senza compito'; if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(t); });
+  const blocchi = [...gruppi.entries()].sort((a,b) => (a[0]==='Senza compito') - (b[0]==='Senza compito')).map(([role, toks]) => {
+    const col = rm.get(role) || 'var(--ink)';
+    const righe = toks.slice().sort((a,b) => a.slot-b.slot).map(t => {
+      const {p, override} = tokenPlayer(sc, t);
+      const dallaForm = P(S.sheet.lineup[t.slot]);
+      const opts = `<option value="">${dallaForm ? `${matchNum(dallaForm.id) ? matchNum(dallaForm.id)+' · ' : ''}${esc(dallaForm.name)} (formazione)` : 'Nessuno in formazione'}</option>` +
+        rosa.map(q => `<option value="${q.id}" ${override && p && p.id===q.id ? 'selected' : ''}>${matchNum(q.id) ? matchNum(q.id)+' · ' : ''}${esc(q.name)}</option>`).join('');
+      return `<div class="asrow">
+        <b class="asnum" style="background:${p?col:'transparent'};border-color:${col};color:${p?'#fff':col}">${p ? (matchNum(p.id)||t.slot) : t.slot}</b>
+        <select id="as_${t.id}" data-atok="${t.id}" aria-label="Giocatore della pedina ${t.slot}" class="${override?'ov':''}">${opts}</select>
+        <input data-arole="${t.id}" list="rolelist" value="${esc(t.role)}" placeholder="Compito" aria-label="Compito della pedina ${t.slot}">
+      </div>`;
+    }).join('');
+    return `<div class="asgrp"><div class="scompr"><i style="background:${col}"></i>${esc(role)}</div>${righe}</div>`;
+  }).join('');
+  return `<h3>Chi fa cosa</h3>
+    <p class="hint">Scegli il giocatore per ogni pedina${A ? '' : ' (vale solo per questa partita)'}: di partenza c'è chi gioca con quel numero di ruolo in formazione. Puoi anche toccare una pedina sul campo.</p>
+    <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+    <div class="aslist">${blocchi}</div>`;
+}
 /* Mister, modalità Pedine: compito ed etichetta della pedina toccata, solo per questa partita */
 function misterTokPanel(sc, roles){
   const t = effTokens(sc).find(q => q.id===selectedToken);
@@ -794,7 +823,7 @@ function viewScheme(){
       </div>` : ''}
     </div>`;
   } else {
-    panel = `<h3>Giocatori</h3><p class="hint">Trascina un giocatore su una pedina per cambiarlo solo in questo schema (segnato con *).</p><div class="tray">${S.players.map(p=>chip(p)).join('')}</div>`;
+    panel = assegnaList(sc, rm, roles);
   }
   return `<section class="panel">
     <div class="row" style="justify-content:space-between;margin-bottom:10px">
@@ -817,7 +846,7 @@ function viewScheme(){
       ${drawMode ? '<line id="draftline" x1="0" y1="0" x2="0" y2="0" stroke="#C8102E" stroke-width=".35" opacity="0" pointer-events="none"/>' : ''}
     </svg>
     <div class="legend">${legend}</div>
-    ${compitiList(sc, rm)}
+    ${boardMode==='assign' ? '' : compitiList(sc, rm)}
     ${moveMode && A ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : ''}
     ${boardMode==='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>` : ''}
     ${boardMode!=='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetedits" ${hasEdits?'':'disabled'}>Ripristina originale</button></div>` : ''}

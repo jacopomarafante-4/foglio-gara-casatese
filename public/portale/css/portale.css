@@ -96,6 +96,12 @@ summary{cursor:pointer;font-weight:600}
 .stitle{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-family:var(--cond);font-weight:600;font-size:17px;line-height:1.15;margin-top:8px}
 .stitle .side{margin-left:0;vertical-align:0}
 .scompiti{margin-top:12px;display:grid;gap:8px}
+.aslist{display:grid;gap:14px;margin-top:8px}
+.asgrp{display:grid;gap:6px}
+.asrow{display:grid;grid-template-columns:30px minmax(0,1fr) minmax(90px,.55fr);gap:8px;align-items:center}
+.asnum{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:2px solid;font-family:var(--cond);font-size:16px}
+.asrow select.ov{border-color:#1F5FA8;box-shadow:0 0 0 1px #1F5FA8 inset}
+@media (max-width:560px){.asrow{grid-template-columns:30px minmax(0,1fr)}.asrow input{grid-column:2}}
 .scomprow{display:grid;grid-template-columns:minmax(90px,150px) 1fr;gap:10px;align-items:start}
 .scompr{display:flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:700;font-size:15px;padding-top:3px}
 .scompr i{width:5px;height:16px;border-radius:2px;flex:none}

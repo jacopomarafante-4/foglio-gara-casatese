@@ -40,7 +40,11 @@ document.addEventListener('click', e => {
   if(t.dataset.callupid){ const id=t.dataset.callupid, st=t.dataset.callupstatus; S.sheet.callup ||= {}; S.sheet.callup[id] = S.sheet.callup[id]===st ? '' : st; save('sheet'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
   if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); selectedPlayer=null; render(); } return; }
-  if(t.dataset.dropToken){ if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); } return; }
+  if(t.dataset.dropToken){
+    if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); }
+    else { const sel = document.getElementById('as_'+t.dataset.dropToken); if(sel){ sel.scrollIntoView({block:'center', behavior:'smooth'}); sel.focus(); sel.showPicker?.(); } }
+    return;
+  }
   if(t.dataset.bench){ const id=t.dataset.bench; const b=S.sheet.bench; S.sheet.bench = b.includes(id) ? b.filter(x=>x!==id) : [...b,id]; save('sheet'); render(); return; }
   if(t.dataset.schemecard){ const id=t.dataset.schemecard; const order=S.schemes.map(q=>q.id); let s=S.sheet.selected.filter(i=>i!==id); if(!S.sheet.selected.includes(id)) s.push(id); S.sheet.selected = s.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('sheet'); render(); return; }
   if(t.dataset.open){ openSchemeId=t.dataset.open; boardMode = (t.dataset.editmode && isAdmin()) ? 'move' : 'assign'; selectedToken=null; drawTool=null; selectedDraw=null; render(); window.scrollTo(0,0); return; }
@@ -139,6 +143,20 @@ document.addEventListener('change', e => {
   if(t.dataset.team && t.dataset.tf==='name'){ render(); return; }
   if(!isAdmin() && (t.dataset.sc || (t.dataset.tok) || t.dataset.calid)) return;
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.dataset.calf==='home' ? t.checked : t.value; save('calendar'); } return; }
+  if(t.dataset.atok){
+    const ov = S.sheet.overrides[openSchemeId] ||= {};
+    if(t.value) ov[t.dataset.atok] = t.value; else delete ov[t.dataset.atok];
+    save('sheet'); render(); return;
+  }
+  if(t.dataset.arole){
+    const sc = S.schemes.find(q=>q.id===openSchemeId); if(!sc) return;
+    if(isAdmin()){ const tk = sc.tokens.find(q=>q.id===t.dataset.arole); if(tk){ tk.role = t.value.trim(); save('schemes'); } }
+    else { const ed = schemeEdit(sc); const base = sc.tokens.find(q=>q.id===t.dataset.arole);
+      if(base && t.value.trim() === (base.role||'')){ if(ed.roles?.[base.id]){ delete ed.roles[base.id].role; if(!Object.keys(ed.roles[base.id]).length) delete ed.roles[base.id]; } }
+      else ((ed.roles ||= {})[t.dataset.arole] ||= {}).role = t.value.trim();
+      save('sheet'); }
+    render(); return;
+  }
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
   else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }

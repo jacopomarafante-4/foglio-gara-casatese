@@ -318,7 +318,8 @@ posizione (vicino al bordo dello schermo la pagina scorre da sola).</li>
 Sul campo ci sono solo i numeri; sotto (e nel PDF, a destra) l'elenco dei compiti con numero e cognome.</li>
 <li>Puoi spostare le pedine, disegnare frecce e <b>cambiare il compito</b> di una pedina (in <b>Pedine</b>: tocca la pedina,
 poi Compito ed Etichetta) <b>solo per la tua partita</b>: lo schema per gli altri non cambia.</li>
-<li>Per cambiare chi fa un compito: in <b>Assegna</b> tocca un giocatore e poi la pedina (dal computer trascinalo).</li></ul>''', 'Piazzati')}
+<li><b>Chi fa cosa</b>: in <b>Assegna</b>, sotto il campo, per ogni pedina c'è una tendina con la rosa: scegli il giocatore
+(di partenza c'è quello della formazione). Nella stessa riga puoi cambiare il compito. Toccando una pedina sul campo si apre la sua tendina.</li></ul>''', 'Piazzati')}
 {fig('p-pdf', '''<h3>Foglio gara PDF</h3>
 <p>Anteprima e <span class="k">Scarica PDF</span>: prima pagina con distinta e formazione, poi una pagina per ogni schema selezionato.
 La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
