@@ -3,7 +3,7 @@
 export type RuoloCampo = 'portiere' | 'difensore' | 'centrocampista' | 'attaccante';
 export type Piede = 'destro' | 'sinistro' | 'ambidestro';
 export type StatoGiocatore =
-  | 'segnalato' | 'da_rivedere' | 'contattato' | 'invitato' | 'in_prova' | 'inserito' | 'chiuso';
+  | 'segnalato' | 'da_rivedere' | 'contattato' | 'invitato' | 'in_prova' | 'inserito';
 export type Giudizio = 'da_prendere' | 'da_rivedere' | 'non_a_livello';
 
 export const RUOLI_CAMPO: Record<RuoloCampo, string> = {
@@ -26,23 +26,18 @@ export const STATI: Record<StatoGiocatore, string> = {
   invitato: 'Invitato',
   in_prova: 'In prova',
   inserito: 'Inserito',
-  chiuso: 'Chiuso',
 };
+
+/** Stato come compare nello storico: "chiuso" non esiste più (0019) ma resta nelle righe vecchie */
+export function etichettaStato(s: string) {
+  return STATI[s as StatoGiocatore] ?? (s === 'chiuso' ? 'Chiuso (stato tolto)' : s);
+}
 
 export const GIUDIZI: Record<Giudizio, string> = {
   da_prendere: 'Da prendere',
   da_rivedere: 'Da rivedere',
   non_a_livello: 'Non a livello',
 };
-
-export const MOTIVI_CHIUSURA = [
-  'Non a livello',
-  'Scelto altro progetto',
-  'Non presentato',
-  'Posti in squadra esauriti',
-  'Da rivalutare più avanti',
-  'Altro',
-];
 
 export const AREE = [
   { chiave: 'tecnica', nome: 'Tecnica', aiuto: 'Conduzione, passaggio, tiro, primo controllo' },

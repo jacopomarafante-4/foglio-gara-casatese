@@ -198,8 +198,9 @@ note solo tecniche · <span class="k">Esci</span> sui dispositivi condivisi · e
 <tr><td>Contattato</td><td>La società ha preso contatto.</td></tr>
 <tr><td>Invitato</td><td>Invitato a un open day o a un provino.</td></tr>
 <tr><td>In prova</td><td>Si sta allenando con noi.</td></tr>
-<tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr>
-<tr><td>Chiuso</td><td>Percorso concluso, con il motivo (non a livello, altro progetto…).</td></tr></table>
+<tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr></table>
+<p class="small">Un giocatore non si chiude mai: resta sempre in archivio. Se non interessa più (non a livello,
+ha scelto un altro progetto…), lo si scrive nelle note della scheda.</p>
 <p class="small">Lo stato lo cambiano solo l'amministratore e i direttori.</p>
 <h3>Categorie per anno di nascita (stagione 2026/27)</h3>
 <table><tr><th>Nati nel</th><th>Categoria</th><th>Nati nel</th><th>Categoria</th></tr>
@@ -454,7 +455,7 @@ Le tue gare le ritrovi in Home, in <b>Le mie gare</b>.</li></ul>''', 'Gare da ve
 <ul>
 <li><b>Giocatori</b>: cerca per nome o descrizione, filtra per annata, ruolo, stato, società.
 Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anche quelli letti dalle distinte e mai osservati.</li>
-<li><b>Per stato</b>: le colonne Segnalato → Da rivedere → … → Inserito, Chiuso. Utile per vedere la pipeline.</li>
+<li><b>Per stato</b>: le colonne Segnalato → Da rivedere → … → Inserito. Utile per vedere la pipeline.</li>
 <li><b>Profilo</b>: il tuo nome e il ruolo. Il PIN, se lo perdi, lo rigenera l'amministratore.</li>
 </ul>
 </section>

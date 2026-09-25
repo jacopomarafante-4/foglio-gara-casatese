@@ -111,10 +111,12 @@ function esitoRiga(note25, note26) {
   const testo = [n25, n26].filter(Boolean).join(' | ') || null;
   const decisiva = (c26 && c26 !== null) ? c26 : (c25 && c25 !== null) ? c25 : null;
 
+  // Lo stato "chiuso" non esiste più (0019): il giocatore resta segnalato, il motivo va nelle note
+  const chiuso = decisiva?.stato === 'chiuso';
   return {
-    stato: decisiva?.stato ?? 'segnalato',
-    motivo: decisiva?.motivo ?? null,
-    note: testo,
+    stato: chiuso ? 'segnalato' : decisiva?.stato ?? 'segnalato',
+    motivo: null,
+    note: [chiuso && decisiva.motivo ? `Esito: ${decisiva.motivo}` : null, testo].filter(Boolean).join(' | ') || null,
     sconosciute,
   };
 }

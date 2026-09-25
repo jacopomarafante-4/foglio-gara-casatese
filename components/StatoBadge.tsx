@@ -7,7 +7,6 @@ const COLORI: Record<StatoGiocatore, string> = {
   invitato: 'bg-blu/15 text-blu',
   in_prova: 'bg-blu text-white',
   inserito: 'bg-blu-scuro text-white',
-  chiuso: 'bg-rosso/10 text-rosso',
 };
 
 export function StatoBadge({ stato }: { stato: StatoGiocatore }) {

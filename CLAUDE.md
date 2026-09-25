@@ -125,6 +125,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0018: direttori nello Scouting come l'admin: `puo_segnalare()` comprende il direttore, le regole di gestione
   (stati, gare, squadre seguite, sedi, distinte, doppioni, `unisci_giocatori`, `unisci_societa`) usano `vede_tutto()`.
   Portale (`docs`, 0011), account e PIN restano: direttori solo in lettura, gestione solo admin
+- 0019: niente più stato `chiuso` (vincolo `giocatori_niente_chiuso`): i chiusi tornati `segnalato`, motivo aggiunto
+  alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
+  (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

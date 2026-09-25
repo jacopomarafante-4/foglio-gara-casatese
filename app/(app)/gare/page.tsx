@@ -35,7 +35,7 @@ export default async function Gare({
       .select('*')
       .not('societa_id', 'is', null)
       .eq('osservato', true)
-      .not('stato', 'in', '(chiuso,inserito)'),
+      .neq('stato', 'inserito'),
   ]);
   const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];
   const interessano = [...new Set([

@@ -50,7 +50,6 @@ export default async function Giocatori({
   if (ruolo) q = q.eq('ruolo', ruolo);
   const stato = valoreValido(STATI, filtri.stato);
   if (stato) q = q.eq('stato', stato);
-  else if (filtri.stato !== 'tutti') q = q.neq('stato', 'chiuso'); // di norma nascondi i chiusi
   if (filtri.societa) q = q.eq('societa_id', filtri.societa);
   // Di norma solo i ragazzi osservati; "da distinta" = anche quelli visti solo nelle distinte (0014)
   const conDistinte = filtri.chi === 'tutti';
@@ -78,7 +77,6 @@ export default async function Giocatori({
           <h1 className="font-display text-4xl font-bold">Giocatori</h1>
           <p className="text-grigio">
             {totale} {totale === 1 ? 'giocatore' : 'giocatori'}
-            {!stato && filtri.stato !== 'tutti' && ' (esclusi i chiusi)'}
             {totalePagine > 1 && ` – pagina ${pagina} di ${totalePagine}`}
           </p>
         </div>
@@ -110,8 +108,7 @@ export default async function Giocatori({
           ))}
         </select>
         <select name="stato" defaultValue={filtri.stato ?? ''} className="campo">
-          <option value="">Aperti</option>
-          <option value="tutti">Tutti, anche chiusi</option>
+          <option value="">Tutti gli stati</option>
           {Object.entries(STATI).map(([v, e]) => (
             <option key={v} value={v}>{e}</option>
           ))}

@@ -14,20 +14,10 @@ function torna(id: string, esito: { ok?: string; errore?: string }): never {
 export async function cambiaStato(formData: FormData) {
   const id = testo(formData, 'id')!;
   const stato = valoreValido(STATI, formData.get('stato'));
-  const motivo = testo(formData, 'motivo_chiusura');
-  const rivedere = testo(formData, 'rivedere_dal');
   if (!stato) torna(id, { errore: 'Scegli uno stato.' });
-  if (stato === 'chiuso' && !motivo) torna(id, { errore: 'Per chiudere serve il motivo.' });
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from('giocatori')
-    .update({
-      stato,
-      motivo_chiusura: stato === 'chiuso' ? motivo : null,
-      rivedere_dal: stato === 'chiuso' ? rivedere : null,
-    })
-    .eq('id', id);
+  const { error } = await supabase.from('giocatori').update({ stato }).eq('id', id);
 
   if (error) torna(id, { errore: `Stato non aggiornato: ${error.message}` });
   torna(id, { ok: `Stato aggiornato: ${STATI[stato]}.` });
@@ -220,7 +210,7 @@ export async function segnaPersoneDiverse(formData: FormData) {
   tornaDoppioni({ ok: 'Segnate come persone diverse: la coppia non verrà più proposta.' });
 }
 
-/* ---------- Vista a colonne per stato: spostamento rapido (solo admin) ---------- */
+/* ---------- Vista a colonne per stato: spostamento rapido (admin e direttori) ---------- */
 
 export async function spostaStato(formData: FormData) {
   const id = testo(formData, 'id')!;
@@ -228,8 +218,6 @@ export async function spostaStato(formData: FormData) {
   const ritorno = testo(formData, 'ritorno') ?? '/giocatori/stati';
   const dove = ritorno.startsWith('/giocatori/stati') ? ritorno : '/giocatori/stati';
   const sep = dove.includes('?') ? '&' : '?';
-  // Per chiudere serve il motivo: si passa dalla scheda del giocatore
-  if (stato === 'chiuso') redirect(`/giocatori/${id}?errore=${encodeURIComponent('Per chiudere scegli il motivo in "Cambia stato".')}`);
   if (!stato) redirect(`${dove}${sep}errore=${encodeURIComponent('Scegli uno stato.')}`);
 
   const supabase = await createClient();

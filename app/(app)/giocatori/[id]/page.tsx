@@ -5,7 +5,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
-  AREE, GIUDIZI, MOTIVI_CHIUSURA, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili,
+  AREE, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
   type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
@@ -31,8 +31,6 @@ type Giocatore = {
   ruolo: RuoloCampo | null;
   piede: Piede | null;
   stato: StatoGiocatore;
-  motivo_chiusura: string | null;
-  rivedere_dal: string | null;
   categoria: string | null; // solo se diversa da quella dell'annata (0013)
   osservato: boolean; // false = visto solo nelle distinte (0014)
   societa_id: string | null;
@@ -54,7 +52,7 @@ type Valutazione = {
 };
 
 type CambioStato = {
-  id: number; da_stato: StatoGiocatore | null; a_stato: StatoGiocatore; motivo: string | null;
+  id: number; da_stato: string | null; a_stato: string; motivo: string | null; // anche il vecchio "chiuso"
   created_at: string; autore: Autore;
 };
 
@@ -176,12 +174,6 @@ export default async function SchedaGiocatore({
             )}
           </p>
           {g.cognome && g.descrizione && <p className="mt-1 text-sm italic text-grigio">{g.descrizione}</p>}
-          {g.stato === 'chiuso' && g.motivo_chiusura && (
-            <p className="mt-2 text-sm">
-              Chiuso: {g.motivo_chiusura}
-              {g.rivedere_dal && ` – da rivedere dal ${dataBreve(g.rivedere_dal)}`}
-            </p>
-          )}
         </div>
         {scrive && (
           <div className="flex gap-2">
@@ -312,8 +304,8 @@ export default async function SchedaGiocatore({
                 }
                 return (
                   <li key={`c${c.id}`} className="px-4 text-sm text-grigio">
-                    {chi(c.autore)} ha spostato da {c.da_stato && STATI[c.da_stato]} a{' '}
-                    <strong className="text-inchiostro">{STATI[c.a_stato]}</strong>
+                    {chi(c.autore)} ha spostato da {c.da_stato && etichettaStato(c.da_stato)} a{' '}
+                    <strong className="text-inchiostro">{etichettaStato(c.a_stato)}</strong>
                     {c.motivo && ` (${c.motivo})`} – {dataBreve(c.created_at)}
                   </li>
                 );
@@ -333,17 +325,6 @@ export default async function SchedaGiocatore({
                   <option key={v} value={v}>{e}</option>
                 ))}
               </select>
-              <Etichetta testo="Motivo (se chiuso)">
-                <select name="motivo_chiusura" defaultValue={g.motivo_chiusura ?? ''} className="campo">
-                  <option value="">–</option>
-                  {MOTIVI_CHIUSURA.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </Etichetta>
-              <Etichetta testo="Rivedere dal (facoltativo)">
-                <input type="date" name="rivedere_dal" defaultValue={g.rivedere_dal ?? ''} className="campo" />
-              </Etichetta>
               <button className="bottone w-full">Aggiorna stato</button>
             </form>
           )}
