@@ -316,7 +316,30 @@ function convocazionePage(logoImg, figcImg){
   const luogo = luogoPartita(s), ritrovo = (s.meetAddress||'').trim();
   linkRow('CAMPO DI GIOCO', testoLuogo(luogo), luogoUrl(luogo));
   linkRow('RITROVO', ritrovo || 'Al campo di gioco', ritrovo ? venueUrl(ritrovo) : '');
-  cellRow('NOTE', s.convNotes, 180, 32); y += 32 + 22;
+  // Note: vanno a capo e la riga cresce quanto serve (al massimo 8 righe), senza uscire dal riquadro
+  {
+    const lw = 180, maxW = tw - lw - 20, lh = 17;
+    font(x, 12.5, 600);
+    const righe = [];
+    for(const para of String(s.convNotes || '').split('\n')){
+      let line = '';
+      for(const w of para.split(/\s+/).filter(Boolean)){
+        const prova = line ? line + ' ' + w : w;
+        if(x.measureText(prova).width > maxW && line){ righe.push(line); line = w; } else line = prova;
+      }
+      righe.push(line);
+    }
+    while(righe.length > 1 && !righe[righe.length-1]) righe.pop();
+    const vis = righe.slice(0, 8);
+    if(righe.length > 8) vis[7] = vis[7].replace(/\s*\S*$/, '') + ' …';
+    const h = Math.max(32, vis.length * lh + 14);
+    x.fillStyle = LABEL_BG; x.fillRect(mx, y, lw, h);
+    x.strokeStyle = LINE_C; x.lineWidth = 1; x.strokeRect(mx, y, lw, h); x.strokeRect(mx+lw, y, tw-lw, h);
+    T(x, 'NOTE', mx+10, y+h/2+1, {size:12, weight:700, base:'middle', color:INK});
+    if(!vis.join('').trim()) T(x, '—', mx+lw+10, y+h/2+1, {size:13, weight:600, base:'middle'});
+    else vis.forEach((r, i) => T(x, r, mx+lw+10, y + 7 + lh*i + lh/2 + 1, {size:12.5, weight:600, base:'middle'}));
+    y += h + 22;
+  }
   const sorted = S.players.slice().sort((a,b)=>a.name.localeCompare(b.name,'it'));
   const statW = 74, nameW = tw - statW*5;
   x.fillStyle = INK; x.fillRect(mx, y, tw, 26);
