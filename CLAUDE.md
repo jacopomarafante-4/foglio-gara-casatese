@@ -26,6 +26,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   fuori dal controllo login del proxy.
 - Dati: tabella `docs` a chiave/valore (`shared/teams`, `roster/<squadra>`, …), permessi in
   `supabase/sicurezza.sql`: admin per email, mister solo via funzioni `coach_*` col PIN.
+- Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, solo admin);
+  `code` sulla squadra = vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo.
+  `coach_team()` non restituisce mai PIN. La tabella del team scouting con i PIN sta in Società (solo admin).
 - `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
   (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
   senza accesso valido torna a `/`. Fuori (vecchio GitHub Pages) usa ancora la sua schermata: PIN squadra
@@ -70,10 +73,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   funzioni `puo_segnalare()`, `puo_vedere_annata()`; solo admin/direttori cambiano `stato` (trigger)
 - 0003: `sedi`, `squadre_seguite`, `gare` (casa/trasferta + coordinate), `gare_osservatori`
 - 0004: rinomina ruoli `responsabile`→`direttore`, `osservatore`→`scout`; blocco app dei mister
-- 0005: `codici_accesso` (PIN degli account personali, leggibili da admin/direttori)
+- 0005: `codici_accesso` (PIN degli account personali; dalla 0008 leggibili solo dall'admin)
 - 0006: `email_per_pin()` per l'accesso col solo PIN
-- 0007: segnalazioni dei mister dal Portale: `coach_segnala()`, `coach_societa()` (col PIN squadra),
-  colonne `segnalazioni.squadra` e `giocatori.segnalato_da_squadra` (autore = "Mister <squadra>")
+- 0007: segnalazioni dei mister dal Portale: `coach_segnala()`, `coach_societa()`, `mister_for_pin()`,
+  colonne `segnalazioni.squadra` e `giocatori.segnalato_da_squadra` (firma "<mister> · <categoria>")
+- 0008: PIN personali dei mister (`team_for_pin`, `coach_team` riscritte); `codici_accesso` leggibile solo dall'admin
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

@@ -6,9 +6,10 @@
 -- I mister non hanno un account: entrano nel Portale col PIN della squadra.
 -- Dal Portale possono SOLO segnalare un giocatore (niente lettura dell'archivio):
 -- una funzione verifica il PIN (public.team_for_pin, da sicurezza.sql) e salva
--- la segnalazione firmata con la categoria della squadra (es. "Mister Under 15").
+-- la segnalazione firmata col nome del mister e la categoria della squadra
+-- (es. "Luca Ponzoni · Under 15"; solo la categoria se si entra col PIN di squadra).
 
-alter table public.segnalazioni add column if not exists squadra text;   -- es. "Under 14 - Provinciale" (autore_id vuoto)
+alter table public.segnalazioni add column if not exists squadra text;   -- es. "Luca Ponzoni · Under 15" (autore_id vuoto)
 alter table public.giocatori    add column if not exists segnalato_da_squadra text;
 
 -- Nome di società confrontabile: minuscole, senza accenti, spazi e punteggiatura
@@ -17,6 +18,18 @@ create or replace function public.normalizza_nome(s text)
 returns text language sql immutable as $$
   select regexp_replace(lower(translate(coalesce(s, ''), 'àáâäèéêëìíîïòóôöùúûüÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜ',
                                                          'aaaaeeeeiiiioooouuuuAAAAEEEEIIIIOOOOUUUU')), '[^a-z0-9]', '', 'g')
+$$;
+
+-- Nome del mister che ha questo PIN personale (null se è il PIN di squadra).
+-- Le squadre stanno nel documento shared/teams: "coaches": [{id, name, code}] (vedi 0008).
+create or replace function public.mister_for_pin(p_pin text)
+returns text language sql stable security definer set search_path = public as $$
+  select c ->> 'name'
+  from public.docs d,
+       jsonb_array_elements(coalesce(d.data -> 'items', '[]'::jsonb)) t,
+       jsonb_array_elements(coalesce(t -> 'coaches', '[]'::jsonb)) c
+  where d.path = 'shared/teams' and coalesce(p_pin, '') <> '' and c ->> 'code' = p_pin
+  limit 1;
 $$;
 
 -- Elenco società per il suggerimento nel form del mister (solo i nomi)
@@ -48,8 +61,9 @@ begin
     perform pg_sleep(1);
     raise exception 'PIN non valido' using errcode = '28000';
   end if;
-  -- La categoria distingue le squadre (il nome spesso è quello del club per tutte)
-  select coalesce(nullif(trim(t ->> 'category'), ''), t ->> 'name') into v_squadra
+  -- Firma: mister + categoria (il nome della squadra spesso è quello del club per tutte)
+  select concat_ws(' · ', public.mister_for_pin(p_pin), coalesce(nullif(trim(t ->> 'category'), ''), t ->> 'name'))
+    into v_squadra
   from public.docs d, jsonb_array_elements(d.data -> 'items') t
   where d.path = 'shared/teams' and t ->> 'id' = v_team;
 
@@ -94,6 +108,7 @@ begin
           coalesce(nullif(p_dati ->> 'data', '')::date, current_date));
 end $$;
 
+revoke all on function public.mister_for_pin(text) from public, anon, authenticated;
 revoke all on function public.coach_societa(text) from public;
 revoke all on function public.coach_segnala(text, jsonb) from public;
 grant execute on function public.coach_societa(text) to anon, authenticated;

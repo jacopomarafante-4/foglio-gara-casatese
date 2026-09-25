@@ -75,13 +75,13 @@ function nameLayout(tokens){
 
 /* ---------- Render ---------- */
 function renderChrome(){
-  const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.name)}${t.coach?' · '+esc(t.coach):''}</option>`).join('');
+  const opts = `<option value="admin" ${isAdmin()?'selected':''}>Amministratore (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
   $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
   $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.name)}</option>`).join('')}</select>` : ''}${IN_APP_UNICA?'<a class="logout" href="/home">Scouting Hub</a>':''}<button class="logout" data-act="logout">Esci</button>`
-    : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span><button class="logout" data-act="logout">Esci</button>`;
+    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}${IN_APP_UNICA?'<a class="logout" href="/home">Scouting Hub</a>':''}<button class="logout" data-act="logout">Esci</button>`
+    : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla scelta dei pannelli solo per l'admin: il mister resterebbe senza squadra
   if(IN_APP_UNICA && isAdmin()) $('#homelink').href = '/'; else $('#homelink').removeAttribute('href');
   renderNav();
@@ -150,34 +150,51 @@ function render(){
 }
 
 function viewSquadre(){
-  const cards = S.teams.map(t => `
+  const cards = S.teams.map(t => {
+    const mister = (t.coaches||[]).map(c => `
+        <div class="coachrow">
+          <input data-coach="${t.id}:${c.id}" value="${esc(c.name)}" placeholder="Nome e cognome" aria-label="Nome del mister">
+          ${c.code ? `<span class="code" title="PIN personale">${esc(c.code)}</span>` : '<span class="nocode">Senza PIN</span>'}
+          <button class="btn small ${c.code?'ghost':'primary'}" data-coachpin="${t.id}:${c.id}">${c.code ? 'Rigenera' : 'Genera PIN'}</button>
+          <button class="iconbtn" aria-label="Togli ${esc(c.name||'mister')}" data-coachdel="${t.id}:${c.id}">×</button>
+        </div>`).join('');
+    return `
     <div class="teamcard">
-      <div class="hd"><strong>${esc(t.name||'Senza nome')}</strong><span class="stat">${t.id===curTeam?'Squadra attiva':''}</span></div>
-      <div class="grid">
-        <div><label class="f">Nome squadra</label><input data-team="${t.id}" data-tf="name" value="${esc(t.name)}"></div>
-        <div><label class="f">Categoria</label><input data-team="${t.id}" data-tf="category" value="${esc(t.category)}" placeholder="Es. Juniores"></div>
-        <div><label class="f">Mister</label><input data-team="${t.id}" data-tf="coach" value="${esc(t.coach)}" placeholder="Nome del mister"></div>
-      </div>
-      <div class="row" style="margin-top:12px;justify-content:space-between">
-        <div class="row"><span class="note">PIN squadra</span><span class="code">${esc(t.code)}</span><button class="btn small ghost" data-teamcode="${t.id}">Rigenera</button></div>
+      <div class="hd">
+        <div><strong>${esc(t.category || t.name || 'Senza nome')}</strong>${t.category && t.name ? `<span class="stat"> · ${esc(t.name)}</span>` : ''}</div>
         <div class="row">
           <button class="btn small" data-teamgo="${t.id}">Gestisci rosa</button>
-          <button class="btn small" data-teamas="${t.id}">Vedi come mister</button>
-          <button class="iconbtn" aria-label="Elimina ${esc(t.name)}" data-teamdel="${t.id}">×</button>
+          <button class="btn small ghost" data-teamas="${t.id}">Vedi come mister</button>
+          <button class="iconbtn" aria-label="Elimina ${esc(t.category||t.name)}" data-teamdel="${t.id}">×</button>
         </div>
       </div>
-    </div>`).join('');
+      <div class="coachlist">
+        <div class="coachhd">Mister</div>
+        ${mister || '<p class="note">Nessun mister: aggiungilo e genera il suo PIN.</p>'}
+        <button class="btn small ghost" data-coachadd="${t.id}">+ Aggiungi mister</button>
+      </div>
+      ${t.code ? `<p class="note legacy">PIN di squadra condiviso (vecchio): <span class="code">${esc(t.code)}</span>
+        <button class="linkbtn" data-teamcodeoff="${t.id}">Disattiva</button> — quando ogni mister ha il suo PIN, disattivalo.</p>` : ''}
+      <details class="teamedit"><summary>Nome e categoria</summary>
+        <div class="grid">
+          <div><label class="f">Nome squadra</label><input data-team="${t.id}" data-tf="name" value="${esc(t.name)}"></div>
+          <div><label class="f">Categoria</label><input data-team="${t.id}" data-tf="category" value="${esc(t.category)}" placeholder="Es. Under 15"></div>
+        </div>
+      </details>
+    </div>`;
+  }).join('');
   return `<section class="panel">
-    <h2>Squadre</h2>
-    <p class="hint">Questa scheda la vedi solo tu. Ogni mister entra con il link della sua squadra e trova solo la sua rosa e la sua formazione. Schemi e moduli sono uguali per tutti.</p>
+    <h2>Squadre e mister</h2>
+    <p class="hint">Solo tu vedi questa pagina. Ogni mister entra dalla pagina d'ingresso con il suo PIN personale e trova solo la sua squadra.</p>
     ${cards || '<p class="empty">Nessuna squadra ancora.</p>'}
     <div class="row" style="margin-top:14px"><button class="btn primary" data-act="teamadd">Aggiungi squadra</button></div>
   </section>
+  ${viewTeamScouting()}
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
-      <div><b>Amministratore</b>Crea le squadre, inserisce le rose, carica e disegna gli schemi dei calci piazzati. Può aprire qualsiasi squadra e scaricare il report PDF delle statistiche.</div>
-      <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test e vede le statistiche della squadra.</div>
+      <div><b>Amministratore</b>Crea le squadre e i PIN dei mister, inserisce le rose, carica e disegna gli schemi dei calci piazzati. Può aprire qualsiasi squadra e scaricare il report PDF delle statistiche.</div>
+      <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test, vede le statistiche e segnala giocatori allo scouting.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>
   </section>
@@ -185,6 +202,35 @@ function viewSquadre(){
     <h3 style="margin-top:0">Backup</h3>
     <p class="hint">Scarica un file con tutti i dati attuali (squadre, rose, schemi, formazioni): una copia di sicurezza da tenere da parte.</p>
     <button class="btn" data-act="exportbackup">Esporta backup</button>
+  </section>`;
+}
+/* Team scouting (scout e direttori) con i PIN personali: letto dal database con la sessione admin
+   (profiles + codici_accesso, visibili solo all'admin dalla 0008). Prima stava nella Home di Scouting Hub. */
+let scoutTeam = null;
+function viewTeamScouting(){
+  if(!supabaseClient || !sessionOk(supaSession)) return '';
+  if(scoutTeam === null){
+    scoutTeam = 'loading';
+    Promise.all([
+      supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').in('ruolo', ['direttore','scout']).order('ruolo').order('cognome'),
+      supabaseClient.from('codici_accesso').select('profilo_id, pin'),
+    ]).then(([p, c]) => {
+      const pin = new Map((c.data||[]).map(x => [x.profilo_id, x.pin]));
+      scoutTeam = (p.data||[]).map(x => ({...x, pin: pin.get(x.id) || ''}));
+      if(tab==='squadre') render();
+    }).catch(() => { scoutTeam = []; });
+  }
+  const righe = Array.isArray(scoutTeam) ? scoutTeam.map(x => `<tr>
+      <td class="nm">${esc([x.nome, x.cognome].filter(Boolean).join(' ') || x.email)}</td>
+      <td>${x.ruolo==='direttore' ? 'Direttore' : 'Scout'}</td>
+      <td>${x.pin ? `<span class="code">${esc(x.pin)}</span>` : '–'}</td>
+      <td>${x.attivo ? 'Attivo' : 'Sospeso'}</td></tr>`).join('') : '';
+  return `<section class="panel">
+    <h3 style="margin-top:0">Team scouting</h3>
+    <p class="hint">Scout e direttori entrano in Scouting Hub con il loro PIN personale. Solo tu vedi i PIN.</p>
+    ${scoutTeam === 'loading' ? '<p class="note">Caricamento…</p>'
+      : righe ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Nome</th><th>Ruolo</th><th>PIN</th><th>Stato</th></tr></thead><tbody>${righe}</tbody></table></div>`
+      : '<p class="note">Nessuno scout o direttore.</p>'}
   </section>`;
 }
 

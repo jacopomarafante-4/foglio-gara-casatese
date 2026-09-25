@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getProfilo } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETICHETTA_RUOLO, nomeCompleto, puoSegnalare, vedeTutto, type Profilo } from '@/lib/ruoli';
+import { ETICHETTA_RUOLO, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { STATI, type StatoGiocatore } from '@/lib/tipi';
 import { dataBreve, dataOraBreve, istanteTraOre } from '@/lib/utili';
 
@@ -18,14 +18,12 @@ type MiaGara = {
   gara: { id: string; data_ora: string; categoria: string; casa_nome: string; trasferta_nome: string } | null;
 };
 
-type CodicePin = { profilo_id: string; pin: string };
-
 export default async function Home() {
   const profilo = (await getProfilo())!;
   const tutto = vedeTutto(profilo.ruolo);
   const supabase = await createClient();
 
-  const [ultime, mieGare, conteggi, team, pin] = await Promise.all([
+  const [ultime, mieGare, conteggi] = await Promise.all([
     supabase
       .from('segnalazioni')
       .select('*, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
@@ -37,10 +35,6 @@ export default async function Home() {
       .eq('profilo_id', profilo.id)
       .gte('gara.data_ora', istanteTraOre(-3)),
     tutto ? supabase.from('giocatori').select('stato') : Promise.resolve({ data: null }),
-    tutto
-      ? supabase.from('profiles').select('id, email, nome, cognome, ruolo, annate, attivo').order('ruolo').order('cognome')
-      : Promise.resolve({ data: null }),
-    tutto ? supabase.from('codici_accesso').select('profilo_id, pin') : Promise.resolve({ data: null }),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
@@ -52,8 +46,6 @@ export default async function Home() {
   for (const r of (conteggi.data as { stato: StatoGiocatore }[] | null) ?? []) {
     perStato.set(r.stato, (perStato.get(r.stato) ?? 0) + 1);
   }
-  const persone = (team.data as Profilo[] | null) ?? [];
-  const pinPerProfilo = new Map(((pin.data as CodicePin[] | null) ?? []).map((p) => [p.profilo_id, p.pin]));
 
   return (
     <div className="space-y-10">
@@ -146,38 +138,6 @@ export default async function Home() {
         </section>
       </div>
 
-      {tutto && (
-        <section>
-          <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-2xl font-bold">Il team</h2>
-            <span className="text-sm text-grigio">{persone.length} persone</span>
-          </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-linea bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-linea text-grigio">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Nome</th>
-                  <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Ruolo</th>
-                  <th className="px-4 py-3 font-medium">PIN</th>
-                  <th className="px-4 py-3 font-medium">Stato</th>
-                </tr>
-              </thead>
-              <tbody>
-                {persone.map((p) => (
-                  <tr key={p.id} className="border-b border-linea last:border-0">
-                    <td className="px-4 py-3 font-medium">{nomeCompleto(p)}</td>
-                    <td className="px-4 py-3 text-grigio">{p.email}</td>
-                    <td className="px-4 py-3">{ETICHETTA_RUOLO[p.ruolo]}</td>
-                    <td className="px-4 py-3 font-mono">{pinPerProfilo.get(p.id) ?? '–'}</td>
-                    <td className="px-4 py-3">{p.attivo ? 'Attivo' : 'Sospeso'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

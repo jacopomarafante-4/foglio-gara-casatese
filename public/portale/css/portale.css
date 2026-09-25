@@ -309,3 +309,16 @@ a.iconbtn2{filter:none;opacity:1}
 .esito{border-radius:8px;padding:10px 14px;font-weight:600;margin:0 0 14px}
 .esito.ok{background:color-mix(in srgb, var(--grass) 12%, var(--paper));color:var(--grass);border:1px solid var(--grass)}
 .esito.ko{background:color-mix(in srgb, var(--red) 10%, var(--paper));color:var(--red);border:1px solid var(--red)}
+/* Società: squadre con i loro mister e i PIN personali */
+.teamcard .hd{flex-wrap:wrap}
+.coachlist{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
+.coachhd{font-family:var(--cond);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.coachrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto 40px;gap:8px;align-items:center}
+.coachrow .code{min-width:64px;text-align:center}
+.nocode{font-size:13px;color:var(--muted);min-width:64px;text-align:center}
+.coachlist > .btn{justify-self:start}
+.legacy{margin:12px 0 0}
+.teamedit{margin-top:12px}
+.teamedit summary{font-size:14px;color:var(--muted)}
+.teamedit .grid{margin-top:8px}
+@media (max-width:560px){.coachrow{grid-template-columns:minmax(0,1fr) auto 40px}.coachrow .btn{grid-column:1 / -1;grid-row:2}}

@@ -1,8 +1,8 @@
 // =====================================================================
 // Scouting Hub · Crea account "leggeri" con PIN numerico (no email vera)
 // Per scout e direttori: si entra dalla pagina d'ingresso col solo PIN, che
-// è anche la password dell'account. Resta visibile agli admin/direttori dalla
-// Home ("Il team"), salvato in chiaro in public.codici_accesso.
+// è anche la password dell'account. Resta visibile solo all'admin (Portale →
+// Società → Team scouting), salvato in chiaro in public.codici_accesso.
 // Nota: i direttori vedono i contatti delle famiglie; un PIN di 6 cifre è più
 // debole di una password (scelta del club). Mai per l'admin: usa PIN_ADMIN + password.
 //

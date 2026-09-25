@@ -53,7 +53,7 @@ export default async function Ingresso({
           <>
             <AccessoForm next={next} />
             <p className="mt-6 text-sm text-grigio">
-              Mister: PIN della squadra. Scout e direttori: PIN personale. Non ce l’hai? Chiedilo all’admin.
+              Mister, scout e direttori: il tuo PIN personale. Non ce l’hai? Chiedilo all’admin.
             </p>
           </>
         )}

@@ -129,7 +129,20 @@ const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
 const LOCK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function lockNote(t){ return `<div class="lock">${LOCK_ICON}<div>${t}</div></div>`; }
-function genPin(){ let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(S.teams.some(t=>t.code===p)); return p; }
+/* PIN a 4 cifre mai usato: né di squadra né di un mister */
+function genPin(){
+  const usati = new Set(S.teams.flatMap(t => [t.code, ...(t.coaches||[]).map(c => c.code)]).filter(Boolean));
+  let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(usati.has(p)); return p;
+}
+/* Mister di una squadra: "coaches": [{id, name, code}], un PIN personale ciascuno.
+   Le squadre di prima avevano solo il testo "coach" ("Nome, Nome"): diventa l'elenco, senza PIN. */
+function withCoaches(t){
+  if(!Array.isArray(t.coaches)) t.coaches = String(t.coach||'').split(',').map(s => s.trim()).filter(Boolean).map((name, i) => ({id:'m'+i, name, code:''}));
+  return t;
+}
+const coachNames = t => (t?.coaches||[]).map(c => c.name).filter(Boolean).join(', ') || t?.coach || '';
+/* "coach" resta come testo riassuntivo per le parti che lo leggono ancora */
+function syncCoach(t){ t.coach = (t.coaches||[]).map(c => c.name).filter(Boolean).join(', '); }
 let tab = 'home', selectedPlayer = null, openSchemeId = null, selectedToken = null;
 /* boardMode: 'assign' (compiti/giocatori) | 'move' (pedine) | 'draw' (frecce, linee, testi) */
 let boardMode = 'assign', drawTool = null, selectedDraw = null;
@@ -174,7 +187,7 @@ function save(name){
 }
 function applyDoc(name, data){
   if(!data) return;
-  if(name==='teams') S.teams = clone(data.items || []);
+  if(name==='teams') S.teams = clone(data.items || []).map(withCoaches);
   else if(name==='roster') S.players = clone(data.players || []);
   else if(name==='schemes') S.schemes = clone(data.items || []);
   else if(name==='calendar') S.calendar = clone(data.matches || []);
@@ -184,7 +197,8 @@ function applyDoc(name, data){
 function resolveAccess(){
   const m = (location.hash||'').match(/squadra=([\w-]+)/i);
   if(m){
-    const t = S.teams.find(t => (t.code||'').toLowerCase() === m[1].toLowerCase());
+    const pin = m[1].toLowerCase();
+    const t = S.teams.find(t => (t.code||'').toLowerCase() === pin || (t.coaches||[]).some(c => (c.code||'').toLowerCase() === pin));
     if(t){ ROLE = 'coach'; curTeam = t.id; hashLocked = true; return; }
   }
   if(!curTeam || !TEAM()) curTeam = S.teams[0]?.id || null;
@@ -266,7 +280,7 @@ function makeSupabaseDb(client){
    che verificano il PIN e aprono solo i documenti della loro squadra. Niente realtime per loro:
    i documenti si ricontrollano ogni 15 secondi. */
 let secureMode = false, sharedSyncStarted = false;
-let coachPin = null; /* PIN della squadra del mister entrato (serve per segnalare allo scouting) */
+let coachPin = null, misterName = ''; /* PIN e nome del mister entrato (servono per segnalare allo scouting) */
 const stableStr = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 function makeCoachDb(client, pin){
   const known = {};
@@ -306,7 +320,7 @@ async function coachLogin(pin){
   try{ const { data, error } = await supabaseClient.rpc('coach_team', { p_pin: pin }); if(!error) tm = data; }catch(e){}
   if(!tm) return false;
   db = makeCoachDb(supabaseClient, pin); coachPin = pin;
-  S.teams = [tm]; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
+  S.teams = [withCoaches(tm)]; misterName = tm.mister || ''; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
   if(!IN_APP_UNICA && !new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
   db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
   setStatus('Sincronizzato');

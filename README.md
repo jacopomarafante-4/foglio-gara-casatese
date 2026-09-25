@@ -18,7 +18,7 @@ Tutti entrano da `/` digitando **solo il PIN**. Il PIN dice chi sei:
 
 | PIN | Dove si entra |
 |---|---|
-| PIN della **squadra** (4 cifre, dalla scheda Squadre del Portale) | Portale squadre, come mister di quella squadra |
+| PIN **del mister** (4 cifre, generato dall'admin in Portale → Società → Squadre) | Portale squadre, solo la sua squadra |
 | PIN **personale** (6 cifre, creato con `scripts/crea-pin.mjs`) | Scouting Hub (scout e direttori) |
 | PIN **admin** (variabile `PIN_ADMIN`) | poi email e password → Portale squadre; da `/` si sceglie anche Scouting Hub |
 
@@ -36,7 +36,7 @@ chiudendo la scheda) e comunque dopo **6 ore** (`ORE_ACCESSO`).
 | Allenamento | Presenze, Test atletici |
 | Statistiche | Allenamento (presenze, per mese, test), Partite (minuti, gol, gol subiti); report PDF solo admin |
 | Scouting (solo mister) | Segnala un giocatore allo scouting del club (non vede l'archivio) |
-| Società (admin) | Squadre, PIN, backup |
+| Società (admin) | Squadre con i loro mister e i PIN personali, team scouting con i PIN, backup |
 
 La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indietro funziona.
 
@@ -77,8 +77,8 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0007_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
-   segnalazioni dei mister dal Portale
+2. `supabase/migrations/0001_…` → `0008_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+   segnalazioni e PIN personali dei mister
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.
 
@@ -87,8 +87,9 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
   `update public.profiles set ruolo = 'admin' where email = 'tua@email.it';`
 - **Scout e direttori**: elenco in un file JSON (`[{ nome, cognome, email, ruolo }]`, l'email
   può essere segnaposto), poi `node --env-file=.env.local scripts/crea-pin.mjs file.json`.
-  Lo script stampa i PIN: consegnali di persona. Admin e direttori li rivedono nella Home di Scouting Hub.
-- **Mister**: nessun account. Usano il PIN della squadra (Portale → Società → Squadre).
+  Lo script stampa i PIN: consegnali di persona. L'admin li rivede in Portale → Società.
+- **Mister**: nessun account. L'admin li aggiunge sotto la loro squadra (Portale → Società → Squadre)
+  e genera il PIN personale di ciascuno.
 
 ## Pubblicazione su Vercel
 1. vercel.com → **Add New… → Project** → importa il repository GitHub `foglio-gara-casatese`.

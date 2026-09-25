@@ -24,7 +24,7 @@ async function pannello(supabase: Supabase, userId: string, next: string) {
 /**
  * Accesso unico col PIN. Il PIN dice chi sei:
  * - PIN admin (PIN_ADMIN, solo sul server): poi email e password;
- * - PIN di una squadra: Portale squadre come mister;
+ * - PIN di un mister (o il vecchio PIN di squadra): Portale squadre, solo quella squadra;
  * - PIN personale (scout, direttori: tabella codici_accesso): Scouting Hub.
  */
 export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<StatoAccesso> {
@@ -49,7 +49,7 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     return { vai };
   }
 
-  // PIN della squadra: il Portale apre la squadra dal link (#squadra=PIN)
+  // PIN di un mister o della squadra: il Portale apre la squadra dal link (#squadra=PIN)
   const { data: squadra } = await supabase.rpc('coach_team', { p_pin: pin });
   if (squadra) {
     await supabase.auth.signOut({ scope: 'local' }); // su un telefono condiviso non resta aperto un altro account

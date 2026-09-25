@@ -103,7 +103,7 @@ function viewHome(){
       <div class="kpi"><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b><span>Gol fatti-subiti</span></div>
     </div>
     <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="statallen">Statistiche allenamento</button><button class="btn small" data-hgo="statpartite">Statistiche partite</button></div></div>`;
-  return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${T0?.coach?' · Mister '+esc(T0.coach):''}</p></section>
+  return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
     <div class="hgrid">${matchCard}${trCard}${todoCard}${numCard}</div>`;
 }
 document.addEventListener('click', e => {
