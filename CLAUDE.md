@@ -28,17 +28,18 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   fuori dal controllo login del proxy.
 - Dati: tabella `docs` a chiave/valore (`shared/teams`, `roster/<squadra>`, …), permessi in
   `supabase/sicurezza.sql`: admin per email, mister solo via funzioni `coach_*` col PIN.
-- Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, solo admin);
+- Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, admin e direttori);
   `code` sulla squadra = vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo.
   `coach_team()` non restituisce mai PIN.
-- Società (la modifica solo l'admin, i direttori la vedono): squadre con i mister, poi "Scouting" (scout) e "Direttori"
-  mostrati come squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff` (solo admin)
+- Società (la modificano admin e direttori, 0020): squadre con i mister, poi "Scouting" (scout) e "Direttori"
+  mostrati come squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff` (admin e direttori)
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
 - Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area.
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
   `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
-- Direttori nel Portale: vedono tutte le squadre e Società in sola lettura (`readOnly()` in `core.js`: `save()` non scrive
-  e ricarica il dato vero, campi `readonly`, pulsanti di gestione nascosti con `.ro`); nel database `docs` solo in lettura (0011).
+- Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
+  Società `squadre`: `save()` non scrive e ricarica il dato vero, campi `readonly`, pulsanti nascosti con `.ro`); nel database
+  `docs` solo in lettura (0011) tranne `shared/teams`, che scrivono (0020).
   La sessione vale per il Portale se è dell'admin (`ADMIN_EMAIL`) o di un direttore (`staffRole`).
 - `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
   (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
@@ -66,13 +67,13 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - I contatti delle famiglie (quasi tutti minorenni) vanno in una tabella separata leggibile solo
   da admin e responsabile. Nessun dato non tecnico o sensibile nelle note.
 - La service role key si usa negli script in `scripts/` e, nell'app, SOLO in `app/api/staff/route.ts`
-  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è l'admin). Mai nel browser.
+  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è admin o direttore). Mai nel browser.
 - Testi dell'interfaccia in italiano, frasi brevi, verbi chiari ("Salva report", non "Invia").
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
 ## Ruoli
-`admin`, `direttore` (a capo di squadre e scout: vede tutto; **Portale e Società in sola lettura, nello Scouting modifica
-come l'admin**, 0018),
+`admin`, `direttore` (a capo di squadre e scout: vede tutto; **squadre del Portale in sola lettura, Società e Scouting
+li modifica come l'admin**, 0018 e 0020),
 `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`). In `lib/ruoli.ts`: `vedeTutto()` = leggere tutto
 (admin, direttori), `gestisce()` = modificare stati, gare, dati di tutti nello Scouting (admin e direttori, SQL `vede_tutto()`),
 `puoSegnalare()` = admin, direttori e scout.
@@ -124,10 +125,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   script `scripts/unisci-societa.mjs` con un JSON in `private/`
 - 0018: direttori nello Scouting come l'admin: `puo_segnalare()` comprende il direttore, le regole di gestione
   (stati, gare, squadre seguite, sedi, distinte, doppioni, `unisci_giocatori`, `unisci_societa`) usano `vede_tutto()`.
-  Portale (`docs`, 0011), account e PIN restano: direttori solo in lettura, gestione solo admin
+  Portale (`docs`, 0011): direttori solo in lettura (Società e PIN: vedi 0020)
 - 0019: niente più stato `chiuso` (vincolo `giocatori_niente_chiuso`): i chiusi tornati `segnalato`, motivo aggiunto
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
+- 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

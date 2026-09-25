@@ -80,7 +80,7 @@ function renderChrome(){
   $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `${readOnly() ? '<span class="badge dir" title="Vedi tutte le squadre, senza modificare">Direttore · sola lettura</span>' : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
+    ? `${isDirettore() ? `<span class="badge dir" title="Squadre in sola lettura, Società e Scouting modificabili">Direttore${readOnly() ? ' · sola lettura' : ''}</span>` : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla Home del Portale (il PIN del mister non sta nell'indirizzo: resta entrato)
   if(IN_APP_UNICA) $('#homelink').href = '#/home'; else $('#homelink').removeAttribute('href');
@@ -198,7 +198,7 @@ function viewSquadre(){
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
-      <div><b>Amministratore e direttori</b>L'amministratore crea le squadre e i PIN di mister, scout e direttori, inserisce le rose, carica e disegna gli schemi. I direttori vedono tutte le squadre e i PIN senza poterli modificare; nello Scouting invece modificano come l'amministratore.</div>
+      <div><b>Amministratore e direttori</b>L'amministratore crea le squadre e i PIN di mister, scout e direttori, inserisce le rose, carica e disegna gli schemi. I direttori vedono tutte le squadre senza poterle modificare; in Società (squadre, mister, scout, direttori e PIN) e nello Scouting invece modificano come l'amministratore.</div>
       <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test, vede le statistiche e segnala giocatori allo scouting.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>

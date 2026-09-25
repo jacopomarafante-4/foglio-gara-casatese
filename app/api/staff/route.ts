@@ -1,4 +1,4 @@
-// Gestione di scout e direttori dal Portale (Società), solo per l'admin (i direttori guardano soltanto):
+// Gestione di scout e direttori dal Portale (Società), per admin e direttori (0020):
 // crea l'account, genera o rigenera il codice personale (= password dell'account),
 // cambia il nome, sospende o riattiva. Il Portale chiama POST /api/staff con la sessione di chi è entrato.
 import { randomInt } from 'node:crypto';
@@ -43,7 +43,9 @@ async function staffEsistente(db: Servizio, id: string) {
 
 export async function POST(request: Request) {
   const profilo = await getProfilo();
-  if (!profilo || !profilo.attivo || profilo.ruolo !== 'admin') return errore('Solo l’admin.', 403);
+  if (!profilo || !profilo.attivo || (profilo.ruolo !== 'admin' && profilo.ruolo !== 'direttore')) {
+    return errore('Solo admin e direttori.', 403);
+  }
 
   let r: Richiesta;
   try {

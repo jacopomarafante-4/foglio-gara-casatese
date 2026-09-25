@@ -90,9 +90,11 @@ const cookieStorage = {
 const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, IN_APP_UNICA ? { auth: { storage: cookieStorage } } : undefined) : null;
 /* Nell'app unica la stessa sessione può essere di uno scout: qui conta solo quella dell'admin */
 /* Nell'app unica la sessione conta per il Portale se è dell'admin o di un direttore.
-   Il direttore vede tutto (tutte le squadre, Società) ma non modifica: readOnly (0011 nel database). */
+   Il direttore vede tutte le squadre senza modificarle (readOnly, 0011 nel database), ma modifica l'area
+   Società (scheda "squadre" = documento shared/teams, 0020). */
 let staffRole = null;
-const readOnly = () => staffRole === 'direttore';
+const isDirettore = () => staffRole === 'direttore';
+const readOnly = () => isDirettore() && tab !== 'squadre';
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
 const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore')));
 async function loadStaffRole(s){
@@ -181,8 +183,8 @@ function payload(name){
   return clone(S.sheet);
 }
 function save(name){
-  /* Sola lettura (direttori): niente salvataggio, si ricarica il dato vero e la modifica sparisce */
-  if(readOnly()){
+  /* Sola lettura (direttori, tranne Società): niente salvataggio, si ricarica il dato vero e la modifica sparisce */
+  if(isDirettore() && (name !== 'teams' || tab !== 'squadre')){
     setStatus('Sola lettura: nessuna modifica');
     db?.doc(docPath(name)).get().then(snap => { applyDoc(name, snap.data()); render(); }).catch(() => {});
     return;

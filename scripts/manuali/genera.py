@@ -134,8 +134,9 @@ gare da andare a vedere, storico delle squadre in cui hanno giocato.</li>
 <tr><th style="width:18%">Ruolo</th><th style="width:25%">Dove entra</th><th>Cosa vede e cosa può fare</th></tr>
 <tr><td><b>Amministratore</b></td><td>Portale, Società e Scouting</td><td>Gestisce tutto: squadre, rose, calendari, schemi, PIN di tutti,
 stati dei giocatori osservati, gare da vedere, importazione delle distinte.</td></tr>
-<tr><td><b>Direttore</b></td><td>Portale (tutte le squadre), Società, Scouting</td><td><b>Portale e Società: vede tutto, non modifica.</b>
-<b>Scouting: modifica come l'amministratore</b> (segnala, valuta, cambia gli stati, gestisce gare e doppioni).
+<tr><td><b>Direttore</b></td><td>Portale (tutte le squadre), Società, Scouting</td><td><b>Squadre: vede tutto, non modifica.</b>
+<b>Società e Scouting: modifica come l'amministratore</b> (squadre, mister, scout, direttori e PIN; segnala, valuta,
+cambia gli stati, gestisce gare e doppioni).
 Vede anche PIN e contatti delle famiglie.</td></tr>
 <tr><td><b>Mister</b></td><td>Portale, solo la sua squadra</td><td>Prepara le partite (convocazioni, formazione, foglio gara), segna presenze,
 test e tabellini, guarda le statistiche, segnala giocatori allo scouting. Non vede l'archivio scouting.</td></tr>
@@ -462,35 +463,35 @@ Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anch
 """
 
 # ---------------------------------------------------------------- DIRETTORI
-direttori = copertina('Manuale del direttore', 'Squadre e Società in lettura, Scouting completo.',
+direttori = copertina('Manuale del direttore', 'Squadre in lettura, Società e Scouting completi.',
                       'i direttori dell’Academy') + f"""
 <section>
 <h2>1. In breve</h2>
-<div class="box blu"><b class="t">Squadre in lettura, Scouting completo</b>
-Nel Portale delle squadre e in Società controlli: vedi ogni squadra e i PIN, ma le modifiche le fanno l'amministratore
-e i mister. Nello Scouting invece lavori come l'amministratore: segnali, valuti, cambi gli stati dei giocatori,
-gestisci le gare e unisci le schede doppie. Vedi anche i contatti delle famiglie.</div>
+<div class="box blu"><b class="t">Squadre in lettura, Società e Scouting completi</b>
+Nelle squadre controlli: vedi rose, partite, presenze e statistiche di tutte, ma le modifiche le fanno i mister e
+l'amministratore. In <b>Società</b> e nello <b>Scouting</b> invece lavori come l'amministratore: squadre, mister,
+scout, direttori e PIN; segnalazioni, valutazioni, stati, gare e schede doppie. Vedi anche i contatti delle famiglie.</div>
 <div class="si">
 <div class="col"><h3>Puoi</h3><ul class="ok">
 <li>Aprire il Portale di <b>tutte le squadre</b>: rosa, calendario, convocazioni, formazioni, presenze, statistiche</li>
-<li>Vedere l'area <b>Società</b>: squadre, mister, scout, direttori e i loro PIN</li>
+<li>In <b>Società</b>: creare e togliere squadre, aggiungere mister, scout e direttori, generare e rigenerare i PIN</li>
 <li>Vedere l'app <b>come la vede un mister</b> (Anteprima)</li>
 <li>Nello <b>Scouting</b>: segnalare, valutare, cambiare gli stati, gestire gare e squadre seguite,
 unire le schede doppie, segnarti su una gara ("Ci vado io")</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
-<li>Modificare squadre, rose, partite, presenze, formazioni nel Portale</li>
-<li>Generare o cambiare PIN, aggiungere persone</li></ul></div>
+<li>Modificare rose, calendari, partite, convocazioni, formazioni, presenze, test e schemi delle squadre</li></ul></div>
 </div>
 {ACCESSO}
 <p>Con il tuo PIN entri nel <b>Portale</b>; lo Scouting è l'area <b>Scouting</b> nella barra in alto.
-Nel Portale i campi si leggono ma non si scrivono; nello Scouting hai gli stessi pulsanti dell'amministratore.</p>
+Nelle schede delle squadre i campi si leggono ma non si scrivono (in alto: DIRETTORE · SOLA LETTURA);
+in Società e nello Scouting hai gli stessi pulsanti dell'amministratore.</p>
 </section>
 
 <section>
 <h2>2. Le tue responsabilità</h2>
 <ul>
-<li><b>Riservatezza massima</b>: vedi i PIN di tutti e i contatti delle famiglie. Non si comunicano a nessuno;
-un PIN lo consegna o rigenera l'amministratore.</li>
+<li><b>Riservatezza massima</b>: vedi i PIN di tutti e i contatti delle famiglie. Non si comunicano a nessuno,
+se non alla persona interessata, quando la aggiungi o le rigeneri il PIN.</li>
 <li><b>Controllo</b>: verifica che le squadre tengano aggiornati convocazioni, presenze e tabellini, e che lo scouting segnali
 e valuti con regolarità e qualità.</li>
 <li><b>Decisioni</b>: le decisioni sui giocatori osservati (contattare, invitare, inserire, chiudere) le registri tu
@@ -511,7 +512,7 @@ nello Scouting, cambiando lo stato; quelle sulle squadre comunicale all'amminist
 <p><b>Anteprima</b>: con "Guarda l'app come" vedi esattamente cosa vede il mister di una squadra.</p>''', 'La Home di una squadra')}
 <h3>Società</h3>
 <p>Le schede delle <b>squadre</b> con i loro mister, poi <b>Scouting</b> (gli scout) e <b>Direttori</b>, ognuno con il suo PIN.
-Tu le vedi soltanto: per aggiungere persone o cambiare un PIN chiedi all'amministratore.</p>
+Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigenerare o disattivare i PIN e sospendere un account.</p>
 </section>
 
 <section>
