@@ -168,7 +168,13 @@ const uid = p => p + Math.random().toString(36).slice(2,9);
 const clone = o => JSON.parse(JSON.stringify(o));
 const P = id => S.players.find(p => p.id === id);
 function fmtDate(d){ if(!d) return ''; const [y,m,g] = d.split('-'); return g ? `${g}/${m}/${y}` : d; }
-function surname(n){ return (n||'').trim(); }
+/* Solo il cognome: nelle rose i nomi sono "Cognome Nome" ("De Luca Marco" → "De Luca") */
+function surname(n){
+  const w = (n||'').trim().split(/\s+/).filter(Boolean);
+  // "De Luca", "Di Stefano", "Dal Molin": la particella fa parte del cognome ("D'Angelo" è già una parola sola)
+  const particella = /^(de|di|da|del|della|dello|dei|degli|dal|dalla|lo|la|li|van|von|el|al|mc|san|santa)$/i;
+  return w.length > 2 && particella.test(w[0]) ? w.slice(0, 2).join(' ') : (w[0] || '');
+}
 function setStatus(t){ $('#status').textContent = t; }
 
 /* ---------- Salvataggio ---------- */

@@ -314,7 +314,8 @@ posizione (vicino al bordo dello schermo la pagina scorre da sola).</li>
 {fig('p-piazzati', '''<h3>Piazzati</h3>
 <p>Gli schemi (angoli e punizioni, a favore e a sfavore) sono <b>comuni a tutte le squadre</b> e li carica la società.</p><ul>
 <li>Tocca uno schema per <b>selezionarlo</b> per questa partita.</li>
-<li>Assegna compiti e giocatori: si riempiono anche da soli dalla formazione, in base al numero di ruolo.</li>
+<li>Assegna compiti e giocatori: si riempiono anche da soli dalla formazione, in base al numero di ruolo.
+Sul campo ci sono solo i numeri; sotto (e nel PDF, a destra) l'elenco dei compiti con numero e cognome.</li>
 <li>Puoi spostare le pedine o disegnare frecce <b>solo per la tua partita</b>: lo schema per gli altri non cambia.</li></ul>''', 'Piazzati')}
 {fig('p-pdf', '''<h3>Foglio gara PDF</h3>
 <p>Anteprima e <span class="k">Scarica PDF</span>: prima pagina con distinta e formazione, poi una pagina per ogni schema selezionato.

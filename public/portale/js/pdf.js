@@ -156,7 +156,7 @@ function schemePage(sc, page, total){
     const {p} = tokenPlayer(sc, t); const col = tokColor(sc, t, rm);
     disc(x, X(t.x), Y(t.y), r, col, p ? (matchNum(p.id)||t.slot) : t.slot, {hollow:!p, size:21});
     if(t.tag) T(x, t.tag, X(t.x), Y(t.y)-r-7, {size:18, weight:700, align:'center', color:RED, halo:3});
-    if(p){ const L2 = nl[t.id]; T(x, surname(p.name), X(t.x), Y(t.y)+r+(L2.low?29:14), {size:12.5, weight:700, align:'center', halo:3.5, max:Math.min(96, L2.span*sx-8)}); }
+    // sul campo solo il numero: numero e cognome sono nell'elenco dei compiti a destra
   });
   // nota e legenda sotto il campo
   let ny = oy + fh + 30;
@@ -183,7 +183,7 @@ function schemePage(sc, page, total){
     toks.slice().sort((a,b)=> (a.tag&&b.tag&&!isNaN(a.tag)&&!isNaN(b.tag)) ? a.tag-b.tag : a.slot-b.slot).forEach(t => {
       const {p, override} = tokenPlayer(sc, t);
       disc(x, rx+24, gy-lh*0.3, Math.min(11, lh*0.42), col, p ? (matchNum(p.id)||t.slot) : t.slot, {hollow:!p, size:Math.min(13, lh*0.5)});
-      T(x, p ? p.name : `Ruolo ${t.slot} da assegnare`, rx+44, gy-lh*0.3+1, {size:Math.min(15.5, lh*0.62), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:rw-60});
+      T(x, p ? surname(p.name) + (override ? ' *' : '') : `Ruolo ${t.slot} da assegnare`, rx+44, gy-lh*0.3+1, {size:Math.min(15.5, lh*0.62), weight:p?600:500, color:p?INK:MUTED, base:'middle', max:rw-60});
       if(t.tag) T(x, t.tag, W-36, gy-lh*0.3+1, {size:Math.min(14,lh*.55), weight:700, color:RED, align:'right', base:'middle'});
       gy += lh;
     });

@@ -704,6 +704,20 @@ const DRAW_TOOLS = [
   ['arrow','Freccia'], ['arrow-dash','Freccia tratteggiata'],
   ['line','Linea'], ['line-dash','Linea tratteggiata'], ['text','Testo']
 ];
+/* Sotto il campo dei piazzati: per ogni compito, numero e cognome (sul campo ci sono solo i numeri) */
+function compitiList(sc, rm){
+  const gruppi = new Map();
+  effTokens(sc).forEach(t => { const k = (t.role||'').trim() || 'Altri'; if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(t); });
+  const righe = [...gruppi.entries()].sort((a,b) => (a[0]==='Altri') - (b[0]==='Altri')).map(([role, toks]) => {
+    const col = rm.get(role) || 'var(--ink)';
+    const chi = toks.slice().sort((a,b) => a.slot-b.slot).map(t => {
+      const {p, override} = tokenPlayer(sc, t);
+      return `<span class="scomp${p?'':' vuoto'}"><b style="background:${p?col:'transparent'};border-color:${col};color:${p?'#fff':col}">${p ? (matchNum(p.id)||t.slot) : t.slot}</b>${p ? esc(surname(p.name)) + (override?' *':'') : 'da assegnare'}${t.tag?` <i>${esc(t.tag)}</i>`:''}</span>`;
+    }).join('');
+    return `<div class="scomprow"><span class="scompr"><i style="background:${col}"></i>${esc(role)}</span><div class="scompp">${chi}</div></div>`;
+  }).join('');
+  return righe ? `<div class="scompiti">${righe}</div>` : '';
+}
 function viewScheme(){
   const sc = S.schemes.find(s => s.id===openSchemeId);
   if(!sc){ openSchemeId=null; return viewSchemes(); }
@@ -723,7 +737,7 @@ function viewScheme(){
       <circle r="1.75" fill="${p?col:'#fff'}" stroke="${p?'#fff':col}" stroke-width="${p?.3:.3}" ${p?'':'stroke-dasharray=".6 .4"'}/>
       <text y=".62" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="1.85" fill="${p?'#fff':col}">${lbl}</text>
       ${t.tag?`<text y="-2.35" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.4" fill="#C8102E">${esc(t.tag)}</text>`:''}
-      ${p?`<text y="${nl[t.id].low?4.6:3.25}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.1" fill="#15202B" stroke="#fff" stroke-width=".35" paint-order="stroke">${esc(surname(p.name))}${override?' *':''}</text>`:''}
+      ${p && override ? `<text x="1.55" y="-1.15" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.5" fill="#1F5FA8" stroke="#fff" stroke-width=".3" paint-order="stroke">*</text>` : ''}
     </g>`;
   }).join('');
   const legend = [...rm.entries()].map(([r,c]) => `<span><i style="background:${c}"></i>${esc(r)}</span>`).join('');
@@ -781,6 +795,7 @@ function viewScheme(){
       ${drawMode ? '<line id="draftline" x1="0" y1="0" x2="0" y2="0" stroke="#C8102E" stroke-width=".35" opacity="0" pointer-events="none"/>' : ''}
     </svg>
     <div class="legend">${legend}</div>
+    ${compitiList(sc, rm)}
     ${moveMode && A ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : ''}
     ${boardMode==='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>` : ''}
     ${boardMode!=='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetedits" ${hasEdits?'':'disabled'}>Ripristina originale</button></div>` : ''}
