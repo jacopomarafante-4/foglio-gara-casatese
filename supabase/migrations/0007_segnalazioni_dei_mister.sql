@@ -6,9 +6,9 @@
 -- I mister non hanno un account: entrano nel Portale col PIN della squadra.
 -- Dal Portale possono SOLO segnalare un giocatore (niente lettura dell'archivio):
 -- una funzione verifica il PIN (public.team_for_pin, da sicurezza.sql) e salva
--- la segnalazione firmata con il nome della squadra.
+-- la segnalazione firmata con la categoria della squadra (es. "Mister Under 15").
 
-alter table public.segnalazioni add column if not exists squadra text;   -- es. "Juniores" (autore_id vuoto)
+alter table public.segnalazioni add column if not exists squadra text;   -- es. "Under 14 - Provinciale" (autore_id vuoto)
 alter table public.giocatori    add column if not exists segnalato_da_squadra text;
 
 -- Nome di società confrontabile: minuscole, senza accenti, spazi e punteggiatura
@@ -48,7 +48,8 @@ begin
     perform pg_sleep(1);
     raise exception 'PIN non valido' using errcode = '28000';
   end if;
-  select t ->> 'name' into v_squadra
+  -- La categoria distingue le squadre (il nome spesso è quello del club per tutte)
+  select coalesce(nullif(trim(t ->> 'category'), ''), t ->> 'name') into v_squadra
   from public.docs d, jsonb_array_elements(d.data -> 'items') t
   where d.path = 'shared/teams' and t ->> 'id' = v_team;
 
