@@ -48,9 +48,12 @@ La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indiet
 - **Valutazione**: report a 4 aree con voto 1–5, note e giudizio finale.
 - **Pipeline**: Segnalato → Da rivedere → Contattato → Invitato → In prova → Inserito, oppure Chiuso;
   anche come vista a colonne per stato (Giocatori → Per stato).
+- **Squadra e prossime gare** nella scheda del giocatore: società + categoria (dall'annata, correggibile), e le
+  partite della sua squadra caricate in Gare, con ora, campo e mappa.
 - **Eventi** nella scheda del giocatore: open day, provini, allenamenti di prova, con presenza ed esito.
 - **Doppioni** (admin): schede dello stesso giocatore scritte in modi diversi, da unire in una.
-- **Gare da vedere**: gare dei prossimi 7 giorni vicino a Casatenovo/Merate, "Ci vado io".
+- **Gare da vedere**: gare dei prossimi 7 giorni vicino a Casatenovo/Merate, "Ci vado io"; sotto ogni partita
+  i giocatori segnalati che giocano in quelle squadre.
 
 ## Cosa ti serve
 - Mac con **Node.js 20.9 o più recente** (`node -v`)
@@ -81,7 +84,7 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0012_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+2. `supabase/migrations/0001_…` → `0013_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
    segnalazioni e PIN personali dei mister, permessi dei direttori
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.

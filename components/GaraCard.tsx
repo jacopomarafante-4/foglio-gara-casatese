@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { annullaPrenotazione, prenotaGara } from '@/app/(app)/gare/actions';
+import { StatoBadge } from '@/components/StatoBadge';
 import type { GaraArricchita } from '@/lib/gare';
 
 export function GaraCard({
@@ -15,7 +17,8 @@ export function GaraCard({
   });
   const seguiteId = new Set(gara.seguite.map((s) => s.societa_id));
   const ciVado = gara.osservatori.some((o) => o.id === mioId);
-  const scoperta = gara.seguite.length > 0 && gara.osservatori.length === 0;
+  const giocatori = gara.giocatori ?? [];
+  const scoperta = (gara.seguite.length > 0 || giocatori.length > 0) && gara.osservatori.length === 0;
 
   return (
     <article
@@ -56,6 +59,25 @@ export function GaraCard({
             {s.motivo ? `: ${s.motivo}` : ' è tra le squadre seguite'}
           </p>
         ))}
+
+        {giocatori.length > 0 && (
+          <div className="mt-2 rounded-md bg-blu/5 px-2 py-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-grigio">
+              {giocatori.length === 1 ? 'Giocatore segnalato' : `${giocatori.length} giocatori segnalati`}
+            </p>
+            <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+              {giocatori.map((x) => (
+                <li key={x.id} className="flex items-center gap-1.5 text-sm">
+                  <Link href={`/giocatori/${x.id}`} className="font-semibold hover:text-blu">
+                    {[x.cognome, x.nome].filter(Boolean).join(' ') || x.descrizione}
+                  </Link>
+                  <span className="text-grigio">{x.annata}</span>
+                  <StatoBadge stato={x.stato} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <p className="text-sm">

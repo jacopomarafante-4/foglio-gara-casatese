@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { nomeCompleto } from '@/lib/ruoli';
 import { distanzaKm, normalizza } from '@/lib/utili';
+import { giocaInGara } from '@/lib/categorie';
+import type { StatoGiocatore } from '@/lib/tipi';
 
 type Coord = { lat: number | null; lon: number | null };
 
@@ -35,7 +37,26 @@ export type Gara = {
   }[];
 };
 
+/** Giocatore osservato che può giocare in una gara (sua società + categoria compatibile) */
+export type GiocatoreInGara = {
+  id: string;
+  cognome: string | null;
+  nome: string | null;
+  descrizione: string | null;
+  annata: number;
+  categoria: string | null;
+  societa_id: string | null;
+  stato: StatoGiocatore;
+};
+
+/** Giocatori segnalati da vedere in questa gara (esclusi chiusi e già inseriti da noi) */
+export function giocatoriDellaGara(g: Pick<Gara, 'categoria' | 'casa_id' | 'trasferta_id'>, giocatori: GiocatoreInGara[]) {
+  return giocatori.filter((x) => x.stato !== 'chiuso' && x.stato !== 'inserito' && giocaInGara(x, g));
+}
+
 export type GaraArricchita = Gara & {
+  /** Giocatori segnalati delle due squadre (solo nel pannello Gare) */
+  giocatori?: GiocatoreInGara[];
   distanza: number | null;
   seguite: SquadraSeguita[];
   osservatori: { id: string; nome: string }[];

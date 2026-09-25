@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
-import { arricchisci, SELECT_GARA, squadreSeguite, type Gara, type Sede } from '@/lib/gare';
+import { arricchisci, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara, type Sede } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
 import { istanteTraOre } from '@/lib/utili';
 
@@ -32,9 +32,22 @@ export default async function Gare({
   const sedi = (sediData as Sede[]) ?? [];
   const sede = sedi.find((s) => String(s.id) === filtri.sede) ?? sedi[0] ?? null;
 
-  const gare = ((gareData as unknown as Gara[]) ?? [])
-    .map((g) => arricchisci(g, sede, seguite))
-    .filter((g) => !soloSeguite || g.seguite.length > 0)
+  // Giocatori segnalati delle società che giocano queste gare
+  const tutteLeGare = (gareData as unknown as Gara[]) ?? [];
+  const idSocieta = [...new Set(tutteLeGare.flatMap((g) => [g.casa_id, g.trasferta_id]).filter((x): x is string => !!x))];
+  const { data: giocatoriData } = idSocieta.length
+    ? await supabase
+        .from('giocatori')
+        // `*`: la colonna categoria esiste solo dalla migrazione 0013
+        .select('*')
+        .in('societa_id', idSocieta)
+        .not('stato', 'in', '(chiuso,inserito)')
+    : { data: [] };
+  const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];
+
+  const gare = tutteLeGare
+    .map((g) => ({ ...arricchisci(g, sede, seguite), giocatori: giocatoriDellaGara(g, giocatori) }))
+    .filter((g) => !soloSeguite || g.seguite.length > 0 || g.giocatori.length > 0)
     .filter((g) => g.distanza === null || g.distanza <= km);
 
   // Raggruppate per giorno
@@ -45,7 +58,7 @@ export default async function Gare({
     });
     perGiorno.set(giorno, [...(perGiorno.get(giorno) ?? []), g]);
   }
-  const scoperte = gare.filter((g) => g.seguite.length > 0 && g.osservatori.length === 0).length;
+  const scoperte = gare.filter((g) => (g.seguite.length > 0 || g.giocatori.length > 0) && g.osservatori.length === 0).length;
 
   return (
     <div className="space-y-6">
@@ -85,7 +98,7 @@ export default async function Gare({
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Squadre</span>
           <select name="tutte" defaultValue={soloSeguite ? '' : '1'} className="campo">
-            <option value="">Solo quelle seguite</option>
+            <option value="">Seguite o con giocatori segnalati</option>
             <option value="1">Tutte le gare</option>
           </select>
         </label>

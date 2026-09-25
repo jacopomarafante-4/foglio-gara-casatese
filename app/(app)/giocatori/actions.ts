@@ -58,6 +58,7 @@ export async function aggiornaGiocatore(formData: FormData) {
       ruolo: valoreValido(RUOLI_CAMPO, formData.get('ruolo')),
       piede: valoreValido(PIEDI, formData.get('piede')),
       societa_id: societa?.id ?? null,
+      categoria: testo(formData, 'categoria'),
       note: testoLungo(formData, 'note'),
     })
     .eq('id', id)

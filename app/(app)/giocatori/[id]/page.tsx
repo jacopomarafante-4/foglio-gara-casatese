@@ -8,7 +8,10 @@ import {
   AREE, GIUDIZI, MOTIVI_CHIUSURA, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili,
   type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
-import { dataBreve } from '@/lib/utili';
+import { dataBreve, istanteTraOre } from '@/lib/utili';
+import { categoriaDaAnnata } from '@/lib/categorie';
+import { arricchisci, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara, type Sede } from '@/lib/gare';
+import { GaraCard } from '@/components/GaraCard';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
@@ -29,6 +32,8 @@ type Giocatore = {
   stato: StatoGiocatore;
   motivo_chiusura: string | null;
   rivedere_dal: string | null;
+  categoria: string | null; // solo se diversa da quella dell'annata (0013)
+  societa_id: string | null;
   note: string | null;
   creato_da: string | null;
   segnalato_da_squadra: string | null;
@@ -88,6 +93,21 @@ export default async function SchedaGiocatore({
     supabase.from('eventi_giocatore').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
   ]);
   const eventi = (ev.data as unknown as Evento[]) ?? [];
+
+  // Squadra di appartenenza e sue prossime gare (dal pannello Gare), se la società è nota
+  const categoria = g.categoria || categoriaDaAnnata(g.annata);
+  const [{ data: gareData }, { data: sediData }, seguite] = g.societa_id
+    ? await Promise.all([
+        supabase.from('gare').select(SELECT_GARA)
+          .or(`casa_id.eq.${g.societa_id},trasferta_id.eq.${g.societa_id}`)
+          .gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(30),
+        supabase.from('sedi').select('id, nome, lat, lon').order('id'),
+        squadreSeguite(supabase),
+      ])
+    : [{ data: [] }, { data: [] }, []];
+  const prossimeGare = ((gareData as unknown as Gara[]) ?? [])
+    .filter((x) => giocatoriDellaGara(x, [{ ...(g as unknown as GiocatoreInGara), stato: 'segnalato' }]).length > 0)
+    .map((x) => arricchisci(x, ((sediData as Sede[]) ?? [])[0] ?? null, seguite));
   const segnalazioni = (segn.data as unknown as Segnalazione[]) ?? [];
   const valutazioni = (val.data as unknown as Valutazione[]) ?? [];
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];
@@ -133,6 +153,13 @@ export default async function SchedaGiocatore({
               g.societa?.nome,
             ].filter(Boolean).join(' – ')}
           </p>
+          <p className="mt-1">
+            <span className="text-grigio">Squadra: </span>
+            <span className="font-semibold">
+              {g.societa?.nome ?? 'società da completare'} · {categoria}
+            </span>
+            {g.categoria && <span className="text-sm text-grigio"> (annata {g.annata}, gioca sotto/sopra età)</span>}
+          </p>
           {g.cognome && g.descrizione && <p className="mt-1 text-sm italic text-grigio">{g.descrizione}</p>}
           {g.stato === 'chiuso' && g.motivo_chiusura && (
             <p className="mt-2 text-sm">
@@ -174,6 +201,30 @@ export default async function SchedaGiocatore({
             </div>
           ))}
         </dl>
+      </section>
+
+      {/* Prossime gare della sua squadra (caricate nel pannello Gare) */}
+      <section className="rounded-xl border border-linea bg-white p-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold">Prossime gare</h2>
+          <span className="text-right text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
+        </div>
+        {!g.societa_id ? (
+          <p className="mt-3 text-grigio">Aggiungi la società nei dati del giocatore per vedere le sue gare.</p>
+        ) : prossimeGare.length === 0 ? (
+          <p className="mt-3 text-grigio">Nessuna gara in programma della sua squadra. Le gare si caricano nel pannello Gare.</p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {prossimeGare.map((x) => (
+              <div key={x.id}>
+                <p className="mb-1 text-sm font-semibold first-letter:uppercase">
+                  {new Date(x.data_ora).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                <GaraCard gara={x} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <EventiGiocatore
@@ -354,6 +405,9 @@ export default async function SchedaGiocatore({
                         <option key={a} value={a}>{a}</option>
                       ))}
                     </select>
+                  </Etichetta>
+                  <Etichetta testo="Categoria" aiuto={`Solo se non gioca in ${categoriaDaAnnata(g.annata)}`}>
+                    <input name="categoria" defaultValue={g.categoria ?? ''} placeholder={categoriaDaAnnata(g.annata)} className="campo" />
                   </Etichetta>
                   <Etichetta testo="Nato il">
                     <input type="date" name="data_nascita" defaultValue={g.data_nascita ?? ''} className="campo" />
