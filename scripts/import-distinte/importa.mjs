@@ -13,11 +13,12 @@
 //   "squadre": [
 //     { "lato": "casa", "societa": "Virtus Adda",
 //       "giocatori": [ { "numero": 1, "cognome": "Rossi", "nome": "Luca", "data_nascita": "2011-03-02",
-//                        "titolare": true, "capitano": false } ] },
+//                        "titolare": true, "capitano": false,
+//                        "societa": "Solo se la società di appartenenza è diversa (prestito, aggregato)" } ] },
 //     { "lato": "trasferta", "societa": "Academy Casatese Merate", "giocatori": [ … ] }
 //   ]
 // }
-// Si prendono solo cognome, nome, data di nascita, numero: niente tessere né documenti.
+// Si prendono solo cognome, nome, data di nascita, numero e società di appartenenza: niente tessere né documenti.
 // =====================================================================
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -129,19 +130,28 @@ for (const d of distinte) {
   for (const sq of [casa, trasf]) {
     for (const r of sq.giocatori ?? []) {
       if (!r.cognome) continue;
+      // Società di appartenenza: quella indicata per il ragazzo (prestito, aggregato) o quella della squadra
+      let socRagazzo = sq._soc;
+      if (r.societa && norm(r.societa) !== norm(sq.societa)) {
+        socRagazzo = trovaSocieta(r.societa);
+        if (!socRagazzo) {
+          riepilogo.societaNuove.add(r.societa.trim());
+          if (CONFERMA) { socRagazzo = (await db.from('societa').insert({ nome: r.societa.trim() }).select('id, nome, alias').single()).data; societa.push(socRagazzo); }
+        }
+      }
       const { g, come, dubbio } = trovaGiocatore(r);
       if (dubbio) riepilogo.dubbi.push(`${d._file}: ${maiuscole(r.cognome)} ${maiuscole(r.nome) ?? ''} (${r.data_nascita ?? r.annata ?? '?'}) — ${come}${g ? ` → ${g.cognome} ${g.nome ?? ''}` : ''}`);
       let id = g?.id;
       if (g) {
         riepilogo.esistenti++;
-        if (sq._soc && g.societa_id && g.societa_id !== sq._soc.id) riepilogo.cambiSocieta.push(`${g.cognome} ${g.nome ?? ''}: ${societa.find((s) => s.id === g.societa_id)?.nome ?? '?'} → ${sq._soc.nome} (${d.data})`);
+        if (socRagazzo && g.societa_id && g.societa_id !== socRagazzo.id) riepilogo.cambiSocieta.push(`${g.cognome} ${g.nome ?? ''}: ${societa.find((s) => s.id === g.societa_id)?.nome ?? '?'} → ${socRagazzo.nome} (${d.data})`);
         if (CONFERMA && !g.data_nascita && r.data_nascita) await db.from('giocatori').update({ data_nascita: r.data_nascita }).eq('id', g.id);
       } else {
         riepilogo.nuovi++;
         if (CONFERMA) {
           const annata = Number(r.data_nascita?.slice(0, 4) ?? r.annata);
           const nuovo = { cognome: maiuscole(r.cognome), nome: maiuscole(r.nome), annata, data_nascita: r.data_nascita ?? null,
-            societa_id: sq._soc?.id ?? null, osservato: false };
+            societa_id: socRagazzo?.id ?? null, osservato: false };
           id = (await db.from('giocatori').insert(nuovo).select('id').single()).data.id;
           const k = norm(nuovo.cognome) + '|' + norm(nuovo.nome);
           const rec = { id, ...nuovo }; giocatori.push(rec); perNome.set(k, [...(perNome.get(k) ?? []), rec]);
@@ -149,19 +159,20 @@ for (const d of distinte) {
       }
       if (CONFERMA && id && distintaId) {
         await db.from('distinte_giocatori').upsert({ distinta_id: distintaId, giocatore_id: id, squadra_id: idSquadra[sq.lato ?? (sq === casa ? 'casa' : 'trasferta')] ?? null,
-          numero: r.numero ?? null, titolare: r.titolare ?? null, capitano: !!r.capitano }, { onConflict: 'distinta_id,giocatore_id' });
+          societa_id: socRagazzo?.id ?? null, numero: r.numero ?? null, titolare: r.titolare ?? null, capitano: !!r.capitano }, { onConflict: 'distinta_id,giocatore_id' });
         toccati.add(id);
       }
     }
   }
 }
 
-// Società e squadra attuali di ogni ragazzo = quelle della sua distinta più recente
+// Società attuale di ogni ragazzo = la sua società di appartenenza nella distinta più recente
 if (CONFERMA) {
   for (const id of toccati) {
-    const { data } = await db.from('distinte_giocatori').select('squadra:squadre(societa_id), distinta:distinte(data)').eq('giocatore_id', id);
-    const ultima = (data ?? []).filter((x) => x.squadra && x.distinta).sort((a, b) => b.distinta.data.localeCompare(a.distinta.data))[0];
-    if (ultima) await db.from('giocatori').update({ societa_id: ultima.squadra.societa_id }).eq('id', id);
+    const { data } = await db.from('distinte_giocatori').select('societa_id, squadra:squadre(societa_id), distinta:distinte(data)').eq('giocatore_id', id);
+    const ultima = (data ?? []).filter((x) => x.distinta).sort((a, b) => b.distinta.data.localeCompare(a.distinta.data))[0];
+    const soc = ultima?.societa_id ?? ultima?.squadra?.societa_id;
+    if (soc) await db.from('giocatori').update({ societa_id: soc }).eq('id', id);
   }
 }
 

@@ -4,6 +4,8 @@ export type Presenza = {
   numero: number | null;
   titolare: boolean | null;
   capitano: boolean;
+  /** Società di appartenenza, se diversa da quella della squadra (prestito, aggregato) */
+  appartenenza: { nome: string } | null;
   squadra: { categoria: string; stagione: string; societa: { nome: string } | null } | null;
   distinta: {
     id: string;
@@ -77,6 +79,7 @@ export function StoricoGiocatore({ presenze }: { presenze: Presenza[] }) {
                             {p.titolare === true && ' · titolare'}
                             {p.titolare === false && ' · panchina'}
                             {p.capitano && ' · capitano'}
+                            {p.appartenenza && p.appartenenza.nome !== g.societa && ` · tesserato con ${p.appartenenza.nome}`}
                           </span>
                         </li>
                       );

@@ -95,7 +95,7 @@ export default async function SchedaGiocatore({
     supabase.from('eventi_giocatore').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase
       .from('distinte_giocatori')
-      .select('numero, titolare, capitano, squadra:squadre(categoria, stagione, societa(nome)), distinta:distinte(id, data, stagione, categoria, competizione, casa_nome, trasferta_nome, risultato)')
+      .select('numero, titolare, capitano, appartenenza:societa(nome), squadra:squadre(categoria, stagione, societa(nome)), distinta:distinte(id, data, stagione, categoria, competizione, casa_nome, trasferta_nome, risultato)')
       .eq('giocatore_id', id),
   ]);
   const presenze = (pres.data as unknown as Presenza[]) ?? [];

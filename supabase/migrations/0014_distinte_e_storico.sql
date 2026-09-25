@@ -62,6 +62,9 @@ create table public.distinte_giocatori (
   distinta_id   uuid not null references public.distinte (id) on delete cascade,
   giocatore_id  uuid not null references public.giocatori (id) on delete cascade,
   squadra_id    uuid references public.squadre (id) on delete set null,
+  -- società di appartenenza (tesseramento): di norma quella della squadra; diversa se in
+  -- prestito, doppio tesseramento o aggregato a un torneo
+  societa_id    uuid references public.societa (id) on delete set null,
   numero        smallint,
   titolare      boolean,              -- null = non indicato
   capitano      boolean not null default false,

@@ -102,7 +102,7 @@ Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations
 ## Distinte di gara (storico giocatori)
 Le distinte, anche di stagioni passate, costruiscono lo storico: squadre per stagione, partite, numeri di maglia.
 1. Ogni distinta diventa un file JSON in `scripts/import-distinte/dati/` (formato in cima allo script; cartella
-   esclusa da git perché contiene dati di minori: solo cognome, nome, data di nascita, numero).
+   esclusa da git perché contiene dati di minori: solo cognome, nome, data di nascita, numero, società di appartenenza).
 2. Simulazione: `node --env-file=.env.local scripts/import-distinte/importa.mjs` → riepilogo (nuovi, già presenti,
    cambi di società, nomi da controllare).
 3. Importazione: stesso comando con `--conferma`.
