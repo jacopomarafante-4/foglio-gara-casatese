@@ -1,16 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { AccessoForm } from './AccessoForm';
 import { esci } from '@/app/auth/actions';
 import { getProfilo } from '@/lib/auth';
-import { puoAccedere } from '@/lib/ruoli';
 import { Striscia } from '@/components/Striscia';
 
 /**
  * Pagina d'ingresso unica: tutti digitano il PIN e il PIN dice chi sei
  * (mister → Portale squadre, scout/direttore → Scouting Hub, admin → email e password).
- * Chi è già entrato va al suo pannello; l'admin sceglie tra i due.
+ * Il PIN si chiede sempre, anche se c'è già una sessione aperta (niente accesso automatico):
+ * solo l'admin già entrato vede la scelta tra i due pannelli.
  */
 export default async function Ingresso({
   searchParams,
@@ -18,10 +17,6 @@ export default async function Ingresso({
   searchParams: Promise<{ next?: string }>;
 }) {
   const [{ next }, profilo] = await Promise.all([searchParams, getProfilo()]);
-  if (profilo && profilo.ruolo !== 'admin' && puoAccedere(profilo.ruolo)) {
-    // Solo percorsi interni, per sicurezza
-    redirect(next?.startsWith('/') && !next.startsWith('//') ? next : '/home');
-  }
   const admin = profilo?.ruolo === 'admin';
 
   return (
