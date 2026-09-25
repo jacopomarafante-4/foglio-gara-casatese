@@ -109,6 +109,11 @@ Le distinte, anche di stagioni passate, costruiscono lo storico: squadre per sta
 I ragazzi mai osservati restano "da distinta" (nascosti nell'archivio, filtro "Anche solo da distinta") e diventano
 osservati alla prima segnalazione.
 
+## Manuali
+Quattro manuali in PDF (generale, mister, scout, direttori) in `public/manuali/`, scaricabili dalla pagina del PIN
+("Istruzioni"). Sorgenti in `scripts/manuali/` (testo in `genera.py`, schermate con dati inventati in `img/`).
+Dopo una modifica: `npm run manuali` (serve Python 3 e Google Chrome sul Mac).
+
 ## Backup
 `npm run backup` esporta tutto il database in `private/backup/AAAA-MM-GG_HHMM/` (una cartella per tabella in JSON;
 esclusa da git). Tiene gli ultimi 12. Il Mac lo lancia da solo **ogni lunedì alle 9** (o al primo risveglio dopo):
@@ -136,6 +141,7 @@ copia ogni tanto `private/backup/` su un disco o un cloud privato, oppure passa 
 | `npm run lint` | Controlla lo stile del codice |
 | `npm run build` | Prova la versione di produzione |
 | `npm run crea-utenti` | Crea account con password da `scripts/utenti.json` |
+| `npm run manuali` | Rigenera i manuali PDF in `public/manuali/` |
 | `npm run backup` | Esporta tutto il database in `private/backup/` |
 | `npm run deck` | Rigenera il PDF di presentazione (Python: `pip install reportlab pillow`) |
 

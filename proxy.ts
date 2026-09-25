@@ -12,6 +12,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Esclude file statici, immagini e i file del Portale squadre (public/portale/)
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|portale/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  // Esclude file statici, immagini, PDF (manuali) e i file del Portale squadre (public/portale/)
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|portale/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|pdf)$).*)'],
 };

@@ -24,7 +24,8 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [x] Migrazione **0012** (eventi del giocatore, doppioni) eseguita nel SQL Editor
 - [x] Migrazione **0013** (categoria del giocatore) eseguita nel SQL Editor
 - [x] Migrazione **0014** (distinte e storico) eseguita nel SQL Editor
-- [ ] Migrazione **0015** (blocco dei PIN a raffica) eseguita nel SQL Editor
+- [x] Migrazione **0015** (blocco dei PIN a raffica) eseguita nel SQL Editor
+- [x] Manuali: generale, mister, scout, direttori (`npm run manuali`)
 - [x] Backup settimanale automatico sul Mac (`npm run backup`)
 - [ ] Importare le distinte (anche stagioni passate) e i calendari/accoppiamenti dei gironi
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):

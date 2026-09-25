@@ -39,6 +39,22 @@ export default async function Ingresso({
         <p className="mt-6 text-sm text-grigio">
           Mister, scout e direttori: il tuo PIN personale. Non ce l’hai? Chiedilo all’admin.
         </p>
+        <p className="mt-4 text-sm">
+          <span className="text-grigio">Istruzioni: </span>
+          {[
+            ['generale', 'Generale'],
+            ['mister', 'Mister'],
+            ['scout', 'Scout'],
+            ['direttori', 'Direttori'],
+          ].map(([file, nome], i) => (
+            <span key={file}>
+              {i > 0 && <span className="text-grigio"> · </span>}
+              <a href={`/manuali/Manuale_${file}.pdf`} target="_blank" rel="noreferrer" className="font-medium text-blu underline">
+                {nome}
+              </a>
+            </span>
+          ))}
+        </p>
       </div>
     </main>
   );

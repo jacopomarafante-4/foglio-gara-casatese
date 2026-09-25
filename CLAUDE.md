@@ -121,5 +121,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 `npm run backup` (scripts/backup.mjs) → `private/backup/`; attività settimanale di macOS (LaunchAgent
 `it.academycasatese.backup`, lunedì 9:00). Se aggiungi una tabella, aggiungila anche all'elenco `TABELLE` dello script.
 
+## Manuali
+PDF in `public/manuali/` (link "Istruzioni" nella pagina del PIN), sorgenti in `scripts/manuali/genera.py`.
+Se cambi una funzione, un pulsante o un permesso, aggiorna il testo del manuale e rilancia `npm run manuali`.
+Nelle schermate dei manuali solo dati inventati (repository pubblico).
+
 ## Stato
 Vedi `docs/ROADMAP.md`.
