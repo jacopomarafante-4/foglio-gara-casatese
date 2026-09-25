@@ -1,34 +1,37 @@
-# Environment
-.env
-.env.local
+# Dipendenze
+/node_modules
+/.pnp
+.pnp.*
+
+# Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# Chiavi: solo sul tuo Mac (resta versionato l'esempio)
+.env*
+!.env.local.example
+
+# Vercel
+.vercel
 
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.egg-info/
-dist/
-build/
 
-# Node
-node_modules/
-package-lock.json
-
-# IDE
+# IDE e sistema
 .vscode/settings.json
 .idea/
 *.swp
-*.swo
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Log
 *.log
+npm-debug.log*
 
-# Local data (if saving to filesystem)
-/local-data/
-
-# Dati personali dei ragazzi: mai nel repository pubblico
+# Dati personali dei ragazzi e delle famiglie: mai nel repository pubblico
 private/
+scripts/import-sheet/dati/

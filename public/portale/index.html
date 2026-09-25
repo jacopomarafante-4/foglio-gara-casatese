@@ -3,35 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#003da5">
 <title>Portale Academy Casatese Merate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<link rel="stylesheet" href="css/portale.css?v=3">
+<link rel="stylesheet" href="css/portale.css?v=4">
 </head>
 <body>
 <div class="top">
   <div class="demo" id="demo"></div>
-  <div class="bar">
-    <div class="brandrow">
-      <span class="logowrap"><img src="casatese-logo.png" alt="Casatese Merate" class="logo"></span>
-      <div><div class="brand" id="brand">Portale Academy Casatese Merate<small id="matchline"></small></div><div class="ctx" id="ctx"></div></div>
+  <header class="head">
+    <div class="bar">
+      <div class="brandrow">
+        <a class="logowrap" id="homelink"><img src="casatese-logo.png" alt="Casatese Merate" class="logo"></a>
+        <div><div class="brand" id="brand">Portale Academy Casatese Merate<small id="matchline"></small></div><div class="ctx" id="ctx"></div></div>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
-    <div class="status" id="status" aria-live="polite"></div>
-  </div>
-  <nav class="areanav hidden" id="areanav" aria-label="Aree del portale"></nav>
-  <nav class="tabs" role="tablist" id="tabs"></nav>
+    <nav class="areanav hidden" id="areanav" aria-label="Aree del portale"></nav>
+  </header>
   <div class="brandstripe"></div>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
 </div>
 <main id="view"></main>
 
-<script src="js/core.js?v=1"></script>
-<script src="js/schede.js?v=6"></script>
+<script src="js/core.js?v=4"></script>
+<script src="js/schede.js?v=8"></script>
 <script src="js/pdf.js?v=1"></script>
 <script src="js/registro.js?v=3"></script>
 <script src="js/portale.js?v=4"></script>
-<script src="js/eventi.js?v=1"></script>
+<script src="js/eventi.js?v=3"></script>
 </body>
 </html>

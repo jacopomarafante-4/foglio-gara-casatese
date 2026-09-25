@@ -1,28 +1,37 @@
 {
-  "name": "foglio-gara-casatese",
+  "name": "portale-casatese",
   "version": "1.0.0",
-  "description": "App web multi-squadra per gestione rosa, formazione e calci piazzati",
-  "author": "Casatese Merate",
-  "license": "MIT",
+  "private": true,
   "scripts": {
-    "start": "python -m http.server 8000",
-    "deck": "python scripts/deck_casatese.py",
-    "patch": "python scripts/patch.py"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "crea-utenti": "node --env-file=.env.local scripts/crea-utenti.mjs",
+    "typecheck": "tsc --noEmit",
+    "deck": "python3 scripts/deck_casatese.py"
   },
-  "keywords": [
-    "calcio",
-    "football",
-    "app",
-    "squadra",
-    "formazione",
-    "foglio-gara"
-  ],
+  "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.1",
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
   "devDependencies": {
-    "reportlab": "^4.0",
-    "pillow": "^9.0"
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/casatese/foglio-gara"
-  }
+  "engines": {
+    "node": ">=20.9"
+  },
+  "description": "Academy Casatese Merate: portale squadre (rosa, gare, allenamenti) e Scouting Hub"
 }

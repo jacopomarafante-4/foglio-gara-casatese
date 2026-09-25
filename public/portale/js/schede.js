@@ -80,8 +80,10 @@ function renderChrome(){
   $('#demo').classList.toggle('hidden', hashLocked);
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
+    ? `<span class="badge admin">Admin</span>${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.name)}</option>`).join('')}</select>` : ''}${IN_APP_UNICA?'<a class="logout" href="/home">Scouting Hub</a>':''}<button class="logout" data-act="logout">Esci</button>`
     : `<span class="badge coach">Mister</span><span class="teamname">${esc(T0?.name||'')}</span><button class="logout" data-act="logout">Esci</button>`;
+  // Il logo riporta alla scelta dei pannelli solo per l'admin: il mister resterebbe senza squadra
+  if(IN_APP_UNICA && isAdmin()) $('#homelink').href = '/'; else $('#homelink').removeAttribute('href');
   renderNav();
 }
 function viewGate(){
@@ -115,6 +117,8 @@ function viewGate(){
 }
 function render(){
   if(!hashLocked && !adminAccessGranted()){
+    // App unica: l'accesso si fa solo dalla pagina d'ingresso (PIN)
+    if(IN_APP_UNICA && teamsLoaded){ location.replace('/'); return; }
     $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
     $('#ctx').innerHTML = ''; $('#tabs').innerHTML = ''; $('#areanav').classList.add('hidden'); $('#matchline').textContent = '';
     $('#view').innerHTML = viewGate();

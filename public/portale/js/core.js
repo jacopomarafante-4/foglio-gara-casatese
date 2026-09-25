@@ -34,11 +34,68 @@ const ADMIN_EMAIL = 'jacopo.marafante@gmail.com';
 let adminUnlocked = false, gateError = false, teamsLoaded = false;
 try{ adminUnlocked = localStorage.getItem('fg:adminpin') === 'ok'; }catch(e){}
 const RUNNING_IN_CLAUDE = !!(window.claude && window.claude.use);
+/* Dentro l'app unica (Next.js, /portale/) ci sono anche la pagina d'ingresso e Scouting Hub */
+const IN_APP_UNICA = location.pathname.startsWith('/portale/');
+/* Niente accesso automatico nell'app unica: il PIN vale finché si chiude il browser (o la scheda, per i mister)
+   e al massimo ORE_ACCESSO ore (stesso valore in lib/supabase/durata.ts). */
+const ORE_ACCESSO = 6;
+const accessoRecente = t => Date.now()/1000 - (t || 0) < ORE_ACCESSO * 3600;
+/* Il PIN del mister arriva dalla pagina d'ingresso in #squadra=PIN: lo si toglie subito dall'indirizzo
+   (cronologia, preferiti) e resta solo in questa scheda. */
+if(IN_APP_UNICA){
+  const m = (location.hash||'').match(/squadra=([\w-]+)\/?(\w*)/i);
+  if(m){
+    try{ sessionStorage.setItem('fg:pin', JSON.stringify({ pin: m[1], t: Date.now()/1000 })); }catch(e){}
+    history.replaceState(null, '', location.pathname + location.search + (m[2] ? '#/' + m[2] : ''));
+  }
+}
+function teamPinFromUrl(){
+  if(!IN_APP_UNICA) return ((location.hash||'').match(/squadra=([\w-]+)/i) || [])[1] || null;
+  try{
+    const v = JSON.parse(sessionStorage.getItem('fg:pin') || 'null');
+    if(v && accessoRecente(v.t)) return v.pin;
+    sessionStorage.removeItem('fg:pin');
+  }catch(e){}
+  return null;
+}
 const SUPABASE_URL = 'https://vxqpuwoqanvkpfzilrcc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4cXB1d29xYW52a3BmemlscmNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDg0NjksImV4cCI6MjEwNTcyNDQ2OX0.MIF-vt76o1jeuVuESFcrLf3lbXffu8P7aqtRd9k247o';
-const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+/* App unica: la sessione sta negli stessi cookie del login della pagina d'ingresso (@supabase/ssr:
+   prefisso "base64-", divisi in pezzi .0 .1 … oltre 3180 caratteri), così l'accesso vale per tutto il sito. */
+const COOKIE_CHUNK = 3180;
+const cookieStorage = {
+  getItem(key){
+    const all = {};
+    document.cookie.split('; ').filter(Boolean).forEach(c => { const i = c.indexOf('='); all[c.slice(0,i)] = decodeURIComponent(c.slice(i+1)); });
+    let v = all[key];
+    if(v == null){ const parts = []; for(let i=0; all[key+'.'+i] != null; i++) parts.push(all[key+'.'+i]); v = parts.length ? parts.join('') : null; }
+    if(v == null || !v.startsWith('base64-')) return v;
+    const b = v.slice(7).replace(/-/g,'+').replace(/_/g,'/');
+    return new TextDecoder().decode(Uint8Array.from(atob(b + '==='.slice((b.length+3)%4)), ch => ch.charCodeAt(0)));
+  },
+  setItem(key, value){
+    this.removeItem(key);
+    let bin = ''; new TextEncoder().encode(value).forEach(x => bin += String.fromCharCode(x));
+    const enc = 'base64-' + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const opt = '; path=/; samesite=lax' + (location.protocol === 'https:' ? '; secure' : ''); // cookie di sessione
+    if(enc.length <= COOKIE_CHUNK){ document.cookie = key + '=' + enc + opt; return; }
+    for(let i=0; i*COOKIE_CHUNK < enc.length; i++) document.cookie = key + '.' + i + '=' + enc.slice(i*COOKIE_CHUNK, (i+1)*COOKIE_CHUNK) + opt;
+  },
+  removeItem(key){
+    document.cookie.split('; ').map(c => c.split('=')[0]).filter(n => n === key || /^\d+$/.test(n.slice(key.length+1)) && n.startsWith(key+'.'))
+      .forEach(n => { document.cookie = n + '=; path=/; max-age=0'; });
+  }
+};
+const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, IN_APP_UNICA ? { auth: { storage: cookieStorage } } : undefined) : null;
+/* Nell'app unica la stessa sessione può essere di uno scout: qui conta solo quella dell'admin */
+const sessionOk = s => !!s && (!IN_APP_UNICA || ((s.user?.email || '').toLowerCase() === ADMIN_EMAIL && accessoRecente(loginTime(s))));
+/* Ora dell'ultimo login, dal token (claim "amr"): resta la stessa anche quando il token si rinnova */
+function loginTime(s){
+  try{ const p = JSON.parse(atob(s.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return Math.max(0, ...(p.amr || []).map(a => a.timestamp || 0)); }catch(e){ return 0; }
+}
 let supaSession = null;
 function adminAccessGranted(){
+  if(IN_APP_UNICA) return sessionOk(supaSession); // il PIN admin l'ha già chiesto la pagina d'ingresso
   if(!adminUnlocked) return false;
   if(RUNNING_IN_CLAUDE || !supabaseClient) return true;
   return !!supaSession;
@@ -51,7 +108,7 @@ async function initAuth(){
   }catch(e){}
   supabaseClient.auth.onAuthStateChange((event, session) => {
     supaSession = session;
-    if(session && secureMode && !sharedSyncStarted){ db = makeSupabaseDb(supabaseClient); startSharedSync(); }
+    if(sessionOk(session) && secureMode && !sharedSyncStarted){ db = makeSupabaseDb(supabaseClient); startSharedSync(); }
     render();
   });
   render();
@@ -159,7 +216,8 @@ function switchView(role, team){
 }
 async function logout(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
-  if(supabaseClient){ try{ await supabaseClient.auth.signOut(); }catch(e){} }
+  if(supabaseClient){ try{ await supabaseClient.auth.signOut({ scope: 'local' }); }catch(e){} }
+  if(IN_APP_UNICA){ try{ sessionStorage.removeItem('fg:pin'); }catch(e){} location.replace('/'); return; }
   adminUnlocked = false; supaSession = null; gateError = false;
   try{ localStorage.removeItem('fg:adminpin'); }catch(e){}
   if(secureMode){ history.replaceState(null, '', location.pathname + location.search); location.reload(); return; }
@@ -247,7 +305,7 @@ async function coachLogin(pin){
   if(!tm) return false;
   db = makeCoachDb(supabaseClient, pin);
   S.teams = [tm]; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
-  if(!new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
+  if(!IN_APP_UNICA && !new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
   db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
   setStatus('Sincronizzato');
   subscribeTeam();
@@ -275,11 +333,12 @@ async function initStore(){
     secureMode = await detectSecure();
     let session = null;
     try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
-    if(session || !secureMode){
+    if(IN_APP_UNICA) supaSession = session;
+    if(sessionOk(session) || !secureMode){
       try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
     } else {
-      const m = (location.hash||'').match(/squadra=([\w-]+)/i);
-      if(!(m && await coachLogin(m[1]))){ teamsLoaded = true; render(); }
+      const pin = teamPinFromUrl();
+      if(!(pin && await coachLogin(pin))){ teamsLoaded = true; render(); }
       return;
     }
   }
