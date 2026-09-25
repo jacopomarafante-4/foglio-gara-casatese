@@ -381,7 +381,7 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <li>Vedere i PIN</li></ul></div>
 </div>
 {ACCESSO}
-<p>Con il tuo PIN entri nello Scouting. Le schede in alto sono: <b>Home</b>, <b>Giocatori</b>, <b>Gare</b>, <b>Segnala</b>, <b>Profilo</b>.</p>
+<p>Con il tuo PIN entri nello Scouting. Le schede in alto sono: <b>Home</b>, <b>Giocatori</b>, <b>Gare</b>, <b>Segnala</b>, <b>Attività</b>.</p>
 </section>
 
 <section>
@@ -457,7 +457,7 @@ Le tue gare le ritrovi in Home, in <b>Le mie gare</b>.</li></ul>''', 'Gare da ve
 <li><b>Giocatori</b>: cerca per nome o descrizione, filtra per annata, ruolo, stato, società.
 Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anche quelli letti dalle distinte e mai osservati.</li>
 <li><b>Per stato</b>: le colonne Segnalato → Da rivedere → … → Inserito. Utile per vedere la pipeline.</li>
-<li><b>Profilo</b>: il tuo nome e il ruolo. Il PIN, se lo perdi, lo rigenera l'amministratore.</li>
+<li><b>Attività</b>: le tue prossime gare ("Ci vado io"), le tue segnalazioni e valutazioni, con i totali. Il PIN, se lo perdi, lo rigenerano l'amministratore o un direttore.</li>
 </ul>
 </section>
 """

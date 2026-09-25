@@ -80,7 +80,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <Scheda href="/giocatori">Giocatori</Scheda>
           <Scheda href="/gare">Gare</Scheda>
           {puoSegnalare(profilo.ruolo) && <Scheda href="/segnala">Segnala</Scheda>}
-          <Scheda href="/profilo">Profilo</Scheda>
+          <Scheda href="/profilo">Attività</Scheda>
         </nav>
       </div>
 
