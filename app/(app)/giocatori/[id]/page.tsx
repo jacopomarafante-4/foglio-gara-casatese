@@ -121,7 +121,7 @@ export default async function SchedaGiocatore({
   const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
   const gestore = gestisce(profilo.ruolo);
-  const tutto = vedeTutto(profilo.ruolo); // i direttori vedono anche i contatti, senza modificare
+  const tutto = vedeTutto(profilo.ruolo); // admin e direttori vedono anche i contatti
   const scrive = puoSegnalare(profilo.ruolo);
   const modifica = gestore || (scrive && g.creato_da === profilo.id);
   const societa = modifica ? await elencoSocieta(supabase) : [];

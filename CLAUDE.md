@@ -71,9 +71,11 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
 ## Ruoli
-`admin`, `direttore` (a capo di squadre e scout: vede tutto, Portale, Società e Scouting, ma **non modifica niente**),
+`admin`, `direttore` (a capo di squadre e scout: vede tutto; **Portale e Società in sola lettura, nello Scouting modifica
+come l'admin**, 0018),
 `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`). In `lib/ruoli.ts`: `vedeTutto()` = leggere tutto
-(admin, direttori), `gestisce()` = modificare stati, gare, dati di tutti nello Scouting (solo admin), `puoSegnalare()` = admin e scout.
+(admin, direttori), `gestisce()` = modificare stati, gare, dati di tutti nello Scouting (admin e direttori, SQL `vede_tutto()`),
+`puoSegnalare()` = admin, direttori e scout.
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
@@ -92,7 +94,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0007: segnalazioni dei mister dal Portale: `coach_segnala()`, `coach_societa()`, `mister_for_pin()`,
   colonne `segnalazioni.squadra` e `giocatori.segnalato_da_squadra` (firma "<mister> · <categoria>")
 - 0008: PIN personali dei mister (`team_for_pin`, `coach_team` riscritte); `codici_accesso` leggibile solo dall'admin
-- 0009: direttori in sola lettura nello Scouting (`puo_segnalare()` senza direttore, scritture di gestione solo `is_admin()`)
+- 0009: direttori in sola lettura nello Scouting (superata dalla 0018)
 - 0010: direttori leggono e scrivono `docs` (Portale) e vedono `codici_accesso`; tolta `dirigente_get()`
 - 0011: direttori solo in lettura su `docs` (Portale)
 - 0012: `eventi_giocatore` (open day, provini: presenza, esito) nella scheda del giocatore; `doppioni_esclusi`;
@@ -118,6 +120,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
   `portale.mjs`. Confermata = gara tra la data del C.U. e la domenica dopo, non variata dal C.U. del suo ente
   (CRL per regionali/élite, delegazione per i provinciali). Le coppe si ignorano.
+- 0017: `unisci_societa()` (sposta giocatori, gare, squadre seguite, squadre e distinte; il nome tolto diventa alias),
+  script `scripts/unisci-societa.mjs` con un JSON in `private/`
+- 0018: direttori nello Scouting come l'admin: `puo_segnalare()` comprende il direttore, le regole di gestione
+  (stati, gare, squadre seguite, sedi, distinte, doppioni, `unisci_giocatori`, `unisci_societa`) usano `vede_tutto()`.
+  Portale (`docs`, 0011), account e PIN restano: direttori solo in lettura, gestione solo admin
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

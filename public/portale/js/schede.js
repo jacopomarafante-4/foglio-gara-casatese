@@ -198,7 +198,7 @@ function viewSquadre(){
   <section class="panel">
     <h3 style="margin-top:0">Chi può fare cosa</h3>
     <div class="rolebox">
-      <div><b>Amministratore e direttori</b>L'amministratore crea le squadre e i PIN di mister, scout e direttori, inserisce le rose, carica e disegna gli schemi. I direttori vedono tutte le squadre, i PIN e lo Scouting, ma non modificano niente.</div>
+      <div><b>Amministratore e direttori</b>L'amministratore crea le squadre e i PIN di mister, scout e direttori, inserisce le rose, carica e disegna gli schemi. I direttori vedono tutte le squadre e i PIN senza poterli modificare; nello Scouting invece modificano come l'amministratore.</div>
       <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test, vede le statistiche e segnala giocatori allo scouting.</div>
       <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
     </div>

@@ -25,7 +25,7 @@ const conta = (g: Scheda) =>
 const completezza = (g: Scheda) =>
   conta(g) * 3 + [g.cognome, g.nome, g.ruolo, g.societa_id].filter(Boolean).length;
 
-/** Possibili schede doppie dello stesso giocatore: le unisce solo l'admin */
+/** Possibili schede doppie dello stesso giocatore: le uniscono admin e direttori */
 export default async function Doppioni({
   searchParams,
 }: {

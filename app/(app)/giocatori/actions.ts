@@ -234,6 +234,6 @@ export async function spostaStato(formData: FormData) {
 
   const supabase = await createClient();
   const { data, error } = await supabase.from('giocatori').update({ stato }).eq('id', id).select('id');
-  if (error || !data?.length) redirect(`${dove}${sep}errore=${encodeURIComponent('Stato non aggiornato: solo l’admin può cambiarlo.')}`);
+  if (error || !data?.length) redirect(`${dove}${sep}errore=${encodeURIComponent('Stato non aggiornato: possono cambiarlo solo admin e direttori.')}`);
   redirect(`${dove}${sep}ok=${encodeURIComponent(`Spostato in ${STATI[stato]}.`)}`);
 }

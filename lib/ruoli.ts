@@ -28,7 +28,7 @@ export function pannelloIniziale(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore' ? '/portale/' : '/home';
 }
 
-/** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi (i direttori, nello Scouting, solo in lettura) */
+/** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi */
 export function vedeTutto(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore';
 }
@@ -38,12 +38,13 @@ export function nomeCompleto(p: Pick<Profilo, 'nome' | 'cognome' | 'email'>) {
   return n || p.email;
 }
 
-/** Stessa regola della funzione SQL public.puo_segnalare() (0009): i direttori nello Scouting guardano soltanto */
+/** Stessa regola della funzione SQL public.puo_segnalare() (0018): admin, direttori e scout */
 export function puoSegnalare(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'scout';
+  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'scout';
 }
 
-/** Stati dei giocatori, gare, squadre seguite, dati di tutti: solo l'admin (SQL: public.is_admin()) */
+/** Stati dei giocatori, gare, squadre seguite, doppioni, dati di tutti nello Scouting: admin e direttori
+ *  (SQL: public.vede_tutto(), 0018). Nel Portale squadre i direttori restano in sola lettura. */
 export function gestisce(ruolo: Ruolo) {
-  return ruolo === 'admin';
+  return ruolo === 'admin' || ruolo === 'direttore';
 }

@@ -134,8 +134,9 @@ gare da andare a vedere, storico delle squadre in cui hanno giocato.</li>
 <tr><th style="width:18%">Ruolo</th><th style="width:25%">Dove entra</th><th>Cosa vede e cosa può fare</th></tr>
 <tr><td><b>Amministratore</b></td><td>Portale, Società e Scouting</td><td>Gestisce tutto: squadre, rose, calendari, schemi, PIN di tutti,
 stati dei giocatori osservati, gare da vedere, importazione delle distinte.</td></tr>
-<tr><td><b>Direttore</b></td><td>Portale (tutte le squadre), Società, Scouting</td><td><b>Vede tutto, non modifica niente.</b> Controlla il lavoro
-di squadre e scouting, compresi PIN e contatti delle famiglie.</td></tr>
+<tr><td><b>Direttore</b></td><td>Portale (tutte le squadre), Società, Scouting</td><td><b>Portale e Società: vede tutto, non modifica.</b>
+<b>Scouting: modifica come l'amministratore</b> (segnala, valuta, cambia gli stati, gestisce gare e doppioni).
+Vede anche PIN e contatti delle famiglie.</td></tr>
 <tr><td><b>Mister</b></td><td>Portale, solo la sua squadra</td><td>Prepara le partite (convocazioni, formazione, foglio gara), segna presenze,
 test e tabellini, guarda le statistiche, segnala giocatori allo scouting. Non vede l'archivio scouting.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
@@ -199,7 +200,7 @@ note solo tecniche · <span class="k">Esci</span> sui dispositivi condivisi · e
 <tr><td>In prova</td><td>Si sta allenando con noi.</td></tr>
 <tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr>
 <tr><td>Chiuso</td><td>Percorso concluso, con il motivo (non a livello, altro progetto…).</td></tr></table>
-<p class="small">Lo stato lo cambia solo l'amministratore.</p>
+<p class="small">Lo stato lo cambiano solo l'amministratore e i direttori.</p>
 <h3>Categorie per anno di nascita (stagione 2026/27)</h3>
 <table><tr><th>Nati nel</th><th>Categoria</th><th>Nati nel</th><th>Categoria</th></tr>
 <tr><td>2008 – 2009</td><td>Juniores</td><td>2014 – 2015</td><td>Esordienti</td></tr>
@@ -460,28 +461,28 @@ Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anch
 """
 
 # ---------------------------------------------------------------- DIRETTORI
-direttori = copertina('Manuale del direttore', 'Vedere tutto: squadre, Società e Scouting. In sola lettura.',
+direttori = copertina('Manuale del direttore', 'Squadre e Società in lettura, Scouting completo.',
                       'i direttori dell’Academy') + f"""
 <section>
 <h2>1. In breve</h2>
-<div class="box blu"><b class="t">Vedi tutto, non modifichi niente</b>
-Il ruolo del direttore è di controllo e indirizzo: vedi ogni squadra, l'area Società con i PIN e tutto lo Scouting,
-compresi i contatti delle famiglie. Le modifiche le fanno l'amministratore, i mister e gli scout.</div>
+<div class="box blu"><b class="t">Squadre in lettura, Scouting completo</b>
+Nel Portale delle squadre e in Società controlli: vedi ogni squadra e i PIN, ma le modifiche le fanno l'amministratore
+e i mister. Nello Scouting invece lavori come l'amministratore: segnali, valuti, cambi gli stati dei giocatori,
+gestisci le gare e unisci le schede doppie. Vedi anche i contatti delle famiglie.</div>
 <div class="si">
 <div class="col"><h3>Puoi</h3><ul class="ok">
 <li>Aprire il Portale di <b>tutte le squadre</b>: rosa, calendario, convocazioni, formazioni, presenze, statistiche</li>
 <li>Vedere l'area <b>Società</b>: squadre, mister, scout, direttori e i loro PIN</li>
 <li>Vedere l'app <b>come la vede un mister</b> (Anteprima)</li>
-<li>Consultare tutto lo <b>Scouting</b>: archivio, schede, contatti, stati, storico, gare</li></ul></div>
+<li>Nello <b>Scouting</b>: segnalare, valutare, cambiare gli stati, gestire gare e squadre seguite,
+unire le schede doppie, segnarti su una gara ("Ci vado io")</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
-<li>Modificare squadre, rose, partite, presenze, formazioni</li>
-<li>Generare o cambiare PIN, aggiungere persone</li>
-<li>Segnalare, valutare, cambiare stati, gestire le gare</li>
-<li>Segnarti su una gara ("Ci vado io")</li></ul></div>
+<li>Modificare squadre, rose, partite, presenze, formazioni nel Portale</li>
+<li>Generare o cambiare PIN, aggiungere persone</li></ul></div>
 </div>
 {ACCESSO}
 <p>Con il tuo PIN entri nel <b>Portale</b>; lo Scouting è l'area <b>Scouting</b> nella barra in alto.
-In alto vedi <span class="k">DIRETTORE · SOLA LETTURA</span>: i campi si leggono ma non si scrivono.</p>
+Nel Portale i campi si leggono ma non si scrivono; nello Scouting hai gli stessi pulsanti dell'amministratore.</p>
 </section>
 
 <section>
@@ -491,8 +492,8 @@ In alto vedi <span class="k">DIRETTORE · SOLA LETTURA</span>: i campi si leggon
 un PIN lo consegna o rigenera l'amministratore.</li>
 <li><b>Controllo</b>: verifica che le squadre tengano aggiornati convocazioni, presenze e tabellini, e che lo scouting segnali
 e valuti con regolarità e qualità.</li>
-<li><b>Decisioni</b>: le decisioni sui giocatori osservati (contattare, invitare, inserire, chiudere) e sulle squadre
-comunicale all'amministratore, che le registra.</li>
+<li><b>Decisioni</b>: le decisioni sui giocatori osservati (contattare, invitare, inserire, chiudere) le registri tu
+nello Scouting, cambiando lo stato; quelle sulle squadre comunicale all'amministratore.</li>
 <li><b>Sicurezza</b>: se sospetti che un PIN sia finito in mani sbagliate, avvisa subito l'amministratore.</li>
 </ul>
 {REGOLE}
@@ -520,7 +521,9 @@ Tu le vedi soltanto: per aggiungere persone o cambiare un PIN chiedi all'amminis
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
-<li><b>Home</b>: numeri dell'archivio per stato e ultime segnalazioni.</li></ul>''', 'Scheda di un giocatore')}
+<li><b>Home</b>: numeri dell'archivio per stato e ultime segnalazioni.</li>
+<li>Come l'amministratore puoi <b>segnalare</b>, <b>valutare</b>, <b>cambiare lo stato</b> (anche trascinando nella vista
+Per stato), <b>gestire le gare</b> e unire le <b>schede doppie</b>.</li></ul>''', 'Scheda di un giocatore')}
 <div class="box"><b class="t">Glossario e regole</b>Stati dei giocatori, categorie per anno di nascita e regole sui dati sono nel
 <b>Manuale generale</b>.</div>
 </section>
