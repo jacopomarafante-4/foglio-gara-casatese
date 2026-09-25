@@ -22,12 +22,10 @@ export function puoAccedere(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'scout';
 }
 
-/** Pannello che si apre dopo l'accesso: l'admin gestisce le squadre, i direttori scelgono
- *  tra Portale e Scouting (pagina d'ingresso), gli scout vanno allo Scouting */
+/** Pannello che si apre dopo l'accesso: admin e direttori il Portale (lì c'è tutto, Scouting compreso),
+ *  gli scout lo Scouting */
 export function pannelloIniziale(ruolo: Ruolo) {
-  if (ruolo === 'admin') return '/portale/';
-  if (ruolo === 'direttore') return '/';
-  return '/home';
+  return ruolo === 'admin' || ruolo === 'direttore' ? '/portale/' : '/home';
 }
 
 /** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi (i direttori, nello Scouting, solo in lettura) */

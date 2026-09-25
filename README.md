@@ -20,8 +20,8 @@ Tutti entrano da `/` digitando **solo il PIN**. Il PIN dice chi sei:
 |---|---|
 | PIN **del mister** (4 cifre, generato dall'admin in Portale → Società → Squadre) | Portale squadre, solo la sua squadra |
 | PIN **personale** di uno scout (6 cifre, generato in Società) | Scouting |
-| PIN **personale** di un direttore (6 cifre) | sceglie Portale o Scouting: vede tutte le squadre, Società e lo Scouting, **non modifica niente** |
-| PIN **admin** (variabile `PIN_ADMIN`) | poi email e password → Portale squadre; da `/` si sceglie anche Scouting Hub |
+| PIN **personale** di un direttore (6 cifre) | Portale: vede tutte le squadre, Società e lo Scouting (area nella barra), **non modifica niente** |
+| PIN **admin** (variabile `PIN_ADMIN`) | poi email e password → Portale (lo Scouting è un'area nella barra) |
 
 Niente accesso automatico: il PIN si rimette quando si chiude il browser (per i mister anche
 chiudendo la scheda) e comunque dopo **6 ore** (`ORE_ACCESSO`).

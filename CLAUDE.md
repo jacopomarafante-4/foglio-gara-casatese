@@ -14,7 +14,9 @@ Repository **pubblico**: niente dati personali dei ragazzi su git (`private/`,
 ## Accesso (pagina `/`, `app/auth/actions.ts` → `accedi`)
 Un solo campo PIN per tutti: PIN squadra → `/portale/#squadra=PIN` (mister); PIN personale
 (`email_per_pin()`, migrazione 0006; il PIN è la password dell'account) → Scouting Hub;
-`PIN_ADMIN` (variabile solo server) → poi email e password → Portale.
+`PIN_ADMIN` (variabile solo server) → poi email e password → Portale. Admin e direttori già entrati che aprono `/`
+tornano dritti al Portale (niente pagina di scelta); il Portale, se non riconosce la sessione, rimanda a `/?pin=1`
+(mostra sempre il PIN, evita il giro di rimandi).
 Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal login
 (`lib/supabase/durata.ts`, stesso valore in `public/portale/js/core.js`). Uscite sempre
 `signOut({ scope: 'local' })`, per non chiudere la sessione sugli altri dispositivi.

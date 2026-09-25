@@ -82,8 +82,8 @@ function renderChrome(){
   $('#ctx').innerHTML = isAdmin()
     ? `${readOnly() ? '<span class="badge dir" title="Vedi tutte le squadre, senza modificare">Direttore · sola lettura</span>' : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
-  // Il logo riporta alla scelta dei pannelli solo per l'admin: il mister resterebbe senza squadra
-  if(IN_APP_UNICA && isAdmin()) $('#homelink').href = '/'; else $('#homelink').removeAttribute('href');
+  // Il logo riporta alla Home del Portale (il PIN del mister non sta nell'indirizzo: resta entrato)
+  if(IN_APP_UNICA) $('#homelink').href = '#/home'; else $('#homelink').removeAttribute('href');
   renderNav();
 }
 function viewGate(){
@@ -119,7 +119,7 @@ function viewGate(){
 function render(){
   if(!hashLocked && !adminAccessGranted()){
     // App unica: l'accesso si fa solo dalla pagina d'ingresso (PIN)
-    if(IN_APP_UNICA && teamsLoaded){ location.replace('/'); return; }
+    if(IN_APP_UNICA && teamsLoaded){ location.replace('/?pin=1'); return; }
     $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
     $('#ctx').innerHTML = ''; $('#tabs').innerHTML = ''; $('#areanav').classList.add('hidden'); $('#matchline').textContent = '';
     $('#view').innerHTML = viewGate();

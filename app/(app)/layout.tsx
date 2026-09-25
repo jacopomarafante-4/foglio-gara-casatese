@@ -47,7 +47,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
         <header className="bg-blu text-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="mx-auto flex max-w-[1000px] items-center gap-2.5 px-4 py-3">
             <a
-              href={profilo.ruolo === 'admin' || profilo.ruolo === 'direttore' ? '/' : '/home'}
+              href={profilo.ruolo === 'admin' || profilo.ruolo === 'direttore' ? '/portale/#/home' : '/home'}
               className="block shrink-0 rounded-[9px] bg-white p-[3px] leading-none shadow"
             >
               <Image src="/portale/casatese-logo.png" alt="Casatese Merate" width={42} height={42} className="rounded-md" priority />
