@@ -149,9 +149,15 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
-  if(readOnly()) v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {
-    if(el.type === 'checkbox' || el.type === 'radio') el.disabled = true; else el.readOnly = true;
-  });
+  if(readOnly()){
+    v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {
+      if(el.type === 'checkbox' || el.type === 'radio') el.disabled = true; else el.readOnly = true;
+    });
+    // anche le tendine che cambiano dati (modulo, capitano, tipo gara…); restano libere quelle per guardare
+    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf]').forEach(el => {
+      el.disabled = true; el.title = 'Sola lettura';
+    });
+  }
 }
 
 function viewSquadre(){
