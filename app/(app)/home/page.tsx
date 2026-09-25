@@ -17,12 +17,14 @@ type MiaGara = {
   gara: { id: string; data_ora: string; categoria: string; casa_nome: string; trasferta_nome: string } | null;
 };
 
+type CodicePin = { profilo_id: string; pin: string };
+
 export default async function Home() {
   const profilo = (await getProfilo())!;
   const tutto = vedeTutto(profilo.ruolo);
   const supabase = await createClient();
 
-  const [ultime, mieGare, conteggi, team] = await Promise.all([
+  const [ultime, mieGare, conteggi, team, pin] = await Promise.all([
     supabase
       .from('segnalazioni')
       .select('id, data, testo, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
@@ -37,6 +39,7 @@ export default async function Home() {
     tutto
       ? supabase.from('profiles').select('id, email, nome, cognome, ruolo, annate, attivo').order('ruolo').order('cognome')
       : Promise.resolve({ data: null }),
+    tutto ? supabase.from('codici_accesso').select('profilo_id, pin') : Promise.resolve({ data: null }),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
@@ -49,6 +52,7 @@ export default async function Home() {
     perStato.set(r.stato, (perStato.get(r.stato) ?? 0) + 1);
   }
   const persone = (team.data as Profilo[] | null) ?? [];
+  const pinPerProfilo = new Map(((pin.data as CodicePin[] | null) ?? []).map((p) => [p.profilo_id, p.pin]));
 
   return (
     <div className="space-y-10">
@@ -154,6 +158,7 @@ export default async function Home() {
                   <th className="px-4 py-3 font-medium">Nome</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Ruolo</th>
+                  <th className="px-4 py-3 font-medium">PIN</th>
                   <th className="px-4 py-3 font-medium">Stato</th>
                 </tr>
               </thead>
@@ -163,6 +168,7 @@ export default async function Home() {
                     <td className="px-4 py-3 font-medium">{nomeCompleto(p)}</td>
                     <td className="px-4 py-3 text-grigio">{p.email}</td>
                     <td className="px-4 py-3">{ETICHETTA_RUOLO[p.ruolo]}</td>
+                    <td className="px-4 py-3 font-mono">{pinPerProfilo.get(p.id) ?? '–'}</td>
                     <td className="px-4 py-3">{p.attivo ? 'Attivo' : 'Sospeso'}</td>
                   </tr>
                 ))}
