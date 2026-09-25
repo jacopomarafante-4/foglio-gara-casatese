@@ -20,7 +20,8 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
 - [ ] Consegnare i PIN di scout e direttori (Società)
 - [x] Migrazione **0009** (direttori in sola lettura nello Scouting) eseguita nel SQL Editor
 - [x] Migrazione **0010** (direttori: modificano Portale e Società) eseguita nel SQL Editor
-- [ ] Migrazione **0011** (direttori: nel Portale solo in lettura) eseguita nel SQL Editor
+- [x] Migrazione **0011** (direttori: nel Portale solo in lettura) eseguita nel SQL Editor
+- [ ] Migrazione **0012** (eventi del giocatore, doppioni) eseguita nel SQL Editor
 - [ ] Note importate con dati personali (es. numeri di telefono dei genitori nel testo delle segnalazioni):
       spostarli nei contatti protetti e toglierli dalle note
 - [x] PIN personali per scout e direttori (si generano in Società)
@@ -42,11 +43,11 @@ Documento di progetto: https://claude.ai/code/artifact/ccfafc8e-f622-424e-82c9-9
       25/26 tradotte in stato/motivo di chiusura con una mappatura di ~60 frasi distinte:
       da controllare a campione, specie le chiusure (`chiuso`) — testo originale sempre
       conservato in `giocatori.note` per verifica.
-- [ ] Unione di due schede doppie (per i responsabili) — utile subito: nel foglio importato
+- [x] Unione di due schede doppie (solo admin, pagina Possibili doppioni) — utile subito: nel foglio importato
       c'erano quasi-doppioni con refusi (es. "Ilyass"/"Ilyasse Omari") non uniti in automatico
       per prudenza (rischio di unire persone diverse)
-- [ ] Eventi: open day e provini con presenze ed esito
-- [ ] Vista a colonne per stato (kanban) per i responsabili
+- [x] Eventi: open day e provini con presenza ed esito, nella scheda del giocatore
+- [x] Vista a colonne per stato (Giocatori → Per stato; sposta solo l'admin)
 - [ ] Lettura automatica delle gare da comunicati PDF / Tuttocampo
 - [x] Pubblicata su Vercel: https://academy-casatese.vercel.app
 - [x] Tutti usano il nuovo indirizzo; GitHub Pages spento (settembre 2026)

@@ -46,7 +46,10 @@ La scheda aperta resta nell'indirizzo (`/portale/#/formazione`): il tasto indiet
 - **Giocatori**: archivio con ricerca e filtri; scheda con storia, medie delle 4 aree, stato,
   contatti famiglia protetti.
 - **Valutazione**: report a 4 aree con voto 1–5, note e giudizio finale.
-- **Pipeline**: Segnalato → Da rivedere → Contattato → Invitato → In prova → Inserito, oppure Chiuso.
+- **Pipeline**: Segnalato → Da rivedere → Contattato → Invitato → In prova → Inserito, oppure Chiuso;
+  anche come vista a colonne per stato (Giocatori → Per stato).
+- **Eventi** nella scheda del giocatore: open day, provini, allenamenti di prova, con presenza ed esito.
+- **Doppioni** (admin): schede dello stesso giocatore scritte in modi diversi, da unire in una.
 - **Gare da vedere**: gare dei prossimi 7 giorni vicino a Casatenovo/Merate, "Ci vado io".
 
 ## Cosa ti serve
@@ -78,7 +81,7 @@ Apri http://localhost:3000 e digita il PIN.
 ## Database (Supabase → SQL Editor)
 Da eseguire **una volta**, in ordine (incolla tutto il file → **Run**):
 1. `supabase/sicurezza.sql` — protegge i documenti del Portale (admin via login, mister via PIN)
-2. `supabase/migrations/0001_…` → `0011_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
+2. `supabase/migrations/0001_…` → `0012_…` — tabelle e permessi di Scouting Hub, accesso col PIN,
    segnalazioni e PIN personali dei mister, permessi dei direttori
 
 Ogni nuova modifica al database = un nuovo file numerato in `supabase/migrations/`.

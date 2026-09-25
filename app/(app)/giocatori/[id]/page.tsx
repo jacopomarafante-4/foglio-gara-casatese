@@ -12,6 +12,7 @@ import { dataBreve } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
+import { EventiGiocatore, type Evento } from '@/components/EventiGiocatore';
 import { aggiornaGiocatore, aggiungiContatto, cambiaStato, eliminaContatto } from '../actions';
 
 type Autore = { nome: string | null; cognome: string | null; email: string } | null;
@@ -79,12 +80,14 @@ export default async function SchedaGiocatore({
   const g = data as unknown as Giocatore;
 
   const autore = 'autore:profiles(nome, cognome, email)';
-  const [segn, val, storico, contatti] = await Promise.all([
+  const [segn, val, storico, contatti, ev] = await Promise.all([
     supabase.from('segnalazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('valutazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('storico_stati').select(`id, da_stato, a_stato, motivo, created_at, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
     supabase.from('contatti').select(`id, tipo, nome, telefono, email, consenso_privacy, ${autore}`).eq('giocatore_id', id).order('created_at'),
+    supabase.from('eventi_giocatore').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
   ]);
+  const eventi = (ev.data as unknown as Evento[]) ?? [];
   const segnalazioni = (segn.data as unknown as Segnalazione[]) ?? [];
   const valutazioni = (val.data as unknown as Valutazione[]) ?? [];
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];
@@ -172,6 +175,15 @@ export default async function SchedaGiocatore({
           ))}
         </dl>
       </section>
+
+      <EventiGiocatore
+        giocatoreId={g.id}
+        eventi={eventi}
+        mioId={profilo.id}
+        scrive={puoSegnalare(profilo.ruolo)}
+        gestore={gestisce(profilo.ruolo)}
+        chi={chi}
+      />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         {/* Storia */}

@@ -53,6 +53,23 @@ export const AREE = [
 
 export type ChiaveArea = (typeof AREE)[number]['chiave'];
 
+/** Eventi nella scheda del giocatore (tipi SQL tipo_evento / esito_evento, migrazione 0012) */
+export type TipoEvento = 'open_day' | 'provino' | 'allenamento_prova' | 'altro';
+export type EsitoEvento = 'positivo' | 'da_rivedere' | 'negativo';
+
+export const TIPI_EVENTO: Record<TipoEvento, string> = {
+  open_day: 'Open day',
+  provino: 'Provino',
+  allenamento_prova: 'Allenamento di prova',
+  altro: 'Altro',
+};
+
+export const ESITI_EVENTO: Record<EsitoEvento, string> = {
+  positivo: 'Positivo',
+  da_rivedere: 'Da rivedere',
+  negativo: 'Negativo',
+};
+
 /** Annate selezionabili: dai 5 ai 20 anni rispetto all'anno in corso */
 export function annateDisponibili() {
   const anno = new Date().getFullYear();

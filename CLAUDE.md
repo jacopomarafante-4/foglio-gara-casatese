@@ -93,6 +93,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0009: direttori in sola lettura nello Scouting (`puo_segnalare()` senza direttore, scritture di gestione solo `is_admin()`)
 - 0010: direttori leggono e scrivono `docs` (Portale) e vedono `codici_accesso`; tolta `dirigente_get()`
 - 0011: direttori solo in lettura su `docs` (Portale)
+- 0012: `eventi_giocatore` (open day, provini: presenza, esito) nella scheda del giocatore; `doppioni_esclusi`;
+  `unisci_giocatori()` (solo admin) — ricerca dei doppioni in `lib/doppioni.ts`, pagina `/giocatori/doppioni`;
+  vista a colonne per stato `/giocatori/stati`
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).

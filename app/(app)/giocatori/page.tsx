@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
-import { puoSegnalare } from '@/lib/ruoli';
+import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { annateDisponibili, RUOLI_CAMPO, STATI, valoreValido, type RuoloCampo, type StatoGiocatore } from '@/lib/tipi';
 import { perRicerca } from '@/lib/utili';
 import { StatoBadge } from '@/components/StatoBadge';
 import { elencoSocieta } from '@/lib/societa';
+import { VistaGiocatori } from '@/components/VistaGiocatori';
 
 type Riga = {
   id: string;
@@ -77,9 +78,12 @@ export default async function Giocatori({
             {totalePagine > 1 && ` – pagina ${pagina} di ${totalePagine}`}
           </p>
         </div>
-        {puoSegnalare(profilo.ruolo) && (
-          <Link href="/segnala" className="bottone">Segnala un giocatore</Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <VistaGiocatori attiva="elenco" admin={gestisce(profilo.ruolo)} />
+          {puoSegnalare(profilo.ruolo) && (
+            <Link href="/segnala" className="bottone">Segnala un giocatore</Link>
+          )}
+        </div>
       </div>
 
       <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-6">
