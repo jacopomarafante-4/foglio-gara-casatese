@@ -377,7 +377,7 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <li>Registrare open day, provini e allenamenti di prova, con presenza ed esito</li>
 <li>Consultare l'archivio, le schede, lo storico delle squadre e le prossime gare di ogni ragazzo</li>
 <li>Scegliere le gare da vedere con "Ci vado io"</li>
-<li>Prendere un <b>incarico</b> dalla Home ("Me ne occupo io") e segnarlo fatto, con com'è andata</li>
+<li>Prendere un <b>incarico</b> dalla Home ("Me ne occupo io"), o trovare quelli che ti hanno affidato, e segnarlo fatto con com'è andata</li>
 <li>Aggiungere i contatti della famiglia</li>
 <li>Modificare i dati dei giocatori che hai segnalato tu</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
@@ -542,6 +542,9 @@ le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Incarichi</b>: in Home scrivi cosa c'è da fare (una squadra da vedere, un torneo da supervisionare, una partita),
 con società, categoria, data e dettagli. Direttori e scout lo prendono con "Me ne occupo io", così nessuno va in due;
 chi l'ha preso lo lascia o lo segna fatto con l'esito. Tu puoi anche liberarlo, chiuderlo o eliminarlo.</li>
+<li><b>Affidare</b>: con "Affida a" scegli tu chi se ne occupa (uno scout o un altro direttore), già quando crei l'incarico
+o dopo. Puoi affidare anche una <b>partita</b> (in Gare, "Affida a…" sotto la gara: la persona risulta anche su "Ci va") o un
+<b>giocatore</b> (nella sua scheda, "Affida a…"). L'incarico compare in Home con chi l'ha affidato.</li>
 <li>Come l'amministratore puoi <b>segnalare</b>, <b>valutare</b>, <b>cambiare lo stato</b> (anche trascinando nella vista
 Per stato), <b>gestire le gare</b> e unire le <b>schede doppie</b>.</li></ul>''', 'Scheda di un giocatore')}
 <div class="box"><b class="t">Glossario e regole</b>Stati dei giocatori, categorie per anno di nascita e regole sui dati sono nel

@@ -1,25 +1,40 @@
+import Link from 'next/link';
 import { nomeCompleto } from '@/lib/ruoli';
-import { dataBreve } from '@/lib/utili';
+import { dataBreve, dataOraBreve } from '@/lib/utili';
+import type { PersonaStaff } from '@/lib/staff';
 import { Etichetta } from '@/components/Etichetta';
-import { chiudiIncarico, creaIncarico, eliminaIncarico, lasciaIncarico, prendiIncarico } from '@/app/(app)/home/actions';
+import { affidaIncarico, chiudiIncarico, creaIncarico, eliminaIncarico, lasciaIncarico, prendiIncarico } from '@/app/(app)/home/actions';
 
 type Persona = { id: string; nome: string | null; cognome: string | null; email: string } | null;
 export type Incarico = {
-  id: string; titolo: string; tipo: 'squadra' | 'torneo' | 'partita' | 'altro'; categoria: string | null; quando: string | null;
+  id: string; titolo: string; tipo: 'squadra' | 'torneo' | 'partita' | 'giocatore' | 'altro'; categoria: string | null; quando: string | null;
   dettagli: string | null; fatto: boolean; fatto_il: string | null; esito: string | null; created_at: string;
-  societa: { nome: string } | null; creato: Persona; assegnato: Persona;
+  societa: { nome: string } | null; creato: Persona; assegnato: Persona; affidante: Persona;
+  gara: { data_ora: string; ora_da_definire: boolean | null; campo: string | null } | null;
+  giocatore: { id: string } | null;
 };
 
 export const SELECT_INCARICO =
   'id, titolo, tipo, categoria, quando, dettagli, fatto, fatto_il, esito, created_at, societa(nome), ' +
-  'creato:profiles!incarichi_creato_da_fkey(id, nome, cognome, email), assegnato:profiles!incarichi_assegnato_a_fkey(id, nome, cognome, email)';
+  'creato:profiles!incarichi_creato_da_fkey(id, nome, cognome, email), assegnato:profiles!incarichi_assegnato_a_fkey(id, nome, cognome, email), ' +
+  'affidante:profiles!incarichi_affidato_da_fkey(id, nome, cognome, email), gara:gare(data_ora, ora_da_definire, campo), giocatore:giocatori(id)';
 
-const TIPI: Record<Incarico['tipo'], string> = { squadra: 'Squadra da vedere', torneo: 'Torneo', partita: 'Partita', altro: 'Altro' };
+const TIPI: Record<Incarico['tipo'], string> = { squadra: 'Squadra da vedere', torneo: 'Torneo', partita: 'Partita', giocatore: 'Giocatore', altro: 'Altro' };
+
+/** Tendina "Affida a": vuota = libero, chiunque può prenderlo */
+function SceltaPersona({ staff, scelta, libero = 'Nessuno: lo prende chi vuole' }: { staff: PersonaStaff[]; scelta?: string; libero?: string }) {
+  return (
+    <select name="persona" defaultValue={scelta ?? ''} className="campo" aria-label="Affida a">
+      <option value="">{libero}</option>
+      {staff.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+    </select>
+  );
+}
 const chi = (p: Persona) => (p ? nomeCompleto({ ...p, email: p.nome || p.cognome ? p.email : 'Utente' }) : '—');
 
 /** Incarichi in Home: li creano admin e direttori (gestore), li prendono direttori e scout */
-export function Incarichi({ aperti, fatti, mioId, gestore, societa }: {
-  aperti: Incarico[]; fatti: Incarico[]; mioId: string; gestore: boolean; societa: string[];
+export function Incarichi({ aperti, fatti, mioId, gestore, societa, staff }: {
+  aperti: Incarico[]; fatti: Incarico[]; mioId: string; gestore: boolean; societa: string[]; staff: PersonaStaff[];
 }) {
   return (
     <section id="incarichi" className="space-y-3">
@@ -35,9 +50,13 @@ export function Incarichi({ aperti, fatti, mioId, gestore, societa }: {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <span className="rounded-full bg-carta px-2 py-0.5 text-xs font-semibold text-grigio">{TIPI[x.tipo]}</span>
-                    <p className="mt-1 font-semibold">{x.titolo}</p>
+                    <p className="mt-1 font-semibold">
+                      {x.giocatore ? <Link href={`/giocatori/${x.giocatore.id}`} className="hover:text-blu">{x.titolo} ›</Link> : x.titolo}
+                    </p>
                     <p className="text-sm text-grigio">
-                      {[x.societa?.nome, x.categoria, x.quando ? dataBreve(x.quando) : null].filter(Boolean).join(' · ')}
+                      {x.gara
+                        ? [x.gara.ora_da_definire ? `${dataBreve(x.gara.data_ora)} · ora da definire` : dataOraBreve(x.gara.data_ora), x.categoria, x.gara.campo].filter(Boolean).join(' · ')
+                        : [x.societa?.nome, x.categoria, x.quando ? dataBreve(x.quando) : null].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                   {gestore && (
@@ -58,7 +77,10 @@ export function Incarichi({ aperti, fatti, mioId, gestore, societa }: {
                     </form>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-sm">Se ne occupa: <strong>{mio ? 'tu' : chi(x.assegnato)}</strong></p>
+                      <p className="text-sm">
+                        Se ne occupa: <strong>{mio ? 'tu' : chi(x.assegnato)}</strong>
+                        {x.affidante && x.affidante.id !== x.assegnato.id && <span className="text-grigio"> · affidato da {chi(x.affidante)}</span>}
+                      </p>
                       {(mio || gestore) && (
                         <div className="flex flex-wrap items-start gap-2">
                           <details className="min-w-0 flex-1">
@@ -76,6 +98,13 @@ export function Incarichi({ aperti, fatti, mioId, gestore, societa }: {
                         </div>
                       )}
                     </div>
+                  )}
+                  {gestore && (
+                    <form action={affidaIncarico} className="mt-3 flex gap-2">
+                      <input type="hidden" name="id" value={x.id} />
+                      <SceltaPersona staff={staff} scelta={x.assegnato?.id} libero="Libero" />
+                      <button className="shrink-0 rounded-lg border border-blu px-3 text-sm font-semibold text-blu hover:bg-blu/5">Affida</button>
+                    </form>
                   )}
                 </div>
               </li>
@@ -101,6 +130,11 @@ export function Incarichi({ aperti, fatti, mioId, gestore, societa }: {
             <Etichetta testo="Quando">
               <input type="date" name="quando" className="campo" />
             </Etichetta>
+            <div className="sm:col-span-2">
+              <Etichetta testo="Affida a">
+                <SceltaPersona staff={staff} />
+              </Etichetta>
+            </div>
             <Etichetta testo="Società">
               <input name="societa" list="incarichi-societa" className="campo" autoComplete="off" />
               <datalist id="incarichi-societa">{societa.map((s) => <option key={s} value={s} />)}</datalist>

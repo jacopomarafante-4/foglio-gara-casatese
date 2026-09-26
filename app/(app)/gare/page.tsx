@@ -5,6 +5,7 @@ import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
 import { Avviso } from '@/components/Avviso';
+import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
 
 const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14'];
@@ -56,6 +57,7 @@ export default async function Gare({
   const { data: gareData, error } = soloSeguite && !interessano.length ? { data: [], error: null } : await q;
 
   const sede = CENTRO_DISTANZE;
+  const staff = gestisce(profilo.ruolo) ? await staffScouting(supabase) : undefined;
   const tutteLeGare = (gareData as unknown as Gara[]) ?? [];
 
   const gare = tutteLeGare
@@ -157,7 +159,7 @@ export default async function Gare({
             <h2 className="mb-3 font-display text-2xl font-bold first-letter:uppercase">{giorno}</h2>
             <div className="space-y-3">
               {lista.map((g) => (
-                <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} />
+                <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff} />
               ))}
             </div>
           </section>

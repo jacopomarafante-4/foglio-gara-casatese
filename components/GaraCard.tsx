@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { annullaPrenotazione, prenotaGara } from '@/app/(app)/gare/actions';
+import { affidaGara } from '@/app/(app)/home/actions';
+import type { PersonaStaff } from '@/lib/staff';
 import { StatoBadge } from '@/components/StatoBadge';
 import type { GaraArricchita } from '@/lib/gare';
 
@@ -8,12 +10,15 @@ export function GaraCard({
   mioId,
   puoPrenotarsi,
   allegati,
+  staff,
 }: {
   gara: GaraArricchita;
   mioId: string;
   puoPrenotarsi: boolean;
   /** Distinte caricate con "Aggiungi partita" (link temporanei) */
   allegati?: { nome: string; url: string }[];
+  /** Solo per admin e direttori: a chi affidare la partita */
+  staff?: PersonaStaff[];
 }) {
   const ora = gara.ora_da_definire
     ? null
@@ -131,6 +136,21 @@ export function GaraCard({
             </form>
           )}
         </div>
+
+        {staff && staff.length > 0 && (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-sm font-semibold text-blu">Affida a…</summary>
+            <form action={affidaGara} className="mt-2 flex flex-wrap gap-2">
+              <input type="hidden" name="gara_id" value={gara.id} />
+              <select name="persona" required defaultValue="" className="campo min-w-0 flex-1" aria-label="Affida la partita a">
+                <option value="" disabled>Scegli chi ci va</option>
+                {staff.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </select>
+              <input name="dettagli" placeholder="Cosa guardare (facoltativo)" className="campo min-w-0 flex-1" />
+              <button className="bottone">Affida</button>
+            </form>
+          </details>
+        )}
       </div>
     </article>
   );

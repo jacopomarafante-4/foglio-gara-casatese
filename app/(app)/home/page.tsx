@@ -5,6 +5,7 @@ import { ETICHETTA_RUOLO, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ru
 import { STATI, type StatoGiocatore } from '@/lib/tipi';
 import { dataBreve, dataOraBreve, istanteTraOre } from '@/lib/utili';
 import { elencoSocieta } from '@/lib/societa';
+import { staffScouting } from '@/lib/staff';
 import { Avviso } from '@/components/Avviso';
 import { Incarichi, SELECT_INCARICO, type Incarico } from '@/components/Incarichi';
 
@@ -31,7 +32,7 @@ export default async function Home({
   const tutto = vedeTutto(profilo.ruolo);
   const supabase = await createClient();
 
-  const [ultime, mieGare, conteggi, aperti, fatti, societa] = await Promise.all([
+  const [ultime, mieGare, conteggi, aperti, fatti, societa, staff] = await Promise.all([
     supabase
       .from('segnalazioni')
       .select('*, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
@@ -48,6 +49,7 @@ export default async function Home({
       .order('quando', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }),
     supabase.from('incarichi').select(SELECT_INCARICO).eq('fatto', true).order('fatto_il', { ascending: false }).limit(10),
     tutto ? elencoSocieta(supabase) : Promise.resolve([]),
+    tutto ? staffScouting(supabase) : Promise.resolve([]),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
@@ -93,6 +95,7 @@ export default async function Home({
         mioId={profilo.id}
         gestore={tutto}
         societa={societa.map((s) => s.nome)}
+        staff={staff}
       />
 
       {tutto && perStato.size > 0 && (

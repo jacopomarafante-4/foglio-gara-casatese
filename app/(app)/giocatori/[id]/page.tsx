@@ -18,6 +18,8 @@ import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
 import { EventiGiocatore, type Evento } from '@/components/EventiGiocatore';
 import { aggiornaGiocatore, aggiungiContatto, cambiaStato, eliminaContatto } from '../actions';
+import { affidaGiocatore } from '../../home/actions';
+import { staffScouting } from '@/lib/staff';
 
 type Autore = { nome: string | null; cognome: string | null; email: string } | null;
 
@@ -118,6 +120,7 @@ export default async function SchedaGiocatore({
   const elencoContatti = (contatti.data as unknown as Contatto[]) ?? [];
 
   const gestore = gestisce(profilo.ruolo);
+  const staff = gestore ? await staffScouting(supabase) : [];
   const tutto = vedeTutto(profilo.ruolo); // admin e direttori vedono anche i contatti
   const scrive = puoSegnalare(profilo.ruolo);
   const modifica = gestore || (scrive && g.creato_da === profilo.id);
@@ -332,6 +335,25 @@ export default async function SchedaGiocatore({
               </select>
               <button className="bottone w-full">Aggiorna stato</button>
             </form>
+          )}
+
+          {/* Affidare il giocatore a uno scout o a un direttore: diventa un incarico in Home */}
+          {gestore && (
+            <details className="rounded-xl border border-linea bg-white p-4">
+              <summary className="cursor-pointer font-display text-xl font-bold">Affida a…</summary>
+              <form action={affidaGiocatore} className="mt-3 space-y-3">
+                <input type="hidden" name="giocatore_id" value={g.id} />
+                <select name="persona" required defaultValue="" className="campo" aria-label="Affida a">
+                  <option value="" disabled>Scegli chi lo va a vedere</option>
+                  {staff.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                </select>
+                <Etichetta testo="Entro quando">
+                  <input type="date" name="quando" className="campo" />
+                </Etichetta>
+                <textarea name="dettagli" rows={2} placeholder="Cosa guardare (facoltativo)" className="campo" />
+                <button className="bottone w-full">Affida</button>
+              </form>
+            </details>
           )}
 
           {/* Contatti */}

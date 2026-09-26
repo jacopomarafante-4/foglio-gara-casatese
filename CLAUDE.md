@@ -132,6 +132,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- 0025: incarichi affidati: `gara_id`, `giocatore_id`, `affidato_da`, tipo `giocatore`. "Affida a" (lista `staffScouting()`
+  in `lib/staff.ts`) in Home, nella scheda del giocatore (`affidaGiocatore`) e sotto ogni gara (`affidaGara`, segna anche "Ci va")
 - 0024: `incarichi` in Home (`components/Incarichi.tsx`): li creano/eliminano admin e direttori (vede_tutto), li prendono
   direttori e scout con `prendi_incarico()`, `lascia_incarico()`, `chiudi_incarico(id, esito)`. Tolti dall'app e dai manuali
   gli avvisi sul consenso dei contatti (staff tutto tesserato: si condividono all'interno dello staff)
