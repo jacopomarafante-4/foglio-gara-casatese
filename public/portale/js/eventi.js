@@ -37,6 +37,9 @@ document.addEventListener('click', e => {
   if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ curTeam = S.teams[0]?.id||null; subscribeTeam(); } else render(); } return; }
   if(t.dataset.pdel){ const id=t.dataset.pdel; S.players = S.players.filter(p=>p.id!==id); const l=S.sheet.lineup; Object.keys(l).forEach(k=>{if(l[k]===id) delete l[k]}); S.sheet.bench=S.sheet.bench.filter(b=>b!==id); save('roster'); save('sheet'); render(); return; }
   if(t.dataset.caldel){ S.calendar = S.calendar.filter(m=>m.id!==t.dataset.caldel); save('calendar'); render(); return; }
+  /* Convocazioni dell'attività di base */
+  if(t.dataset.adbconv){ const [i, pid] = t.dataset.adbconv.split(':'); const p = partiteAdb()[+i]; if(p){ p.conv ||= []; p.conv = p.conv.includes(pid) ? p.conv.filter(x => x!==pid) : [...p.conv, pid]; save('sheet'); render(); } return; }
+  if(t.dataset.adbdel){ const pp = partiteAdb(); if(confirm(`Togliere la partita ${+t.dataset.adbdel+1} e i suoi convocati?`)){ pp.splice(+t.dataset.adbdel, 1); save('sheet'); render(); } return; }
   if(t.dataset.callupid){ const id=t.dataset.callupid, st=t.dataset.callupstatus; S.sheet.callup ||= {}; S.sheet.callup[id] = S.sheet.callup[id]===st ? '' : st; save('sheet'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
   if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); selectedPlayer=null; render(); } return; }
@@ -91,6 +94,8 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'downloadconv': downloadConvocazione(); break;
+    case 'adbadd': { const pp = partiteAdb(); if(pp.length < ADB_MAX){ const usate = new Set(pp.map(p => p.calId)); const m = allCalendar().filter(x => x.date && x.date >= todayISO() && !usate.has(x.id)).sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0]; pp.push(nuovaPartitaAdb(pp.length ? null : m)); save('sheet'); render(); } break; }
+    case 'adbreset': if(confirm('Svuotare tutte le partite e i convocati?')){ S.sheet.adb = {partite: []}; save('sheet'); render(); } break;
     case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'exportbackup': exportBackup(); break;
     case 'segnala': inviaSegnalazione(); break;
@@ -126,6 +131,7 @@ document.addEventListener('input', e => {
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }
   if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save('roster'); } }
+  else if(t.dataset.adbf && t.tagName!=='SELECT'){ const p = partiteAdb()[+t.dataset.adbi]; if(p){ p[t.dataset.adbf] = t.value; save('sheet'); } }
   else if(t.dataset.sheet && t.tagName!=='SELECT'){
     S.sheet[t.dataset.sheet]=t.value;
     save('sheet');
@@ -157,6 +163,13 @@ document.addEventListener('change', e => {
       save('sheet'); }
     render(); return;
   }
+  if(t.dataset.adbcal !== undefined && t.tagName==='SELECT'){
+    const p = partiteAdb()[+t.dataset.adbcal], m = allCalendar().find(x => x.id===t.value);
+    if(p && m) Object.assign(p, {calId: m.id, date: m.date||'', time: m.time||'', opponent: m.opponent||'', home: !!m.home, venue: m.venue||'', address: m.address||'', ll: m.ll||''});
+    else if(p) p.calId = '';
+    save('sheet'); render(); return;
+  }
+  if(t.dataset.adbf && t.tagName==='SELECT'){ const p = partiteAdb()[+t.dataset.adbi]; if(p){ p[t.dataset.adbf] = t.dataset.adbf==='home' ? !!t.value : t.value; save('sheet'); render(); } return; }
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
   else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
   else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }

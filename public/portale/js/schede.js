@@ -160,7 +160,7 @@ function render(){
       if(el.type === 'checkbox' || el.type === 'radio') el.disabled = true; else el.readOnly = true;
     });
     // anche le tendine che cambiano dati (modulo, capitano, tipo gara…); restano libere quelle per guardare
-    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf], select[data-atok], select[data-ruolo]').forEach(el => {
+    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf], select[data-atok], select[data-ruolo], select[data-adbcal], select[data-adbf]').forEach(el => {
       el.disabled = true; el.title = 'Sola lettura';
     });
   }
@@ -469,8 +469,70 @@ function viewFriendlies(){ /* in Squadra → Calendario */
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
+/* ---------- Convocazioni dell'attività di base: da 1 a 4 partite, ognuna con i suoi convocati ----------
+   sheet.adb.partite = [{id, calId, date, time, meetTime, opponent, home, venue, address, ll, meetAddress, mr, note, conv:[pid]}]
+   Il PDF ha una pagina per partita (convocazioneAdbPage in pdf.js). */
+const ADB_MAX = 4;
+const partiteAdb = () => ((S.sheet.adb ||= {partite: []}).partite ||= []);
+function nuovaPartitaAdb(m){
+  return {id: uid('pa'), calId: m?.id || '', date: m?.date || '', time: m?.time || '', meetTime: '', opponent: m?.opponent || '',
+    home: !!m?.home, venue: m?.venue || '', address: m?.address || '', ll: m?.ll || '', meetAddress: '', mr: '', note: '', conv: []};
+}
+function viewConvocazioniAdb(){
+  const pp = partiteAdb();
+  const sorted = S.players.slice().sort((a,b) => a.name.localeCompare(b.name, 'it'));
+  const oggi = todayISO();
+  const cal = allCalendar().filter(m => m.date && m.date >= oggi).sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  const card = (p, i) => {
+    const altrove = pid => pp.some((q, j) => j !== i && (q.conv||[]).includes(pid));
+    const calOpts = `<option value="">Scegli dal calendario…</option>` + cal.map(m => `<option value="${m.id}" ${m.id===p.calId?'selected':''}>${weekday(m.date)} ${fmtDate(m.date)}${m.time?' '+esc(m.time):''} · ${esc(m.opponent||'Avversario')}${m.home?' (casa)':''}</option>`).join('');
+    const f = (k, l, t = 'text', ph = '') => `<div><label class="f">${l}</label><input type="${t}" data-adbf="${k}" data-adbi="${i}" value="${esc(p[k]||'')}" placeholder="${esc(ph)}"></div>`;
+    const conv = sorted.map(g => {
+      const on = (p.conv||[]).includes(g.id);
+      return `<button class="convtoggle adbconv" data-adbconv="${i}:${g.id}" aria-pressed="${on}">${on ? '✓ ' : ''}${esc(g.name)}${!on && altrove(g.id) ? ' <small>· in altra partita</small>' : ''}</button>`;
+    }).join('');
+    return `<div class="adbcard">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Partita ${i+1}${pp.length > 1 ? ` di ${pp.length}` : ''}</h3>
+        ${pp.length > 1 ? `<button class="btn small ghost danger" data-adbdel="${i}">Togli</button>` : ''}
+      </div>
+      <div style="margin-top:10px"><select data-adbcal="${i}" aria-label="Partita dal calendario">${calOpts}</select></div>
+      <div class="grid" style="margin-top:10px">
+        ${f('date','Data','date')}${f('time','Inizio gara','time')}
+        <div><label class="f">Ritrovo ore</label><input type="time" data-adbf="meetTime" data-adbi="${i}" value="${esc(p.meetTime || minus75(p.time) || '')}"></div>
+        ${f('opponent','Avversario')}
+        <div><label class="f">Sede</label><select data-adbf="home" data-adbi="${i}"><option value="1" ${p.home?'selected':''}>Casa</option><option value="" ${!p.home?'selected':''}>Trasferta</option></select></div>
+        ${f('mr','Mister presente','text', coachNames(TEAM())||'Nome del mister')}
+      </div>
+      <div class="grid" style="margin-top:10px">
+        ${f('venue','Campo di gioco','text','Campo e paese')}${f('address','Indirizzo del campo')}
+        ${f('meetAddress','Indirizzo del ritrovo','text','Al campo di gioco (solo se altrove)')}
+      </div>
+      <div style="margin-top:10px"><label class="f">Note</label><textarea data-adbf="note" data-adbi="${i}">${esc(p.note||'')}</textarea></div>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:14px">
+        <h3 class="convh3" style="margin:0">Convocati</h3><span class="countchip" data-status="CON"><b>${(p.conv||[]).length}</b>convocati</span>
+      </div>
+      <p class="hint">Tocca i giocatori convocati per questa partita: nel foglio compaiono solo loro.</p>
+      <div class="adbconvlist">${conv}</div>
+    </div>`;
+  };
+  return `<section class="panel">
+    <h2>Convocazioni</h2>
+    <p class="hint">Attività di base: da 1 a ${ADB_MAX} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF ha una pagina per partita.</p>
+    ${pp.length ? pp.map(card).join('') : `<p class="empty">Nessuna partita: aggiungi la prima.</p>`}
+    <div class="row" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      ${pp.length < ADB_MAX ? `<button class="btn" data-act="adbadd">+ Aggiungi partita</button>` : '<span class="note">Massimo 4 partite.</span>'}
+      <span class="row" style="gap:8px">
+        ${pp.length ? `<button class="btn primary" data-act="downloadconv">Scarica convocazione PDF</button>` : ''}
+        ${pp.length ? `<button class="btn small ghost danger" data-act="adbreset">Svuota</button>` : ''}
+      </span>
+    </div>
+  </section>`;
+}
+
 function viewConvocazioni(){
   const s = S.sheet;
+  if(isAdb() && S.players.length) return viewConvocazioniAdb();
   if(!S.players.length) return `<section class="panel"><h2>Convocazioni</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
   const sorted = S.players.slice().sort((a,b) => a.name.localeCompare(b.name, 'it'));
   /* Attività di base: solo convocato sì/no, senza motivo (nel PDF compaiono solo i convocati) */

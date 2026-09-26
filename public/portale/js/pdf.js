@@ -273,7 +273,7 @@ const loadLogo = () => loadImg('casatese-logo.png');
 /* Convocazione dell'attività di base (da Under 13 in giù), come il modello della società:
    CONVOCAZIONE · società · categoria, poi Data, Indirizzo, Inizio gara, Ritrovo, Avversario, Mister presente, Note
    e l'elenco dei soli convocati (su due colonne se sono tanti). */
-function convocazioneAdbPage(logoImg, figcImg){
+function convocazioneAdbPage(logoImg, figcImg, p, n = 1, tot = 1){
   const PW = 800, PH = 1131, PK = 2;
   const c = document.createElement('canvas'); c.width = PW*PK; c.height = PH*PK;
   const x = c.getContext('2d'); x.scale(PK,PK); x.fillStyle = '#fff'; x.fillRect(0,0,PW,PH);
@@ -286,7 +286,7 @@ function convocazioneAdbPage(logoImg, figcImg){
   const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
   T(x, 'CONVOCAZIONE', cx, y+34, {size:32, weight:700, align:'center', max:cmax});
   T(x, 'ACADEMY CASATESE MERATE', cx, y+66, {size:18, weight:700, align:'center', max:cmax, color:BLU_SCURO});
-  T(x, String(TEAM()?.category || s.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase(), cx, y+96, {size:22, weight:700, align:'center', max:cmax});
+  T(x, String(TEAM()?.category || s.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase() + (tot > 1 ? ` · PARTITA ${n} DI ${tot}` : ''), cx, y+96, {size:22, weight:700, align:'center', max:cmax});
   y += hh + 10;
   striscia(x, mx, y, tw, 5); y += 18;
 
@@ -315,20 +315,22 @@ function convocazioneAdbPage(logoImg, figcImg){
     if(out.length > maxRighe){ out.length = maxRighe; out[maxRighe-1] = out[maxRighe-1].replace(/\s*\S*$/, '') + ' …'; }
     return out;
   }
-  const luogo = luogoPartita(s), ritrovo = (s.meetAddress||'').trim();
-  const data = s.date ? `${weekday(s.date)} ${fmtDate(s.date)}` : '';
-  riga('Data', data);
+  // Dati della partita: dal calendario, se collegata (campo aggiornato dai comunicati), se no quelli scritti
+  const m = p.calId ? allCalendar().find(q => q.id === p.calId) : null;
+  const luogo = m && m.venue ? {venue: m.venue, address: m.address||'', ll: m.ll||''} : {venue: p.venue||'', address: p.address||'', ll: p.ll||''};
+  const ritrovo = (p.meetAddress||'').trim();
+  riga('Data', p.date ? `${weekday(p.date)} ${fmtDate(p.date)}` : '');
   riga('Indirizzo', testoLuogo(luogo), {aCapo:true, max:2, url:luogoUrl(luogo)});
   if(ritrovo) riga('Ritrovo presso', ritrovo, {aCapo:true, max:2, url:venueUrl(ritrovo)});
-  riga('Inizio gara ore', s.time || '');
-  riga('Ritrovo ore', defaultMeetTime(s));
-  riga('Avversario', s.opponent ? `${s.opponent}${s.home ? ' (in casa)' : ' (in trasferta)'}` : '');
-  riga('Mister presente', s.mrPresente || coachNames(TEAM()) || '');
-  riga('Note', s.convNotes, {aCapo:true, max:6});
+  riga('Inizio gara ore', p.time || '');
+  riga('Ritrovo ore', p.meetTime || minus75(p.time) || '');
+  riga('Avversario', p.opponent ? `${p.opponent}${p.home ? ' (in casa)' : ' (in trasferta)'}` : '');
+  riga('Mister presente', p.mr || coachNames(TEAM()) || '');
+  riga('Note', p.note, {aCapo:true, max:6});
   y += 22;
 
   // Convocati: solo i nomi, in ordine alfabetico; due colonne se sono più di 10
-  const conv = S.players.filter(p => (s.callup[p.id]||'') === 'CON').sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  const conv = S.players.filter(g => (p.conv||[]).includes(g.id)).sort((a,b)=>a.name.localeCompare(b.name,'it'));
   x.fillStyle = BLU_SCURO; x.fillRect(mx, y, tw, 34);
   T(x, `CONVOCATI (${conv.length})`, mx+12, y+17+1, {size:15, weight:700, base:'middle', color:'#fff'});
   y += 34;
@@ -336,14 +338,14 @@ function convocazioneAdbPage(logoImg, figcImg){
   const rh = Math.min(34, Math.max(20, (PH - y - 50) / perCol)), cw = tw / colonne;
   for(let i = 0; i < perCol; i++){
     for(let k = 0; k < colonne; k++){
-      const p = conv[k*perCol + i]; const px = mx + k*cw;
+      const g = conv[k*perCol + i]; const px = mx + k*cw;
       x.fillStyle = i%2 ? '#F7F7F5' : '#fff'; x.fillRect(px, y, cw, rh);
       x.strokeStyle = LINE_C; x.strokeRect(px, y, cw, rh);
-      if(p){ T(x, String(k*perCol + i + 1), px+22, y+rh/2+1, {size:12, weight:700, align:'center', base:'middle', color:MUTED}); T(x, p.name, px+44, y+rh/2+1, {size:Math.min(15, rh*0.52), weight:600, base:'middle', max:cw-56}); }
+      if(g){ T(x, String(k*perCol + i + 1), px+22, y+rh/2+1, {size:12, weight:700, align:'center', base:'middle', color:MUTED}); T(x, g.name, px+44, y+rh/2+1, {size:Math.min(15, rh*0.52), weight:600, base:'middle', max:cw-56}); }
     }
     y += rh;
   }
-  if(!conv.length) T(x, 'Nessun giocatore convocato: segna CON nelle Convocazioni.', mx+12, y+20, {size:13, color:MUTED});
+  if(!conv.length) T(x, 'Nessun giocatore convocato per questa partita.', mx+12, y+20, {size:13, color:MUTED});
   return c;
 }
 function convocazionePage(logoImg, figcImg){
@@ -443,12 +445,17 @@ async function downloadConvocazione(){
   setStatus('Creo la convocazione…');
   await ensureFonts();
   const [logoImg, figcImg] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]);
-  const page = isAdb() ? convocazioneAdbPage(logoImg, figcImg) : convocazionePage(logoImg, figcImg);
+  // Attività di base: una pagina per partita; agonistica: una pagina
+  const pp = isAdb() ? partiteAdb() : null;
+  const pages = pp ? pp.map((p, i) => convocazioneAdbPage(logoImg, figcImg, p, i + 1, pp.length)) : [convocazionePage(logoImg, figcImg)];
   const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:true});
-  doc.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
-  for(const ml of page.mapsLinks || []){ const kx = 210/ml.pw, ky = 297/ml.ph; doc.link(ml.x*kx, ml.y*ky, ml.w*kx, ml.h*ky, {url: ml.url}); }
-  const s = S.sheet;
-  const name = [fmtDate(s.date).replace(/\//g,'_'), s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : '', 'CONVOCAZIONE'].filter(Boolean).join('_') + '.pdf';
+  pages.forEach((page, i) => {
+    if(i) doc.addPage();
+    doc.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+    for(const ml of page.mapsLinks || []){ const kx = 210/ml.pw, ky = 297/ml.ph; doc.link(ml.x*kx, ml.y*ky, ml.w*kx, ml.h*ky, {url: ml.url}); }
+  });
+  const s = pp && pp[0] ? pp[0] : S.sheet;
+  const name = [fmtDate(s.date).replace(/\//g,'_'), (pp && pp.length > 1) ? `${pp.length}_PARTITE` : (s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : ''), 'CONVOCAZIONE'].filter(Boolean).join('_') + '.pdf';
   try{
     if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
     else browserDownload(name, doc.output('blob'));
