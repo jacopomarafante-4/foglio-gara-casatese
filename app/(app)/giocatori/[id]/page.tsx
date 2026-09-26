@@ -10,7 +10,7 @@ import {
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
 import { categoriaDaAnnata } from '@/lib/categorie';
-import { arricchisci, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara, type Sede } from '@/lib/gare';
+import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { Avviso } from '@/components/Avviso';
@@ -101,18 +101,17 @@ export default async function SchedaGiocatore({
 
   // Squadra di appartenenza e sue prossime gare (dal pannello Gare), se la società è nota
   const categoria = g.categoria || categoriaDaAnnata(g.annata);
-  const [{ data: gareData }, { data: sediData }, seguite] = g.societa_id
+  const [{ data: gareData }, seguite] = g.societa_id
     ? await Promise.all([
         supabase.from('gare').select(SELECT_GARA)
           .or(`casa_id.eq.${g.societa_id},trasferta_id.eq.${g.societa_id}`)
           .gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(80),
-        supabase.from('sedi').select('id, nome, lat, lon').order('id'),
         squadreSeguite(supabase),
       ])
-    : [{ data: [] }, { data: [] }, []];
+    : [{ data: [] }, []];
   const prossimeGare = ((gareData as unknown as Gara[]) ?? [])
     .filter((x) => giocatoriDellaGara(x, [{ ...(g as unknown as GiocatoreInGara), stato: 'in_lista' }]).length > 0)
-    .map((x) => arricchisci(x, ((sediData as Sede[]) ?? [])[0] ?? null, seguite));
+    .map((x) => arricchisci(x, CENTRO_DISTANZE, seguite));
   const segnalazioni = (segn.data as unknown as Segnalazione[]) ?? [];
   const valutazioni = (val.data as unknown as Valutazione[]) ?? [];
   const cambi = (storico.data as unknown as CambioStato[]) ?? [];

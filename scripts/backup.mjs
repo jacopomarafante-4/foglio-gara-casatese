@@ -6,7 +6,7 @@
 // degli account si salvano solo email e ruolo (profiles).
 // =====================================================================
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
@@ -25,7 +25,7 @@ const TABELLE = [
   'profiles', 'codici_accesso',
   // Scouting
   'societa', 'giocatori', 'contatti', 'segnalazioni', 'valutazioni', 'storico_stati', 'eventi_giocatore',
-  'doppioni_esclusi', 'sedi', 'squadre_seguite', 'gare', 'gare_osservatori',
+  'doppioni_esclusi', 'sedi', 'squadre_seguite', 'gare', 'gare_osservatori', 'gare_allegati',
   // Distinte e storico
   'squadre', 'distinte', 'distinte_giocatori',
 ];
@@ -50,6 +50,18 @@ for (const t of TABELLE) {
   await writeFile(join(cartella, `${t}.json`), JSON.stringify(righe, null, 1));
   riepilogo[t] = righe.length;
 }
+// File delle distinte caricate con "Aggiungi partita" (contenitore privato "distinte"): contengono nomi di minori,
+// restano solo qui in private/
+let file = 0;
+for (const a of (await db.from('gare_allegati').select('percorso')).data ?? []) {
+  const { data } = await db.storage.from('distinte').download(a.percorso);
+  if (!data) { problemi++; continue; }
+  const dest = join(cartella, 'distinte', a.percorso);
+  await mkdir(dirname(dest), { recursive: true });
+  await writeFile(dest, Buffer.from(await data.arrayBuffer()));
+  file++;
+}
+riepilogo['file distinte'] = file;
 await writeFile(join(cartella, '_riepilogo.json'), JSON.stringify({ quando: ora.toISOString(), righe: riepilogo }, null, 1));
 
 // Tiene solo gli ultimi TENERE backup

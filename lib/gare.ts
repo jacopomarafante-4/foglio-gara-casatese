@@ -8,6 +8,9 @@ type Coord = { lat: number | null; lon: number | null };
 
 export type Sede = { id: number; nome: string; lat: number; lon: number };
 
+/** Centro fisso delle distanze: a metà tra Merate e Cernusco Lombardone */
+export const CENTRO_DISTANZE: Sede = { id: 0, nome: 'Merate – Cernusco Lombardone', lat: 45.696, lon: 9.409 };
+
 export type SquadraSeguita = {
   id: string;
   societa_id: string;

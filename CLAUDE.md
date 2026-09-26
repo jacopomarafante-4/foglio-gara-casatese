@@ -132,6 +132,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- 0023: "Aggiungi partita" (`/gare/nuova`): gare a mano anche dagli scout (`chiave` null, `inserita_da`),
+  `segnalazioni.gara_id`, `gare_allegati` + contenitore privato `distinte` (foto/PDF, vedono vede_tutto() e chi carica;
+  il browser carica i file dopo `salvaPartita()`). Distanze nel pannello Gare da `CENTRO_DISTANZE` (lib/gare.ts, tra Merate e
+  Cernusco L.) con tolleranza 10%; `sedi` non si usa più. Il backup scarica anche i file delle distinte
 - 0022: stati `in_lista`, `in_osservazione`, `da_rivedere`, `inserito`, `da_non_inserire` (rinominati da segnalato,
   contattato, chiuso; invitato/in_prova → in_osservazione e vietati, restano nel tipo solo per lo storico: `etichettaStato()`).
   I giocatori dell'Academy (`idNostraSocieta()` in `lib/societa.ts`) non compaiono in elenco e vista per stato se non con "Tutti i giocatori"

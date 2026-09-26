@@ -7,10 +7,13 @@ export function GaraCard({
   gara,
   mioId,
   puoPrenotarsi,
+  allegati,
 }: {
   gara: GaraArricchita;
   mioId: string;
   puoPrenotarsi: boolean;
+  /** Distinte caricate con "Aggiungi partita" (link temporanei) */
+  allegati?: { nome: string; url: string }[];
 }) {
   const ora = gara.ora_da_definire
     ? null
@@ -93,6 +96,16 @@ export function GaraCard({
               ))}
             </ul>
           </div>
+        )}
+
+        {allegati && allegati.length > 0 && (
+          <p className="mt-2 flex flex-wrap gap-2 text-sm">
+            {allegati.map((a, i) => (
+              <a key={a.url} href={a.url} target="_blank" rel="noreferrer" className="rounded-full bg-carta px-3 py-1 hover:text-blu">
+                📎 {allegati.length > 1 ? `Distinta ${i + 1}` : 'Distinta'}
+              </a>
+            ))}
+          </p>
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
