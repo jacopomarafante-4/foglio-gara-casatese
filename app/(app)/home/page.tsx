@@ -127,9 +127,14 @@ export default async function Home({
           ) : (
             <ul className="mt-3 divide-y divide-linea rounded-xl border border-linea bg-white">
               {gare.map((g) => (
-                <li key={g.id} className="px-4 py-3">
-                  <p className="text-sm text-grigio">{dataOraBreve(g.data_ora)} – {g.categoria}</p>
-                  <p className="font-semibold">{g.casa_nome} – {g.trasferta_nome}</p>
+                <li key={g.id}>
+                  <Link href={`/gare/${g.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-carta">
+                    <span>
+                      <span className="block text-sm text-grigio">{dataOraBreve(g.data_ora)} – {g.categoria}</span>
+                      <span className="block font-semibold">{g.casa_nome} – {g.trasferta_nome}</span>
+                    </span>
+                    <span aria-hidden className="text-grigio">›</span>
+                  </Link>
                 </li>
               ))}
             </ul>

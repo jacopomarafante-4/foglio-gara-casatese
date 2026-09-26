@@ -132,6 +132,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano
+  chi l'ha inserita (solo gare a mano) e admin/direttori; una gara dei calendari modificata a mano diventa "variata"
+  ("Modificata a mano"), così `importa.mjs` non la sovrascrive. Partite cliccabili in Home, Gare e Attività
 - 0025: incarichi affidati: `gara_id`, `giocatore_id`, `affidato_da`, tipo `giocatore`. "Affida a" (lista `staffScouting()`
   in `lib/staff.ts`) in Home, nella scheda del giocatore (`affidaGiocatore`) e sotto ogni gara (`affidaGara`, segna anche "Ci va")
 - 0024: `incarichi` in Home (`components/Incarichi.tsx`): li creano/eliminano admin e direttori (vede_tutto), li prendono

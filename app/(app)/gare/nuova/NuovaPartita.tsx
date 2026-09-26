@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { caricaDistinte } from '@/components/CaricaDistinte';
 import { etaDaCategoria, fineStagione } from '@/lib/categorie';
 import { RUOLI_CAMPO } from '@/lib/tipi';
 import { Etichetta } from '@/components/Etichetta';
@@ -36,19 +37,9 @@ export function NuovaPartita({ societa, oggi }: { societa: string[]; oggi: strin
     if (r.errore || !r.garaId) { setStato({ errore: r.errore ?? 'Partita non salvata.' }); return; }
 
     // Distinte: nel contenitore privato "distinte", cartella della gara
-    let caricate = 0;
-    const falliti: string[] = [];
-    if (file.length) {
-      const supabase = createClient();
-      for (const [i, f] of file.entries()) {
-        setStato({ lavoro: `Carico la distinta ${i + 1} di ${file.length}…` });
-        const nome = f.name.normalize('NFD').replace(/[^\w.-]+/g, '_').slice(-80);
-        const percorso = `${r.garaId}/${Date.now()}-${i}-${nome}`;
-        const up = await supabase.storage.from('distinte').upload(percorso, f, { contentType: f.type || undefined });
-        const ins = up.error ? up : await supabase.from('gare_allegati').insert({ gara_id: r.garaId, percorso, nome_file: f.name, tipo: f.type });
-        if (ins.error) falliti.push(f.name); else caricate++;
-      }
-    }
+    const { caricate, falliti } = file.length
+      ? await caricaDistinte(r.garaId, file, (i) => setStato({ lavoro: `Carico la distinta ${i + 1} di ${file.length}…` }))
+      : { caricate: 0, falliti: [] as string[] };
     const msg = [r.messaggio, caricate ? `${caricate} ${caricate === 1 ? 'distinta caricata' : 'distinte caricate'}.` : '',
       falliti.length ? `Non caricate: ${falliti.join(', ')}.` : ''].filter(Boolean).join(' ');
     router.push(`/gare?ok=${encodeURIComponent(msg)}`);
@@ -149,7 +140,7 @@ export function NuovaPartita({ societa, oggi }: { societa: string[]; oggi: strin
       {stato.errore && <p role="alert" className="rounded-md bg-rosso/10 px-4 py-3 text-sm text-rosso">{stato.errore}</p>}
       <div className="flex flex-wrap items-center gap-3">
         <button disabled={inLavoro} className="bottone">{inLavoro ? stato.lavoro : 'Salva partita'}</button>
-        <a href="/gare" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">Annulla</a>
+        <Link href="/gare" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">Annulla</Link>
       </div>
     </form>
   );

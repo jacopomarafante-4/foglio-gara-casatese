@@ -79,12 +79,14 @@ export default async function Attivita() {
         ) : (
           <ul className="mt-3 divide-y divide-linea rounded-xl border border-linea bg-white text-sm">
             {gare.map((g) => (
-              <li key={g.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
-                <span className="font-semibold first-letter:uppercase">
-                  {g.ora_da_definire ? `${dataOraBreve(g.data_ora).split(',')[0]} · ora da definire` : dataOraBreve(g.data_ora)}
-                </span>
-                <span>{g.casa_nome} – {g.trasferta_nome}</span>
-                <span className="text-grigio">{g.categoria}{g.campo ? ` · ${g.campo}` : ''}</span>
+              <li key={g.id}>
+                <Link href={`/gare/${g.id}`} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5 hover:bg-carta">
+                  <span className="font-semibold first-letter:uppercase">
+                    {g.ora_da_definire ? `${dataOraBreve(g.data_ora).split(',')[0]} · ora da definire` : dataOraBreve(g.data_ora)}
+                  </span>
+                  <span>{g.casa_nome} – {g.trasferta_nome}</span>
+                  <span className="text-grigio">{g.categoria}{g.campo ? ` · ${g.campo}` : ''}</span>
+                </Link>
               </li>
             ))}
           </ul>

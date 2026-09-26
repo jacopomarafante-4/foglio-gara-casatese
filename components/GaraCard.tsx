@@ -58,11 +58,13 @@ export function GaraCard({
           {stato && <span className={`rounded px-1.5 py-0.5 text-xs font-semibold ${stato.classe}`}>{stato.testo}</span>}
         </p>
         <h3 className="font-display text-xl font-bold leading-tight">
-          <span className={gara.casa_id && seguiteId.has(gara.casa_id) ? 'text-blu' : ''}>{gara.casa_nome}</span>
-          {' – '}
-          <span className={gara.trasferta_id && seguiteId.has(gara.trasferta_id) ? 'text-blu' : ''}>
-            {gara.trasferta_nome}
-          </span>
+          <Link href={`/gare/${gara.id}`} className="hover:underline" title="Apri la partita">
+            <span className={gara.casa_id && seguiteId.has(gara.casa_id) ? 'text-blu' : ''}>{gara.casa_nome}</span>
+            {' – '}
+            <span className={gara.trasferta_id && seguiteId.has(gara.trasferta_id) ? 'text-blu' : ''}>
+              {gara.trasferta_nome}
+            </span>
+          </Link>
         </h3>
 
         {(gara.campo || gara.indirizzo) && (

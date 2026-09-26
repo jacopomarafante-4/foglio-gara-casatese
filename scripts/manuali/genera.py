@@ -460,6 +460,9 @@ segnalati) oppure "Tutte", categoria.</li>
 <li><b>Aggiungi partita</b>: una partita vista (anche fuori calendario: tornei, amichevoli, Esordienti, Pulcini) con le
 <b>foto o i PDF delle distinte</b> e i <b>giocatori visti</b>, tutto in una pagina. Se la partita è già nei calendari si usa
 quella. Le distinte restano private: le vedono admin, direttori e chi le ha caricate (📎 sulla gara).</li>
+<li><b>Ogni partita si apre</b> toccandone il nome (in Gare, in Home "Le mie gare", in Attività): dati, chi ci va, giocatori
+visti in quella partita e distinte. Chi l'ha inserita e i direttori possono <b>modificarla</b>, aggiungere o togliere distinte
+ed eliminarla (solo quelle inserite a mano).</li>
 <li>Le gare vengono dai <b>calendari ufficiali</b> dei gironi. <b>Da calendario</b> = data, ora e campo previsti, ancora da
 verificare; <b>Confermata · C.U. n. …</b> = confermata dal comunicato ufficiale; <b>Variata · C.U. n. …</b> = data, ora o campo
 cambiati dal comunicato. Controlla sempre prima di partire.</li>
