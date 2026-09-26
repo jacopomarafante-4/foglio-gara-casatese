@@ -19,6 +19,9 @@ alter type public.stato_giocatore rename value 'chiuso'     to 'da_non_inserire'
 -- Invitati e in prova → in osservazione, senza cambiare la data di ultima modifica
 alter table public.giocatori disable trigger giocatori_updated_at;
 update public.giocatori set stato = 'in_osservazione' where stato in ('invitato', 'in_prova');
+-- Ex "chiusi" (0019) con motivo "Non a livello" nelle note → da non inserire; gli altri restano in lista
+update public.giocatori set stato = 'da_non_inserire'
+ where stato = 'in_lista' and note ilike '%Esito: Non a livello%';
 alter table public.giocatori enable trigger giocatori_updated_at;
 
 alter table public.giocatori drop constraint if exists giocatori_stati_attuali;
