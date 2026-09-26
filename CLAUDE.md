@@ -132,6 +132,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- 0024: `incarichi` in Home (`components/Incarichi.tsx`): li creano/eliminano admin e direttori (vede_tutto), li prendono
+  direttori e scout con `prendi_incarico()`, `lascia_incarico()`, `chiudi_incarico(id, esito)`. Tolti dall'app e dai manuali
+  gli avvisi sul consenso dei contatti (staff tutto tesserato: si condividono all'interno dello staff)
 - 0023: "Aggiungi partita" (`/gare/nuova`): gare a mano anche dagli scout (`chiave` null, `inserita_da`),
   `segnalazioni.gara_id`, `gare_allegati` + contenitore privato `distinte` (foto/PDF, vedono vede_tutto() e chi carica;
   il browser carica i file dopo `salvaPartita()`). Distanze nel pannello Gare da `CENTRO_DISTANZE` (lib/gare.ts, tra Merate e

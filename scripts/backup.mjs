@@ -25,7 +25,7 @@ const TABELLE = [
   'profiles', 'codici_accesso',
   // Scouting
   'societa', 'giocatori', 'contatti', 'segnalazioni', 'valutazioni', 'storico_stati', 'eventi_giocatore',
-  'doppioni_esclusi', 'sedi', 'squadre_seguite', 'gare', 'gare_osservatori', 'gare_allegati',
+  'doppioni_esclusi', 'sedi', 'squadre_seguite', 'gare', 'gare_osservatori', 'gare_allegati', 'incarichi',
   // Distinte e storico
   'squadre', 'distinte', 'distinte_giocatori',
 ];

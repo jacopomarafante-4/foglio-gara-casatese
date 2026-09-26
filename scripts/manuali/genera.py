@@ -377,7 +377,8 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <li>Registrare open day, provini e allenamenti di prova, con presenza ed esito</li>
 <li>Consultare l'archivio, le schede, lo storico delle squadre e le prossime gare di ogni ragazzo</li>
 <li>Scegliere le gare da vedere con "Ci vado io"</li>
-<li>Aggiungere i contatti della famiglia (con il consenso)</li>
+<li>Prendere un <b>incarico</b> dalla Home ("Me ne occupo io") e segnarlo fatto, con com'è andata</li>
+<li>Aggiungere i contatti della famiglia</li>
 <li>Modificare i dati dei giocatori che hai segnalato tu</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
 <li>Cambiare lo stato di un giocatore (in lista, in osservazione…)</li>
@@ -400,8 +401,8 @@ niente informazioni personali (salute, famiglia, scuola).</li>
 <li><b>Niente doppioni</b>: prima di segnalare cerca il ragazzo in <b>Giocatori</b>; se c'è, usa
 <span class="k">Aggiungi segnalazione</span> dalla sua scheda. L'app riconosce comunque stesso cognome, nome e annata.</li>
 <li><b>"Ci vado io"</b>: usalo per le gare a cui vai, così non si va in due allo stesso campo, e toglilo se cambi idea.</li>
-<li><b>Contatti delle famiglie</b>: li inserisci solo se la famiglia ha dato il consenso. Per contattare società, famiglie o
-ragazzi segui le indicazioni del direttore e della società.</li>
+<li><b>Contatti delle famiglie</b>: si possono condividere tra lo staff dell'Academy (mister, scout, direttori), che è tutto
+tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del direttore e della società.</li>
 <li><b>Discrezione</b> a bordo campo e fuori: le valutazioni restano nello staff.</li>
 </ul>
 {REGOLE}
@@ -502,8 +503,8 @@ in Società e nello Scouting hai gli stessi pulsanti dell'amministratore.</p>
 <section>
 <h2>2. Le tue responsabilità</h2>
 <ul>
-<li><b>Riservatezza massima</b>: vedi i PIN di tutti e i contatti delle famiglie. Non si comunicano a nessuno,
-se non alla persona interessata, quando la aggiungi o le rigeneri il PIN.</li>
+<li><b>Riservatezza</b>: i PIN non si comunicano a nessuno, se non alla persona interessata, quando la aggiungi o le
+rigeneri il PIN. I contatti delle famiglie si condividono solo all'interno dello staff dell'Academy.</li>
 <li><b>Controllo</b>: verifica che le squadre tengano aggiornati convocazioni, presenze e tabellini, e che lo scouting segnali
 e valuti con regolarità e qualità.</li>
 <li><b>Decisioni</b>: le decisioni sui giocatori osservati (contattare, invitare, inserire, chiudere) le registri tu
@@ -537,7 +538,10 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
-<li><b>Home</b>: numeri dell'archivio per stato e ultime segnalazioni.</li>
+<li><b>Home</b>: incarichi, numeri dell'archivio per stato e ultime segnalazioni.</li>
+<li><b>Incarichi</b>: in Home scrivi cosa c'è da fare (una squadra da vedere, un torneo da supervisionare, una partita),
+con società, categoria, data e dettagli. Direttori e scout lo prendono con "Me ne occupo io", così nessuno va in due;
+chi l'ha preso lo lascia o lo segna fatto con l'esito. Tu puoi anche liberarlo, chiuderlo o eliminarlo.</li>
 <li>Come l'amministratore puoi <b>segnalare</b>, <b>valutare</b>, <b>cambiare lo stato</b> (anche trascinando nella vista
 Per stato), <b>gestire le gare</b> e unire le <b>schede doppie</b>.</li></ul>''', 'Scheda di un giocatore')}
 <div class="box"><b class="t">Glossario e regole</b>Stati dei giocatori, categorie per anno di nascita e regole sui dati sono nel

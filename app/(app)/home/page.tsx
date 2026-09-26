@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { ETICHETTA_RUOLO, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { STATI, type StatoGiocatore } from '@/lib/tipi';
 import { dataBreve, dataOraBreve, istanteTraOre } from '@/lib/utili';
+import { elencoSocieta } from '@/lib/societa';
+import { Avviso } from '@/components/Avviso';
+import { Incarichi, SELECT_INCARICO, type Incarico } from '@/components/Incarichi';
 
 type UltimaSegnalazione = {
   id: string;
@@ -18,12 +21,17 @@ type MiaGara = {
   gara: { id: string; data_ora: string; categoria: string; casa_nome: string; trasferta_nome: string } | null;
 };
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; errore?: string }>;
+}) {
+  const { ok, errore } = await searchParams;
   const profilo = (await getProfilo())!;
   const tutto = vedeTutto(profilo.ruolo);
   const supabase = await createClient();
 
-  const [ultime, mieGare, conteggi] = await Promise.all([
+  const [ultime, mieGare, conteggi, aperti, fatti, societa] = await Promise.all([
     supabase
       .from('segnalazioni')
       .select('*, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
@@ -35,6 +43,11 @@ export default async function Home() {
       .eq('profilo_id', profilo.id)
       .gte('gara.data_ora', istanteTraOre(-3)),
     tutto ? supabase.from('giocatori').select('stato').eq('osservato', true) : Promise.resolve({ data: null }),
+    // Incarichi: aperti (prima quelli con la data più vicina) e gli ultimi fatti
+    supabase.from('incarichi').select(SELECT_INCARICO).eq('fatto', false)
+      .order('quando', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }),
+    supabase.from('incarichi').select(SELECT_INCARICO).eq('fatto', true).order('fatto_il', { ascending: false }).limit(10),
+    tutto ? elencoSocieta(supabase) : Promise.resolve([]),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
@@ -54,6 +67,8 @@ export default async function Home() {
         <h1 className="font-display text-4xl font-bold">Ciao {profilo.nome ?? nomeCompleto(profilo)}</h1>
       </section>
 
+      <Avviso ok={ok} errore={errore} />
+
       {puoSegnalare(profilo.ruolo) && (
         <Link
           href="/segnala"
@@ -71,6 +86,14 @@ export default async function Home() {
           </span>
         </Link>
       )}
+
+      <Incarichi
+        aperti={(aperti.data as unknown as Incarico[]) ?? []}
+        fatti={(fatti.data as unknown as Incarico[]) ?? []}
+        mioId={profilo.id}
+        gestore={tutto}
+        societa={societa.map((s) => s.nome)}
+      />
 
       {tutto && perStato.size > 0 && (
         <section>

@@ -354,7 +354,6 @@ export default async function SchedaGiocatore({
                         {c.email && (
                           <a href={`mailto:${c.email}`} className="block text-blu">{c.email}</a>
                         )}
-                        {!c.consenso_privacy && <span className="block text-xs text-rosso">Consenso privacy non registrato</span>}
                         <span className="block text-xs text-grigio">Aggiunto da {chi(c.autore)}</span>
                       </span>
                       {scrive && (
@@ -381,10 +380,6 @@ export default async function SchedaGiocatore({
                     <input name="nome" placeholder="Nome (es. mamma Laura)" className="campo" />
                     <input name="telefono" type="tel" placeholder="Telefono" className="campo" />
                     <input name="email" type="email" placeholder="Email" className="campo" />
-                    <label className="flex items-start gap-2 text-sm">
-                      <input type="checkbox" name="consenso" className="mt-1" />
-                      La famiglia ha dato il consenso al trattamento dei dati
-                    </label>
                     <button className="bottone w-full">Salva contatto</button>
                   </form>
                 </details>
