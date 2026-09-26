@@ -36,10 +36,7 @@ export default async function Ingresso({
 
       <div className="mx-auto w-full max-w-sm flex-1 px-6 py-10">
         <AccessoForm next={next} />
-        <p className="mt-6 text-sm text-grigio">
-          Mister, scout e direttori: il tuo PIN personale. Non ce l’hai? Chiedilo all’admin.
-        </p>
-        <p className="mt-4 text-sm">
+        <p className="mt-6 text-sm">
           <span className="text-grigio">Istruzioni: </span>
           {[
             ['generale', 'Generale'],
