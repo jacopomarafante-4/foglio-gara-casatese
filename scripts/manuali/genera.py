@@ -269,7 +269,9 @@ Scarica il foglio gara in PDF.</li>
 <li><b>Da fare</b>: tabellini da compilare, gol da inserire, portieri da segnare. Tocca una riga per andarci.</li>
 <li><b>Stagione</b>: allenamenti, presenza media, partite, gol fatti e subiti.</li></ul>''', 'Home')}
 {fig('p-rosa', '''<h3>Squadra → Rosa</h3>
-<p>L'elenco dei giocatori, inserito dalla società. Il numero è quello della prossima partita, che assegni in Formazione.</p>
+<p>L'elenco dei giocatori, inserito dalla società. Il numero è quello della prossima partita, che assegni in Formazione.
+Il <b>ruolo</b> di ogni giocatore lo scegli tu: da Under 13 in su portiere, difensore, centrocampista o attaccante;
+da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai inserire i gol subiti nelle partite.</p>
 <p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>
 <h3>Squadra → Calendario</h3>
 <p>Le partite ufficiali, inserite dalla società. Le amichevoli le aggiungi tu da <b>Statistiche → Partite → + Amichevole</b>:

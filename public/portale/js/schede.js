@@ -160,7 +160,7 @@ function render(){
       if(el.type === 'checkbox' || el.type === 'radio') el.disabled = true; else el.readOnly = true;
     });
     // anche le tendine che cambiano dati (modulo, capitano, tipo gara…); restano libere quelle per guardare
-    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf], select[data-atok]').forEach(el => {
+    v.querySelectorAll('select[data-sheet], select[data-sc], select[data-tok], select[data-frid], select[data-gmf], select[data-atok], select[data-ruolo]').forEach(el => {
       el.disabled = true; el.title = 'Sola lettura';
     });
   }
@@ -290,11 +290,11 @@ function viewStaff(){
 const gkBtn = p => `<button class="gkbtn" data-gktoggle="${p.id}" aria-pressed="${isGk(p.id)}" title="${isGk(p.id)?'Portiere (tocca per togliere)':'Segna come portiere'}">🧤</button>`;
 function viewRosa(){
   if(!isAdmin()){
-    const rows = S.players.map(p => { const n = matchNum(p.id); return `<div class="ro-row"><span class="n ${n?'':'off'}">${n||'–'}</span><span class="nm">${esc(p.name)}</span>${gkBtn(p)}</div>`; }).join('');
+    const rows = S.players.map(p => { const n = matchNum(p.id); return `<div class="ro-row"><span class="n ${n?'':'off'}">${n||'–'}</span><span class="nm">${esc(p.name)}</span>${ruoloSel(p)}</div>`; }).join('');
     return `<section class="panel">
       <h2>Rosa</h2>
       ${lockNote('La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all\'amministratore.')}
-      <p class="hint">Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione. Tocca 🧤 per segnare i portieri: nelle partite potrai inserire i loro gol subiti.</p>
+      <p class="hint">Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione. Scegli il <b>ruolo</b> di ogni giocatore${ruoliSquadra()===RUOLI_BASE ? ' (in questa categoria: portiere o giocatore di movimento)' : ''}: per i portieri potrai inserire i gol subiti nelle partite.</p>
       <div class="cols2">${rows || '<p class="empty">La rosa non è ancora stata caricata.</p>'}</div>
     </section>`;
   }
@@ -302,12 +302,12 @@ function viewRosa(){
     <div class="prow">
       <span class="num ${matchNum(p.id)?'':'missing'}">${matchNum(p.id)||'–'}</span>
       <input aria-label="Nome" data-pname="${p.id}" value="${esc(p.name)}" placeholder="Cognome">
-      ${gkBtn(p)}
+      ${ruoloSel(p)}
       <button class="iconbtn" aria-label="Elimina ${esc(p.name)}" data-pdel="${p.id}">×</button>
     </div>`).join('');
   return `<section class="panel">
     <h2>Rosa · ${esc(TEAM()?.name||'')}</h2>
-    <p class="hint">Solo il nome: il numero di maglia lo assegni in Formazione, cambia partita per partita (titolari 1-11, panchina 12+). Tocca 🧤 per segnare i portieri.</p>
+    <p class="hint">Nome e ruolo: il numero di maglia lo assegni in Formazione, cambia partita per partita (titolari 1-11, panchina 12+). Il ruolo lo può scegliere anche il mister${ruoliSquadra()===RUOLI_BASE ? ' (in questa categoria: portiere o giocatore di movimento)' : ''}.</p>
     ${rows || '<p class="empty">Nessun giocatore. Aggiungili uno a uno o incolla un elenco.</p>'}
     <div class="row"><button class="btn" data-act="padd">Aggiungi giocatore</button></div>
     <details ${S.players.length?'':'open'}>

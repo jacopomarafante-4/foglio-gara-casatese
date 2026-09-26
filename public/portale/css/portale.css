@@ -53,7 +53,7 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-b
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 /* Rosa */
-.prow{display:grid;grid-template-columns:40px 1fr 40px 40px;gap:8px;margin-bottom:8px;align-items:center}
+.prow{display:grid;grid-template-columns:40px 1fr auto 40px;gap:8px;margin-bottom:8px;align-items:center}
 .prow .num{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);font-family:var(--cond);font-weight:700;font-size:16px}
 .prow .num.missing{background:none;color:var(--muted);border:2px dashed var(--line)}
 .iconbtn{border:0;background:none;width:40px;height:40px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:20px}
@@ -373,3 +373,7 @@ a.areabtn{text-decoration:none}
 .ro [data-staffpin],.ro [data-staffstato],.ro [data-staffnew],.ro [data-staffadd],.ro [data-act="padd"],.ro [data-act="bulk"],
 .ro [data-pdel],.ro [data-act="newscheme"],.ro [data-act="caladd"],.ro [data-caldel],.ro .teamedit,.ro [data-act="exportbackup"]{display:none!important}
 .ro #view input[readonly],.ro #view textarea[readonly]{background:var(--bg);cursor:default}
+
+/* Ruolo nella rosa */
+.rsel{width:auto;min-width:0;max-width:190px;padding:5px 8px;font-size:14px}
+.ro-row .rsel{justify-self:end}
