@@ -16,6 +16,26 @@ alter type public.stato_giocatore rename value 'segnalato'  to 'in_lista';
 alter type public.stato_giocatore rename value 'contattato' to 'in_osservazione';
 alter type public.stato_giocatore rename value 'chiuso'     to 'da_non_inserire';
 
+-- Lo storico dei cambi di stato citava 'chiuso' (0002): senza, il primo cambio di stato si bloccherebbe
+create or replace function public.registra_cambio_stato()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' or new.stato is distinct from old.stato then
+    insert into public.storico_stati (giocatore_id, da_stato, a_stato, motivo, autore_id)
+    values (
+      new.id,
+      case when tg_op = 'UPDATE' then old.stato end,
+      new.stato,
+      null,
+      auth.uid()
+    );
+  end if;
+  return new;
+end;
+$$;
+
 -- Invitati e in prova → in osservazione, senza cambiare la data di ultima modifica
 alter table public.giocatori disable trigger giocatori_updated_at;
 update public.giocatori set stato = 'in_osservazione' where stato in ('invitato', 'in_prova');
