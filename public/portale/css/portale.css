@@ -70,6 +70,22 @@ summary{cursor:pointer;font-weight:600}
 .ghost-chip{position:fixed;z-index:100;pointer-events:none;transform:translate(-50%,-120%);box-shadow:0 6px 18px rgba(0,0,0,.25)}
 /* Formazione board */
 .formwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+/* Formazione come il PDF: distinta · campo · modulo e note */
+.fgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:980px){.fgrid{grid-template-columns:minmax(230px,1fr) minmax(300px,380px) minmax(210px,.8fr);align-items:start}}
+.fcol h3{margin:14px 0 6px}.fcol h3:first-child{margin-top:0}
+.flist{display:grid;gap:3px}
+.frow{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px;min-height:36px}
+.flist .frow:nth-child(odd){background:var(--bg)}
+.fnum{display:grid;place-items:center;min-width:30px;height:26px;border-radius:6px;background:#002A73;color:#fff;font-family:var(--cond);font-size:16px}
+.fnum.bench{background:#2F6B45}
+.fname{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fname.vuoto{color:var(--muted);font-weight:500}
+.ktag{background:#E3A008;color:#15202B;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.frow .fx{margin-left:auto}
+.frow.libero{justify-content:space-between}.frow.libero .chip{flex:1;min-width:0}
+.fside{display:grid;gap:14px;background:var(--bg);border-radius:12px;padding:14px}
+.fmodulo{font-family:var(--cond);font-size:26px;font-weight:700;color:#002A73}
+.fpiaz{margin:0;padding:0;list-style:none;display:grid;gap:3px}
 @media (min-width:820px){.formwrap{grid-template-columns:minmax(0,420px) minmax(0,1fr)}}
 .pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:14px;overflow:hidden;
   background:repeating-linear-gradient(180deg,var(--grass-soft) 0 8.33%,var(--grass-2) 8.33% 16.66%);

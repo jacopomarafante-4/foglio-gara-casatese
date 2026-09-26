@@ -576,6 +576,8 @@ function viewSlotPicker(){
     </div>
   </div>`;
 }
+/* Formazione come la prima pagina del PDF, da sinistra a destra: distinta (titolari, panchina, disponibili) ·
+   campo · modulo, capitani, piazzati e note. Da telefono le tre colonne vanno una sotto l'altra. */
 function viewFormazione(){
   const s = S.sheet;
   if(!S.players.length) return `<section class="panel"><h2>Formazione</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
@@ -590,23 +592,48 @@ function viewFormazione(){
       ${p ? `<span class="pname">${esc(surname(p.name))}</span><button class="x" aria-label="Togli ${esc(p.name)}" data-clear-slot="${n}">×</button>` : ''}
     </div>`;
   }).join('');
-  const others = S.players.filter(p => !slotOf(p.id));
-  const bench = others.map(p => `<button class="chip ${s.bench.includes(p.id)?'bench':''}" data-bench="${p.id}" aria-pressed="${s.bench.includes(p.id)}"><b>${matchNum(p.id)||'–'}</b>${esc(p.name)}</button>`).join('');
+  const kTag = p => p.id===s.captain ? '<span class="ktag">K</span>' : p.id===s.vice ? '<span class="ktag">VK</span>' : '';
+  // Titolari nell'ordine del modulo, come nella distinta del PDF
+  const titolari = starters().map(({slot, p}) => `<div class="frow">
+      <b class="fnum">${p ? (matchNum(p.id)||'–') : '–'}</b>
+      ${p ? `<span class="fname">${esc(p.name)}</span>${kTag(p)}<button class="iconbtn fx" aria-label="Togli ${esc(p.name)}" data-clear-slot="${slot}">×</button>`
+          : `<span class="fname vuoto">Posizione ${slot} da assegnare</span>`}
+    </div>`).join('');
+  const panchina = s.bench.map(P).filter(Boolean).map(p => `<div class="frow">
+      <b class="fnum bench">${matchNum(p.id)||'–'}</b><span class="fname">${esc(p.name)}</span>${kTag(p)}
+      <button class="iconbtn fx" aria-label="Togli ${esc(p.name)} dalla panchina" data-bench="${p.id}">×</button>
+    </div>`).join('');
+  // Disponibili: né in campo né in panchina. Tocca = prossima posizione libera; "Panchina" = in panchina
+  const liberi = S.players.filter(p => !slotOf(p.id) && !s.bench.includes(p.id));
+  const disponibili = liberi.map(p => `<div class="frow libero">${chip(p)}<button class="btn small ghost" data-bench="${p.id}">Panchina</button></div>`).join('');
+  const opts = sel => `<option value="">Nessuno</option>` + S.players.filter(p => slotOf(p.id) || s.bench.includes(p.id) || p.id===sel)
+    .map(p => { const n=matchNum(p.id); return `<option value="${p.id}" ${sel===p.id?'selected':''}>${esc((n?n+' ':'')+p.name)}</option>`; }).join('');
+  const piazzati = s.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
   return `<section class="panel">
     <h2>Formazione</h2>
-    <p class="hint"><b>Tocca una posizione sul campo</b> per scegliere chi metterci. Oppure tocca un giocatore per metterlo nella prossima posizione libera (portiere, poi difesa, centrocampo, attacco, da destra a sinistra) — tocca di nuovo per toglierlo — o trascinalo su una posizione specifica. Trascina invece l'intera casella di una posizione per spostarla leggermente sul campo. Il numerino piccolo in alto è il ruolo usato negli schemi; il numero grande è quello di questa partita.</p>
-    <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:14px">
-      <div style="max-width:240px"><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation">${fopts}</select></div>
-      ${hasSlotPos ? `<button class="btn small ghost" data-act="resetslotpos">Ripristina posizioni modulo</button>` : ''}
-    </div>
-    <div class="formwrap">
-      <div class="pitch" id="pitch">${pitchLines()}${slots}</div>${viewSlotPicker()}
-      <div>
-        <h3 style="margin-top:0">Giocatori</h3>
-        <div class="tray">${S.players.map(p => chip(p)).join('')}</div>
+    <p class="hint">Tocca una <b>posizione sul campo</b> per scegliere chi metterci, oppure tocca un giocatore <b>disponibile</b> per metterlo nella prossima posizione libera (o trascinalo sul campo). Il numerino in alto sulla pedina è il ruolo usato negli schemi.</p>
+    <div class="fgrid">
+      <div class="fcol">
+        <h3>Titolari</h3>
+        <div class="flist">${titolari}</div>
         <h3>Panchina</h3>
-        <p class="hint">Tocca per aggiungere o togliere dalla panchina.</p>
-        <div class="tray">${bench || '<span class="note">Tutti i giocatori sono in campo.</span>'}</div>
+        <div class="flist">${panchina || '<p class="note">Nessuno in panchina: aggiungili dai disponibili.</p>'}</div>
+        ${liberi.length ? `<h3>Disponibili</h3><div class="flist">${disponibili}</div>` : ''}
+      </div>
+      <div class="fcol">
+        <div class="pitch" id="pitch">${pitchLines()}${slots}</div>${viewSlotPicker()}
+        ${hasSlotPos ? `<div class="row" style="margin-top:8px"><button class="btn small ghost" data-act="resetslotpos">Ripristina posizioni modulo</button></div>` : ''}
+      </div>
+      <div class="fcol fside">
+        <div><label class="f" for="f_form">Modulo</label><select id="f_form" data-sheet="formation" class="fmodulo">${fopts}</select></div>
+        <div><label class="f" for="f_cap">Capitano</label><select id="f_cap" data-sheet="captain">${opts(s.captain)}</select></div>
+        <div><label class="f" for="f_vice">Vice capitano</label><select id="f_vice" data-sheet="vice">${opts(s.vice)}</select></div>
+        <div>
+          <label class="f">Calci piazzati</label>
+          ${piazzati.length ? `<ul class="fpiaz">${piazzati.map((q,i) => `<li><span class="note">p. ${i+2}</span> ${esc(q.name)}</li>`).join('')}</ul>` : '<p class="note" style="margin:0">Nessuno scelto.</p>'}
+          <button class="btn small ghost" data-hgo="piazzati" style="margin-top:6px">Scegli i piazzati</button>
+        </div>
+        <div><label class="f" for="f_notes2">Note per la squadra</label><textarea id="f_notes2" data-sheet="notes" rows="5">${esc(s.notes)}</textarea></div>
       </div>
     </div>
   </section>`;

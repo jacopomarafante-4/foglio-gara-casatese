@@ -296,14 +296,16 @@ partire insieme). Se lo lasci vuoto, nella convocazione c'è "Al campo di gioco"
 <section>
 <h2>5. Gara: la formazione</h2>
 {duo('p-formazione-campo', 'Il campo: modulo, posizioni, × per togliere', 'p-formazione-elenco', 'Tocchi una posizione: scegli chi metterci')}
+<p>La pagina è fatta come il foglio gara PDF, da sinistra a destra: <b>Titolari e Panchina</b>, il <b>campo</b>,
+e a destra <b>modulo, capitano, vice, calci piazzati e note</b>. Dal telefono le tre parti sono una sotto l'altra.</p>
 <ol class="passi">
-<li>Scegli il <b>modulo</b> (per esempio 1-4-2-3-1).</li>
+<li>A destra scegli il <b>modulo</b> (per esempio 1-4-2-3-1).</li>
 <li><b>Tocca una posizione sul campo</b>: si apre l'elenco dei giocatori; tocca chi vuoi mettere lì.
 Se la posizione è occupata puoi anche <span class="k">Togli dal campo</span>.</li>
-<li>In alternativa: tocca un giocatore per metterlo nella <b>prossima posizione libera</b>, oppure <b>trascinalo</b> su una
-posizione (vicino al bordo dello schermo la pagina scorre da sola).</li>
-<li>La <span class="k">×</span> rossa su una posizione toglie il giocatore dal campo.</li>
-<li>Sotto, in <b>Panchina</b>, tocca i giocatori che vanno in panchina.</li>
+<li>In alternativa, nei <b>Disponibili</b> tocca un giocatore per metterlo nella <b>prossima posizione libera</b>, oppure
+<b>trascinalo</b> su una posizione; <span class="k">Panchina</span> lo mette in panchina.</li>
+<li>La <span class="k">×</span> toglie un giocatore dal campo o dalla panchina.</li>
+<li>A destra scegli <b>capitano</b> e <b>vice</b>, e scrivi le <b>note</b> per la squadra: finiscono nel PDF.</li>
 <li>Trascinando la casella di una posizione la sposti leggermente sul campo; <span class="k">Ripristina posizioni modulo</span> la rimette a posto.</li></ol>
 <p class="small">Il numero grande è quello della partita; il numerino in alto è il ruolo usato negli schemi dei calci piazzati.</p>
 </section>
