@@ -20,14 +20,15 @@ export function AccessoForm({ next }: { next?: string }) {
         <input type="hidden" name="pin" value={stato.pin ?? ''} />
       ) : (
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">PIN</span>
+          <span className="sr-only">PIN</span>
           <input
-            className="campo text-center font-display text-3xl tracking-[0.3em]"
+            className="campo h-16 rounded-2xl border-2 bg-carta text-center font-display text-4xl tracking-[0.4em] placeholder:text-grigio/40 focus:bg-white"
             type="password"
             name="pin"
             inputMode="numeric"
             autoComplete="off"
-            placeholder="····"
+            placeholder="••••"
+            aria-label="PIN"
             required
             autoFocus
           />
@@ -53,7 +54,7 @@ export function AccessoForm({ next }: { next?: string }) {
           {stato.errore}
         </p>
       )}
-      <button type="submit" className="bottone w-full" disabled={inCorso || Boolean(stato.vai)}>
+      <button type="submit" className="bottone h-14 w-full rounded-2xl text-lg" disabled={inCorso || Boolean(stato.vai)}>
         {inCorso || stato.vai ? 'Accesso in corso…' : 'Entra'}
       </button>
       {admin && (
