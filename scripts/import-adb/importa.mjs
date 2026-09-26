@@ -5,7 +5,7 @@
 //
 // I fogli stanno in private/adb/U13.csv … U8.csv (NON su git: nomi di minori), scaricati dai fogli Google
 // "ACM_Uxx_anno_PRESENZE" (foglio ALLENAMENTI): N°, Cognome, Nome, [Ruoli], poi una colonna per allenamento
-// sotto il mese. Valori: 1 presente, 0/A assente, M malato, I infortunio, V vacanza.
+// sotto il mese. Valori: 1 presente, 0/A/V assente giustificato (motivi familiari), M malato, I infortunio.
 // Crea solo ciò che manca: una squadra, una rosa o un registro già presenti non si toccano.
 // =====================================================================
 import { readFile } from 'node:fs/promises';
@@ -32,7 +32,7 @@ const SQUADRE = [
   { file: 'U8', id: 't_u8', category: 'Under 8 - Attività di base', annata: 2019 },
 ];
 const MESI = { AGOSTO: 8, SETTEMBRE: 9, OTTOBRE: 10, NOVEMBRE: 11, DICEMBRE: 12, GENNAIO: 1, FEBBRAIO: 2, MARZO: 3, APRILE: 4, MAGGIO: 5, GIUGNO: 6 };
-const PRESENZA = { '1': 'P', '0': 'A', A: 'A', M: 'MAL', I: 'INF', V: 'FAM' };
+const PRESENZA = { '1': 'P', '0': 'FAM', A: 'FAM', M: 'MAL', I: 'INF', V: 'FAM' };   // assenze giustificate come in U14/U15
 
 /** CSV semplice con virgolette */
 function leggiCsv(testo) {

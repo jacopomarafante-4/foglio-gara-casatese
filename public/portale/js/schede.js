@@ -473,8 +473,14 @@ function viewConvocazioni(){
   const s = S.sheet;
   if(!S.players.length) return `<section class="panel"><h2>Convocazioni</h2><p class="empty">Prima inserisci la rosa nella scheda Rosa.</p></section>`;
   const sorted = S.players.slice().sort((a,b) => a.name.localeCompare(b.name, 'it'));
+  /* Attività di base: solo convocato sì/no, senza motivo (nel PDF compaiono solo i convocati) */
+  const adb = isAdb();
   const rows = sorted.map(p => {
     const cur = s.callup[p.id] || '';
+    if(adb) return `<div class="callrow" data-status="${cur==='CON'?'CON':''}">
+      <div class="callname">${esc(p.name)}</div>
+      <button class="convtoggle" data-callupid="${p.id}" data-callupstatus="CON" aria-pressed="${cur==='CON'}">${cur==='CON' ? '✓ Convocato' : 'Convoca'}</button>
+    </div>`;
     const btns = CALLUP_STATUSES.map(st => `<button data-callupid="${p.id}" data-callupstatus="${st}" aria-pressed="${cur===st}" title="${CALLUP_LABELS[st]}">${st}</button>`).join('');
     return `<div class="callrow" data-status="${cur}">
       <div class="callname">${esc(p.name)}</div>
@@ -482,7 +488,8 @@ function viewConvocazioni(){
     </div>`;
   }).join('');
   const count = CALLUP_STATUSES.reduce((o,st)=>{ o[st]=sorted.filter(p=>(s.callup[p.id]||'')===st).length; return o; }, {});
-  const chips = CALLUP_STATUSES.map(st => `<span class="countchip" data-status="${st}"><b>${count[st]||0}</b>${st}</span>`).join('');
+  const chips = adb ? `<span class="countchip" data-status="CON"><b>${count.CON||0}</b>convocati</span>`
+    : CALLUP_STATUSES.map(st => `<span class="countchip" data-status="${st}"><b>${count[st]||0}</b>${st}</span>`).join('');
   const nm = nextMatch();
   return `<section class="panel">
     <h2>Convocazioni</h2>
@@ -529,7 +536,8 @@ function viewConvocazioni(){
       <h3 class="convh3" style="margin:0">Giocatori</h3>
       <div class="row" style="gap:6px">${chips}</div>
     </div>
-    <p class="hint">Ordine alfabetico. Tocca lo stato per ciascun giocatore: <b>CON</b> convocato · <b>NC</b> non convocato · <b>INF</b> infortunato · <b>SQL</b> squalificato · <b>ND</b> non disponibile.</p>
+    <p class="hint">${adb ? 'Ordine alfabetico. Tocca <b>Convoca</b> per chi è convocato: nel foglio convocazione compaiono solo loro, senza motivi per gli altri.'
+      : 'Ordine alfabetico. Tocca lo stato per ciascun giocatore: <b>CON</b> convocato · <b>NC</b> non convocato · <b>INF</b> infortunato · <b>SQL</b> squalificato · <b>ND</b> non disponibile.'}</p>
     <div class="callist">${rows}</div>
     <div class="row" style="margin-top:16px;justify-content:space-between">
       <button class="btn primary" data-act="downloadconv">Scarica convocazione PDF</button>
