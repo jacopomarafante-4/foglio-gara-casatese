@@ -285,6 +285,8 @@ compaiono anche qui.</p>''', 'Rosa')}
 tocca <span class="k">Usa questa</span> e i campi si compilano da soli.</p>
 {fig('p-convocazioni', '''<h3>Convocazioni</h3><ol class="passi">
 <li>Tocca <span class="k">Usa questa</span> per prendere la prossima partita dal calendario.</li>
+<li><b>Attività di base</b> (da Under 13 in giù): non ci sono formazione, piazzati e foglio gara; la convocazione PDF è
+quella della società (data, indirizzo, orari, avversario, <b>mister presente</b>, note e l'elenco dei convocati).</li>
 <li><b>Campo di gioco</b>: è scritto esattamente come nel calendario ufficiale o nell'ultimo comunicato, con l'indirizzo,
 e si aggiorna da solo se un comunicato lo cambia. Il segnaposto 📍 apre Google Maps; con 📌 puoi salvare il punto esatto
 del cancello, che vale per tutte le partite su quel campo.</li>

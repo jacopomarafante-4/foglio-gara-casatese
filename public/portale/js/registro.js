@@ -367,12 +367,15 @@ function newFriendly(){ const f = {id:uid('am'), date:todayISO(), time:'', oppon
    Da Under 13 in su i ruoli completi; da Under 12 in giù (Esordienti, Pulcini…) solo portiere o giocatore di movimento. */
 const RUOLI_PIENI = [['portiere','Portiere'],['difensore','Difensore'],['centrocampista','Centrocampista'],['attaccante','Attaccante']];
 const RUOLI_BASE = [['portiere','Portiere'],['movimento','Giocatore di movimento']];
-function ruoliSquadra(){
-  const c = String(TEAM()?.category || TEAM()?.name || '');
+/* Età della categoria della squadra: "Under 13 - Attività di base" → 13 (99 se non si capisce) */
+function etaSquadra(t = TEAM()){
+  const c = String(t?.category || t?.name || '');
   const u = c.match(/under\s*(\d+)|\bu\s*(\d{1,2})\b/i);
-  const eta = u ? +(u[1] || u[2]) : /esordienti/i.test(c) ? 12 : /pulcini|primi\s*calci|piccoli/i.test(c) ? 10 : 99;
-  return eta >= 13 ? RUOLI_PIENI : RUOLI_BASE;
+  return u ? +(u[1] || u[2]) : /esordienti/i.test(c) ? 12 : /pulcini|primi\s*calci|piccoli/i.test(c) ? 10 : 99;
 }
+/* Attività di base: da Under 13 in giù (risultato a tempi, convocazione semplice, niente foglio gara) */
+const isAdb = (t = TEAM()) => etaSquadra(t) <= 13;
+function ruoliSquadra(){ return etaSquadra() >= 13 ? RUOLI_PIENI : RUOLI_BASE; }
 const ruoloDi = pid => (S.reg.ruoli||{})[pid] || (isGk(pid) ? 'portiere' : '');
 function ruoloSel(p){
   const r = ruoloDi(p.id);

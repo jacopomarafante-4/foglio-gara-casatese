@@ -28,7 +28,10 @@ const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
 const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
-function allowedTabs(){ return allowedAreas().flatMap(a => a.tabs); }
+/* Attività di base (da Under 13 in giù): niente formazione, piazzati e foglio gara PDF */
+const SOLO_AGONISTICA = ['formazione','piazzati','pdf'];
+const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)));
+function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
 const startTab = () => routeTab() || 'home';
@@ -58,8 +61,9 @@ function renderNav(){
       ${icon(a.k)}<span>${a.label}</span></button>`).join('');
   if(scoutingLink){ const soc = $('#areanav [data-area="societa"]'); if(soc) soc.insertAdjacentHTML('beforebegin', scoutingLink); else $('#areanav').insertAdjacentHTML('beforeend', scoutingLink); }
   $('#areanav').classList.remove('hidden');
-  $('#tabs').innerHTML = cur.tabs.length > 1 ? cur.tabs.map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('') : '';
-  $('#tabs').classList.toggle('hidden', cur.tabs.length <= 1);
+  const schede = tabsDi(cur);
+  $('#tabs').innerHTML = schede.length > 1 ? schede.map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('') : '';
+  $('#tabs').classList.toggle('hidden', schede.length <= 1);
 }
 
 /* ---------- Home ---------- */

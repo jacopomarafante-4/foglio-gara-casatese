@@ -132,6 +132,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- Portale, attività di base (da Under 13 in giù, `isAdb()` in `registro.js`): squadre t_u13…t_u8 create con
+  `scripts/import-adb/importa.mjs` dai fogli presenze (CSV in `private/adb/`, NON su git); niente Formazione/Piazzati/Foglio gara
+  (`SOLO_AGONISTICA` in `portale.js`); convocazione PDF sul modello della società (`convocazioneAdbPage()` in `pdf.js`, campo
+  `mrPresente`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano

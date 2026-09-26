@@ -516,6 +516,7 @@ function viewConvocazioni(){
     <h3 class="convh3">Ritrovo</h3>
     <div class="grid">
       <div><label class="f" for="cv_meettime">Orario</label><input id="cv_meettime" type="time" data-sheet="meetTime" value="${esc(defaultMeetTime(s))}"></div>
+      ${isAdb() ? `<div><label class="f" for="cv_mr">Mister presente</label><input id="cv_mr" data-sheet="mrPresente" value="${esc(s.mrPresente||'')}" placeholder="${esc(coachNames(TEAM())||'Nome del mister')}"></div>` : ''}
       <div><label class="f" for="cv_meetaddr">Indirizzo del ritrovo</label>
         <div class="addrrow"><input id="cv_meetaddr" data-sheet="meetAddress" value="${esc(s.meetAddress||'')}" placeholder="Al campo di gioco (scrivi solo se è altrove)">
           <a id="cv_mapslink" class="iconbtn2" href="${esc(mapsLink(s))}" target="_blank" rel="noopener" title="Apri in Google Maps" aria-label="Apri in Google Maps" ${mapsLink(s)?'':'hidden'}>📍</a>
