@@ -20,6 +20,12 @@ export async function elencoSocieta(supabase: SupabaseClient): Promise<Societa[]
   return (data as Societa[]) ?? [];
 }
 
+/** La nostra società: i suoi giocatori non compaiono nell'archivio dello scouting, se non con "Tutti i giocatori" */
+export const NOSTRA_SOCIETA = 'Academy Casatese Merate';
+export function idNostraSocieta(elenco: Societa[]) {
+  return elenco.find((s) => s.nome === NOSTRA_SOCIETA)?.id ?? null;
+}
+
 /** Cerca per nome o nome alternativo, ignorando maiuscole, spazi e accenti */
 export function trovaSocieta(elenco: Societa[], nome: string) {
   const n = normalizza(nome);

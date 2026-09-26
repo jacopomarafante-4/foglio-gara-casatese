@@ -89,7 +89,7 @@ const MAPPA_ESITO = {
   'sta valutando inserimento': { stato: 'da_rivedere' },
   'presto ma da valutare': { stato: 'da_rivedere' },
 
-  'viene in prova a fine agosto': { stato: 'invitato' },
+  'viene in prova a fine agosto': { stato: 'in_osservazione' },
 };
 
 function classificaEsito(testo) {
@@ -111,10 +111,10 @@ function esitoRiga(note25, note26) {
   const testo = [n25, n26].filter(Boolean).join(' | ') || null;
   const decisiva = (c26 && c26 !== null) ? c26 : (c25 && c25 !== null) ? c25 : null;
 
-  // Lo stato "chiuso" non esiste più (0019): il giocatore resta segnalato, il motivo va nelle note
+  // Esiti "chiusi" del foglio (non a livello, altro progetto…) → da non inserire (0022), il motivo va nelle note
   const chiuso = decisiva?.stato === 'chiuso';
   return {
-    stato: chiuso ? 'segnalato' : decisiva?.stato ?? 'segnalato',
+    stato: chiuso ? 'da_non_inserire' : decisiva?.stato ?? 'in_lista',
     motivo: null,
     note: [chiuso && decisiva.motivo ? `Esito: ${decisiva.motivo}` : null, testo].filter(Boolean).join(' | ') || null,
     sconosciute,
@@ -260,7 +260,7 @@ async function importaPrimaVista() {
     if (CONFERMA) {
       const { data: giocatore, error } = await supabase
         .from('giocatori')
-        .insert({ descrizione, annata: anno, ruolo, societa_id: societaId, stato: 'segnalato' })
+        .insert({ descrizione, annata: anno, ruolo, societa_id: societaId, stato: 'in_lista' })
         .select('id').single();
       if (error) { risultato.errori.push(`${descrizione}: ${error.message}`); continue; }
 

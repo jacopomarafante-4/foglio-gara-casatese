@@ -9,7 +9,7 @@ import {
 import { istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
 import { StatoBadge } from '@/components/StatoBadge';
-import { elencoSocieta } from '@/lib/societa';
+import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
 
 type Riga = {
@@ -108,6 +108,9 @@ export default async function Giocatori({
 
   // Tutti i giocatori dei filtri (sono qualche centinaio): l'ordinamento per valutazione o
   // prossima gara si calcola qui, poi si prende la pagina
+  const societa = await elencoSocieta(supabase);
+  const nostra = idNostraSocieta(societa);
+  const tuttiIGiocatori = filtri.chi === 'tutti';
   const costruisci = () => {
     let q = supabase
       .from('giocatori')
@@ -123,8 +126,12 @@ export default async function Giocatori({
     const stato = valoreValido(STATI, filtri.stato);
     if (stato) q = q.eq('stato', stato);
     if (filtri.societa) q = q.eq('societa_id', filtri.societa);
-    // Di norma solo i ragazzi osservati; "da distinta" = anche quelli visti solo nelle distinte (0014)
-    if (filtri.chi !== 'tutti') q = q.eq('osservato', true);
+    // Di norma solo i ragazzi osservati e non dell'Academy; "Tutti i giocatori" = anche i nostri e quelli
+    // visti solo nelle distinte (0014). Scegliendo l'Academy come società si vedono comunque i nostri.
+    if (!tuttiIGiocatori) {
+      q = q.eq('osservato', true);
+      if (nostra && filtri.societa !== nostra) q = q.or(`societa_id.is.null,societa_id.neq.${nostra}`);
+    }
     const cerca = filtri.q ? perRicerca(filtri.q) : '';
     if (cerca) q = q.or(`cognome.ilike.%${cerca}%,nome.ilike.%${cerca}%,descrizione.ilike.%${cerca}%`);
     return q;
@@ -137,7 +144,6 @@ export default async function Giocatori({
     tutti.push(...((r.data as unknown as Riga[]) ?? []));
     if ((r.data?.length ?? 0) < 1000) break;
   }
-  const societa = await elencoSocieta(supabase);
 
   const nomeDi = (g: Riga) => [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
   const categoriaDi = (g: Riga) => (g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0]).replace(/^Under\s*/i, 'U');
@@ -270,8 +276,8 @@ export default async function Giocatori({
           ))}
         </select>
         <select name="chi" defaultValue={filtri.chi ?? ''} className="campo">
-          <option value="">Solo osservati</option>
-          <option value="tutti">Anche solo da distinta</option>
+          <option value="">Osservati (senza Academy)</option>
+          <option value="tutti">Tutti i giocatori</option>
         </select>
         <select name="societa" defaultValue={filtri.societa ?? ''} className="campo">
           <option value="">Tutte le società</option>

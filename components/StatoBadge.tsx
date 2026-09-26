@@ -1,12 +1,11 @@
 import { STATI, type StatoGiocatore } from '@/lib/tipi';
 
 const COLORI: Record<StatoGiocatore, string> = {
-  segnalato: 'bg-linea text-inchiostro',
+  in_lista: 'bg-linea text-inchiostro',
+  in_osservazione: 'bg-blu/10 text-blu',
   da_rivedere: 'bg-oro/25 text-inchiostro',
-  contattato: 'bg-blu/10 text-blu',
-  invitato: 'bg-blu/15 text-blu',
-  in_prova: 'bg-blu text-white',
   inserito: 'bg-blu-scuro text-white',
+  da_non_inserire: 'bg-rosso/10 text-rosso',
 };
 
 export function StatoBadge({ stato }: { stato: StatoGiocatore }) {

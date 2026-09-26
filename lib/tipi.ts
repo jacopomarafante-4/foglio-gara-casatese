@@ -3,7 +3,7 @@
 export type RuoloCampo = 'portiere' | 'difensore' | 'centrocampista' | 'attaccante';
 export type Piede = 'destro' | 'sinistro' | 'ambidestro';
 export type StatoGiocatore =
-  | 'segnalato' | 'da_rivedere' | 'contattato' | 'invitato' | 'in_prova' | 'inserito';
+  | 'in_lista' | 'in_osservazione' | 'da_rivedere' | 'inserito' | 'da_non_inserire';
 export type Giudizio = 'da_prendere' | 'da_rivedere' | 'non_a_livello';
 
 export const RUOLI_CAMPO: Record<RuoloCampo, string> = {
@@ -20,17 +20,17 @@ export const PIEDI: Record<Piede, string> = {
 };
 
 export const STATI: Record<StatoGiocatore, string> = {
-  segnalato: 'Segnalato',
+  in_lista: 'In lista',
+  in_osservazione: 'In osservazione',
   da_rivedere: 'Da rivedere',
-  contattato: 'Contattato',
-  invitato: 'Invitato',
-  in_prova: 'In prova',
   inserito: 'Inserito',
+  da_non_inserire: 'Da non inserire',
 };
 
-/** Stato come compare nello storico: "chiuso" non esiste più (0019) ma resta nelle righe vecchie */
+/** Stato come compare nello storico: le righe vecchie possono avere stati non più usati (0022) */
+const STATI_VECCHI: Record<string, string> = { invitato: 'Invitato', in_prova: 'In prova' };
 export function etichettaStato(s: string) {
-  return STATI[s as StatoGiocatore] ?? (s === 'chiuso' ? 'Chiuso (stato tolto)' : s);
+  return STATI[s as StatoGiocatore] ?? STATI_VECCHI[s] ?? s;
 }
 
 export const GIUDIZI: Record<Giudizio, string> = {

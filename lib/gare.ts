@@ -55,9 +55,9 @@ export type GiocatoreInGara = {
   stato: StatoGiocatore;
 };
 
-/** Giocatori segnalati da vedere in questa gara (esclusi quelli già inseriti da noi) */
+/** Giocatori segnalati da vedere in questa gara (esclusi quelli già inseriti da noi e quelli da non inserire) */
 export function giocatoriDellaGara(g: Pick<Gara, 'categoria' | 'casa_id' | 'trasferta_id'>, giocatori: GiocatoreInGara[]) {
-  return giocatori.filter((x) => x.stato !== 'inserito' && giocaInGara(x, g));
+  return giocatori.filter((x) => x.stato !== 'inserito' && x.stato !== 'da_non_inserire' && giocaInGara(x, g));
 }
 
 export type GaraArricchita = Gara & {

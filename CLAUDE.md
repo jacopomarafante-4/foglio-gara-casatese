@@ -132,6 +132,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   alle note ("Esito: …"). Il valore resta nel tipo SQL solo per le vecchie righe di `storico_stati`
   (`etichettaStato()` in `lib/tipi.ts`); `motivo_chiusura` e `rivedere_dal` non si usano più
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
+- 0022: stati `in_lista`, `in_osservazione`, `da_rivedere`, `inserito`, `da_non_inserire` (rinominati da segnalato,
+  contattato, chiuso; invitato/in_prova → in_osservazione e vietati, restano nel tipo solo per lo storico: `etichettaStato()`).
+  I giocatori dell'Academy (`idNostraSocieta()` in `lib/societa.ts`) non compaiono in elenco e vista per stato se non con "Tutti i giocatori"
 - 0021: `nome_proprio()` + trigger `giocatori_nomi`: cognome e nome dei giocatori sempre "Rossi", "Maria Elena",
   "D'Angelo" (anche da importazioni e Portale); stessa regola di `maiuscoleIniziali()` in `lib/utili.ts`
 

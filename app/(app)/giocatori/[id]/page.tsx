@@ -111,7 +111,7 @@ export default async function SchedaGiocatore({
       ])
     : [{ data: [] }, { data: [] }, []];
   const prossimeGare = ((gareData as unknown as Gara[]) ?? [])
-    .filter((x) => giocatoriDellaGara(x, [{ ...(g as unknown as GiocatoreInGara), stato: 'segnalato' }]).length > 0)
+    .filter((x) => giocatoriDellaGara(x, [{ ...(g as unknown as GiocatoreInGara), stato: 'in_lista' }]).length > 0)
     .map((x) => arricchisci(x, ((sediData as Sede[]) ?? [])[0] ?? null, seguite));
   const segnalazioni = (segn.data as unknown as Segnalazione[]) ?? [];
   const valutazioni = (val.data as unknown as Valutazione[]) ?? [];

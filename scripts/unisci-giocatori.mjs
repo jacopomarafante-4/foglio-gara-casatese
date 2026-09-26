@@ -28,7 +28,7 @@ const db = createClient(url, serviceKey, { auth: { autoRefreshToken: false, pers
 const CONFERMA = process.argv.includes('--conferma');
 const gruppi = JSON.parse(await readFile(FILE, 'utf8'));
 
-const ORDINE_STATI = ['segnalato', 'da_rivedere', 'contattato', 'invitato', 'in_prova', 'inserito'];
+const ORDINE_STATI = ['in_lista', 'in_osservazione', 'da_rivedere', 'da_non_inserire', 'inserito'];
 const CAMPI = ['descrizione', 'data_nascita', 'ruolo', 'piede', 'categoria', 'segnalato_da_squadra'];
 const proprio = (s) => (s ? s.trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, (_, a, b) => a + b.toUpperCase()) : s);
 const nomeDi = (g) => [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'senza nome';

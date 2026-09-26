@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getProfilo } from '@/lib/auth';
 import { gestisce } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
-import { elencoSocieta } from '@/lib/societa';
+import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
 import { annateDisponibili, RUOLI_CAMPO, STATI, valoreValido, type RuoloCampo, type StatoGiocatore } from '@/lib/tipi';
 import { Avviso } from '@/components/Avviso';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
@@ -34,25 +34,29 @@ export default async function GiocatoriPerStato({
   const admin = gestisce(profilo.ruolo);
   const supabase = await createClient();
 
+  const societa = await elencoSocieta(supabase);
+  const nostra = idNostraSocieta(societa);
   let q = supabase
     .from('giocatori')
     .select('id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count)')
     .eq('osservato', true) // i ragazzi visti solo nelle distinte non sono nella pipeline
     .order('updated_at', { ascending: false });
+  // I giocatori dell'Academy solo con "Tutti i giocatori" (o scegliendo l'Academy come società)
+  if (nostra && filtri.chi !== 'tutti' && filtri.societa !== nostra) q = q.or(`societa_id.is.null,societa_id.neq.${nostra}`);
   const annata = Number(filtri.annata);
   if (Number.isInteger(annata) && annata > 0) q = q.eq('annata', annata);
   const ruolo = valoreValido(RUOLI_CAMPO, filtri.ruolo);
   if (ruolo) q = q.eq('ruolo', ruolo);
   if (filtri.societa) q = q.eq('societa_id', filtri.societa);
 
-  const [{ data, error }, societa] = await Promise.all([q, elencoSocieta(supabase)]);
+  const { data, error } = await q;
   const carte = (data as unknown as Carta[]) ?? [];
   const perStato = new Map<StatoGiocatore, Carta[]>((Object.keys(STATI) as StatoGiocatore[]).map((s) => [s, []]));
   for (const c of carte) perStato.get(c.stato)?.push(c);
 
   // Filtri correnti, per tornare qui dopo uno spostamento e per il link "vedi tutti"
   const qs = new URLSearchParams(
-    Object.entries({ annata: filtri.annata, ruolo: filtri.ruolo, societa: filtri.societa }).filter(([, v]) => v) as [string, string][],
+    Object.entries({ annata: filtri.annata, ruolo: filtri.ruolo, societa: filtri.societa, chi: filtri.chi }).filter(([, v]) => v) as [string, string][],
   );
   const ritorno = `/giocatori/stati${qs.size ? `?${qs}` : ''}`;
 
@@ -68,7 +72,7 @@ export default async function GiocatoriPerStato({
         <VistaGiocatori attiva="stati" admin={admin} />
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4">
+      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-5">
         <select name="annata" defaultValue={filtri.annata ?? ''} className="campo">
           <option value="">Tutte le annate</option>
           {annateDisponibili().map((a) => (
@@ -86,6 +90,10 @@ export default async function GiocatoriPerStato({
           {societa.map((s) => (
             <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
+        </select>
+        <select name="chi" defaultValue={filtri.chi ?? ''} className="campo">
+          <option value="">Senza Academy</option>
+          <option value="tutti">Tutti i giocatori</option>
         </select>
         <div className="col-span-2 flex gap-2 sm:col-span-1">
           <Link href="/giocatori/stati" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">Azzera</Link>

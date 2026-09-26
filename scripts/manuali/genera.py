@@ -194,14 +194,13 @@ note solo tecniche · <span class="k">Esci</span> sui dispositivi condivisi · e
 <h2>5. Parole dell'app</h2>
 <h3>Stati di un giocatore osservato (Scouting)</h3>
 <table><tr><th style="width:22%">Stato</th><th>Significato</th></tr>
-<tr><td>Segnalato</td><td>Qualcuno lo ha visto e segnalato.</td></tr>
-<tr><td>Da rivedere</td><td>Interessante: va visto di nuovo.</td></tr>
-<tr><td>Contattato</td><td>La società ha preso contatto.</td></tr>
-<tr><td>Invitato</td><td>Invitato a un open day o a un provino.</td></tr>
-<tr><td>In prova</td><td>Si sta allenando con noi.</td></tr>
-<tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr></table>
-<p class="small">Un giocatore non si chiude mai: resta sempre in archivio. Se non interessa più (non a livello,
-ha scelto un altro progetto…), lo si scrive nelle note della scheda.</p>
+<tr><td>In lista</td><td>Segnalato: è nell'archivio, da seguire.</td></tr>
+<tr><td>In osservazione</td><td>Lo stiamo seguendo attivamente (gare viste, contatti, open day, prova).</td></tr>
+<tr><td>Da rivedere</td><td>Interessante: va visto di nuovo prima di decidere.</td></tr>
+<tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr>
+<tr><td>Da non inserire</td><td>Deciso di non prenderlo (il motivo va nelle note). Resta in archivio.</td></tr></table>
+<p class="small">I giocatori dell'Academy Casatese Merate non compaiono nell'archivio: si vedono scegliendo
+"Tutti i giocatori" (o l'Academy come società).</p>
 <p class="small">Lo stato lo cambiano solo l'amministratore e i direttori.</p>
 <h3>Categorie per anno di nascita (stagione 2026/27)</h3>
 <table><tr><th>Nati nel</th><th>Categoria</th><th>Nati nel</th><th>Categoria</th></tr>
@@ -381,7 +380,7 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <li>Aggiungere i contatti della famiglia (con il consenso)</li>
 <li>Modificare i dati dei giocatori che hai segnalato tu</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
-<li>Cambiare lo stato di un giocatore (segnalato, contattato…)</li>
+<li>Cambiare lo stato di un giocatore (in lista, in osservazione…)</li>
 <li>Inserire o modificare le gare e le squadre da seguire</li>
 <li>Vedere i contatti inseriti da altri</li>
 <li>Unire schede doppie</li>
@@ -467,7 +466,7 @@ Le tue gare le ritrovi in Home, in <b>Le mie gare</b>.</li></ul>''', 'Gare da ve
 <ul>
 <li><b>Giocatori</b>: cerca per nome o descrizione, filtra per annata, ruolo, stato, società.
 Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anche quelli letti dalle distinte e mai osservati.</li>
-<li><b>Per stato</b>: le colonne Segnalato → Da rivedere → … → Inserito. Utile per vedere la pipeline.</li>
+<li><b>Per stato</b>: le colonne In lista → In osservazione → Da rivedere → Inserito → Da non inserire. Utile per vedere la pipeline.</li>
 <li><b>Attività</b>: le tue prossime gare ("Ci vado io"), le tue segnalazioni e valutazioni, con i totali. Il PIN, se lo perdi, lo rigenerano l'amministratore o un direttore.</li>
 </ul>
 </section>
