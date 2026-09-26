@@ -471,7 +471,7 @@ const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', S
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
 /* ---------- Convocazioni dell'attività di base: da 1 a 4 partite, ognuna con i suoi convocati ----------
    sheet.adb.partite = [{id, calId, date, time, meetTime, opponent, home, venue, address, ll, meetAddress, mr, note, conv:[pid]}]
-   Il PDF ha una pagina per partita (convocazioneAdbPage in pdf.js). */
+   Il PDF è un foglio orizzontale con una colonna per partita (convocazioneAdbSheet in pdf.js). */
 const ADB_MAX = 4;
 const partiteAdb = () => ((S.sheet.adb ||= {partite: []}).partite ||= []);
 function nuovaPartitaAdb(m){
@@ -518,7 +518,7 @@ function viewConvocazioniAdb(){
   };
   return `<section class="panel">
     <h2>Convocazioni</h2>
-    <p class="hint">Attività di base: da 1 a ${ADB_MAX} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF ha una pagina per partita.</p>
+    <p class="hint">Attività di base: da 1 a ${ADB_MAX} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF è un foglio orizzontale con una colonna per partita.</p>
     ${pp.length ? pp.map(card).join('') : `<p class="empty">Nessuna partita: aggiungi la prima.</p>`}
     <div class="row" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;gap:10px">
       ${pp.length < ADB_MAX ? `<button class="btn" data-act="adbadd">+ Aggiungi partita</button>` : '<span class="note">Massimo 4 partite.</span>'}

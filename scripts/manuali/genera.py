@@ -288,8 +288,8 @@ tocca <span class="k">Usa questa</span> e i campi si compilano da soli.</p>
 <li><b>Attività di base</b> (da Under 13 in giù): non ci sono formazione, piazzati e foglio gara; la convocazione PDF è
 quella della società (data, indirizzo, orari, avversario, <b>mister presente</b>, note e l'elenco dei convocati).
 Nelle convocazioni puoi mettere <b>da 1 a 4 partite</b> (+ Aggiungi partita), ognuna scelta dal calendario o scritta a mano,
-con i <b>suoi convocati</b>: tocchi i nomi, e chi è già in un'altra partita è segnato. Nel PDF c'è una pagina per partita
-e compaiono solo i convocati, senza motivi per gli altri.</li>
+con i <b>suoi convocati</b>: tocchi i nomi, e chi è già in un'altra partita è segnato. Il PDF è un unico foglio
+orizzontale, come quello della società: una colonna per partita, con i dati e i soli convocati (senza motivi per gli altri).</li>
 <li><b>Campo di gioco</b>: è scritto esattamente come nel calendario ufficiale o nell'ultimo comunicato, con l'indirizzo,
 e si aggiorna da solo se un comunicato lo cambia. Il segnaposto 📍 apre Google Maps; con 📌 puoi salvare il punto esatto
 del cancello, che vale per tutte le partite su quel campo.</li>
