@@ -29,7 +29,7 @@ async function salvaPdf(doc, nome){
 }
 const nomeFile = (...parti) => parti.filter(Boolean).join('_').replace(/[^\w]+/g, '_').replace(/_+/g, '_').toUpperCase() + '.pdf';
 
-/* ---------- Distinta compilabile (Squadra → Partite → Distinta) ----------
+/* ---------- Distinta compilabile (Modulistica → Distinta) ----------
    sheet.distinta = {tipo, manifestazione, data, luogo, giocatori:{pid:{sel, numero, nascita, tessera}}, staff:[{ruolo, nome, documento}], note} */
 const TIPI_DISTINTA = ['Torneo', 'Amichevole omologata'];
 const RUOLI_STAFF = ['Allenatore', 'Dirigente accompagnatore', 'Preparatore', 'Massaggiatore', 'Medico'];
@@ -125,7 +125,10 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- Comunicazione su carta intestata (dagli Avvisi) ---------- */
+/* I caratteri del PDF (Helvetica) non hanno emoji né simboli fuori dall'alfabeto latino: si tolgono */
+const perPdf = t => String(t || '').replace(/[^\x00-\xFF€–—‘’“”…•]/g, '').replace(/^[ \t]+/gm, '');
 async function pdfComunicazione(a){
+  a = {...a, titolo: perPdf(a.titolo).trim(), testo: perPdf(a.testo)};
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   let y = await intestazionePdf(doc, 'COMUNICAZIONE', squadreTesto(a.squadre));
@@ -140,7 +143,7 @@ async function pdfComunicazione(a){
   await salvaPdf(doc, nomeFile('COMUNICAZIONE', a.titolo || '', a.data));
 }
 
-/* ---------- Programma gare di un periodo (Calendario → Programma) ---------- */
+/* ---------- Programma gare di un periodo (Modulistica → Programma gare) ---------- */
 let progDal = null, progAl = null, progSquadre = [];
 function viewProgramma(){
   caricaTuttiCal();
@@ -206,4 +209,36 @@ document.addEventListener('click', e => {
   if(b.dataset.progpdf){ pdfProgramma(); return; }
   if(b.dataset.avpdf){ const a = avvisiSoc.find(x => x.id === b.dataset.avpdf); if(a) pdfComunicazione(a); return; }
   if(b.dataset.avbozzapdf){ pdfComunicazione({...bozzaAvviso, data: todayISO(), autore: misterName || 'La società'}); }
+});
+
+/* ---------- Comunicazione (Modulistica → Comunicazione): titolo e testo su carta intestata, in PDF ----------
+   Non si salva e non si pubblica: per mandarla alle famiglie nell'app c'è Calendario → Avvisi. */
+let bozzaCom = null;
+function viewComunicazione(){
+  bozzaCom ||= {modello:'libero', squadre:[], titolo:'', testo:'', autore: misterName || (isAdmin() ? 'La società' : '')};
+  const b = bozzaCom, squadre = S.teams.filter(t => !t.organizza && !t.vedeTutte);
+  return `<section class="panel">
+    <h2>Comunicazione</h2>
+    <p class="hint">Un foglio su carta intestata della società, da stampare o allegare. Per farla arrivare nell'app a mister e famiglie usa Calendario → Avvisi.</p>
+    <label class="f" for="com_modello">Modello</label>
+    <select id="com_modello" data-com="modello">${Object.entries(MODELLI_AVVISO).map(([k, m]) => `<option value="${k}" ${k===b.modello?'selected':''}>${esc(m.label)}</option>`).join('')}</select>
+    <label class="f" style="margin-top:8px">Per <span class="note">(nessuna scelta = tutta la società)</span></label>
+    <div class="gchips" style="flex-wrap:wrap">${squadre.map(t => `<button class="gchip" data-comsq="${esc(t.id)}" aria-pressed="${b.squadre.includes(t.id)}">${esc(siglaSquadra(t))}</button>`).join('')}</div>
+    <label class="f" for="com_titolo">Titolo</label><input id="com_titolo" data-com="titolo" value="${esc(b.titolo)}" placeholder="Es. Cambio orario allenamenti">
+    <label class="f" for="com_testo">Testo</label><textarea id="com_testo" data-com="testo" rows="10">${esc(b.testo)}</textarea>
+    <label class="f" for="com_autore">Firma</label><input id="com_autore" data-com="autore" value="${esc(b.autore)}" placeholder="Es. Il responsabile del settore giovanile">
+    <div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" data-compdf="1" ${b.testo.trim() ? '' : 'disabled'}>Scarica PDF</button>
+      <button class="btn ghost" data-comvuota="1">Svuota</button></div>
+  </section>`;
+}
+document.addEventListener('input', e => { const k = e.target.dataset?.com; if(!k || !bozzaCom || k === 'modello') return;
+  bozzaCom[k] = e.target.value; const p = document.querySelector('[data-compdf]'); if(p) p.disabled = !bozzaCom.testo.trim(); });
+document.addEventListener('change', e => { if(e.target.dataset?.com !== 'modello' || !bozzaCom) return;
+  const m = MODELLI_AVVISO[e.target.value]; bozzaCom.modello = e.target.value;
+  if(m){ bozzaCom.titolo = m.titolo; bozzaCom.testo = m.testo; } setTimeout(render, 0); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-comsq],[data-compdf],[data-comvuota]'); if(!b || !bozzaCom) return;
+  if(b.dataset.comsq){ const id = b.dataset.comsq; bozzaCom.squadre = bozzaCom.squadre.includes(id) ? bozzaCom.squadre.filter(x => x!==id) : [...bozzaCom.squadre, id]; render(); return; }
+  if(b.dataset.comvuota){ bozzaCom = null; render(); return; }
+  if(b.dataset.compdf) pdfComunicazione({...bozzaCom, data: todayISO()});
 });

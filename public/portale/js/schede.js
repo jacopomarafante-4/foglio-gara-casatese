@@ -148,6 +148,7 @@ function render(){
   /* Schede che non dipendono da una squadra aperta (la segreteria non ne apre nessuna) */
   else if(tab==='tesserati') v.innerHTML = viewTesserati();
   else if(tab==='programma') v.innerHTML = viewProgramma();
+  else if(tab==='comunicazione') v.innerHTML = viewComunicazione();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();

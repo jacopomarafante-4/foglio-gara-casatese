@@ -121,7 +121,7 @@ let squadraOrg = null;
 const isOrg = () => !!squadraOrg;
 const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
 /* Direttori: in sola lettura, tranne Società, Segreteria e calendario/eventi/avvisi (0020, 0031, 0034) */
-const readOnly = () => (isDirettore() && !['squadre','tesserati','calendario','calendariotutte','avvisi'].includes(tab)) || guardaAltra();
+const readOnly = () => (isDirettore() && !['squadre','tesserati','calendario','calendariotutte','avvisi','comunicazione'].includes(tab)) || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
 const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore' || staffRole === 'segreteria')));
 async function loadStaffRole(s){

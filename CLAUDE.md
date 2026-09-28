@@ -36,7 +36,7 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
 - Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area. Aree (`AREAS` in
   `portale.js`): Home (weekend, da fare, riepilogo) · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
-  Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test solo
+  Modulistica (distinta, programma, comunicazione) · Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test solo
   Under 15 `SOLO_U15`, Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
   `statpartite`, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
   Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara/Campi/Statistiche partite (`SOLO_AGONISTICA`):
@@ -184,8 +184,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   la contano come cambio (`app.unione`). Scheda: `components/CarrieraGiocatore.tsx` (con le stagioni delle distinte); la società non si
   cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
-  direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`: Distinta (Squadra → Partite, `sheet.distinta`),
-  Programma gare dal–al (Calendario → Programma, PDF), Comunicazione su carta intestata (Avvisi → Scarica PDF); casella
+  direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`, area **Modulistica** del Portale: Distinta (`sheet.distinta`),
+  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi, PDF su carta intestata; anche Avvisi → Scarica PDF); casella
   "Mostra la categoria" (`sheet.senzaCategoria`) per le intestazioni di convocazioni, distinta e foglio gara
 - 0033: `documenti_tesserati` (visita medica, bonifico con `rata` = posizione in quote, altro; file in `bytea`, max 4 MB,
   foto ridotte a 1600 px nel browser): la famiglia carica con `famiglia_carica(pin, …)` e li vede in `famiglia_get`; la

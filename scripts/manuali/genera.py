@@ -334,9 +334,6 @@ pareggiate e perse, gol, porta inviolata); tocca un riquadro per le statistiche 
 <b>rosso</b> in trasferta. <span class="k">+ Aggiungi amichevole</span>, in fondo, ne aggiunge una: si apre subito
 "Modifica amichevole" per data, ora, avversario e campo (lo stesso per cambiarla o eliminarla dopo). Le partite già giocate sono
 nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo.</p>
-<h3>Calendario → Programma</h3>
-<p>Scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre: vedi partite ed eventi giorno per giorno e con
-<span class="k">Scarica programma PDF</span> lo stampi.</p>
 <h3>Calendario → Tutte le squadre</h3>
 <p>Le partite da giocare di tutta la società, con la tua evidenziata; il menu <b>Categoria</b> ne mostra una sola. La vista
 <b>Giorno</b> è come Google Calendar: una colonna per Merate, Cernusco e Trasferta, le ore in verticale, le frecce ‹ › per
@@ -426,10 +423,15 @@ mostra "Lavori in corso".</p>''', 'Presenze')}
 
 <section>
 <h2>8. Squadra → Partite: tabellini e statistiche</h2>
-<h3>Distinta</h3>
-<p>Per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di nascita e
-tessera: quello che lasci vuoto si scrive a penna), allenatore e dirigenti con il documento, note. <span class="k">Scarica distinta
-PDF</span> prepara il foglio con le righe per le firme.</p>
+<h3>Modulistica</h3>
+<p>Nell'area <b>Modulistica</b> (barra in alto) ci sono i moduli da stampare su carta intestata:</p><ul>
+<li><b>Distinta</b>, per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di
+nascita e tessera: quello che lasci vuoto si scrive a penna), allenatore e dirigenti con il documento, note.
+<span class="k">Scarica distinta PDF</span> prepara il foglio con le righe per le firme.</li>
+<li><b>Programma gare</b>: scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi giorno per giorno
+e con <span class="k">Scarica programma PDF</span> lo stampi.</li>
+<li><b>Comunicazione</b>: un modello (o testo libero), per chi è, titolo, testo e firma; <span class="k">Scarica PDF</span>. Non si
+pubblica: per farla arrivare nell'app usa Calendario → Avvisi.</li></ul>
 <p>In Convocazioni, Distinta e Foglio gara la casella <b>Mostra la categoria nell'intestazione del PDF</b> decide se stampare la
 categoria (es. "Under 14 - Provinciale").</p>
 <h3>Tabellini</h3><ol class="passi">

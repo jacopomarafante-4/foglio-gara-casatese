@@ -12,6 +12,7 @@ const AREA_ICONS = {
   gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
   allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
   statistiche:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  modulistica:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
   scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
@@ -20,12 +21,14 @@ const AREA_ICONS = {
 const GRUPPI_SQUADRA = [
   {k:'rosa', label:'Rosa', tabs:['rosa']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','mieiallenamenti','test','statallen']},
-  {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','distinta','tabellini','statpartite','campi']}
+  {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini','statpartite','campi']}
 ];
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
-  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte','programma','avvisi']},
+  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte','avvisi']},
   {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
+  /* Moduli da stampare su carta intestata: distinta, programma gare, comunicazione (modulistica.js) */
+  {k:'modulistica', label:'Modulistica', tabs:['distinta','programma','comunicazione']},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
@@ -34,7 +37,7 @@ const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calend
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
   segnala:'Segnala un giocatore', giocatori:'Giocatori', avvisi:'Avvisi', tesserati:'Tesserati',
-  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma', distinta:'Distinta'};
+  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma gare', distinta:'Distinta', comunicazione:'Comunicazione'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti', eventi:'calendariotutte'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -50,7 +53,7 @@ const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf','campi','statpa
 /* Test atletici: solo per l'Under 15 */
 const SOLO_U15 = ['test'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15)
-  && !(isOrg() && t==='calendario')
+  && !(isOrg() && (t==='calendario' || t==='distinta'))
   /* Avvisi: li scrivono admin, direttori (in lettura) e organizzativo; i mister li vedono in Home */
   && !(t==='avvisi' && !isAdmin() && !isOrg()));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
