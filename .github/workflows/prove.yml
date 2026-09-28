@@ -1,5 +1,5 @@
 # Prove rapide a ogni salvataggio su GitHub (e sulle richieste di modifica): controllo del codice (lint), tipi,
-# Portale (sintassi e file caricati), build. Se qualcosa non va, GitHub manda un'email e la spunta diventa rossa.
+# regole di calcolo (tests/), Portale (sintassi e file caricati), build. Se qualcosa non va, GitHub manda un'email e la spunta diventa rossa.
 # Nessun segreto qui: la build usa valori finti per le variabili pubbliche (le pagine non contattano il database).
 name: Prove rapide
 on:
@@ -29,6 +29,8 @@ jobs:
         run: npm run lint
       - name: Tipi TypeScript
         run: npm run typecheck
+      - name: Regole di calcolo (tests/)
+        run: npm run prove:regole
       - name: Portale (sintassi e file caricati)
         run: npm run prove:portale
       - name: Build di produzione
