@@ -79,6 +79,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <Scheda href="/home">Home</Scheda>
           <Scheda href="/giocatori">Giocatori</Scheda>
           <Scheda href="/gare">Gare</Scheda>
+          {puoSegnalare(profilo.ruolo) && <Scheda href="/calendario">Calendario</Scheda>}
           {puoSegnalare(profilo.ruolo) && <Scheda href="/necessita">Necessità</Scheda>}
           {puoSegnalare(profilo.ruolo) && <Scheda href="/segnala">Segnala</Scheda>}
           <Scheda href="/profilo">Attività</Scheda>

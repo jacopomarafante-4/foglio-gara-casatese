@@ -574,6 +574,14 @@ altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito co
 </section>
 
 <section>
+<h2>Calendario delle nostre squadre</h2>
+<p>Nella scheda <b>Calendario</b> ci sono le partite di tutte le squadre dell'Academy, di tutte le annate, con i colori del
+Portale: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Scegli il periodo (questo weekend,
+prossime 2 settimane, fino a fine stagione) e, se vuoi, una sola squadra. Per ogni partita: ora, avversario, campionato o
+amichevole, campo.</p>
+</section>
+
+<section>
 <h2>Necessità della società</h2>
 <p>Nella scheda <b>Necessità</b> ci sono i giocatori che la società sta cercando (annata, ruolo, piede, priorità e note),
 scritti dai direttori. Sotto ogni richiesta vedi i ragazzi già in archivio che rientrano, con stato, media dell'ultima
@@ -704,6 +712,8 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
+<li><b>Calendario</b>: le partite di tutte le nostre squadre (tutte le annate) con i colori del Portale, per periodo e squadra.
+Lo vedono anche gli scout.</li>
 <li><b>Necessità</b>: che giocatori cerca la società. <span class="k">+ Nuova necessità</span> (admin e direttori): cosa cerchiamo,
 annata (anche più di una), ruolo, piede, priorità e note. Sotto ogni richiesta ci sono i giocatori già in archivio che rientrano
 (non dell'Academy, né inseriti né scartati), prima i "Da prendere", poi per media; a parte, "Da verificare", quelli con ruolo o
