@@ -392,13 +392,15 @@ li vedono tutte le squadre). In alto il filtro: Tutti, A favore, A sfavore, Scel
 <li>Tocca uno schema per <b>sceglierlo per la partita</b>: va nel foglio gara.</li>
 <li>Su un modello tocca <span class="k">Usa come modello</span>: ne fai una copia tua, già scelta per la partita, che resta nei tuoi
 schemi anche per le prossime. Oppure <span class="k">+ Nuovo schema vuoto</span>.</li>
-<li><b>Un solo pannello</b> per cambiarlo: in alto nome, <b>comando</b> (la chiamata, es. "Braccia alzate") e tipo. Con
-<b>✋ Sposta</b> trascini pedine e pallone; <b>tocca una pedina</b> per numero di ruolo, compito, etichetta rossa e giocatore.
+<li><b>Come nel foglio gara</b>: a sinistra il campo, a destra il riquadro <b>Compiti</b>. In alto nome e <b>comando</b> (la
+chiamata, es. "Braccia alzate"); nel riquadro <b>A favore / A sfavore</b>. Con <b>✋ Sposta</b> trascini pedine e pallone;
 Freccia, Tratteggiata, Linea e Testo per disegnare (freccia piena = palla, tratteggiata = movimento); tocca un segno per
-cancellarlo. <span class="k">+ Pedina</span>, nota sotto lo schema, <span class="k">Duplica</span> ed <span class="k">Elimina schema</span>.</li>
-<li>Se lo stesso giocatore finisce in due pedine (per esempio due pedine con il numero 5) compare un avviso rosso.</li>
-<li><b>Chi fa cosa</b>: per ogni pedina il giocatore (di partenza chi gioca con quel numero in formazione; vale per la partita) e
-il compito; tocca il nome di un compito (✎) per rinominarlo per tutte le sue pedine.</li>
+cancellarlo. Sotto il campo la nota.</li>
+<li><b>Nel riquadro Compiti</b>: tocca il <b>nome di un compito</b> per rinominarlo, il <b>+</b> accanto per aggiungere una pedina a
+quel compito, <span class="k">+ Nuovo compito</span> per crearne un altro. Ogni riga è una pedina: scegli il <b>giocatore</b> (di
+partenza chi gioca con quel numero in formazione; vale per la partita). <b>Tocca una pedina</b> (sul campo o nella riga) per
+cambiarne numero, compito ed etichetta, o toglierla; si illumina anche sul campo. Se lo stesso giocatore è in due pedine compare
+un avviso rosso.</li>
 <li>La ★ mette o toglie uno schema dai preferiti. Tutto si salva da solo.</li></ul>''', 'Piazzati')}
 {fig('p-pdf', '''<h3>Foglio gara PDF</h3>
 <p>Anteprima e <span class="k">Scarica PDF</span>: prima pagina con distinta e formazione, poi una pagina per ogni schema selezionato.

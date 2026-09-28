@@ -163,7 +163,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - Portale, piazzati (`public/portale/js/piazzati.js`): modelli della società (`shared/schemes`, li modifica l'admin) e "I miei schemi"
   della squadra in `registro/<squadra>.schemi` (li salva il mister col PIN; `preferito`, `da` = modello, `aggiornato`). "Usa come
   modello" (`usaModello`) copia posizioni, compiti e frecce e sceglie la copia per la partita. Editor unico (`boardMode = 'unico'`,
-  `viewSchemaEditor`): trascinare, toccare una pedina, strumenti di disegno; `schemaDa(id)` trova lo schema ovunque (formazione,
+  `viewSchemaEditor`), impaginato come il foglio gara: campo a sinistra, riquadro Compiti a destra (`pannelloCompiti`: nome dei
+  compiti, + pedina per compito, giocatore per riga, riga della pedina scelta con numero/compito/etichetta, `data-edtokid`); `schemaDa(id)` trova lo schema ovunque (formazione,
   foglio gara), `modificaBase(sc)`/`salvaSchema(sc)` dicono chi lo cambia e dove si salva. I mister non modificano più i modelli
   per la partita (resta solo la lettura delle vecchie `schemeEdits`)
 - Portale, calci piazzati (`shared/schemes`, comuni a tutte le squadre): schemi aggiunti in blocco da `scripts/piazzati/schemi.mjs`
