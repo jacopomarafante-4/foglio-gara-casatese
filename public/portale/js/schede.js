@@ -150,13 +150,14 @@ function render(){
   else if(tab==='formazione') v.innerHTML = viewFormazione();
   else if(tab==='piazzati') v.innerHTML = openSchemeId ? viewScheme() : viewSchemes();
   else if(tab==='pdf'){ v.innerHTML = viewPdf(); buildPreview(); }
-  else if(tab==='calendario') v.innerHTML = viewCalendario();
+  else if(tab==='calendario' || tab==='calendariotutte') v.innerHTML = viewCalendario();
+  else if(tab==='campi') v.innerHTML = viewCampi();
+  else if(tab==='tabellini'){ v.innerHTML = viewTabellini(); scrollGridsToEnd(); }
   else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
   else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
-  else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
+  else if(tab==='statistiche'){ v.innerHTML = viewStatistiche(); scrollGridsToEnd(); }
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
-  else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
     v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {
@@ -443,7 +444,7 @@ function viewPartita(){
       </div>
       <p class="hint" style="margin:6px 0 0">Oppure ignora e scrivi qui sotto i dati di un'altra partita (amichevole, recupero, ecc.).</p>
     </div>` : ''}
-    <p class="hint">Questi dati finiscono nell'intestazione di ogni pagina del PDF. Il calendario delle partite è in Squadra → Calendario.</p>
+    <p class="hint">Questi dati finiscono nell'intestazione di ogni pagina del PDF. Il calendario delle partite è nell'area Calendario.</p>
     <div class="grid">
       ${f('team','La nostra squadra (nel PDF)')}${f('opponent','Avversario')}
       ${f('date','Data','date')}${f('time','Ora','time')}
@@ -457,7 +458,7 @@ function viewPartita(){
 `;
 }
 
-function viewFriendlies(){ /* in Squadra → Calendario */
+function viewFriendlies(){ /* in Calendario → La mia squadra */
   const today = todayISO();
   const rows = (S.reg.friendlies||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(m => `
     <div class="teamcard ${m.date && m.date < today ? 'past' : ''}">
@@ -474,7 +475,7 @@ function viewFriendlies(){ /* in Squadra → Calendario */
     </div>`).join('');
   return `<section class="panel">
     <h3 style="margin-top:0">Amichevoli</h3>
-    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Gara → Partita e in Statistiche → Partite.</p>
+    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Partita → Dati partita e nei Tabellini.</p>
     ${rows || '<p class="empty">Nessuna amichevole.</p>'}
     <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
   </section>`;

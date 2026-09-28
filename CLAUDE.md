@@ -34,7 +34,11 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
 - Società (la modificano admin e direttori, 0020): squadre con i mister, poi "Scouting" (scout) e "Direttori"
   mostrati come squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff` (admin e direttori)
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
-- Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area.
+- Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area. Aree (`AREAS` in
+  `portale.js`, ordine della settimana): Home · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
+  Partita (`gara`: Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara PDF, Tabellini) · Allenamento (Presenze, Test) ·
+  Squadra (Rosa, Statistiche con Allenamento/Partite, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
+  Attività di base: niente Dati partita/Formazione/Piazzati/PDF (`SOLO_AGONISTICA`).
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
   `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
@@ -147,7 +151,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0020: direttori scrivono `docs` solo per `shared/teams` (area Società); `/api/staff` accetta admin e direttori
 - Portale, attività di base (da Under 13 in giù, `isAdb()` in `registro.js`): squadre t_u13…t_u8 create con
   `scripts/import-adb/importa.mjs` dai fogli presenze (CSV in `private/adb/`, NON su git); niente Formazione/Piazzati/Foglio gara
-  (`SOLO_AGONISTICA` in `portale.js`); convocazioni da 1 a 4 partite con i loro convocati (`sheet.adb.partite`, `viewConvocazioniAdb()`), PDF orizzontale sul
+  (`SOLO_AGONISTICA` in `portale.js`, anche Dati partita); convocazioni da 1 a 4 partite con i loro convocati (`sheet.adb.partite`, `viewConvocazioniAdb()`), PDF orizzontale sul
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)

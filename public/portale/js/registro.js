@@ -297,7 +297,7 @@ function testEditor(t){
 }
 
 /* ---------- Scheda Statistiche ---------- */
-/* Statistiche → Allenamento e Statistiche → Partite (con i tabellini) */
+/* Squadra → Statistiche (allenamento e partite) e Partita → Tabellini */
 function statHeader(title, kpis){
   return `<section class="panel">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
@@ -339,7 +339,6 @@ function viewStatAllenamento(){
 }
 function viewStatPartite(){
   if(!S.players.length) return `<section class="panel"><h2>Statistiche partite</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
-  if(curGame()) return registroPage('Tabellino', viewGames());
   const {gm, rows, team} = computeStats();
   const kpis = [
     kpiBox(team.nG, 'Partite giocate', team.nScored ? `${team.w}V ${team.d}N ${team.l}P` : ''),
@@ -354,8 +353,14 @@ function viewStatPartite(){
     <h3 class="convh3">Giocatori</h3>
     ${gm.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Partite giocate (almeno 1 minuto)">Pres.</th><th>Minuti</th><th title="Minuti giocati sul totale disponibile">% min</th><th title="Minuti medi a partita giocata">Media</th><th>Gol</th><th title="Gol subiti da portiere">Subiti 🧤</th></tr></thead><tbody>${gmRows}</tbody></table></div>` : '<p class="empty">Nessuna partita giocata nel periodo.</p>'}
   </section>
-  <section class="panel">
-    <h3 class="convh3">Tabellini</h3>
+  <p class="note">I tabellini delle partite (minuti, gol, gol subiti) si compilano in <button class="linkbtn" data-tab="tabellini">Partita → Tabellini</button>.</p>`;
+}
+/* Partita → Tabellini: dopo la partita, minuti, gol e gol subiti */
+function viewTabellini(){
+  if(!S.players.length) return `<section class="panel"><h2>Tabellini</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
+  if(curGame()) return registroPage('Tabellino', viewGames());
+  return `<section class="panel">
+    <h2>Tabellini · ${esc(TEAM()?.category || TEAM()?.name || '')}</h2>
     <p class="hint" style="margin-bottom:0">Minuti, gol e gol subiti di ogni partita. Tocca una partita per compilarla.</p>
     ${viewGames()}
   </section>`;

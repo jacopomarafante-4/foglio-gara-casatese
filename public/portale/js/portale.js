@@ -1,10 +1,11 @@
-/* Portale Academy Casatese Merate · Portale: aree e sotto-schede, indirizzo della pagina, Home, Squadra → Calendario.
+/* Portale Academy Casatese Merate · Portale: aree e sotto-schede, indirizzo della pagina, Home, Calendario.
    I file si caricano in ordine (vedi index.html) e condividono le stesse variabili globali. */
 /* ---------- Portale: aree, sotto-schede, indirizzo della pagina ---------- */
 /* L'indirizzo tiene la scheda aperta (#/formazione, oppure #squadra=PIN/formazione per i mister):
    il tasto indietro del telefono torna alla scheda precedente e si può mandare il link a una sezione. */
 const AREA_ICONS = {
   home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
+  calendario:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/>',
   squadra:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.6.3 4.5 2.4 4.5 5.8"/>',
   gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
   allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
@@ -12,24 +13,28 @@ const AREA_ICONS = {
   scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
+/* Aree nell'ordine della settimana del mister: calendario, partita (prima e dopo), allenamento, squadra */
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
-  {k:'squadra', label:'Squadra', tabs:['rosa','calendario']},
-  {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf']},
+  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte']},
+  {k:'gara', label:'Partita', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
-  {k:'statistiche', label:'Statistiche', tabs:['statallen','statpartite']},
+  {k:'squadra', label:'Squadra', tabs:['rosa','statistiche','campi']},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
-const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione',
-  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre', segnala:'Segnala un giocatore', giocatori:'Giocatori'};
+const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
+  convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara PDF', tabellini:'Tabellini',
+  statistiche:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
+  segnala:'Segnala un giocatore', giocatori:'Giocatori'};
 /* nomi delle schede di versioni precedenti (link salvati) */
-const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:'allenamenti'};
+const TAB_ALIASES = {statallen:'statistiche', statpartite:'statistiche', registro:'allenamenti'};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
 const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
-/* Attività di base (da Under 13 in giù): niente formazione, piazzati e foglio gara PDF */
-const SOLO_AGONISTICA = ['formazione','piazzati','pdf'];
+/* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF):
+   nell'area Partita restano Convocazioni e Tabellini */
+const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
@@ -71,7 +76,7 @@ function daysUntil(d){ const a = new Date(todayISO()+'T12:00:00'), b = new Date(
 /* ---------- Calendari di tutte le squadre (Calendario → "Tutte le squadre") ----------
    Mister: funzione coach_calendari (0027, solo nome, categoria e partite); admin e direttori leggono i documenti.
    Si ricaricano al massimo ogni minuto; se non si possono leggere resta il calendario della propria squadra. */
-let tuttiCal = null, tuttiCalAt = 0, tuttiCalInCorso = false, calScope = 'mia';
+let tuttiCal = null, tuttiCalAt = 0, tuttiCalInCorso = false;
 async function caricaTuttiCal(){
   if(tuttiCalInCorso || Date.now() - tuttiCalAt < 60000) return;
   tuttiCalInCorso = true;
@@ -88,7 +93,7 @@ async function caricaTuttiCal(){
     }
   }catch(e){ /* funzione non ancora nel database o rete assente: solo la propria squadra */ }
   tuttiCalAt = Date.now(); tuttiCalInCorso = false;
-  if(tab==='calendario') render();
+  if(tab==='calendariotutte') render();
 }
 /* Partite di tutte le squadre, ognuna con la sua squadra (la propria dai dati aperti, amichevoli del mister comprese) */
 function partiteTutte(){
@@ -143,14 +148,14 @@ function viewHome(){
   const todo = homeTodo(), maxTodo = 6;
   const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
   /* Anteprima: gli impegni della squadra di sabato e domenica di questa settimana (campionato, amichevoli e tornei),
-     colorati per calendario. Le altre partite e le altre squadre sono in Squadra → Calendario */
+     colorati per calendario. Le altre partite e le altre squadre sono nell'area Calendario */
   const [sab, dom] = weekendISO(), wk = allCalendar().filter(m => m.date===sab || m.date===dom)
     .sort((a,b) => (a.date+(a.time||'').padStart(5,'0')).localeCompare(b.date+(b.time||'').padStart(5,'0')));
   const matchCard = `<div class="hcard hmatch hwide">
       <div class="hlabel">Weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
       ${wk.length ? `${legendaCal()}<ul class="wklist">${wk.map(m => rigaPartita(m, false)).join('')}</ul>`
         : `<p class="note">Nessun impegno questo weekend.${nm ? ` Prossima partita: ${weekday(nm.date)} ${fmtDate(nm.date)} · ${esc(nm.opponent||'')} (${whenTxt(nm.date)}).` : ''}</p>`}
-      ${nm ? `<div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button><button class="btn small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
+      ${nm ? `<div class="row" style="margin-top:12px">${isAdb() ? '' : `<button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button>`}<button class="btn ${isAdb() ? 'primary ' : ''}small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
         : '<div class="row" style="margin-top:12px"><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>'}
     </div>`;
   const trCard = trToday
@@ -169,7 +174,7 @@ function viewHome(){
       <div class="kpi"><b>${team.nG}</b><span>Partite</span></div>
       <div class="kpi"><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b><span>Gol fatti-subiti</span></div>
     </div>
-    <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="statallen">Statistiche allenamento</button><button class="btn small" data-hgo="statpartite">Statistiche partite</button></div></div>`;
+    <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="stat:allenamento">Statistiche allenamento</button><button class="btn small" data-hgo="stat:partite">Statistiche partite</button></div></div>`;
   return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
     <div class="hgrid">${matchCard}${trCard}${todoCard}${numCard}</div>`;
 }
@@ -191,13 +196,14 @@ document.addEventListener('click', e => {
   }
   if(k==='tr'){ goTab('allenamenti'); openTrainingId = id; render(); return; }
   if(k==='opencal'){
-    goTab('statpartite');
+    goTab('tabellini');
     const m = allCalendar().find(x => x.id===id); if(!m) return;
     let g = S.reg.games.find(x => x.calId===m.id);
     if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; S.reg.games.push(g); save('registro'); }
     openGameId = g.id; render(); return;
   }
-  if(k==='opengm'){ goTab('statpartite'); openGameId = id; render(); return; }
+  if(k==='opengm'){ goTab('tabellini'); openGameId = id; render(); return; }
+  if(k==='stat'){ statVista = id; goTab('statistiche'); return; }
   goTab(k);
 });
 
@@ -217,7 +223,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => { if(e.target.id==='cv_meetaddr') render(); });
 document.addEventListener('keydown', e => { if(e.target.id==='pin_in' && e.key==='Enter'){ e.preventDefault(); document.querySelector('[data-pinsave]')?.click(); } });
 
-/* ---------- Squadra → Calendario ---------- */
+/* ---------- Calendario: La mia squadra, Tutte le squadre ---------- */
 /* Partite collegate ai calendari ufficiali (scripts/import-calendari/portale.mjs): "da calendario"
    finché un comunicato non le conferma o varia */
 function calStato(m){
@@ -311,10 +317,8 @@ document.addEventListener('click', e => {
 });
 function viewCalendario(){
   const A = isAdmin(), sigla = siglaSquadra(TEAM());
-  const scelta = `<div class="row" style="justify-content:space-between;margin-bottom:10px">
-      <div class="seg" role="group" aria-label="Quali partite"><button data-calscope="mia" aria-pressed="${calScope==='mia'}">Solo ${esc(sigla)}</button><button data-calscope="tutte" aria-pressed="${calScope==='tutte'}">Tutte le squadre</button></div>
-      ${legendaCal()}</div>`;
-  if(calScope === 'tutte'){
+  const scelta = `<div class="row" style="justify-content:flex-end;margin-bottom:10px">${legendaCal()}</div>`;
+  if(tab === 'calendariotutte'){
     caricaTuttiCal();
     /* Filtro per categoria: tutte, oppure una sola squadra */
     const squadre = (tuttiCal || S.teams).filter(t => t.id === curTeam || (t.matches || []).length);
@@ -352,26 +356,35 @@ function viewCalendario(){
       </div>`).join('')
     : `<ul class="wklist callist">${listaCalendario(prossime, false)}</ul>`;
   return `<section class="panel">
-    <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
+    <h2>Calendario · ${esc(sigla)}</h2>
     ${scelta}
-    <p class="hint">${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
+    <p class="hint">${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Partita → Dati partita e per i Tabellini.</p>
     ${(A ? cal.length : prossime.length) ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
     ${viewStorico()}
   </section>
-  ${viewFriendlies()}
-  ${viewVenues()}`;
+  ${viewFriendlies()}`;
+}
+/* Squadra → Campi: posizione esatta dei campi per il link di Google Maps */
+function viewCampi(){
+  return viewVenues() || `<section class="panel"><h2>Campi</h2><p class="empty">Nessun campo: i campi arrivano dalle partite del calendario.</p></section>`;
+}
+/* Squadra → Statistiche: allenamento o partite */
+let statVista = 'allenamento';
+function viewStatistiche(){
+  const scelta = `<div class="row" style="margin-bottom:10px"><div class="seg" role="group" aria-label="Statistiche di"><button data-statvista="allenamento" aria-pressed="${statVista==='allenamento'}">Allenamento</button><button data-statvista="partite" aria-pressed="${statVista==='partite'}">Partite</button></div></div>`;
+  return scelta + (statVista === 'partite' ? viewStatPartite() : viewStatAllenamento());
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-calscope]'); if(!b) return;
-  calScope = b.dataset.calscope; render();
+  const b = e.target.closest('[data-statvista]'); if(!b) return;
+  statVista = b.dataset.statvista; render();
 });
 function viewVenues(){
   const vs = [...new Set(allCalendar().map(m => (m.venue||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'it'));
   if(!vs.length) return '';
   const n = vs.filter(v => venuePin(v)).length;
   return `<section class="panel">
-    <h3 style="margin-top:0">Campi · posizione per Google Maps</h3>
+    <h2>Campi · posizione per Google Maps</h2>
     <p class="hint">Con la posizione esatta salvata, il link di convocazioni e foglio convocazione porta dritto al cancello. ${n} campi su ${vs.length} impostati.</p>
     <div class="reglist">${vs.map(v => `<div class="regrow venuerow"><div><b>${esc(v)}</b><div><a class="mapslink" href="${esc(venueUrl(v))}" target="_blank" rel="noopener">📍 Prova il link</a></div>${pinBox(v)}</div></div>`).join('')}</div>
   </section>`;

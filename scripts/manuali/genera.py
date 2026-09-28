@@ -151,10 +151,11 @@ Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 {fig('p-home', '''<ul>
 <li><b>Intestazione blu</b>: il nome dell'app, il tuo ruolo (<span class="k">MISTER</span>, <span class="k">SCOUT</span>,
 <span class="k">DIRETTORE</span>…), il tuo nome o la tua squadra, e <span class="k">Esci</span>.</li>
-<li><b>Barra delle aree</b>, sempre in alto: Home, Squadra, Gara, Allenamento, Statistiche, Scouting, Società.
+<li><b>Barra delle aree</b>, sempre in alto, nell'ordine della settimana: Home, Calendario, Partita, Allenamento, Squadra,
+Scouting, Società.
 Ognuno vede solo le aree che gli servono. Se non ci stanno tutte, la barra scorre di lato.</li>
-<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta (per esempio in Gara: Partita, Convocazioni,
-Formazione, Piazzati, Foglio gara PDF).</li>
+<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta (per esempio in Partita: Dati partita, Convocazioni,
+Formazione, Piazzati, Foglio gara PDF, Tabellini).</li>
 <li>Il <b>logo</b> in alto riporta sempre alla Home.</li>
 </ul>''', 'La Home di un mister.')}
 </section>
@@ -266,7 +267,7 @@ Scarica il foglio gara in PDF.</li>
 </section>
 
 <section>
-<h2>3. Home e Squadra</h2>
+<h2>3. Home e Calendario</h2>
 {fig('p-home', '''<h3>Home</h3><ul>
 <li><b>Weekend</b>: gli impegni di sabato e domenica di questa settimana (campionato, amichevoli, tornei) con ora, luogo
 e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario.</li>
@@ -274,30 +275,26 @@ e note, e i pulsanti per preparare la prossima partita, le convocazioni e il cal
 <li><b>Allenamento di oggi</b>: se le presenze non sono ancora segnate, un tocco ti porta lì.</li>
 <li><b>Da fare</b>: tabellini da compilare, gol da inserire, portieri da segnare. Tocca una riga per andarci.</li>
 <li><b>Stagione</b>: allenamenti, presenza media, partite, gol fatti e subiti.</li></ul>''', 'Home')}
-{fig('p-rosa', '''<h3>Squadra → Rosa</h3>
-<p>L'elenco dei giocatori, inserito dalla società. Il numero è quello della prossima partita, che assegni in Formazione.
-Il <b>ruolo</b> di ogni giocatore lo scegli tu: da Under 13 in su portiere, difensore, centrocampista o attaccante;
-da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai inserire i gol subiti nelle partite.</p>
-<p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>
-<h3>Squadra → Calendario</h3>
-<p>Le partite da giocare fino a fine stagione: ufficiali, amichevoli e tornei, inseriti dalla società. In alto scegli <b>Solo</b>
-la tua squadra oppure <b>Tutte le squadre</b>: le partite da giocare di tutta la società, con la tua evidenziata. In <b>Tutte le squadre</b> la vista
+<h3>Calendario → La mia squadra</h3>
+<p>Le partite da giocare fino a fine stagione: ufficiali, amichevoli e tornei, inseriti dalla società. Colori: <b>blu</b> in casa
+a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le partite già giocate sono nello <b>Storico</b>, in fondo
+alla pagina: toccalo per aprirlo. Sotto ci sono le <b>Amichevoli</b> che aggiungi tu.</p>
+<h3>Calendario → Tutte le squadre</h3>
+<p>Le partite da giocare di tutta la società, con la tua evidenziata; il menu <b>Categoria</b> ne mostra una sola. La vista
 <b>Giorno</b> è come Google Calendar: una colonna per Merate, Cernusco e Trasferta, le ore in verticale, le frecce ‹ › per
-cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte in fila. Le partite già
-giocate della tua squadra sono nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo. Colori: <b>blu</b> in casa a Merate,
-<b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le tue amichevoli le aggiungi da
-<b>Statistiche → Partite → + Amichevole</b>: compaiono anche qui.</p>''', 'Rosa')}
+cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte in fila.</p>
 </section>
 
 <section>
-<h2>4. Gara: preparare la partita</h2>
-<h3>Partita</h3>
-<p>I dati della gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. Se la partita è in calendario
-tocca <span class="k">Usa questa</span> e i campi si compilano da soli.</p>
+<h2>4. Partita: prepararla</h2>
+<p><b>Attività di base</b> (da Under 13 in giù): nell'area Partita ci sono solo <b>Convocazioni</b> e <b>Tabellini</b>,
+senza foglio gara.</p>
+<h3>Dati partita</h3>
+<p>I dati della gara per il foglio gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. In alto ci sono
+tutte le partite della squadra nel weekend: tocca <span class="k">Usa questa</span> su quella da preparare e i campi si
+compilano da soli; quella scelta è segnata "✓ Nel foglio gara".</p>
 {fig('p-convocazioni', '''<h3>Convocazioni</h3><ol class="passi">
-<li>In alto ci sono tutte le partite della squadra nel weekend: tocca <span class="k">Usa questa</span> su quella da preparare
-(se nel weekend non ce ne sono, c'è la prossima in calendario). Quella scelta è segnata "✓ Nel foglio gara".</li>
-<li><b>Attività di base</b> (da Under 13 in giù): non ci sono formazione, piazzati e foglio gara; la convocazione PDF è
+<li><b>Attività di base</b> (da Under 13 in giù): la convocazione PDF è
 quella della società (data, indirizzo, orari, avversario, <b>mister presente</b>, note e l'elenco dei convocati).
 Nelle convocazioni puoi mettere <b>da 1 a 4 partite</b> (+ Aggiungi partita), ognuna scelta dal calendario o scritta a mano,
 con i <b>suoi convocati</b>: tocchi i nomi, e chi è già in un'altra partita è segnato. Il PDF è un unico foglio
@@ -313,7 +310,7 @@ partire insieme). Se lo lasci vuoto, nella convocazione c'è "Al campo di gioco"
 </section>
 
 <section>
-<h2>5. Gara: la formazione</h2>
+<h2>5. Partita: la formazione</h2>
 {duo('p-formazione-campo', 'Il campo: modulo, posizioni, × per togliere', 'p-formazione-elenco', 'Tocchi una posizione: scegli chi metterci')}
 <p>La pagina è fatta come il foglio gara PDF, da sinistra a destra: <b>Titolari e Panchina</b>, il <b>campo</b>,
 e a destra <b>modulo, capitano, vice, calci piazzati e note</b>. Dal telefono le tre parti sono una sotto l'altra.</p>
@@ -330,7 +327,7 @@ Se la posizione è occupata puoi anche <span class="k">Togli dal campo</span>.</
 </section>
 
 <section>
-<h2>6. Piazzati e foglio gara</h2>
+<h2>6. Partita: piazzati e foglio gara</h2>
 {fig('p-piazzati', '''<h3>Piazzati</h3>
 <p>Gli schemi (angoli e punizioni, a favore e a sfavore) sono <b>comuni a tutte le squadre</b> e li carica la società.</p><ul>
 <li>Tocca uno schema per <b>selezionarlo</b> per questa partita.</li>
@@ -360,20 +357,31 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 </section>
 
 <section>
-<h2>8. Statistiche e tabellini</h2>
-{fig('p-statistiche', '''<h3>Statistiche → Allenamento</h3>
-<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%.</p>
-<h3>Statistiche → Partite</h3>
-<p>Partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti.</p>
-<h3>Tabellini</h3><ol class="passi">
+<h2>8. Partita: tabellini</h2>
+<h3>Partita → Tabellini</h3><ol class="passi">
 <li>Nella tabella dei tabellini tocca una partita.</li>
 <li>Segna chi ha giocato, i <b>minuti</b>, i <b>gol</b>, i cartellini, e i <b>gol subiti</b> dei portieri.</li>
 <li>Inserisci il risultato.</li></ol>
-<p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>''', 'Statistiche → Partite')}
+<p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>
 </section>
 
 <section>
-<h2>9. Scouting: segnalare un giocatore</h2>
+<h2>9. Squadra: rosa, statistiche, campi</h2>
+{fig('p-rosa', '''<h3>Squadra → Rosa</h3>
+<p>L'elenco dei giocatori, inserito dalla società. Il numero è quello della prossima partita, che assegni in Formazione.
+Il <b>ruolo</b> di ogni giocatore lo scegli tu: da Under 13 in su portiere, difensore, centrocampista o attaccante;
+da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai inserire i gol subiti nelle partite.</p>
+<p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>''', 'Rosa')}
+{fig('p-statistiche', '''<h3>Squadra → Statistiche</h3>
+<p>In alto scegli <b>Allenamento</b> (percentuali di presenza per giocatore e per mese, risultati dei test; in rosso chi è
+sotto il 75%) oppure <b>Partite</b> (partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti).</p>
+<h3>Squadra → Campi</h3>
+<p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni
+porta dritto lì.</p>''', 'Statistiche')}
+</section>
+
+<section>
+<h2>10. Scouting: segnalare un giocatore</h2>
 {fig('p-segnala', '''<p>Hai visto un ragazzo interessante (in una partita contro di voi, a un torneo…)? Mandalo allo scouting del club
 dall'area <b>Scouting</b>.</p><ol class="passi">
 <li><b>Annata</b> (obbligatoria) e, se lo sai, il ruolo.</li>
@@ -546,9 +554,9 @@ nello Scouting, cambiando lo stato; quelle sulle squadre comunicale all'amminist
 <h2>3. Il Portale delle squadre</h2>
 {fig('p-home', '''<ol class="passi">
 <li>In alto, accanto a <b>Squadra</b>, scegli la squadra dal menu.</li>
-<li>Usa le aree come un mister: <b>Home</b> (impegni del weekend, da fare, stagione), <b>Squadra</b> (rosa, calendario),
-<b>Gara</b> (partita, convocazioni, formazione, piazzati, PDF), <b>Allenamento</b> (presenze, test),
-<b>Statistiche</b> (allenamento e partite).</li>
+<li>Usa le aree come un mister: <b>Home</b> (impegni del weekend, da fare, stagione), <b>Calendario</b> (la squadra, tutte
+le squadre), <b>Partita</b> (dati partita, convocazioni, formazione, piazzati, PDF, tabellini), <b>Allenamento</b> (presenze,
+test), <b>Squadra</b> (rosa, statistiche, campi).</li>
 <li>La sezione <b>Da fare</b> in Home mostra cosa manca: tabellini da compilare, gol da inserire.</li></ol>
 <p><b>Anteprima</b>: con "Guarda l'app come" vedi esattamente cosa vede il mister di una squadra.</p>''', 'La Home di una squadra')}
 <h3>Società</h3>
