@@ -5,7 +5,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
-  AREE, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
+  AREE, DETTAGLI_SEGNALAZIONE, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
   type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
@@ -51,6 +51,7 @@ type Giocatore = {
 type Segnalazione = {
   id: string; data: string; contesto: string | null; testo: string; voto: number | null; autore: Autore;
   squadra: string | null; // segnalazione di un mister dal Portale squadre
+  piede: Piede | null; piede_forte: number | null; piede_debole: number | null; statura: number | null; forza: number | null; // 0041
 };
 
 type Valutazione = {
@@ -309,6 +310,14 @@ export default async function SchedaGiocatore({
                         {s.voto && <span className="ml-2 font-semibold text-inchiostro">voto {s.voto}/5</span>}
                       </p>
                       <p className="mt-2 whitespace-pre-line">{s.testo}</p>
+                      {(s.piede || DETTAGLI_SEGNALAZIONE.some((d) => s[d.chiave])) && (
+                        <p className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                          {s.piede && <span className="rounded-full bg-carta px-2 py-0.5 font-semibold">Piede {PIEDI[s.piede].toLowerCase()}</span>}
+                          {DETTAGLI_SEGNALAZIONE.filter((d) => s[d.chiave]).map((d) => (
+                            <span key={d.chiave} className="rounded-full bg-carta px-2 py-0.5 font-semibold">{d.nome} {s[d.chiave]}/5</span>
+                          ))}
+                        </p>
+                      )}
                     </li>
                   );
                 }

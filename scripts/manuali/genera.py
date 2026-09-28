@@ -545,7 +545,8 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <li><span class="k">Salva segnalazione</span>: si apre la scheda del giocatore.</li></ol>
 <div class="box"><b class="t">È già in lista? Si valuta</b>Mentre scrivi annata e cognome si apre la finestra <b>"Già in lista. Vuoi
 valutare?"</b> con i ragazzi già in archivio (anche con il cognome scritto un po' diverso): <span class="k">Sì, valuta</span> apre subito la
-<b>Valutazione</b> (le 4 aree da 1 a 5 e il giudizio), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
+<b>Valutazione</b> (le 4 aree da 1 a 5, il dettaglio facoltativo su spunti, guida della palla, ricezione, calciata, contrasto,
+velocità e reattività, e il giudizio), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
 (cognome, nome e annata) la segnalazione <b>non</b> si salva e si apre la valutazione. Nella scheda di un giocatore già in lista c'è
 solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
 </section>
@@ -723,6 +724,9 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
+<li><b>Segnalazione</b>: oltre a cosa hai visto, il <b>piede</b> e quattro voti facoltativi da 1 a 5 (piede forte, piede debole,
+statura, forza; "–" se non li hai visti). <b>Valutazione</b>: le 4 aree obbligatorie e, <b>nel dettaglio</b> (facoltativo), spunti,
+guida della palla, ricezione, calciata, contrasto, velocità e reattività. Si vedono nella storia e nello storico valutazioni della scheda.</li>
 <li><b>Tre valutazioni</b>: ogni giocatore ha <b>3 caselle</b> con le iniziali delle persone che l'hanno valutato. Servono 3 persone
 diverse per passarlo a <b>Inserito</b>: a 3 su 3 caselle e riga diventano <b>verdi</b> ✓. Ogni <b>annata</b> ha il suo colore e
 l'elenco è diviso per annata (dalla più giovane), finché non scegli un altro ordine.</li>

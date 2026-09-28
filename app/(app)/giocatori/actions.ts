@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
-import { AREE, ESITI_EVENTO, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, TIPI_EVENTO, valoreValido } from '@/lib/tipi';
+import { AREE, DETTAGLI_VALUTAZIONE, ESITI_EVENTO, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, TIPI_EVENTO, valoreValido } from '@/lib/tipi';
 import { intero, maiuscoleIniziali, testo, testoLungo } from '@/lib/utili';
 
 function torna(id: string, esito: { ok?: string; errore?: string }): never {
@@ -104,6 +104,8 @@ export async function salvaValutazione(formData: FormData) {
     voti[`${a.chiave}_note`] = testoLungo(formData, `${a.chiave}_note`);
   }
   if (!giudizio) redirect(`/giocatori/${id}/valuta?errore=${encodeURIComponent('Scegli il giudizio finale.')}`);
+  // voti tecnici facoltativi (0041)
+  for (const d of DETTAGLI_VALUTAZIONE) { const v = intero(formData, d.chiave); voti[d.chiave] = v && v >= 1 && v <= 5 ? v : null; }
 
   const data = testo(formData, 'data');
   const supabase = await createClient();

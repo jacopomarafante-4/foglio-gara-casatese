@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
-import { RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
+import { DETTAGLI_SEGNALAZIONE, PIEDI, RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
 import { intero, maiuscoleIniziali, normalizza, testo, testoLungo } from '@/lib/utili';
 
 function errore(msg: string, giocatoreId?: string | null): never {
@@ -31,6 +31,7 @@ export async function salvaSegnalazione(formData: FormData) {
     const nome = maiuscoleIniziali(testo(formData, 'nome'));
     const descrizione = testo(formData, 'descrizione');
     const ruolo = valoreValido(RUOLI_CAMPO, formData.get('ruolo'));
+    const piede = valoreValido(PIEDI, formData.get('piede'));
     const nomeSocieta = testo(formData, 'societa');
 
     if (!annata) errore('Indica l’annata.');
@@ -54,7 +55,7 @@ export async function salvaSegnalazione(formData: FormData) {
 
       const { data: nuovo, error } = await supabase
         .from('giocatori')
-        .insert({ cognome, nome, descrizione, annata, ruolo, societa_id: societa?.id ?? null })
+        .insert({ cognome, nome, descrizione, annata, ruolo, piede, societa_id: societa?.id ?? null })
         .select('id')
         .single();
       if (error || !nuovo) errore(`Giocatore non salvato: ${error?.message ?? 'errore sconosciuto'}`);
@@ -72,10 +73,16 @@ export async function salvaSegnalazione(formData: FormData) {
     }
   }
 
+  // voti facoltativi (0041): solo da 1 a 5, se no niente
+  const dettagli = Object.fromEntries(DETTAGLI_SEGNALAZIONE.map((d) => {
+    const v = intero(formData, d.chiave); return [d.chiave, v && v >= 1 && v <= 5 ? v : null];
+  }));
   const { error } = await supabase.from('segnalazioni').insert({
     giocatore_id: giocatoreId,
     testo: osservazione,
     voto,
+    piede: valoreValido(PIEDI, formData.get('piede')),
+    ...dettagli,
     contesto,
     ...(data ? { data } : {}),
   });

@@ -4,7 +4,7 @@ import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta } from '@/lib/societa';
-import { annateDisponibili, RUOLI_CAMPO } from '@/lib/tipi';
+import { annateDisponibili, DETTAGLI_SEGNALAZIONE, PIEDI, RUOLI_CAMPO } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -78,6 +78,14 @@ export default async function Segnala({
                 </select>
               </Etichetta>
             </div>
+            <Etichetta testo="Piede">
+              <select name="piede" className="campo" defaultValue="">
+                <option value="">Non so</option>
+                {Object.entries(PIEDI).map(([v, e]) => (
+                  <option key={v} value={v}>{e}</option>
+                ))}
+              </select>
+            </Etichetta>
 
             <Etichetta testo="Società" aiuto="Scegli dall’elenco o scrivi il nome: se è nuova la aggiungo.">
               <input name="societa" list="elenco-societa" className="campo" autoComplete="off" />
@@ -114,6 +122,17 @@ export default async function Segnala({
           <Voto nome="voto" />
           <span className="mt-1 block text-xs text-grigio">1 = non a livello · 5 = da prendere subito</span>
         </div>
+
+        <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">
+          <legend className="px-1 font-display text-lg font-bold">Qualche voto in più <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
+          <p className="-mt-2 text-xs text-grigio">Da 1 a 5; lascia &quot;–&quot; se non l&apos;hai visto.</p>
+          {DETTAGLI_SEGNALAZIONE.map((d) => (
+            <div key={d.chiave}>
+              <span className="mb-1 block text-sm font-medium">{d.nome}</span>
+              <Voto nome={d.chiave} facoltativo />
+            </div>
+          ))}
+        </fieldset>
 
         <div className="grid grid-cols-[1fr_auto] gap-3">
           <Etichetta testo="Partita o occasione">

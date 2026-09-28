@@ -649,6 +649,14 @@ const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampis
 function annateScouting(){ const a = new Date().getFullYear(); return Array.from({length:16}, (_, i) => String(a - 5 - i)); }
 /* Giocatore già in lista (coach_segnala risponde esistente, 0032): al posto della segnalazione la valutazione (coach_valuta) */
 let segValuta = null;
+/* Voti facoltativi da 1 a 5 (0041): nella segnalazione e nel dettaglio della valutazione (come nello Scouting, lib/tipi.ts) */
+const DETTAGLI_SEGNALA = [['piede_forte','Piede forte'],['piede_debole','Piede debole'],['statura','Statura'],['forza','Forza']];
+const DETTAGLI_VALUTA = [['spunti','Spunti'],['guida_palla','Guida della palla'],['ricezione','Ricezione'],['calciata','Calciata'],
+  ['contrasto','Contrasto'],['velocita','Velocità'],['reattivita','Reattività']];
+const PIEDI_SCOUTING = {destro:'Destro', sinistro:'Sinistro', ambidestro:'Ambidestro'};
+/* riga di voti facoltativi: tocca un numero per sceglierlo, di nuovo per toglierlo */
+const votiFacoltativi = (attr, voci, dati) => `<div class="votifac">${voci.map(([k,l]) => `<div class="votofac"><span>${l}</span>
+  <div class="seg" role="group" aria-label="${l} da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" ${attr}="${k}:${n}" aria-pressed="${String(dati[k])===String(n)}">${n}</button>`).join('')}</div></div>`).join('')}</div>`;
 const AREE_VALUTA = [['tecnica','Tecnica','Controllo, passaggio, tiro, uso dei due piedi'],['motoria','Motoria','Velocità, coordinazione, resistenza, forza'],
   ['tattica','Tattica','Posizione, letture di gioco, scelte'],['mentale','Mentale','Carattere, concentrazione, reazione all\'errore']];
 function viewValutaMister(){
@@ -661,6 +669,8 @@ function viewValutaMister(){
     ${AREE_VALUTA.map(([k,l,aiuto]) => `<div class="valarea"><div class="row" style="justify-content:space-between;align-items:baseline"><b>${l}</b><span class="note">${aiuto}</span></div>
       <div class="seg" role="group" aria-label="${l} da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" data-valv="${k}:${n}" aria-pressed="${String(v[k])===String(n)}">${n}</button>`).join('')}</div>
       <textarea data-valf="${k}_note" rows="2" placeholder="Note (facoltative)">${esc(v[k+'_note']||'')}</textarea></div>`).join('')}
+    <span class="f">Nel dettaglio (facoltativo)</span>
+    ${votiFacoltativi('data-vald', DETTAGLI_VALUTA, v)}
     <span class="f">Giudizio finale *</span>
     <div class="seg" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
     <label class="f" for="val_comm">Commento finale</label><textarea id="val_comm" data-valf="commento" rows="4">${esc(v.commento||'')}</textarea>
@@ -708,6 +718,7 @@ function viewSegnala(){
     <div class="grid">
       <div><label class="f" for="sg_annata">Annata *</label><select id="sg_annata" data-seg="annata"><option value="">Scegli</option>${annateScouting().map(a => `<option ${a===d.annata?'selected':''}>${a}</option>`).join('')}</select></div>
       <div><label class="f" for="sg_ruolo">Ruolo</label><select id="sg_ruolo" data-seg="ruolo"><option value="">Non so</option>${Object.entries(RUOLI_SCOUTING).map(([v,l]) => `<option value="${v}" ${v===d.ruolo?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div><label class="f" for="sg_piede">Piede</label><select id="sg_piede" data-seg="piede"><option value="">Non so</option>${Object.entries(PIEDI_SCOUTING).map(([v,l]) => `<option value="${v}" ${v===d.piede?'selected':''}>${l}</option>`).join('')}</select></div>
     </div>
     <label class="f" for="sg_societa">Società</label>
     ${inp('societa', 'list="sg_elenco" autocomplete="off"')}<datalist id="sg_elenco">${societaNomi.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
@@ -724,6 +735,8 @@ function viewSegnala(){
     <span class="f">Prima impressione (facoltativa)</span>
     <div class="seg" role="group" aria-label="Voto da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" data-segvoto="${n}" aria-pressed="${String(n)===d.voto}">${n}</button>`).join('')}</div>
     <p class="note">1 = non a livello · 5 = da prendere subito</p>
+    <span class="f">Qualche voto in più (facoltativo)</span>
+    ${votiFacoltativi('data-segd', DETTAGLI_SEGNALA, d)}
     <div class="grid">
       <div><label class="f" for="sg_contesto">Partita o occasione</label>${inp('contesto', 'placeholder="Es. Cambiaghese–Vibe, U12"')}</div>
       <div><label class="f" for="sg_data">Data</label>${inp('data', 'type="date"')}</div>
@@ -801,3 +814,10 @@ async function inviaSegnalazione(){
   else segEsito = {ok:false, msg: error.message || 'Segnalazione non inviata, riprova.'};
   render(); window.scrollTo(0,0);
 }
+
+/* Voti facoltativi di segnalazione (data-segd) e valutazione (data-vald): stesso numero = si toglie */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-segd],[data-vald]'); if(!b) return;
+  const [k, n] = (b.dataset.segd || b.dataset.vald).split(':'), dati = b.dataset.segd ? segDraft : segValuta; if(!dati) return;
+  dati[k] = String(dati[k]) === n ? '' : n; render();
+});

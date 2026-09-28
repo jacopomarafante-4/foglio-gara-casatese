@@ -175,6 +175,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0041: segnalazione con `piede` e 4 voti facoltativi 1–5 (`piede_forte`, `piede_debole`, `statura`, `forza`); valutazione con 7 voti
+  tecnici facoltativi (`spunti`, `guida_palla`, `ricezione`, `calciata`, `contrasto`, `velocita`, `reattivita`) oltre alle 4 aree.
+  Elenchi in `lib/tipi.ts` (`DETTAGLI_SEGNALAZIONE`, `DETTAGLI_VALUTAZIONE`), `Voto facoltativo` con "–"; nel Portale
+  `DETTAGLI_SEGNALA`/`DETTAGLI_VALUTA`; `coach_segnala`/`coach_valuta` riscritte. Giocatori già nelle nostre rose:
+  `scripts/inserisci-da-rose.mjs [--conferma]` (abbina per nome e annata ±1, li mette "Inseriti" e dell'Academy, nota nello storico e
+  nella carriera; elenco con i nomi in `private/inseriti-da-rose.json`)
 - 0040: tre valutazioni per inserire: `valutatori_distinti(giocatore)` conta le persone diverse (account o mister), il trigger
   `controlla_inserimento` blocca il passaggio a `inserito` sotto 3. Nell'app: 3 caselle con le iniziali (`SlotValutazioni`,
   `valutatori()` in `components/Autore.tsx`, `slotValutazioni()` nel Portale), verdi a 3 su 3 (riga/scheda verde). Annate con un

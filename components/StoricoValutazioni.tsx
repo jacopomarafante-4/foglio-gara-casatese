@@ -1,7 +1,7 @@
 // Scheda del giocatore: storico delle valutazioni sotto le medie. Una riga per valutazione (dalla più recente):
 // data, chi, i 4 voti, media e giudizio, con la freccia rispetto alla valutazione precedente.
 // Toccando la riga: note delle aree e commento.
-import { AREE, GIUDIZI, type Giudizio } from '@/lib/tipi';
+import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, type Giudizio } from '@/lib/tipi';
 import { dataBreve } from '@/lib/utili';
 import { Autore, type FirmaValutazione } from '@/components/Autore';
 import { eliminaValutazione } from '@/app/(app)/giocatori/actions';
@@ -11,6 +11,8 @@ export type ValutazioneStorico = {
   f: FirmaValutazione; puoEliminare: boolean;
   tecnica: number; motoria: number; tattica: number; mentale: number;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
+  spunti?: number | null; guida_palla?: number | null; ricezione?: number | null; calciata?: number | null;
+  contrasto?: number | null; velocita?: number | null; reattivita?: number | null;   // 0041, facoltativi
 };
 
 const media = (v: ValutazioneStorico) => (v.tecnica + v.motoria + v.tattica + v.mentale) / 4;
@@ -66,11 +68,20 @@ export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: 
                   <span className="text-grigio transition group-open:rotate-90" aria-hidden="true">›</span>
                 </summary>
                 <div className="space-y-1 px-3 pb-3 text-sm">
+                  {DETTAGLI_VALUTAZIONE.some((d) => v[d.chiave]) && (
+                    <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
+                      {DETTAGLI_VALUTAZIONE.filter((d) => v[d.chiave]).map((d) => (
+                        <span key={d.chiave} className="flex items-center justify-between gap-2 rounded-md bg-carta px-2 py-1">
+                          <span className="text-xs text-grigio">{d.nome}</span><b className="font-display text-base">{v[d.chiave]}</b>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {note.map((a) => (
                     <p key={a.chiave}><span className="font-semibold">{a.nome}:</span> {v[`${a.chiave}_note`]}</p>
                   ))}
                   {v.commento && <p className="whitespace-pre-line">{v.commento}</p>}
-                  {!note.length && !v.commento && <p className="text-grigio">Nessuna nota.</p>}
+                  {!note.length && !v.commento && !DETTAGLI_VALUTAZIONE.some((d) => v[d.chiave]) && <p className="text-grigio">Nessuna nota.</p>}
                   {v.puoEliminare && (
                     <form action={eliminaValutazione} className="pt-1 text-right">
                       <input type="hidden" name="id" value={giocatoreId} />

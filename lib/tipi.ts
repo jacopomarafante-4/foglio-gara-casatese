@@ -39,6 +39,24 @@ export const GIUDIZI: Record<Giudizio, string> = {
   non_a_livello: 'Non a livello',
 };
 
+/** Segnalazione: 4 voti da 1 a 5 facoltativi (0041) */
+export const DETTAGLI_SEGNALAZIONE = [
+  { chiave: 'piede_forte', nome: 'Piede forte' },
+  { chiave: 'piede_debole', nome: 'Piede debole' },
+  { chiave: 'statura', nome: 'Statura' },
+  { chiave: 'forza', nome: 'Forza' },
+] as const;
+/** Valutazione: 7 voti tecnici da 1 a 5 facoltativi, oltre alle 4 aree (0041) */
+export const DETTAGLI_VALUTAZIONE = [
+  { chiave: 'spunti', nome: 'Spunti', aiuto: 'Uno contro uno, cambi di passo' },
+  { chiave: 'guida_palla', nome: 'Guida della palla', aiuto: 'Conduzione a testa alta, con entrambi i piedi' },
+  { chiave: 'ricezione', nome: 'Ricezione', aiuto: 'Primo controllo, orientato' },
+  { chiave: 'calciata', nome: 'Calciata', aiuto: 'Tiro e lancio, forza e precisione' },
+  { chiave: 'contrasto', nome: 'Contrasto', aiuto: 'Tempo e decisione nel recupero palla' },
+  { chiave: 'velocita', nome: 'Velocità', aiuto: 'Allungo, con e senza palla' },
+  { chiave: 'reattivita', nome: 'Reattività', aiuto: 'Prontezza nei primi passi e sulle seconde palle' },
+] as const;
+
 export const AREE = [
   { chiave: 'tecnica', nome: 'Tecnica', aiuto: 'Conduzione, passaggio, tiro, primo controllo' },
   { chiave: 'motoria', nome: 'Motoria', aiuto: 'Rapidità, coordinazione, equilibrio, resistenza' },
