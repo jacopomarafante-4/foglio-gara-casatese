@@ -35,10 +35,11 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   mostrati come squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff` (admin e direttori)
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
 - Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area. Aree (`AREAS` in
-  `portale.js`, ordine della settimana): Home · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
-  Partita (`gara`: Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara PDF, Tabellini) · Allenamento (Presenze, Test) ·
-  Squadra (Rosa, Statistiche con Allenamento/Partite, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
-  Attività di base: niente Dati partita/Formazione/Piazzati/PDF (`SOLO_AGONISTICA`).
+  `portale.js`): Home (weekend, da fare, riepilogo) · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
+  Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test,
+  Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
+  `statpartite`, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
+  Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara (`SOLO_AGONISTICA`).
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
   `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda

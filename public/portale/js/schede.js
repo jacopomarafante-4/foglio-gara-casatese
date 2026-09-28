@@ -129,7 +129,7 @@ function render(){
     // App unica: l'accesso si fa solo dalla pagina d'ingresso (PIN)
     if(IN_APP_UNICA && teamsLoaded){ location.replace('/?pin=1'); return; }
     $('#demo').innerHTML = ''; $('#demo').classList.add('hidden');
-    $('#ctx').innerHTML = ''; $('#tabs').innerHTML = ''; $('#areanav').classList.add('hidden'); $('#matchline').textContent = '';
+    $('#ctx').innerHTML = ''; $('#tabs').innerHTML = ''; $('#subtabs').classList.add('hidden'); $('#areanav').classList.add('hidden'); $('#matchline').textContent = '';
     $('#view').innerHTML = viewGate();
     return;
   }
@@ -155,7 +155,8 @@ function render(){
   else if(tab==='tabellini'){ v.innerHTML = viewTabellini(); scrollGridsToEnd(); }
   else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
   else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
-  else if(tab==='statistiche'){ v.innerHTML = viewStatistiche(); scrollGridsToEnd(); }
+  else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
+  else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
@@ -475,7 +476,7 @@ function viewFriendlies(){ /* in Calendario → La mia squadra */
     </div>`).join('');
   return `<section class="panel">
     <h3 style="margin-top:0">Amichevoli</h3>
-    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Partita → Dati partita e nei Tabellini.</p>
+    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Squadra → Partite → Dati partita e nei Tabellini.</p>
     ${rows || '<p class="empty">Nessuna amichevole.</p>'}
     <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
   </section>`;

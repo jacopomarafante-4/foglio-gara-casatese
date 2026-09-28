@@ -13,27 +13,33 @@ const AREA_ICONS = {
   scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
-/* Aree nell'ordine della settimana del mister: calendario, partita (prima e dopo), allenamento, squadra */
+/* Aree: Home, Calendario, Squadra, Scouting, Società. Squadra ha tre sottopannelli (gruppi): Rosa, Allenamento e Partite,
+   ognuno con le sue schede (seconda riga, #subtabs) e le sue statistiche */
+const GRUPPI_SQUADRA = [
+  {k:'rosa', label:'Rosa', tabs:['rosa']},
+  {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test','statallen']},
+  {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini','statpartite','campi']}
+];
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
   {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte']},
-  {k:'gara', label:'Partita', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini']},
-  {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
-  {k:'squadra', label:'Squadra', tabs:['rosa','statistiche','campi']},
+  {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
-  convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara PDF', tabellini:'Tabellini',
-  statistiche:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
+  convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
+  statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
   segnala:'Segnala un giocatore', giocatori:'Giocatori'};
 /* nomi delle schede di versioni precedenti (link salvati) */
-const TAB_ALIASES = {statallen:'statistiche', statpartite:'statistiche', registro:'allenamenti'};
+const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti'};
+const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
+const gruppoLast = {};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
 const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
 /* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF):
-   nell'area Partita restano Convocazioni e Tabellini */
+   in Squadra → Partite restano Convocazioni, Tabellini, Statistiche e Campi */
 const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
@@ -47,7 +53,7 @@ function writeRoute(push){
 }
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
-  tab = t; areaLast[areaOf(t).k] = t;
+  tab = t; areaLast[areaOf(t).k] = t; if(gruppoDi(t)) gruppoLast[gruppoDi(t).k] = t;
   selectedPlayer = null; slotPick = null; if(t!=='piazzati') openSchemeId = null;
   openTrainingId = openGameId = openTestId = null;
   writeRoute(true); render(); window.scrollTo(0,0);
@@ -66,9 +72,21 @@ function renderNav(){
       ${icon(a.k)}<span>${a.label}</span></button>`).join('');
   if(scoutingLink){ const soc = $('#areanav [data-area="societa"]'); if(soc) soc.insertAdjacentHTML('beforebegin', scoutingLink); else $('#areanav').insertAdjacentHTML('beforeend', scoutingLink); }
   $('#areanav').classList.remove('hidden');
-  const schede = tabsDi(cur);
-  $('#tabs').innerHTML = schede.length > 1 ? schede.map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('') : '';
-  $('#tabs').classList.toggle('hidden', schede.length <= 1);
+  const schede = tabsDi(cur), ok = new Set(schede);
+  let sotto = [];
+  if(cur.gruppi){
+    /* Squadra: prima riga i sottopannelli, seconda riga le schede del sottopannello aperto */
+    const gruppi = cur.gruppi.map(g => ({...g, tabs:g.tabs.filter(t => ok.has(t))})).filter(g => g.tabs.length);
+    const aperto = gruppi.find(g => g.tabs.includes(tab)) || gruppi[0];
+    $('#tabs').innerHTML = gruppi.map(g => `<button class="tab" role="tab" data-tab="${g.tabs.includes(gruppoLast[g.k]) ? gruppoLast[g.k] : g.tabs[0]}" aria-selected="${g===aperto}">${g.label}</button>`).join('');
+    $('#tabs').classList.remove('hidden');
+    sotto = aperto && aperto.tabs.length > 1 ? aperto.tabs : [];
+  } else {
+    $('#tabs').innerHTML = schede.length > 1 ? schede.map(k => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${TAB_NAMES[k]}</button>`).join('') : '';
+    $('#tabs').classList.toggle('hidden', schede.length <= 1);
+  }
+  $('#subtabs').innerHTML = sotto.map(k => `<button class="subtab" data-tab="${k}" aria-current="${k===tab}">${TAB_NAMES[k]}</button>`).join('');
+  $('#subtabs').classList.toggle('hidden', !sotto.length);
 }
 
 /* ---------- Home ---------- */
@@ -144,7 +162,7 @@ function viewHome(){
   if(!curTeam) return `<section class="panel"><h2>Benvenuto</h2><p class="empty">Nessuna squadra. Creane una in Società → Squadre.</p></section>`;
   const T0 = TEAM(), nm = nextMatch(), today = todayISO();
   const trToday = S.reg.trainings.find(t => t.date===today);
-  const {team} = computeStats();
+  const {team, gm} = computeStats();
   const todo = homeTodo(), maxTodo = 6;
   const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
   /* Anteprima: gli impegni della squadra di sabato e domenica di questa settimana (campionato, amichevoli e tornei),
@@ -158,25 +176,26 @@ function viewHome(){
       ${nm ? `<div class="row" style="margin-top:12px">${isAdb() ? '' : `<button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button>`}<button class="btn ${isAdb() ? 'primary ' : ''}small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
         : '<div class="row" style="margin-top:12px"><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>'}
     </div>`;
-  const trCard = trToday
-    ? (() => { const v = S.players.map(p => attOf(trToday, p.id)); return `<div class="hcard"><div class="hlabel">Allenamento di oggi</div>
-        <div class="hbig">${v.filter(x=>x==='P').length} presenti <span class="note">· ${v.filter(isAbs).length} assenti</span></div>
-        <div class="row" style="margin-top:12px"><button class="btn small" data-hgo="tr:${trToday.id}">Modifica presenze</button></div></div>`; })()
-    : `<div class="hcard"><div class="hlabel">Allenamento di oggi</div><p class="note">Presenze non ancora segnate.</p>
-        <div class="row" style="margin-top:10px"><button class="btn primary small" data-hgo="trnew">Segna le presenze di oggi</button></div></div>`;
-  const todoCard = `<div class="hcard hwide"><div class="hlabel">Da fare</div>
-    ${todo.length ? `<ul class="todo">${todo.slice(0,maxTodo).map(i => `<li><button data-hgo="${i.go}">${esc(i.txt)}<span aria-hidden="true">›</span></button></li>`).join('')}</ul>${todo.length>maxTodo?`<p class="note">…e altre ${todo.length-maxTodo}</p>`:''}`
-      : '<p class="note">Tutto in ordine ✓</p>'}</div>`;
-  const numCard = `<div class="hcard hwide"><div class="hlabel">Stagione</div>
-    <div class="kpis hk">
-      <div class="kpi"><b>${team.nT}</b><span>Allenamenti</span></div>
-      <div class="kpi"><b>${pctTxt(team.avgPct)}</b><span>Presenza media</span></div>
-      <div class="kpi"><b>${team.nG}</b><span>Partite</span></div>
-      <div class="kpi"><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b><span>Gol fatti-subiti</span></div>
-    </div>
-    <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="stat:allenamento">Statistiche allenamento</button><button class="btn small" data-hgo="stat:partite">Statistiche partite</button></div></div>`;
+  /* Da fare: prima le presenze di oggi, poi tabellini e gol mancanti, portieri */
+  const presenzeOggi = trToday
+    ? (() => { const v = S.players.map(p => attOf(trToday, p.id)); return `<li><button data-hgo="tr:${trToday.id}"><span class="tdtxt">Presenze di oggi: <b>${v.filter(x=>x==='P').length} presenti</b>, ${v.filter(isAbs).length} assenti</span><span aria-hidden="true">›</span></button></li>`; })()
+    : `<li><button data-hgo="trnew" class="tdprimo"><span class="tdtxt">Segna le presenze dell'allenamento di oggi</span><span aria-hidden="true">›</span></button></li>`;
+  const todoCard = `<div class="hcard"><div class="hlabel">Da fare</div>
+    <ul class="todo">${presenzeOggi}${todo.slice(0,maxTodo).map(i => `<li><button data-hgo="${i.go}"><span class="tdtxt">${esc(i.txt)}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>
+    ${todo.length>maxTodo?`<p class="note">…e altre ${todo.length-maxTodo}</p>`:''}${!todo.length ? '<p class="note" style="margin-top:6px">Tabellini e gol in ordine ✓</p>' : ''}</div>`;
+  /* Riepilogo della stagione: allenamento e partite, con i link alle statistiche */
+  const numCard = `<div class="hcard"><div class="hlabel">Riepilogo stagione</div>
+    <div class="hriep">
+      <button class="hriepbox" data-hgo="stat:allenamento"><span class="hriepttl">Allenamento</span>
+        <span><b>${team.nT}</b> allenamenti</span><span><b>${pctTxt(team.avgPct)}</b> presenza media</span>
+        <span><b>${team.low}</b> sotto il ${LOW_ATT*100}%</span><span class="hrieplink">Statistiche ›</span></button>
+      <button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
+        <span><b>${team.nG}</b> giocate${team.nScored ? ` · ${team.w}V ${team.d}N ${team.l}P` : ''}</span>
+        <span><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b> gol fatti-subiti</span>
+        <span><b>${team.nScored ? gm.map(gameScore).filter(x => x && x.ga===0).length : '—'}</b> porta inviolata</span><span class="hrieplink">Statistiche ›</span></button>
+    </div></div>`;
   return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
-    <div class="hgrid">${matchCard}${trCard}${todoCard}${numCard}</div>`;
+    <div class="hgrid">${matchCard}${todoCard}${numCard}</div>`;
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hgo]'); if(!b || !curTeam) return;
@@ -203,7 +222,7 @@ document.addEventListener('click', e => {
     openGameId = g.id; render(); return;
   }
   if(k==='opengm'){ goTab('tabellini'); openGameId = id; render(); return; }
-  if(k==='stat'){ statVista = id; goTab('statistiche'); return; }
+  if(k==='stat'){ goTab(id==='partite' ? 'statpartite' : 'statallen'); return; }
   goTab(k);
 });
 
@@ -358,7 +377,7 @@ function viewCalendario(){
   return `<section class="panel">
     <h2>Calendario · ${esc(sigla)}</h2>
     ${scelta}
-    <p class="hint">${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Partita → Dati partita e per i Tabellini.</p>
+    <p class="hint">${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Squadra → Partite → Dati partita e per i Tabellini.</p>
     ${(A ? cal.length : prossime.length) ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
     ${viewStorico()}
@@ -369,16 +388,7 @@ function viewCalendario(){
 function viewCampi(){
   return viewVenues() || `<section class="panel"><h2>Campi</h2><p class="empty">Nessun campo: i campi arrivano dalle partite del calendario.</p></section>`;
 }
-/* Squadra → Statistiche: allenamento o partite */
-let statVista = 'allenamento';
-function viewStatistiche(){
-  const scelta = `<div class="row" style="margin-bottom:10px"><div class="seg" role="group" aria-label="Statistiche di"><button data-statvista="allenamento" aria-pressed="${statVista==='allenamento'}">Allenamento</button><button data-statvista="partite" aria-pressed="${statVista==='partite'}">Partite</button></div></div>`;
-  return scelta + (statVista === 'partite' ? viewStatPartite() : viewStatAllenamento());
-}
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-statvista]'); if(!b) return;
-  statVista = b.dataset.statvista; render();
-});
+
 function viewVenues(){
   const vs = [...new Set(allCalendar().map(m => (m.venue||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'it'));
   if(!vs.length) return '';
@@ -405,6 +415,11 @@ function registroPage(title, body, hint){
 let giocatoriAnnata = null, giocatoriErrore = '', giocatoriCerca = '';
 const STATI_SCOUTING = {in_lista:'In lista', in_osservazione:'In osservazione', da_rivedere:'Da rivedere', inserito:'Inserito', da_non_inserire:'Da non inserire'};
 const GIUDIZI = {da_prendere:'Da prendere', da_rivedere:'Da rivedere', non_a_livello:'Non a livello'};
+let giocatoriStato = '', giocatoriRuolo = '';
+const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_non_inserire'];
+const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT'};
+const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']];
+const mediaVal = v => v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null;
 function viewGiocatori(){
   if(!coachPin) return `<h2>Giocatori</h2><section class="panel"><p class="empty">L'elenco si vede entrando col PIN della squadra.</p></section>`;
   if(giocatoriAnnata === null && !giocatoriErrore){
@@ -417,33 +432,57 @@ function viewGiocatori(){
   /* Preparatori dei portieri (vedeTutte): i portieri di tutte le annate */
   const mia = S.teams.find(t => t.id === (squadraPropria || curTeam)), portieri = !!mia?.vedeTutte;
   const eta = etaSquadra(mia), stagione = +todayISO().slice(0,4) + (+todayISO().slice(5,7) >= 7 ? 1 : 0), annata = eta < 99 ? stagione - eta : null;
-  const q = giocatoriCerca.trim().toLowerCase();
-  const tutti = giocatoriAnnata || [], lista = tutti.filter(g => !q || [g.cognome, g.nome, g.descrizione, g.societa].join(' ').toLowerCase().includes(q));
-  const scheda = g => {
+  const titolo = `<h2>${portieri ? 'Portieri · tutte le annate' : `Giocatori${annata ? ' · annata '+annata : ''}`}</h2>
+    <p class="hint">${portieri ? 'I portieri osservati dallo scouting, di tutte le annate.' : 'I giocatori osservati dallo scouting della tua annata.'} Tocca un nome per valutazioni e segnalazioni.</p>`;
+  if(!annata && !portieri) return titolo + '<section class="panel"><p class="empty">Questa squadra non ha un\'annata: l\'elenco è per le squadre Under.</p></section>';
+  if(giocatoriErrore) return titolo + `<section class="panel"><p class="empty">${esc(giocatoriErrore)}</p></section>`;
+  if(giocatoriAnnata === undefined) return titolo + '<section class="panel"><p class="note">Carico i giocatori…</p></section>';
+  const tutti = giocatoriAnnata || [], q = giocatoriCerca.trim().toLowerCase();
+  const cercati = tutti.filter(g => !q || [g.cognome, g.nome, g.descrizione, g.societa].join(' ').toLowerCase().includes(q));
+  const perRuolo = cercati.filter(g => !giocatoriRuolo || (giocatoriRuolo === '-' ? !g.ruolo : g.ruolo === giocatoriRuolo));
+  const lista = perRuolo.filter(g => !giocatoriStato || g.stato === giocatoriStato);
+  const conta = (arr, f) => arr.filter(f).length;
+  const chip = (attr, val, cur, label, n) => `<button class="gchip" ${attr}="${val}" aria-pressed="${val===cur}">${label} <span>${n}</span></button>`;
+  const filtri = `<div class="gfiltri">
+      <div class="gchips" role="group" aria-label="Stato">${chip('data-gstato', '', giocatoriStato, 'Tutti', perRuolo.length)}${
+        ORDINE_STATI.filter(k => conta(perRuolo, g => g.stato===k)).map(k => chip('data-gstato', k, giocatoriStato, `<i class="gdot st-${k}"></i>${STATI_SCOUTING[k]}`, conta(perRuolo, g => g.stato===k))).join('')}</div>
+      ${portieri ? '' : `<div class="gchips" role="group" aria-label="Ruolo">${chip('data-gruolo', '', giocatoriRuolo, 'Tutti i ruoli', cercati.length)}${
+        Object.keys(SIGLE_RUOLO).filter(k => conta(cercati, g => g.ruolo===k)).map(k => chip('data-gruolo', k, giocatoriRuolo, RUOLI_SCOUTING[k], conta(cercati, g => g.ruolo===k))).join('')}${
+        conta(cercati, g => !g.ruolo) ? chip('data-gruolo', '-', giocatoriRuolo, 'Ruolo da definire', conta(cercati, g => !g.ruolo)) : ''}</div>`}
+    </div>`;
+  const barre = v => AREE_VAL.map(([k,l]) => `<div class="gbar"><span>${l}</span><i><b style="width:${v[k]*20}%"></b></i><strong>${v[k]}</strong></div>${v[k+'_note'] ? `<p class="gtxt gnota">${esc(v[k+'_note'])}</p>` : ''}`).join('');
+  const riga = g => {
     const nome = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
-    const val = g.valutazioni.map(v => `<div class="gval">
-        <div class="note">${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
-        <div class="garee">${[['Tecnica','tecnica'],['Motoria','motoria'],['Tattica','tattica'],['Mentale','mentale']].map(([l,k]) => `<span title="${esc(v[k+'_note']||'')}"><b>${v[k]}</b> ${l}</span>`).join('')}</div>
-        ${[['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']].filter(([k]) => v[k+'_note']).map(([k,l]) => `<p class="gtxt"><b>${l}:</b> ${esc(v[k+'_note'])}</p>`).join('')}
-        <p class="gtxt"><b>${esc(GIUDIZI[v.giudizio] || v.giudizio)}</b>${v.commento ? ' · '+esc(v.commento) : ''}</p></div>`).join('');
-    const seg = g.segnalazioni.map(x => `<div class="gval"><div class="note">${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ' · voto '+x.voto : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('');
-    return `<details class="gcard"><summary>
-        <div><b>${esc(nome)}</b><div class="note">${[portieri ? String(g.annata) : '', RUOLI_SCOUTING[g.ruolo], g.societa, g.piede ? 'piede '+g.piede : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
-        <span class="gstato">${esc(STATI_SCOUTING[g.stato] || g.stato)}</span></summary>
-      ${val ? `<h4>Valutazioni</h4>${val}` : ''}${seg ? `<h4>Segnalazioni</h4>${seg}` : ''}${!val && !seg ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}
-    </details>`;
+    const ultima = g.valutazioni[0], media = mediaVal(ultima);
+    const info = [portieri ? String(g.annata) : '', g.societa, g.segnalazioni.length ? `${g.segnalazioni.length} ${g.segnalazioni.length===1 ? 'segnalazione' : 'segnalazioni'}` : '',
+      g.valutazioni.length ? `${g.valutazioni.length} ${g.valutazioni.length===1 ? 'valutazione' : 'valutazioni'}` : ''].filter(Boolean).map(esc).join(' · ');
+    return `<details class="grow st-${esc(g.stato)}"><summary>
+        <div class="gprinc"><div class="gnome"><b>${esc(nome)}</b>${g.ruolo ? `<span class="gruolo">${SIGLE_RUOLO[g.ruolo]}</span>` : ''}${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : ''}</div>
+          <div class="note">${info || 'Nessuna segnalazione'}</div></div>
+        <div class="gmedia${media==null ? ' vuota' : ''}" title="Media dell'ultima valutazione">${media==null ? '–' : media.toFixed(1)}</div></summary>
+      <div class="gdett">
+        ${g.descrizione && g.cognome ? `<p class="note">${esc(g.descrizione)}</p>` : ''}
+        ${g.piede ? `<p class="note">Piede ${esc(g.piede)}${g.categoria ? ' · '+esc(g.categoria) : ''}</p>` : ''}
+        ${g.valutazioni.map(v => `<div class="gval"><div class="note">${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
+          ${barre(v)}<p class="gtxt"><span class="ggiud gg-${esc(v.giudizio)}">${esc(GIUDIZI[v.giudizio] || v.giudizio)}</span>${v.commento ? ' '+esc(v.commento) : ''}</p></div>`).join('')}
+        ${g.segnalazioni.map(x => `<div class="gval gseg"><div class="note">Segnalazione · ${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ` · <b>${x.voto}/5</b>` : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('')}
+        ${!g.valutazioni.length && !g.segnalazioni.length ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}
+      </div></details>`;
   };
-  return `<h2>${portieri ? 'Portieri · tutte le annate' : `Giocatori${annata ? ' · annata '+annata : ''}`}</h2>
-  <p class="hint">${portieri ? 'I portieri osservati dallo scouting, di tutte le annate.' : 'I giocatori osservati dallo scouting della tua annata.'} Tocca un nome per segnalazioni e valutazioni. Per segnalarne uno nuovo usa "Segnala un giocatore".</p>
-  <section class="panel">
-    ${!annata && !portieri ? '<p class="empty">Questa squadra non ha un\'annata: l\'elenco è per le squadre Under.</p>'
-      : giocatoriErrore ? `<p class="empty">${esc(giocatoriErrore)}</p>`
-      : giocatoriAnnata === undefined ? '<p class="note">Carico i giocatori…</p>'
-      : `<input id="gc_cerca" type="search" value="${esc(giocatoriCerca)}" placeholder="Cerca per nome o società" aria-label="Cerca giocatore">
-        <p class="note" style="margin:8px 0">${lista.length} ${lista.length===1 ? 'giocatore' : 'giocatori'}${q ? ' su '+tutti.length : ''}</p>
-        ${lista.length ? lista.map(scheda).join('') : '<p class="empty">Nessun giocatore.</p>'}`}
+  const gruppi = ORDINE_STATI.concat([...new Set(lista.map(g => g.stato))].filter(k => !ORDINE_STATI.includes(k)))
+    .map(k => ({k, gs: lista.filter(g => g.stato === k)})).filter(x => x.gs.length);
+  return titolo + `<section class="panel">
+    <input id="gc_cerca" type="search" value="${esc(giocatoriCerca)}" placeholder="Cerca per nome o società" aria-label="Cerca giocatore">
+    ${filtri}
+    ${lista.length ? gruppi.map(x => `<h3 class="gtitolo"><i class="gdot st-${esc(x.k)}"></i>${esc(STATI_SCOUTING[x.k] || x.k)} <span>${x.gs.length}</span></h3>${x.gs.map(riga).join('')}`).join('')
+      : '<p class="empty">Nessun giocatore con questi filtri.</p>'}
   </section>`;
 }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-gstato],[data-gruolo]'); if(!b) return;
+  if(b.dataset.gstato !== undefined) giocatoriStato = b.dataset.gstato; else giocatoriRuolo = b.dataset.gruolo;
+  render();
+});
 document.addEventListener('input', e => {
   if(e.target.id !== 'gc_cerca') return;
   giocatoriCerca = e.target.value; const pos = e.target.selectionStart; render();

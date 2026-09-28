@@ -151,11 +151,11 @@ Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 {fig('p-home', '''<ul>
 <li><b>Intestazione blu</b>: il nome dell'app, il tuo ruolo (<span class="k">MISTER</span>, <span class="k">SCOUT</span>,
 <span class="k">DIRETTORE</span>…), il tuo nome o la tua squadra, e <span class="k">Esci</span>.</li>
-<li><b>Barra delle aree</b>, sempre in alto, nell'ordine della settimana: Home, Calendario, Partita, Allenamento, Squadra,
-Scouting, Società.
+<li><b>Barra delle aree</b>, sempre in alto: Home, Calendario, Squadra, Scouting, Società.
 Ognuno vede solo le aree che gli servono. Se non ci stanno tutte, la barra scorre di lato.</li>
-<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta (per esempio in Partita: Dati partita, Convocazioni,
-Formazione, Piazzati, Foglio gara PDF, Tabellini).</li>
+<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta. In <b>Squadra</b> ci sono tre sottopannelli
+(Rosa, Allenamento, Partite) e sotto, su una seconda riga, le loro schede (per esempio in Partite: Dati partita,
+Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche, Campi).</li>
 <li>Il <b>logo</b> in alto riporta sempre alla Home.</li>
 </ul>''', 'La Home di un mister.')}
 </section>
@@ -271,10 +271,12 @@ Scarica il foglio gara in PDF.</li>
 {fig('p-home', '''<h3>Home</h3><ul>
 <li><b>Weekend</b>: gli impegni di sabato e domenica di questa settimana (campionato, amichevoli, tornei) con ora, luogo
 e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario.</li>
+<li><b>Da fare</b>: per prima cosa le presenze dell'allenamento di oggi, poi tabellini da compilare, gol da inserire,
+portieri da segnare. Tocca una riga per andarci.</li>
+<li><b>Riepilogo stagione</b>: allenamento (allenamenti, presenza media, chi è sotto il 75%) e partite (giocate, vinte,
+pareggiate e perse, gol, porta inviolata); tocca un riquadro per le statistiche complete.</li>
 <li>I colori dicono dove si gioca: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta.</li>
-<li><b>Allenamento di oggi</b>: se le presenze non sono ancora segnate, un tocco ti porta lì.</li>
-<li><b>Da fare</b>: tabellini da compilare, gol da inserire, portieri da segnare. Tocca una riga per andarci.</li>
-<li><b>Stagione</b>: allenamenti, presenza media, partite, gol fatti e subiti.</li></ul>''', 'Home')}
+</ul>''', 'Home')}
 <h3>Calendario → La mia squadra</h3>
 <p>Le partite da giocare fino a fine stagione: ufficiali, amichevoli e tornei, inseriti dalla società. Colori: <b>blu</b> in casa
 a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le partite già giocate sono nello <b>Storico</b>, in fondo
@@ -286,9 +288,9 @@ cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte
 </section>
 
 <section>
-<h2>4. Partita: prepararla</h2>
-<p><b>Attività di base</b> (da Under 13 in giù): nell'area Partita ci sono solo <b>Convocazioni</b> e <b>Tabellini</b>,
-senza foglio gara.</p>
+<h2>4. Squadra → Partite: prepararla</h2>
+<p><b>Attività di base</b> (da Under 13 in giù): in Partite ci sono solo <b>Convocazioni</b>, <b>Tabellini</b>,
+<b>Statistiche</b> e <b>Campi</b>, senza foglio gara.</p>
 <h3>Dati partita</h3>
 <p>I dati della gara per il foglio gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. In alto ci sono
 tutte le partite della squadra nel weekend: tocca <span class="k">Usa questa</span> su quella da preparare e i campi si
@@ -310,7 +312,7 @@ partire insieme). Se lo lasci vuoto, nella convocazione c'è "Al campo di gioco"
 </section>
 
 <section>
-<h2>5. Partita: la formazione</h2>
+<h2>5. Squadra → Partite: la formazione</h2>
 {duo('p-formazione-campo', 'Il campo: modulo, posizioni, × per togliere', 'p-formazione-elenco', 'Tocchi una posizione: scegli chi metterci')}
 <p>La pagina è fatta come il foglio gara PDF, da sinistra a destra: <b>Titolari e Panchina</b>, il <b>campo</b>,
 e a destra <b>modulo, capitano, vice, calci piazzati e note</b>. Dal telefono le tre parti sono una sotto l'altra.</p>
@@ -327,7 +329,7 @@ Se la posizione è occupata puoi anche <span class="k">Togli dal campo</span>.</
 </section>
 
 <section>
-<h2>6. Partita: piazzati e foglio gara</h2>
+<h2>6. Squadra → Partite: piazzati e foglio gara</h2>
 {fig('p-piazzati', '''<h3>Piazzati</h3>
 <p>Gli schemi (angoli e punizioni, a favore e a sfavore) sono <b>comuni a tutte le squadre</b> e li carica la società.</p><ul>
 <li>Tocca uno schema per <b>selezionarlo</b> per questa partita.</li>
@@ -344,7 +346,7 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 </section>
 
 <section>
-<h2>7. Allenamento</h2>
+<h2>7. Squadra → Allenamento</h2>
 {fig('p-presenze', '''<h3>Presenze</h3><ol class="passi">
 <li>Tocca <span class="k">+ Allenamento di oggi</span> (o apri un'altra data).</li>
 <li>Per ogni ragazzo: <span class="k">Presente</span> o <span class="k">Assente</span>; se assente, scegli il <b>motivo</b>
@@ -353,31 +355,33 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 <p>Gli infortuni non abbassano la percentuale di presenza del ragazzo.</p>
 <h3>Test atletici</h3>
 <p><span class="k">+ Nuovo test</span>, poi i tempi di ognuno come <b>minuti:secondi</b> (es. 12:51). Una parola diversa
-(es. "non svolto") resta come nota.</p>''', 'Presenze')}
+(es. "non svolto") resta come nota.</p>
+<h3>Statistiche</h3>
+<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%.</p>''', 'Presenze')}
 </section>
 
 <section>
-<h2>8. Partita: tabellini</h2>
-<h3>Partita → Tabellini</h3><ol class="passi">
+<h2>8. Squadra → Partite: tabellini e statistiche</h2>
+<h3>Tabellini</h3><ol class="passi">
 <li>Nella tabella dei tabellini tocca una partita.</li>
 <li>Segna chi ha giocato, i <b>minuti</b>, i <b>gol</b>, i cartellini, e i <b>gol subiti</b> dei portieri.</li>
 <li>Inserisci il risultato.</li></ol>
 <p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>
+<h3>Statistiche</h3>
+<p>Partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti.</p>
+<h3>Campi</h3>
+<p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni
+porta dritto lì.</p>
 </section>
 
 <section>
-<h2>9. Squadra: rosa, statistiche, campi</h2>
+<h2>9. Squadra → Rosa</h2>
 {fig('p-rosa', '''<h3>Squadra → Rosa</h3>
 <p>L'elenco dei giocatori, inserito dalla società. Il numero è quello della prossima partita, che assegni in Formazione.
 Il <b>ruolo</b> di ogni giocatore lo scegli tu: da Under 13 in su portiere, difensore, centrocampista o attaccante;
 da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai inserire i gol subiti nelle partite.</p>
 <p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>''', 'Rosa')}
-{fig('p-statistiche', '''<h3>Squadra → Statistiche</h3>
-<p>In alto scegli <b>Allenamento</b> (percentuali di presenza per giocatore e per mese, risultati dei test; in rosso chi è
-sotto il 75%) oppure <b>Partite</b> (partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti).</p>
-<h3>Squadra → Campi</h3>
-<p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni
-porta dritto lì.</p>''', 'Statistiche')}
+
 </section>
 
 <section>
@@ -392,9 +396,11 @@ dall'area <b>Scouting</b>.</p><ol class="passi">
 <p>La segnalazione arriva firmata con il tuo nome e la tua squadra. Se il ragazzo c'è già, la tua segnalazione si aggiunge
 alla sua scheda.</p>
 <h3>Scouting → Giocatori</h3>
-<p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), con ruolo, società e stato
-(In lista, In osservazione, Da rivedere…). Cerca per nome o società; tocca un nome per vedere valutazioni (le 4 aree) e
-segnalazioni. I contatti delle famiglie non si vedono.</p>''', 'Segnala un giocatore')}
+<p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), divisi per stato, ognuno col suo
+colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In alto cerchi per nome o società e filtri per
+stato e ruolo. Ogni riga dice ruolo, società, quante segnalazioni e valutazioni ha, l'ultimo giudizio e, a destra, la media
+dell'ultima valutazione. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni. I contatti delle famiglie
+non si vedono.</p>''', 'Segnala un giocatore')}
 </section>
 """
 
@@ -554,9 +560,9 @@ nello Scouting, cambiando lo stato; quelle sulle squadre comunicale all'amminist
 <h2>3. Il Portale delle squadre</h2>
 {fig('p-home', '''<ol class="passi">
 <li>In alto, accanto a <b>Squadra</b>, scegli la squadra dal menu.</li>
-<li>Usa le aree come un mister: <b>Home</b> (impegni del weekend, da fare, stagione), <b>Calendario</b> (la squadra, tutte
-le squadre), <b>Partita</b> (dati partita, convocazioni, formazione, piazzati, PDF, tabellini), <b>Allenamento</b> (presenze,
-test), <b>Squadra</b> (rosa, statistiche, campi).</li>
+<li>Usa le aree come un mister: <b>Home</b> (weekend, da fare, riepilogo), <b>Calendario</b> (la squadra, tutte le squadre),
+<b>Squadra</b>: Rosa, Allenamento (presenze, test, statistiche) e Partite (dati partita, convocazioni, formazione, piazzati,
+foglio gara, tabellini, statistiche, campi).</li>
 <li>La sezione <b>Da fare</b> in Home mostra cosa manca: tabellini da compilare, gol da inserire.</li></ol>
 <p><b>Anteprima</b>: con "Guarda l'app come" vedi esattamente cosa vede il mister di una squadra.</p>''', 'La Home di una squadra')}
 <h3>Società</h3>

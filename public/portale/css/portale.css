@@ -32,6 +32,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .tabs::-webkit-scrollbar{display:none}
 .tab{border:0;background:none;padding:8px 12px 10px;font-family:var(--cond);font-weight:600;font-size:18px;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--sel)}
+/* Seconda riga: le schede del sottopannello (Squadra → Allenamento / Partite) */
+.subtabs{max-width:1000px;margin:0 auto;display:flex;gap:6px;padding:8px 12px 2px;overflow-x:auto;scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.subtabs.hidden{display:none}
+.subtab{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+.subtab[aria-current="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 main{max-width:1000px;margin:0 auto;padding:16px 16px 80px}
 h2{font-family:var(--cond);font-weight:700;font-size:28px;margin:0 0 4px;line-height:1.1}
 h3{font-family:var(--cond);font-weight:600;font-size:20px;margin:22px 0 8px}
@@ -289,6 +295,15 @@ a.iconbtn2{filter:none;opacity:1}
 .todo button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;background:none;padding:11px 2px;font-size:15px;font-weight:600;text-align:left;cursor:pointer;color:var(--ink)}
 .todo button span{color:var(--muted);font-size:20px}
 .kpis.hk{margin-top:4px}
+.todo button .tdtxt{flex:1;font-size:15px;color:var(--ink)}
+.todo button.tdprimo .tdtxt{color:var(--sel)}
+#gc_cerca{width:100%;box-sizing:border-box}
+.gdett > p.note{margin:4px 12px}
+.hriep{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hriepbox{display:flex;flex-direction:column;gap:3px;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--ink);font-size:14px}
+.hriepbox b{font-family:var(--cond);font-size:20px}
+.hriepttl{font-family:var(--cond);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.hrieplink{margin-top:4px;color:var(--sel);font-weight:700}
 .wklist{list-style:none;margin:0;padding:0}
 .wklist li{display:flex;gap:12px;align-items:flex-start;padding:9px 0}
 .wklist li + li{border-top:1px solid var(--line)}
@@ -332,16 +347,38 @@ a.iconbtn2{filter:none;opacity:1}
 .cg-ev.scelta{outline:3px dashed var(--ink);outline-offset:2px;z-index:2}
 .usalist .btn,.usalist .usata{margin-top:8px}
 .usata{font-weight:700;font-size:14px;color:var(--sel)}
-.gcard{border:1px solid var(--line);border-radius:12px;margin-top:8px;background:var(--paper)}
-.gcard summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;list-style:none}
-.gcard summary::-webkit-details-marker{display:none}
-.gcard[open] summary{border-bottom:1px solid var(--line)}
-.gcard h4{margin:10px 12px 4px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:13px;color:var(--muted)}
-.gstato{flex:0 0 auto;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.st-in_lista{--st:#003DA5}.st-in_osservazione{--st:#D4AF37}.st-da_rivedere{--st:#E07B00}.st-inserito{--st:#0E1A2B}.st-da_non_inserire{--st:#9AA8BA}
+.gfiltri{display:grid;gap:6px;margin:10px 0 4px}
+.gchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.gchips::-webkit-scrollbar{display:none}
+.gchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.gchip span{color:var(--muted);font-weight:700}
+.gchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.gchip[aria-pressed="true"] span{color:var(--paper);opacity:.8}
+.gdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--st)}
+.gtitolo{display:flex;align-items:center;gap:7px;margin:18px 0 6px;font-family:var(--cond);font-size:17px;text-transform:uppercase;letter-spacing:.04em}
+.gtitolo span{color:var(--muted);font-weight:600}
+.grow{border:1px solid var(--line);border-left:5px solid var(--st);border-radius:10px;margin-top:6px;background:var(--paper)}
+.grow summary{display:flex;align-items:center;gap:10px;padding:9px 12px;list-style:none;cursor:pointer}
+.grow summary::-webkit-details-marker{display:none}
+.grow[open] summary{border-bottom:1px solid var(--line)}
+.gprinc{flex:1;min-width:0}
+.gnome{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gnome b{font-size:16px}
+.gruolo{font-size:11px;font-weight:800;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.ggiud{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;color:#fff;background:var(--muted)}
+.gg-da_prendere{background:#003DA5}.gg-da_rivedere{background:#B8860B}.gg-non_a_livello{background:#C41E3A}
+.gmedia{flex:0 0 auto;min-width:40px;text-align:center;font-family:var(--cond);font-weight:700;font-size:20px;padding:3px 6px;border-radius:8px;background:var(--bg)}
+.gmedia.vuota{color:var(--muted);font-size:16px}
+.gdett{padding:6px 0 4px}
 .gval{margin:0 12px 10px;padding:8px 10px;border-left:3px solid var(--sel);background:var(--bg);border-radius:6px}
-.garee{display:flex;flex-wrap:wrap;gap:6px 12px;margin:4px 0;font-size:14px}
-.garee b{font-family:var(--cond);font-size:18px}
+.gval.gseg{border-left-color:var(--muted)}
+.gbar{display:grid;grid-template-columns:70px 1fr 18px;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+.gbar i{display:block;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.gbar i b{display:block;height:100%;background:var(--sel);border-radius:4px}
+.gbar strong{font-family:var(--cond);font-size:16px;text-align:right}
 .gtxt{margin:4px 0 0;font-size:14px}
+.gnota{margin:0 0 4px 78px;color:var(--muted);font-size:13px}
 .cg-dettaglio{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:0 10px}
 .storico summary{font-family:var(--cond);font-size:17px;padding:4px 0}
 /* PDF */

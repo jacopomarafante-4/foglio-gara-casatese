@@ -297,7 +297,7 @@ function testEditor(t){
 }
 
 /* ---------- Scheda Statistiche ---------- */
-/* Squadra → Statistiche (allenamento e partite) e Partita → Tabellini */
+/* Squadra → Allenamento → Statistiche, Squadra → Partite → Statistiche e Tabellini */
 function statHeader(title, kpis){
   return `<section class="panel">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
@@ -353,9 +353,9 @@ function viewStatPartite(){
     <h3 class="convh3">Giocatori</h3>
     ${gm.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Partite giocate (almeno 1 minuto)">Pres.</th><th>Minuti</th><th title="Minuti giocati sul totale disponibile">% min</th><th title="Minuti medi a partita giocata">Media</th><th>Gol</th><th title="Gol subiti da portiere">Subiti 🧤</th></tr></thead><tbody>${gmRows}</tbody></table></div>` : '<p class="empty">Nessuna partita giocata nel periodo.</p>'}
   </section>
-  <p class="note">I tabellini delle partite (minuti, gol, gol subiti) si compilano in <button class="linkbtn" data-tab="tabellini">Partita → Tabellini</button>.</p>`;
+  <p class="note">I tabellini delle partite (minuti, gol, gol subiti) si compilano in <button class="linkbtn" data-tab="tabellini">Partite → Tabellini</button>.</p>`;
 }
-/* Partita → Tabellini: dopo la partita, minuti, gol e gol subiti */
+/* Squadra → Partite → Tabellini: dopo la partita, minuti, gol e gol subiti */
 function viewTabellini(){
   if(!S.players.length) return `<section class="panel"><h2>Tabellini</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
   if(curGame()) return registroPage('Tabellino', viewGames());
