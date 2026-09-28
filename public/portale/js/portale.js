@@ -143,7 +143,7 @@ function viewHome(){
   const todo = homeTodo(), maxTodo = 6;
   const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
   /* Anteprima: gli impegni della squadra di sabato e domenica di questa settimana (campionato, amichevoli e tornei),
-     colorati per calendario. Tutta la stagione e le altre squadre sono in Squadra → Calendario */
+     colorati per calendario. Le altre partite e le altre squadre sono in Squadra → Calendario */
   const [sab, dom] = weekendISO(), wk = allCalendar().filter(m => m.date===sab || m.date===dom)
     .sort((a,b) => (a.date+(a.time||'').padStart(5,'0')).localeCompare(b.date+(b.time||'').padStart(5,'0')));
   const matchCard = `<div class="hcard hmatch hwide">
@@ -229,30 +229,39 @@ function calStato(m){
 }
 /* Righe del calendario raggruppate per mese, colorate per calendario (Merate, Cernusco, Trasferta) */
 function listaCalendario(ms, tutte){
-  const today = todayISO(); let mese = '';
+  let mese = '';
   return ms.map(m => {
     const mm = (m.date||'').slice(0,7), testa = mm !== mese ? `<li class="calmese">${mm ? monthLabel(mm) : 'Senza data'}</li>` : '';
     mese = mm;
-    return testa + rigaPartita(m, tutte, true).replace('<li class="', `<li class="${m.date && m.date < today ? 'past ' : ''}`);
+    return testa + rigaPartita(m, tutte, true);
   }).join('');
 }
+const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
+/* Nel calendario solo le partite da giocare; quelle giocate vanno nello storico, solo della propria squadra */
+const daGiocare = m => !m.date || m.date >= todayISO();
+function viewStorico(){
+  const giocate = inOrdine(allCalendar().filter(m => !daGiocare(m))).reverse();
+  if(!giocate.length) return '';
+  return `<details class="storico"><summary>Storico · ${giocate.length} ${giocate.length===1 ? 'partita giocata' : 'partite giocate'}</summary>
+    <ul class="wklist callist">${listaCalendario(giocate, false)}</ul></details>`;
+}
 function viewCalendario(){
-  const A = isAdmin(), today = todayISO(), sigla = siglaSquadra(TEAM());
+  const A = isAdmin(), sigla = siglaSquadra(TEAM());
   const scelta = `<div class="row" style="justify-content:space-between;margin-bottom:10px">
       <div class="seg" role="group" aria-label="Quali partite"><button data-calscope="mia" aria-pressed="${calScope==='mia'}">Solo ${esc(sigla)}</button><button data-calscope="tutte" aria-pressed="${calScope==='tutte'}">Tutte le squadre</button></div>
       ${legendaCal()}</div>`;
   if(calScope === 'tutte'){
     caricaTuttiCal();
-    const ms = partiteTutte();
+    const ms = partiteTutte().filter(daGiocare);
     return `<section class="panel">
       <h2>Calendario · tutte le squadre</h2>
       ${scelta}
-      <p class="hint">Tutta la stagione di tutte le squadre della società: le partite già giocate sono più chiare, la tua squadra è evidenziata.</p>
+      <p class="hint">Le partite da giocare di tutte le squadre della società, fino a fine stagione. La tua squadra è evidenziata.</p>
       ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
       ${ms.length ? `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>` : '<p class="empty">Nessuna partita in programma.</p>'}
     </section>`;
   }
-  const cal = S.calendar.slice().sort((a,b)=>((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
+  const cal = inOrdine(S.calendar.filter(daGiocare)), prossime = inOrdine(allCalendar().filter(daGiocare));
   const official = A
     ? cal.map(m => `
       <div class="teamcard cal-${calDi(m)}">
@@ -268,13 +277,14 @@ function viewCalendario(){
           <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
         </div>
       </div>`).join('')
-    : `<ul class="wklist callist">${listaCalendario(allCalendar().sort((a,b)=>((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0'))), false)}</ul>`;
+    : `<ul class="wklist callist">${listaCalendario(prossime, false)}</ul>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
     ${scelta}
-    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Tutta la stagione della squadra: campionato, amichevoli e tornei. Le partite già giocate sono più chiare.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
-    ${(A ? cal.length : allCalendar().length) ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
+    <p class="hint">${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
+    ${(A ? cal.length : prossime.length) ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
+    ${viewStorico()}
   </section>
   ${viewFriendlies()}
   ${viewVenues()}`;

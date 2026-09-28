@@ -125,8 +125,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   il campionato resta quello ufficiale). Nessun aggiornamento automatico: quando l'utente chiede "aggiorna il calendario",
   Claude riscarica i tre calendari (list_events da oggi al 30/06 della stagione, tutte le pagine) nei file di
   `private/google-calendar/`, fa la simulazione e poi `--conferma`.
-  La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha tutta la
-  stagione, "Solo Uxx" o "Tutte le squadre".
+  La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha le partite da
+  giocare, "Solo Uxx" o "Tutte le squadre"; quelle giocate solo nello Storico della propria squadra (`viewStorico()`).
   Regola delle date nel Portale: SEMPRE il calendario ufficiale, salvo le variazioni dei comunicati (già nelle gare):
   `portale.mjs [--squadra=<id>]` sovrascrive date e ore scritte a mano; Google non cambia mai le gare di campionato.
   Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.

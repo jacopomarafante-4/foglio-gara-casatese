@@ -304,10 +304,11 @@ a.iconbtn2{filter:none;opacity:1}
 .wklist li[class*="cal-"]{border-left:4px solid var(--calc);padding-left:10px}
 .wklist li.mia{background:color-mix(in srgb,var(--calc) 12%,transparent)}
 .wklist li.mia .wkmatch::after{content:" · la tua squadra";font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted)}
-.wklist li.past{opacity:.55}
 .callist .wkwhen{flex-basis:88px}
 .wklist li.calmese{display:block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:13px;padding:16px 0 4px;border-top:0}
 .teamcard[class*="cal-"]{border-left:5px solid var(--calc)}
+.storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.storico summary{font-family:var(--cond);font-size:17px;padding:4px 0}
 /* PDF */
 .pages{display:grid;gap:14px;margin-top:14px}
 .pages canvas{width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);background:#fff}
