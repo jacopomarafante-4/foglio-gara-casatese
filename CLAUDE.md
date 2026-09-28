@@ -228,6 +228,11 @@ Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come ne
   per "adesso" nei componenti server usa `istanteTraOre()` (la regola di lint vieta `Date.now()` nel render).
 - Tipi SQL ↔ TypeScript allineati in `lib/tipi.ts`: se aggiungi uno stato, aggiornalo in entrambi.
 
+## Test dei profili
+`node --env-file=.env.local scripts/test-profili.mjs private/test-profili.json`: permessi di tutti i profili sul database e
+giro completo del sito vero con ogni profilo (identità di prova temporanee, cancellate alla fine). Rifarlo dopo modifiche a
+permessi, migrazioni o navigazione del Portale.
+
 ## Backup
 `npm run backup` (scripts/backup.mjs) → `private/backup/`; attività settimanale di macOS (LaunchAgent
 `it.academycasatese.backup`, lunedì 9:00). Se aggiungi una tabella, aggiungila anche all'elenco `TABELLE` dello script.
