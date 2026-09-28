@@ -5,7 +5,7 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button, [data-drop-slot], [data-drop-token], [data-move-token]');
   if(!t) return;
   if(t.dataset.tab){ goTab(t.dataset.tab); return; }
-  if(t.dataset.area){ const a = AREAS.find(x => x.k===t.dataset.area); if(a) goTab(areaLast[a.k] || a.tabs[0]); return; }
+  if(t.dataset.area){ const a = AREAS.find(x => x.k===t.dataset.area); if(a){ const ok = tabsDi(a); goTab(ok.includes(areaLast[a.k]) ? areaLast[a.k] : ok[0]); } return; }
   if(t.dataset.segvoto){ segDraft.voto = segDraft.voto === t.dataset.segvoto ? '' : t.dataset.segvoto; render(); return; }
   /* Scelta del giocatore per una posizione toccata sul campo. Il telefono manda un "clic" subito dopo il tocco
      che ha aperto l'elenco: se arriva nel primo mezzo secondo lo ignoriamo (chiuderebbe o sceglierebbe per sbaglio) */

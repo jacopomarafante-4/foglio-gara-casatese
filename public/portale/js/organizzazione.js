@@ -14,7 +14,7 @@ async function caricaCondivisi(forza){
   if(ev) eventiSoc = ev;
   if(av) avvisiSoc = av;
   condivisiAt = Date.now(); condivisiInCorso = false;
-  if(['home','calendario','calendariotutte','eventi','avvisi'].includes(tab)) render();
+  if(['home','calendario','calendariotutte','avvisi'].includes(tab)) render();
 }
 function salvaCondiviso(path, items){
   if(!puoOrganizzare()){ setStatus('Sola lettura: nessuna modifica'); return; }
@@ -35,15 +35,11 @@ const eventiPer = teamId => { caricaCondivisi(); return eventiSoc.filter(e => !(
 const eventiTutti = () => { caricaCondivisi(); return eventiSoc.map(eventoCome); };
 const squadreTesto = ids => (ids||[]).length ? ids.map(id => siglaSquadra(S.teams.find(t => t.id===id) || (tuttiCal||[]).find(t => t.id===id))).filter(Boolean).join(', ') : 'Tutta la società';
 
-/* ---------- Eventi ---------- */
+/* ---------- Eventi: si creano e si modificano nel calendario (Tutte le squadre), non c'è una pagina a parte ---------- */
 let eventoAperto = null;
-function viewEventi(){
-  caricaCondivisi();
-  const oggi = todayISO(), P = puoOrganizzare();
-  const ord = eventiSoc.slice().sort((a,b) => ((a.data||'')+(a.inizio||'')).localeCompare((b.data||'')+(b.inizio||'')));
-  const prossimi = ord.filter(e => !e.data || e.data >= oggi), passati = ord.filter(e => e.data && e.data < oggi).reverse();
+function formEvento(e){
   const squadre = S.teams.filter(t => !t.organizza && !t.vedeTutte);
-  const form = e => `<details class="fredit" ${e.id===eventoAperto ? 'open' : ''}><summary>Modifica evento</summary>
+  return `<details class="fredit" ${e.id===eventoAperto ? 'open' : ''}><summary>Modifica evento</summary>
       <div class="grid">
         <div><label class="f">Titolo</label><input data-evf="titolo" data-evid="${e.id}" value="${esc(e.titolo||'')}" placeholder="Es. Torneo di Natale"></div>
         <div><label class="f">Tipo</label><select data-evf="tipo" data-evid="${e.id}">${TIPI_EVENTO.map(t => `<option ${t===e.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
@@ -60,20 +56,13 @@ function viewEventi(){
         <button class="btn small" data-evavviso="${e.id}">Scrivi un avviso per questo evento</button>
         <button class="btn small ghost danger" data-evdel="${e.id}">Elimina evento</button>
       </div></details>`;
-  const riga = e => { const m = eventoCome(e);
-    return rigaPartita(m, true, true).replace(/<\/div>\s*<\/li>\s*$/, (P ? form(e) : '') + '</div></li>'); };
-  return `<section class="panel">
-    <h2>Eventi della società</h2>
-    <p class="hint">Tornei organizzati da noi, open day, feste, riunioni. Compaiono nel calendario di tutti (vista Giorno compresa, nella colonna del campo) e in quello delle squadre coinvolte.</p>
-    ${prossimi.length ? `<ul class="wklist callist">${prossimi.map(riga).join('')}</ul>` : '<p class="empty">Nessun evento in programma.</p>'}
-    ${P ? '<div class="row" style="margin-top:10px"><button class="btn primary small" data-evadd="1">+ Nuovo evento</button></div>' : ''}
-    ${passati.length ? `<details class="storico"><summary>Eventi passati · ${passati.length}</summary><ul class="wklist callist">${passati.map(riga).join('')}</ul></details>` : ''}
-  </section>`;
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-evadd],[data-evdel],[data-evsq],[data-evavviso]'); if(!b || !puoOrganizzare()) return;
   if(b.dataset.evadd){ const ev = {id:uid('ev'), titolo:'', tipo:'Torneo organizzato', data:todayISO(), inizio:'', fine:'', luogo:'merate', indirizzo:'', squadre:[], note:''};
-    eventiSoc.push(ev); eventoAperto = ev.id; salvaCondiviso('shared/eventi', eventiSoc); render(); return; }
+    /* il nuovo evento si apre in modifica nell'elenco di Tutte le squadre */
+    eventiSoc.push(ev); eventoAperto = ev.id; calVista = 'elenco'; calCategoria = ''; salvaCondiviso('shared/eventi', eventiSoc);
+    if(tab !== 'calendariotutte') goTab('calendariotutte'); else render(); return; }
   if(b.dataset.evdel){ const ev = eventiSoc.find(x => x.id===b.dataset.evdel);
     if(ev && confirm(`Eliminare l'evento "${ev.titolo||'senza titolo'}"?`)){ eventiSoc = eventiSoc.filter(x => x!==ev); salvaCondiviso('shared/eventi', eventiSoc); render(); } return; }
   if(b.dataset.evsq){ const [id, t] = b.dataset.evsq.split(':'), ev = eventiSoc.find(x => x.id===id); if(!ev) return;
@@ -88,8 +77,9 @@ document.addEventListener('input', e => {
   ev[t.dataset.evf] = t.value; eventoAperto = ev.id; salvaCondiviso('shared/eventi', eventiSoc);
 });
 document.addEventListener('change', e => {
-  if(!e.target.dataset?.evf || !['eventi'].includes(tab)) return;
-  eventoAperto = e.target.dataset.evid; render();
+  if(!e.target.dataset?.evf || tab !== 'calendariotutte') return;
+  /* ridisegno un attimo dopo: il campo sta ancora perdendo il cursore */
+  eventoAperto = e.target.dataset.evid; setTimeout(render, 0);
 });
 
 /* ---------- Avvisi (Comunicazioni): per una o più squadre, restano nel Portale e si mandano su WhatsApp ---------- */
@@ -182,7 +172,8 @@ function salvaCalendarioSquadra(teamId){
    ufficiale (salvo comunicati), e scripts/import-calendari/portale.mjs le riporterebbe comunque alla data ufficiale.
    Gli eventi si cambiano in Eventi. */
 function modificaPartitaSquadra(m){
-  if(!puoOrganizzare() || m.evento || !m.team || m.garaId || !m.friendly) return '';
+  if(m.evento) return puoOrganizzare() ? formEvento(m.evento) : '';
+  if(!puoOrganizzare() || !m.team || m.garaId || !m.friendly) return '';
   const k = `${m.team.id}|${m.id}`, f = (campo, l, tipo='text') => `<div><label class="f">${l}</label><input type="${tipo}" data-tcf="${esc(k)}|${campo}" value="${esc(m[campo]||'')}"></div>`;
   return `<details class="fredit" ${k===partitaAperta ? 'open' : ''}><summary>Modifica</summary>
     <div class="grid">${f('date','Data','date')}${f('time','Ora','time')}${f('opponent','Avversario')}${f('venue','Campo')}</div>
@@ -200,7 +191,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   if(!e.target.dataset?.tcf || tab !== 'calendariotutte') return;
-  render();
+  setTimeout(render, 0);
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-tcdel],[data-tcadd]'); if(!b || !puoOrganizzare()) return;
@@ -227,8 +218,8 @@ function viewHomeOrg(){
         <div class="hriep" style="grid-template-columns:repeat(3,1fr)">${Object.entries(CAL_NOMI).map(([k,n]) => `<button class="hriepbox cal-${k}" data-hgo="calendariotutte" style="border-left:5px solid var(--calc)"><span class="hriepttl">${n}</span><span><b>${conta(k)}</b> impegni</span></button>`).join('')}</div>
         <div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="calendariotutte">Apri la vista Giorno</button></div></div>
       <div class="hcard"><div class="hlabel">Prossimi eventi</div>
-        ${prossimi.length ? `<ul class="todo">${prossimi.map(e => `<li><button data-hgo="eventi"><span class="tdtxt">${weekday(e.data)} ${fmtDate(e.data).slice(0,5)} · ${esc(e.titolo||'Evento')}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>` : '<p class="note">Nessun evento in programma.</p>'}
-        <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="eventi">Eventi</button></div></div>
+        ${prossimi.length ? `<ul class="todo">${prossimi.map(e => `<li><button data-hgo="calendariotutte"><span class="tdtxt">${weekday(e.data)} ${fmtDate(e.data).slice(0,5)} · ${esc(e.titolo||'Evento')}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>` : '<p class="note">Nessun evento in programma.</p>'}
+        <div class="row" style="margin-top:10px"><button class="btn small primary" data-evadd="1">+ Nuovo evento</button></div></div>
       <div class="hcard"><div class="hlabel">Ultimi avvisi</div>
         ${avvisi.length ? `<ul class="todo">${avvisi.map(a => `<li><button data-hgo="avvisi"><span class="tdtxt">${fmtDate(a.data).slice(0,5)} · ${esc(a.titolo || a.testo.slice(0,40))}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>` : '<p class="note">Nessun avviso.</p>'}
         <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="avvisi">Nuovo avviso</button></div></div>

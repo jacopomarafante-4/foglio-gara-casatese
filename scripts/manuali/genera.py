@@ -185,7 +185,7 @@ categorie di portieri (in Società, "Portieri di: Under"): in Home e in Calendar
 quelle categorie; in Tutte le squadre vede tutto. Sotto ogni partita ci sono i portieri di quella squadra con lo stato
 della convocazione (convocato, non convocato, infortunato… o "da convocare"); in I miei portieri il menu Portiere mostra
 solo le partite di un portiere.</td></tr>
-<tr><td><b>Responsabile organizzativo</b></td><td>Portale: Home, Calendario, Eventi</td><td>Vede il calendario di tutte
+<tr><td><b>Responsabile organizzativo</b></td><td>Portale: Home, Calendario (con gli Avvisi)</td><td>Vede il calendario di tutte
 le squadre (vista Giorno per campo: Merate, Cernusco, Trasferta), aggiunge e modifica amichevoli e tornei di ogni squadra (le partite
 di campionato no: vale il calendario ufficiale), gestisce gli <b>eventi</b> della società (tornei organizzati, open day, feste,
 riunioni) e pubblica <b>avvisi</b> per una o più squadre, da mandare anche su WhatsApp. Non vede rose né dati dei ragazzi.</td></tr>
@@ -651,8 +651,10 @@ bonifico, altro). <span class="k">Apri</span> per vederlo, <span class="k">Accet
 nota che la famiglia legge). Accettando un bonifico la rata diventa pagata; accettando una visita si scrive la nuova scadenza del
 certificato. Il filtro "Documenti da controllare" mostra chi ne ha di nuovi.</p>
 <h3>Eventi e avvisi</h3>
-<p>Nell'area <b>Eventi</b>: <span class="k">+ Nuovo evento</span> (titolo, tipo, data, orari, luogo, squadre coinvolte: nessuna =
-tutta la società); gli eventi compaiono nel calendario di tutti e nella vista Giorno, nella colonna del campo. In <b>Avvisi</b> scegli
+<p>Gli eventi stanno nel calendario: in <b>Calendario → Tutte le squadre</b> tocca <span class="k">+ Nuovo evento</span> (titolo, tipo,
+data, orari, luogo, squadre coinvolte: nessuna = tutta la società) e si apre "Modifica evento" sulla sua riga; per cambiarlo più avanti
+basta aprire lo stesso "Modifica evento" nell'elenco o nel dettaglio della vista Giorno. Gli eventi compaiono nel calendario di tutti e
+nella vista Giorno, nella colonna del campo. In <b>Calendario → Avvisi</b> scegli
 le squadre e un modello (cambio campo, cambio orario, evento, libero), completa il testo e <span class="k">Pubblica avviso</span>:
 compare nella Home dei mister di quelle squadre per due settimane; <span class="k">Manda su WhatsApp</span> apre il messaggio pronto.</p>
 </section>

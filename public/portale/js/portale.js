@@ -24,8 +24,7 @@ const GRUPPI_SQUADRA = [
 ];
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
-  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte']},
-  {k:'eventi', label:'Eventi', tabs:['eventi','avvisi'], org:true},
+  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte','avvisi']},
   {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
@@ -34,25 +33,26 @@ const AREAS = [
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
-  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi', tesserati:'Tesserati',
+  segnala:'Segnala un giocatore', giocatori:'Giocatori', avvisi:'Avvisi', tesserati:'Tesserati',
   mieiallenamenti:'I miei allenamenti 🚧'};
 /* nomi delle schede di versioni precedenti (link salvati) */
-const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti'};
+const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti', eventi:'calendariotutte'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
 const gruppoLast = {};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
-/* Eventi: admin, direttori e responsabile organizzativo; l'organizzativo non ha Squadra né Scouting */
+/* L'organizzativo non ha Squadra né Scouting; la segreteria solo la sua area */
 const allowedAreas = () => isSegreteria() ? AREAS.filter(a => a.k==='segreteria')
-  : AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()) && (!a.org || isAdmin() || isOrg())
-    && !(isOrg() && (a.k==='squadra' || a.k==='scouting')));
+  : AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()) && !(isOrg() && (a.k==='squadra' || a.k==='scouting')));
 /* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF) né campi;
    in Squadra → Partite restano Convocazioni e Tabellini (presenza sì/no, con le statistiche nella stessa scheda) */
 const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf','campi','statpartite'];
 /* Test atletici: solo per l'Under 15 */
 const SOLO_U15 = ['test'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15)
-  && !(isOrg() && t==='calendario'));
+  && !(isOrg() && t==='calendario')
+  /* Avvisi: li scrivono admin, direttori (in lettura) e organizzativo; i mister li vedono in Home */
+  && !(t==='avvisi' && !isAdmin() && !isOrg()));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
@@ -333,7 +333,7 @@ let frAperta = null;   // amichevole appena aggiunta (o in modifica): il suo "Mo
 /* Uscendo da un campo dell'amichevole la riga si aggiorna (titolo, data, ordine) */
 document.addEventListener('change', e => {
   if(!e.target.dataset?.frid || tab !== 'calendario') return;
-  frAperta = e.target.dataset.frid; render();
+  frAperta = e.target.dataset.frid; setTimeout(render, 0);
 });
 const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
 /* Nel calendario solo le partite da giocare; quelle giocate vanno nello storico, solo della propria squadra */
@@ -434,7 +434,8 @@ function viewCalendario(){
         : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true, modificaPartitaSquadra)}</ul>`}
       ${puoOrganizzare() ? `<div class="row" style="margin-top:12px;gap:8px"><label class="note" for="tc_squadra">Nuova amichevole per</label>
         <select id="tc_squadra">${(tuttiCal || []).filter(t => !t.organizza && !t.vedeTutte).map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>
-        <button class="btn small" data-tcadd="1">+ Aggiungi amichevole</button></div>` : ''}
+        <button class="btn small" data-tcadd="1">+ Aggiungi amichevole</button>
+        <button class="btn small primary" data-evadd="1">+ Nuovo evento</button></div>` : ''}
     </section>`;
   }
   const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];
