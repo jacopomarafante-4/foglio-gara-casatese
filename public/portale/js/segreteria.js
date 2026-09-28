@@ -1,5 +1,5 @@
 /* Portale · Segreteria (0031): anagrafica dei tesserati, contatti dei genitori, certificato medico, taglie, iscrizione,
-   quote, PIN delle famiglie (mandato su WhatsApp). La vedono admin, direttori e segreteria (gestisce_segreteria()).
+   quote, PIN delle famiglie (consegnati a mano col foglio PIN in PDF: niente WhatsApp). La vedono admin, direttori e segreteria (gestisce_segreteria()).
    Dati di minori: stanno nelle tabelle protette tesserati / tesserati_dati, mai nei documenti del Portale.
    Squadre e rose arrivano da segreteria_rose() (senza PIN dei mister). */
 
@@ -42,10 +42,30 @@ function statoCertificato(d){
   return {k:'ok', l:`Certificato fino al ${fmtDate(d.certificato_scadenza)}`};
 }
 const quoteDaPagare = d => (d.quote||[]).filter(q => !q.pagata);
-const telWa = n => { let x = String(n||'').replace(/[^\d+]/g, ''); if(x.startsWith('+')) x = x.slice(1); else if(x.startsWith('00')) x = x.slice(2); else if(x && !x.startsWith('39')) x = '39' + x; return x; };
-function messaggioPin(t){
-  const sq = (segRose||[]).find(s => s.id === t.squadra_id);
-  return `Academy Casatese Merate · ${sq?.category || ''}\nCiao! Da oggi potete seguire ${t.nome_completo} dal Portale della società: convocazioni (con la risposta "ci sarà / non ci sarà"), calendario, avvisi, iscrizione e quote.\n\n1. Aprite ${SITO}\n2. Inserite il PIN: ${t.pin}\n\nIl PIN è personale: non giratelo ad altri.`;
+/* Foglio PIN (PDF): biglietti da ritagliare, 8 per pagina, da consegnare a mano alle famiglie */
+async function fogliPin(elenco){
+  if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
+  const con = elenco.filter(t => t.pin); if(!con.length){ setStatus('Nessun PIN da stampare: generali prima'); return; }
+  const sqNome = id => (segRose||[]).find(s => s.id === id)?.category || '';
+  const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
+  const W = 95, H = 66, X = [10, 105], Y = [12, 80, 148, 216];
+  con.forEach((t, i) => {
+    if(i && i % 8 === 0) doc.addPage();
+    const x = X[i % 2], y = Y[Math.floor((i % 8) / 2)];
+    doc.setDrawColor(180); doc.setLineDashPattern([1.5, 1.5], 0); doc.rect(x, y, W, H); doc.setLineDashPattern([], 0);
+    doc.setFillColor(0, 61, 165); doc.rect(x, y, W, 11, 'F');
+    doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('ACADEMY CASATESE MERATE · PORTALE', x + 4, y + 7);
+    doc.setTextColor(14, 26, 43); doc.setFontSize(13); doc.text(doc.splitTextToSize(t.nome_completo, W - 8)[0], x + 4, y + 19);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(sqNome(t.squadra_id), x + 4, y + 24);
+    doc.setFontSize(9); doc.text('1. Aprite ' + SITO.replace('https://', ''), x + 4, y + 32);
+    doc.text('2. Inserite il PIN:', x + 4, y + 37);
+    doc.setFont('courier', 'bold'); doc.setFontSize(22); doc.text(t.pin.replace(/(\d{4})(\d{4})/, '$1 $2'), x + 4, y + 48);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(91, 107, 128);
+    doc.text(doc.splitTextToSize('Convocazioni (con "ci sarà / non ci sarà"), calendario, avvisi, iscrizione, quote e documenti. Il PIN è personale: non datelo ad altri.', W - 8), x + 4, y + 56);
+  });
+  const nome = `PIN_FAMIGLIE_${(sqNome(con[0].squadra_id) || 'squadra').replace(/[^\w]+/g, '_').toUpperCase()}.pdf`;
+  try{ if(downloads) await downloads.save({filename: nome, data: doc.output('blob')}); else browserDownload(nome, doc.output('blob')); setStatus('Foglio PIN pronto'); }
+  catch(e){ setStatus('Download non riuscito'); }
 }
 
 /* ---------- Salvataggio (con un attimo di attesa mentre si scrive) ---------- */
@@ -101,7 +121,6 @@ function viewTesserati(){
         <input type="date" data-segq="${t.id}:${i}:scadenza" value="${esc(q.scadenza||'')}" aria-label="Scadenza">
         <label class="row" style="gap:4px"><input type="checkbox" data-segq="${t.id}:${i}:pagata" ${q.pagata?'checked':''}> Pagata</label>
         <button class="iconbtn" aria-label="Togli rata" data-segqdel="${t.id}:${i}">×</button></div>`).join('');
-    const tel = d.genitore1_tel || d.genitore2_tel;
     return `<details class="grow segrow st-${c.k==='ok' && d.iscrizione_completa && !qd.length ? 'inserito' : 'da_rivedere'}" ${t.id===segAperto ? 'open' : ''} data-segapri="${t.id}">
       <summary><div class="gtesta"><div class="gprinc"><div class="gnome"><b>${esc(t.nome_completo)}</b>${t.numero ? `<span class="gruolo">N. ${t.numero}</span>` : ''}</div>
         <div class="sbadges">${badges}</div></div></div></summary>
@@ -141,16 +160,17 @@ function viewTesserati(){
         ${t.pin ? `<p>PIN: <span class="code">${esc(t.pin)}</span></p>` : '<p class="note">Nessun PIN: generalo e mandalo alla famiglia.</p>'}
         <div class="row" style="gap:8px">
           <button class="btn small ${t.pin ? 'ghost' : 'primary'}" data-segpin="${t.id}">${t.pin ? 'Rigenera PIN' : 'Genera PIN'}</button>
-          ${t.pin && tel ? `<a class="btn small primary" href="https://wa.me/${telWa(tel)}?text=${encodeURIComponent(messaggioPin(t))}" target="_blank" rel="noopener">Manda il PIN su WhatsApp</a>` : ''}
-          ${t.pin && !tel ? '<span class="note">Per mandarlo su WhatsApp scrivi il telefono di un genitore.</span>' : ''}
+          ${t.pin ? `<button class="btn small primary" data-segfoglio="${t.id}">Foglio PIN (PDF)</button>` : ''}
         </div>
       </div></details>`;
   };
   return `<section class="panel">
     <h2>Segreteria · tesserati</h2>
-    <p class="hint">Anagrafica, genitori, certificato medico, taglie, iscrizione e quote di ogni ragazzo, e il PIN con cui la famiglia entra nel Portale. Si salva da solo.</p>
+    <p class="hint">Anagrafica, genitori, certificato medico, taglie, iscrizione e quote di ogni ragazzo, e il PIN con cui la famiglia entra nel Portale. Si salva da solo.
+      Il PIN si consegna a mano con il foglio PIN: uno per ragazzo, o tutta la squadra insieme.</p>
     <div class="row" style="gap:8px;margin-bottom:8px"><label class="note" for="seg_sq">Squadra</label>
       <select id="seg_sq" data-segsq="1">${segRose.map(s => `<option value="${esc(s.id)}" ${s.id===segSquadra?'selected':''}>${esc(s.category || s.name)}</option>`).join('')}</select></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn small" data-segfoglio="squadra">Stampa i PIN della squadra (PDF)</button></div>
     <div class="gchips" style="flex-wrap:wrap;margin-bottom:6px">${Object.entries(filtri).map(([k,[l,n]]) => `<button class="gchip" data-segfiltro="${k}" aria-pressed="${k===segFiltro}">${l} <span>${n}</span></button>`).join('')}</div>
     ${sq ? (lista.length ? lista.map(scheda).join('') : '<p class="empty">Nessun ragazzo con questo filtro.</p>') : '<p class="empty">Nessuna squadra con la rosa.</p>'}
   </section>`;
@@ -205,9 +225,10 @@ document.addEventListener('change', e => {
   if(ds.segd?.endsWith(':iscrizione_completa') || ds.segq?.endsWith(':pagata') || ds.segd?.endsWith(':certificato_scadenza')) render();
 });
 document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-segfiltro],[data-segqadd],[data-segqdel],[data-segpin],[data-segdocapri],[data-segdocok],[data-segdocno],[data-segapri] > summary'); if(!b) return;
+  const b = e.target.closest('[data-segfiltro],[data-segqadd],[data-segqdel],[data-segpin],[data-segfoglio],[data-segdocapri],[data-segdocok],[data-segdocno],[data-segapri] > summary'); if(!b) return;
   const ds = b.dataset || {};
   if(ds.segdocapri){ apriDocumento(ds.segdocapri); return; }
+  if(ds.segfoglio){ fogliPin(ds.segfoglio === 'squadra' ? segTess.filter(t => t.squadra_id === segSquadra).sort((a,b) => a.nome_completo.localeCompare(b.nome_completo, 'it')) : [trovaTess(ds.segfoglio)].filter(Boolean)); return; }
   if(ds.segdocok){ esitoDocumento(ds.segdocok, true); return; }
   if(ds.segdocno){ esitoDocumento(ds.segdocno, false); return; }
   if(ds.segfiltro !== undefined){ segFiltro = ds.segfiltro; render(); return; }

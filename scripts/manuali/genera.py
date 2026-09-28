@@ -188,9 +188,9 @@ solo le partite di un portiere.</td></tr>
 <tr><td><b>Responsabile organizzativo</b></td><td>Portale: Home, Calendario (con gli Avvisi)</td><td>Vede il calendario di tutte
 le squadre (vista Giorno per campo: Merate, Cernusco, Trasferta), aggiunge e modifica amichevoli e tornei di ogni squadra (le partite
 di campionato no: vale il calendario ufficiale), gestisce gli <b>eventi</b> della società (tornei organizzati, open day, feste,
-riunioni) e pubblica <b>avvisi</b> per una o più squadre, da mandare anche su WhatsApp. Non vede rose né dati dei ragazzi.</td></tr>
+riunioni) e pubblica <b>avvisi</b> per una o più squadre, che si leggono nell'app. Non vede rose né dati dei ragazzi.</td></tr>
 <tr><td><b>Segreteria</b></td><td>Portale: Segreteria</td><td>Anagrafica dei tesserati, contatti dei genitori, certificati medici,
-taglie, iscrizioni e quote; genera il PIN di ogni famiglia e lo manda su WhatsApp. Non vede lo Scouting né le squadre.</td></tr>
+taglie, iscrizioni e quote; genera il PIN di ogni famiglia e stampa il foglio PIN da consegnare. Non vede lo Scouting né le squadre.</td></tr>
 <tr><td><b>Famiglia</b></td><td>Portale, solo il proprio figlio</td><td>Vede le convocazioni del figlio (ora, ritrovo, campo) e risponde
 "ci sarà / non ci sarà", il calendario della squadra, gli avvisi, l'anagrafica (aggiorna contatti e taglie), iscrizione, certificato e
 quote. <b>Carica documenti</b>: visita medica, contabile del bonifico di una rata, altri documenti (foto o PDF).</td></tr>
@@ -643,7 +643,8 @@ mister di quella squadra ha quei poteri.</p>
 <p>Nell'area <b>Segreteria</b> scegli la squadra: per ogni ragazzo data di nascita, numero, genitori, certificato medico, taglie,
 iscrizione (con i documenti mancanti), rate delle quote e note della segreteria (la famiglia non le vede). I filtri in alto
 mostrano chi ha il certificato da sistemare, l'iscrizione incompleta, rate da pagare o nessun PIN. <span class="k">Genera PIN</span>
-crea il PIN della famiglia; <span class="k">Manda il PIN su WhatsApp</span> apre il messaggio pronto per il genitore. In
+crea il PIN della famiglia; <span class="k">Foglio PIN (PDF)</span> stampa il biglietto da consegnare a mano (con
+<span class="k">Stampa i PIN della squadra</span> quelli di tutta la squadra, 8 per pagina, da ritagliare). In
 <b>Società → Segreteria</b> si crea l'account (e il PIN) di chi lavora in segreteria. Il mister vede nelle Convocazioni le
 risposte delle famiglie ("famiglia: ci sarà / non ci sarà").</p>
 <p><b>Documenti delle famiglie</b>: nella scheda del ragazzo, "Documenti caricati dalla famiglia" (visita medica, contabile di
@@ -656,7 +657,7 @@ data, orari, luogo, squadre coinvolte: nessuna = tutta la società) e si apre "M
 basta aprire lo stesso "Modifica evento" nell'elenco o nel dettaglio della vista Giorno. Gli eventi compaiono nel calendario di tutti e
 nella vista Giorno, nella colonna del campo. In <b>Calendario → Avvisi</b> scegli
 le squadre e un modello (cambio campo, cambio orario, evento, libero), completa il testo e <span class="k">Pubblica avviso</span>:
-compare nella Home dei mister di quelle squadre per due settimane; <span class="k">Manda su WhatsApp</span> apre il messaggio pronto.</p>
+compare nell'app, nella Home dei mister e delle famiglie di quelle squadre, per due settimane.</p>
 </section>
 
 <section>

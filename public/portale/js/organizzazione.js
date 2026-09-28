@@ -1,4 +1,4 @@
-/* Portale · Responsabile organizzativo ed eventi (0029): eventi della società, avvisi per le squadre (anche su WhatsApp),
+/* Portale · Responsabile organizzativo ed eventi (0029): eventi della società, avvisi per le squadre (solo nell'app),
    modifica dei calendari di tutte le squadre. Eventi e avvisi li leggono tutti (calendario, Home dei mister).
    Documenti: shared/eventi {items:[{id, titolo, tipo, data, inizio, fine, luogo:'merate'|'cernusco'|'altro', indirizzo,
    squadre:[id], note}]}, shared/avvisi {items:[{id, data, squadre:[id], titolo, testo, autore}]} (squadre vuote = tutta la società). */
@@ -82,7 +82,7 @@ document.addEventListener('change', e => {
   eventoAperto = e.target.dataset.evid; setTimeout(render, 0);
 });
 
-/* ---------- Avvisi (Comunicazioni): per una o più squadre, restano nel Portale e si mandano su WhatsApp ---------- */
+/* ---------- Avvisi (Comunicazioni): per una o più squadre, solo nell'app (Home di mister e famiglie; niente WhatsApp) ---------- */
 const MODELLI_AVVISO = {
   libero: {label:'Avviso libero', titolo:'', testo:''},
   campo: {label:'Cambio campo', titolo:'Cambio campo', testo:'⚠️ CAMBIO CAMPO\nLa partita di [giorno] contro [avversario] si gioca a [campo, indirizzo].\nOrario invariato: ritrovo alle [ora].'},
@@ -94,18 +94,16 @@ function testoEvento(ev){
   const luogo = ev.luogo==='altro' ? (ev.indirizzo || 'luogo da definire') : LUOGHI_EVENTO[ev.luogo];
   return `📣 ${(ev.titolo||'Evento').toUpperCase()}\n${ev.data ? weekday(ev.data)+' '+fmtDate(ev.data) : ''}${ev.inizio ? ' dalle '+ev.inizio : ''}${ev.fine ? ' alle '+ev.fine : ''}\n📍 ${luogo}\nSquadre: ${squadreTesto(ev.squadre)}${ev.note ? '\n'+ev.note : ''}`;
 }
-const testoWhatsapp = a => `*Academy Casatese Merate*${a.titolo ? '\n*'+a.titolo+'*' : ''}\n${a.testo}\n(${squadreTesto(a.squadre)})`;
 function viewAvvisi(){
   caricaCondivisi();
   const P = puoOrganizzare(), b = bozzaAvviso, squadre = S.teams.filter(t => !t.organizza && !t.vedeTutte);
   const elenco = avvisiSoc.slice().sort((x,y) => (y.data||'').localeCompare(x.data||''));
   const scheda = a => `<div class="gval gseg avviso"><div class="note">${fmtDate(a.data)} · ${esc(squadreTesto(a.squadre))}${a.autore ? ' · '+esc(a.autore) : ''}</div>
       ${a.titolo ? `<b>${esc(a.titolo)}</b>` : ''}<p class="gtxt" style="white-space:pre-line">${esc(a.testo)}</p>
-      <div class="row" style="margin-top:6px"><a class="btn small" href="https://wa.me/?text=${encodeURIComponent(testoWhatsapp(a))}" target="_blank" rel="noopener">Manda su WhatsApp</a>
-      ${P ? `<button class="btn small ghost danger" data-avdel="${a.id}">Elimina</button>` : ''}</div></div>`;
+      ${P ? `<div class="row" style="margin-top:6px"><button class="btn small ghost danger" data-avdel="${a.id}">Elimina</button></div>` : ''}</div>`;
   return `${P ? `<section class="panel">
     <h2>Nuovo avviso</h2>
-    <p class="hint">Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. "Pubblica" lo mette nella Home dei mister delle squadre scelte; poi mandalo su WhatsApp.</p>
+    <p class="hint">Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. "Pubblica" lo mette nell'app: nella Home dei mister e delle famiglie delle squadre scelte.</p>
     <label class="f">Squadre</label>
     <div class="gchips" style="flex-wrap:wrap">${squadre.map(t => `<button class="gchip" data-avsq="${t.id}" aria-pressed="${b.squadre.includes(t.id)}">${esc(siglaSquadra(t))}</button>`).join('')}</div>
     <div class="grid" style="margin-top:10px">
@@ -116,7 +114,6 @@ function viewAvvisi(){
     <textarea id="av_txt" data-avf="testo" rows="6" placeholder="Scrivi l'avviso. Le parti tra [ ] vanno completate.">${esc(b.testo)}</textarea>
     <div class="row" style="margin-top:10px;gap:8px">
       <button class="btn primary" data-avpub="1" ${b.testo.trim() ? '' : 'disabled'}>Pubblica avviso</button>
-      <a class="btn" href="https://wa.me/?text=${encodeURIComponent(testoWhatsapp(b))}" target="_blank" rel="noopener">Anteprima su WhatsApp</a>
     </div>
   </section>` : ''}
   <section class="panel">

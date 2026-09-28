@@ -67,6 +67,8 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - Server Actions per i form (vedi `app/auth/actions.ts`), `useActionState` nei componenti client.
 
 ## Regole
+- **Niente WhatsApp** (né link wa.me né "manda su WhatsApp"): comunicazioni, avvisi, convocazioni e PIN passano solo dall'app
+  (i PIN delle famiglie si consegnano col foglio PIN in PDF).
 - Permessi SEMPRE nel database con Row Level Security; l'interfaccia li rispecchia soltanto.
   Funzioni SQL disponibili: `mio_ruolo()`, `vede_tutto()`, `is_admin()`.
 - Ogni modifica al database = un nuovo file in `supabase/migrations/` con numero progressivo
@@ -176,14 +178,14 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   blocco 0015 non deve scattare) → `/portale/#famiglia=PIN` → `famiglia.js`: `famiglia_get` (solo il suo ragazzo, le sue
   convocazioni, avvisi ed eventi della squadra), `famiglia_contatti` (genitori e taglie), `famiglia_rispondi` (ci sarà / non ci
   sarà, chiave = calId o "data|avversario"). Il mister vede le risposte in Convocazioni (`coach_risposte`, `rispostaFamiglia()`).
-  Segreteria: `segreteria.js` (area Segreteria → Tesserati), PIN alla famiglia con "Manda su WhatsApp" (wa.me al genitore).
+  Segreteria: `segreteria.js` (area Segreteria → Tesserati), PIN alla famiglia col foglio PIN in PDF (`fogliPin()`, 8 per pagina).
   Anagrafica iniziale da importare dal file della segreteria (in `private/`, mai su git)
 - 0029: squadra con `organizza: true` (responsabile organizzativo, casella in Società → Nome e categoria): `coach_get` gli dà
   tutte le squadre senza PIN e `calendar/*`; `coach_set` scrive `calendar/*`, `shared/eventi`, `shared/avvisi`. Tutti i mister
   leggono `shared/eventi` e `shared/avvisi`. Nel Portale `public/portale/js/organizzazione.js`: niente area Eventi (gli eventi si creano e
   modificano in Calendario → Tutte le squadre, `formEvento()`, "+ Nuovo evento"), Calendario → Avvisi (admin e organizzativo),
   Home dell'organizzativo, amichevoli e tornei di ogni squadra modificabili in Tutte le squadre (il campionato no), eventi nei
-  calendari (`eventoCome`, colonna del luogo), avvisi per 14 giorni nella Home dei mister, "Manda su WhatsApp" (wa.me)
+  calendari (`eventoCome`, colonna del luogo), avvisi per 14 giorni nella Home dei mister (e delle famiglie)
 - 0028: squadra con `vedeTutte: true` in `shared/teams` (preparatori dei portieri, `t_nt2m1iv`): `coach_get` le dà tutte le
   squadre senza PIN e rosa/foglio/calendario/registro di tutte; nel Portale `squadraPropria` + `guardaAltra()` = sola lettura
   sulle altre (`save()` non scrive), la propria (presenze) la modificano. `coach_giocatori(pin)`: Scouting → Giocatori, osservati
