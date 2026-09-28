@@ -1,7 +1,10 @@
 // =====================================================================
 // Calendari ufficiali → calendario delle nostre squadre nel Portale (docs calendar/<squadra>)
-// Uso: node --env-file=.env.local scripts/import-calendari/portale.mjs [--conferma]
+// Uso: node --env-file=.env.local scripts/import-calendari/portale.mjs [--squadra=t_u15] [--date-ufficiali] [--conferma]
 // (dopo importa.mjs; senza --conferma è una simulazione)
+// --squadra=<id>: solo quella squadra del Portale;
+// --date-ufficiali: data e ora del calendario ufficiale anche per le gare non ancora confermate da un comunicato
+//   (per correggere date scritte a mano sbagliate, es. il sabato del weekend al posto della domenica)
 //
 // Squadra del Portale ↔ gare: "Under 14 - Provinciale" prende le gare "Under 14 … Provinciali …"
 // in cui gioca l'Academy Casatese Merate. Regole:
@@ -25,6 +28,8 @@ if (!url || !serviceKey) {
 }
 const db = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const CONFERMA = process.argv.includes('--conferma');
+const SOLO = process.argv.find((a) => a.startsWith('--squadra='))?.slice(10);
+const DATE_UFFICIALI = process.argv.includes('--date-ufficiali');
 const NOSTRA = 'Academy Casatese Merate';
 
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
@@ -68,7 +73,7 @@ for (const g of gareData) {
 }
 if (trovate) console.log(`📍 coordinate trovate per ${trovate} gare`);
 
-for (const team of teamsDoc.data.items ?? []) {
+for (const team of (teamsDoc.data.items ?? []).filter((t) => !SOLO || t.id === SOLO)) {
   const cat = String(team.category ?? '');
   const eta = cat.match(/under\s*(\d+)/i)?.[1];
   const livello = Object.entries(LIVELLI).find(([k]) => cat.toLowerCase().includes(k))?.[1];
@@ -103,8 +108,8 @@ for (const team of teamsDoc.data.items ?? []) {
     }
     const diversa = m.date !== date || (!g.ora_da_definire && (m.time || '').padStart(5, '0') !== time);
     if (!diversa) continue;
-    if (g.stato === 'confermata' || g.stato === 'variata') {
-      console.log(`   ✎ ${m.opponent}: ${m.date} ${m.time} → ${date} ${ufficiale.time} (${g.comunicato})`);
+    if (g.stato === 'confermata' || g.stato === 'variata' || DATE_UFFICIALI) {
+      console.log(`   ✎ ${m.opponent}: ${m.date} ${m.time} → ${date} ${ufficiale.time} (${g.comunicato || 'calendario ufficiale'})`);
       Object.assign(m, { date, time: ufficiale.time || m.time });
       aggiornate++;
     } else {

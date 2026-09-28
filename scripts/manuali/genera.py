@@ -265,8 +265,7 @@ Scarica il foglio gara in PDF.</li>
 <h2>3. Home e Squadra</h2>
 {fig('p-home', '''<h3>Home</h3><ul>
 <li><b>Weekend</b>: gli impegni di sabato e domenica di questa settimana (campionato, amichevoli, tornei) con ora, luogo
-e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario. Nell'attività di base (da Under 13
-in giù) ci sono gli impegni di <b>tutte le squadre</b>, con la tua evidenziata.</li>
+e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario.</li>
 <li>I colori dicono dove si gioca: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta.</li>
 <li><b>Allenamento di oggi</b>: se le presenze non sono ancora segnate, un tocco ti porta lì.</li>
 <li><b>Da fare</b>: tabellini da compilare, gol da inserire, portieri da segnare. Tocca una riga per andarci.</li>
@@ -277,8 +276,8 @@ Il <b>ruolo</b> di ogni giocatore lo scegli tu: da Under 13 in su portiere, dife
 da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai inserire i gol subiti nelle partite.</p>
 <p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>
 <h3>Squadra → Calendario</h3>
-<p>Le partite ufficiali, le amichevoli e i tornei, inseriti dalla società. In alto scegli <b>Solo</b> la tua squadra oppure
-<b>Tutte le squadre</b>: le prossime partite di tutta la società, con la tua evidenziata. Colori: <b>blu</b> in casa a Merate,
+<p>Tutta la stagione: partite ufficiali, amichevoli e tornei, inseriti dalla società. In alto scegli <b>Solo</b> la tua squadra
+oppure <b>Tutte le squadre</b>: la stagione di tutta la società, con la tua evidenziata. Le partite già giocate sono più chiare. Colori: <b>blu</b> in casa a Merate,
 <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le tue amichevoli le aggiungi da
 <b>Statistiche → Partite → + Amichevole</b>: compaiono anche qui.</p>''', 'Rosa')}
 </section>

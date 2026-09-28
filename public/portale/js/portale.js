@@ -68,7 +68,7 @@ function renderNav(){
 
 /* ---------- Home ---------- */
 function daysUntil(d){ const a = new Date(todayISO()+'T12:00:00'), b = new Date(d+'T12:00:00'); return Math.round((b-a)/86400000); }
-/* ---------- Calendari di tutte le squadre (Calendario "Tutte le squadre", Home dell'attività di base) ----------
+/* ---------- Calendari di tutte le squadre (Calendario → "Tutte le squadre") ----------
    Mister: funzione coach_calendari (0027, solo nome, categoria e partite); admin e direttori leggono i documenti.
    Si ricaricano al massimo ogni minuto; se non si possono leggere resta il calendario della propria squadra. */
 let tuttiCal = null, tuttiCalAt = 0, tuttiCalInCorso = false, calScope = 'mia';
@@ -88,7 +88,7 @@ async function caricaTuttiCal(){
     }
   }catch(e){ /* funzione non ancora nel database o rete assente: solo la propria squadra */ }
   tuttiCalAt = Date.now(); tuttiCalInCorso = false;
-  if(tab==='home' || tab==='calendario') render();
+  if(tab==='calendario') render();
 }
 /* Partite di tutte le squadre, ognuna con la sua squadra (la propria dai dati aperti, amichevoli del mister comprese) */
 function partiteTutte(){
@@ -142,14 +142,13 @@ function viewHome(){
   const {team} = computeStats();
   const todo = homeTodo(), maxTodo = 6;
   const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
-  /* Impegni di sabato e domenica di questa settimana (campionato, amichevoli e tornei), colorati per calendario.
-     Attività di base: quelli di tutte le squadre, la propria evidenziata */
-  const adb = isAdb(); if(adb) caricaTuttiCal();
-  const [sab, dom] = weekendISO(), wk = (adb ? partiteTutte() : allCalendar()).filter(m => m.date===sab || m.date===dom)
+  /* Anteprima: gli impegni della squadra di sabato e domenica di questa settimana (campionato, amichevoli e tornei),
+     colorati per calendario. Tutta la stagione e le altre squadre sono in Squadra → Calendario */
+  const [sab, dom] = weekendISO(), wk = allCalendar().filter(m => m.date===sab || m.date===dom)
     .sort((a,b) => (a.date+(a.time||'').padStart(5,'0')).localeCompare(b.date+(b.time||'').padStart(5,'0')));
   const matchCard = `<div class="hcard hmatch hwide">
-      <div class="hlabel">Weekend${adb ? ' di tutte le squadre' : ''} · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
-      ${wk.length ? `${legendaCal()}<ul class="wklist">${wk.map(m => rigaPartita(m, adb)).join('')}</ul>`
+      <div class="hlabel">Weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
+      ${wk.length ? `${legendaCal()}<ul class="wklist">${wk.map(m => rigaPartita(m, false)).join('')}</ul>`
         : `<p class="note">Nessun impegno questo weekend.${nm ? ` Prossima partita: ${weekday(nm.date)} ${fmtDate(nm.date)} · ${esc(nm.opponent||'')} (${whenTxt(nm.date)}).` : ''}</p>`}
       ${nm ? `<div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button><button class="btn small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
         : '<div class="row" style="margin-top:12px"><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>'}
@@ -244,11 +243,11 @@ function viewCalendario(){
       ${legendaCal()}</div>`;
   if(calScope === 'tutte'){
     caricaTuttiCal();
-    const ms = partiteTutte().filter(m => !m.date || m.date >= today);
+    const ms = partiteTutte();
     return `<section class="panel">
       <h2>Calendario · tutte le squadre</h2>
       ${scelta}
-      <p class="hint">Le prossime partite di tutte le squadre della società, dalla più vicina. La tua squadra è evidenziata.</p>
+      <p class="hint">Tutta la stagione di tutte le squadre della società: le partite già giocate sono più chiare, la tua squadra è evidenziata.</p>
       ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
       ${ms.length ? `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>` : '<p class="empty">Nessuna partita in programma.</p>'}
     </section>`;
@@ -269,12 +268,12 @@ function viewCalendario(){
           <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
         </div>
       </div>`).join('')
-    : `<ul class="wklist callist">${listaCalendario(cal, false)}</ul>`;
+    : `<ul class="wklist callist">${listaCalendario(allCalendar().sort((a,b)=>((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0'))), false)}</ul>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
     ${scelta}
-    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
-    ${cal.length ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
+    <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Tutta la stagione della squadra: campionato, amichevoli e tornei. Le partite già giocate sono più chiare.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
+    ${(A ? cal.length : allCalendar().length) ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
   </section>
   ${viewFriendlies()}

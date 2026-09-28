@@ -125,7 +125,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   il campionato resta quello ufficiale). Nessun aggiornamento automatico: quando l'utente chiede "aggiorna il calendario",
   Claude riscarica i tre calendari (list_events da oggi al 30/06 della stagione, tutte le pagine) nei file di
   `private/google-calendar/`, fa la simulazione e poi `--conferma`.
-  La Home del Portale mostra gli impegni del weekend della settimana in corso (attività di base: di tutte le squadre).
+  La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha tutta la
+  stagione, "Solo Uxx" o "Tutte le squadre".
+  `portale.mjs --squadra=<id> --date-ufficiali`: date e ore del calendario ufficiale anche per le gare non confermate
+  (usato per l'U15, scritta a mano col sabato del weekend al posto del giorno di gioco).
   Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.
   Comunicati settimanali: PDF in `private/comunicati/`, `comunicati.py` legge le tabelle "GARA VARIATA" e le regole
   "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
@@ -147,7 +150,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
-  Home dell'attività di base); admin e direttori leggono i `calendar/<squadra>` direttamente
+  in Squadra → Calendario); admin e direttori leggono i `calendar/<squadra>` direttamente
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano
   chi l'ha inserita (solo gare a mano) e admin/direttori; una gara dei calendari modificata a mano diventa "variata"
   ("Modificata a mano"), così `importa.mjs` non la sovrascrive. Partite cliccabili in Home, Gare e Attività
