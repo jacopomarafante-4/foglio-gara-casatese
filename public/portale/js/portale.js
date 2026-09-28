@@ -18,11 +18,11 @@ const AREAS = [
   {k:'gara', label:'Gara', tabs:['partita','convocazioni','formazione','piazzati','pdf']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test']},
   {k:'statistiche', label:'Statistiche', tabs:['statallen','statpartite']},
-  {k:'scouting', label:'Scouting', tabs:['segnala'], coach:true},
+  {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'Calendario', partita:'Partita', convocazioni:'Convocazioni', formazione:'Formazione',
-  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre', segnala:'Segnala un giocatore'};
+  piazzati:'Piazzati', pdf:'Foglio gara PDF', statallen:'Allenamento', statpartite:'Partite', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre', segnala:'Segnala un giocatore', giocatori:'Giocatori'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', tabellini:'statpartite', registro:'allenamenti'};
 const areaLast = {};
@@ -247,7 +247,7 @@ function viewStorico(){
 }
 /* ---------- Vista a giornata (come Google Calendar): una colonna per calendario, ore in verticale ----------
    Si conosce solo l'inizio della gara: il blocco dura in modo indicativo 60' (fino a U10), 75' (U11–U13), 90' (dopo). */
-let calVista = 'giorno', calGiorno = null, calScelta = null;
+let calVista = 'giorno', calGiorno = null, calScelta = null, calCategoria = '';
 const CG_ORA = 56;                                   // pixel per ora
 const minuti = t => { const [h, m] = (t||'').split(':').map(Number); return h*60 + (m||0); };
 const durataPartita = m => { const e = etaSquadra(m.team); return e <= 10 ? 60 : e <= 13 ? 75 : 90; };
@@ -299,6 +299,10 @@ function vistaGiorno(ms){
     ${(() => { const m = delGiorno.find(x => `${x.team?.id}|${x.id}` === calScelta); return m ? `<ul class="wklist callist cg-dettaglio">${rigaPartita(m, true, true)}</ul>` : ''; })()}
     <p class="note">Tocca una partita per i dettagli. Durata dei blocchi indicativa: si conosce l'ora d'inizio della partita.</p>`;
 }
+document.addEventListener('change', e => {
+  if(!e.target.dataset?.calcat) return;
+  calCategoria = e.target.value; calGiorno = null; calScelta = null; render();
+});
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-calday],[data-calvista],[data-calev]'); if(!b) return;
   if(b.dataset.calvista){ calVista = b.dataset.calvista; render(); return; }
@@ -312,13 +316,19 @@ function viewCalendario(){
       ${legendaCal()}</div>`;
   if(calScope === 'tutte'){
     caricaTuttiCal();
-    const ms = partiteTutte().filter(daGiocare);
+    /* Filtro per categoria: tutte, oppure una sola squadra */
+    const squadre = (tuttiCal || S.teams).filter(t => t.id === curTeam || (t.matches || []).length);
+    if(calCategoria && !squadre.some(t => t.id === calCategoria)) calCategoria = '';
+    const ms = partiteTutte().filter(daGiocare).filter(m => !calCategoria || m.team?.id === calCategoria);
+    const filtro = `<label class="note" for="cal_cat">Categoria</label> <select id="cal_cat" data-calcat="1"><option value="">Tutte le categorie</option>${
+      squadre.map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category || t.name)}</option>`).join('')}</select>`;
     const vista = `<div class="seg" role="group" aria-label="Vista"><button data-calvista="giorno" aria-pressed="${calVista==='giorno'}">Giorno</button><button data-calvista="elenco" aria-pressed="${calVista==='elenco'}">Elenco</button></div>`;
     return `<section class="panel">
       <h2>Calendario · tutte le squadre</h2>
       ${scelta}
       <div class="row" style="justify-content:space-between;margin-bottom:8px">
         <p class="hint" style="margin:0">Le partite da giocare di tutte le squadre, fino a fine stagione. La tua squadra è evidenziata.</p>${vista}</div>
+      <div class="row" style="margin-bottom:8px;gap:8px">${filtro}</div>
       ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
       ${!ms.length ? '<p class="empty">Nessuna partita in programma.</p>'
         : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>`}
@@ -377,6 +387,53 @@ function registroPage(title, body, hint){
    Passa dalla funzione coach_segnala (col PIN della squadra, migrazione 0007): il mister
    manda la segnalazione ma non vede l'archivio. La bozza resta in segDraft mentre si scrive,
    così gli aggiornamenti che ridisegnano la pagina non cancellano niente. */
+/* ---------- Scouting → Giocatori: gli osservati dell'annata della squadra (coach_giocatori, 0028) ----------
+   Scheda base, segnalazioni e valutazioni; mai i contatti delle famiglie. */
+let giocatoriAnnata = null, giocatoriErrore = '', giocatoriCerca = '';
+const STATI_SCOUTING = {in_lista:'In lista', in_osservazione:'In osservazione', da_rivedere:'Da rivedere', inserito:'Inserito', da_non_inserire:'Da non inserire'};
+const GIUDIZI = {da_prendere:'Da prendere', da_rivedere:'Da rivedere', non_a_livello:'Non a livello'};
+function viewGiocatori(){
+  if(!coachPin) return `<h2>Giocatori</h2><section class="panel"><p class="empty">L'elenco si vede entrando col PIN della squadra.</p></section>`;
+  if(giocatoriAnnata === null && !giocatoriErrore){
+    giocatoriAnnata = undefined;
+    supabaseClient.rpc('coach_giocatori', {p_pin: coachPin}).then(({data, error}) => {
+      if(error){ giocatoriErrore = 'Elenco non disponibile.'; giocatoriAnnata = null; } else giocatoriAnnata = data || [];
+      if(tab==='giocatori') render();
+    });
+  }
+  const eta = etaSquadra(S.teams.find(t => t.id === (squadraPropria || curTeam))), stagione = +todayISO().slice(0,4) + (+todayISO().slice(5,7) >= 7 ? 1 : 0), annata = eta < 99 ? stagione - eta : null;
+  const q = giocatoriCerca.trim().toLowerCase();
+  const tutti = giocatoriAnnata || [], lista = tutti.filter(g => !q || [g.cognome, g.nome, g.descrizione, g.societa].join(' ').toLowerCase().includes(q));
+  const scheda = g => {
+    const nome = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
+    const val = g.valutazioni.map(v => `<div class="gval">
+        <div class="note">${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
+        <div class="garee">${[['Tecnica','tecnica'],['Motoria','motoria'],['Tattica','tattica'],['Mentale','mentale']].map(([l,k]) => `<span title="${esc(v[k+'_note']||'')}"><b>${v[k]}</b> ${l}</span>`).join('')}</div>
+        ${[['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']].filter(([k]) => v[k+'_note']).map(([k,l]) => `<p class="gtxt"><b>${l}:</b> ${esc(v[k+'_note'])}</p>`).join('')}
+        <p class="gtxt"><b>${esc(GIUDIZI[v.giudizio] || v.giudizio)}</b>${v.commento ? ' · '+esc(v.commento) : ''}</p></div>`).join('');
+    const seg = g.segnalazioni.map(x => `<div class="gval"><div class="note">${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ' · voto '+x.voto : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('');
+    return `<details class="gcard"><summary>
+        <div><b>${esc(nome)}</b><div class="note">${[RUOLI_SCOUTING[g.ruolo], g.societa, g.piede ? 'piede '+g.piede : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
+        <span class="gstato">${esc(STATI_SCOUTING[g.stato] || g.stato)}</span></summary>
+      ${val ? `<h4>Valutazioni</h4>${val}` : ''}${seg ? `<h4>Segnalazioni</h4>${seg}` : ''}${!val && !seg ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}
+    </details>`;
+  };
+  return `<h2>Giocatori${annata ? ' · annata '+annata : ''}</h2>
+  <p class="hint">I giocatori osservati dallo scouting della tua annata. Tocca un nome per segnalazioni e valutazioni. Per segnalarne uno nuovo usa "Segnala un giocatore".</p>
+  <section class="panel">
+    ${!annata ? '<p class="empty">Questa squadra non ha un\'annata: l\'elenco è per le squadre Under.</p>'
+      : giocatoriErrore ? `<p class="empty">${esc(giocatoriErrore)}</p>`
+      : giocatoriAnnata === undefined ? '<p class="note">Carico i giocatori…</p>'
+      : `<input id="gc_cerca" type="search" value="${esc(giocatoriCerca)}" placeholder="Cerca per nome o società" aria-label="Cerca giocatore">
+        <p class="note" style="margin:8px 0">${lista.length} ${lista.length===1 ? 'giocatore' : 'giocatori'}${q ? ' su '+tutti.length : ''}</p>
+        ${lista.length ? lista.map(scheda).join('') : '<p class="empty">Nessun giocatore.</p>'}`}
+  </section>`;
+}
+document.addEventListener('input', e => {
+  if(e.target.id !== 'gc_cerca') return;
+  giocatoriCerca = e.target.value; const pos = e.target.selectionStart; render();
+  const c = $('#gc_cerca'); if(c){ c.focus(); c.setSelectionRange(pos, pos); }
+});
 let segDraft = {data: todayISO()}, segEsito = null, segInvio = false, societaNomi = null;
 const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampista:'Centrocampista', attaccante:'Attaccante'};
 /* stesso elenco di annateDisponibili() in lib/tipi.ts */

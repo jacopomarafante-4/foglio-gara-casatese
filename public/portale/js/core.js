@@ -94,7 +94,11 @@ const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase
    Società (scheda "squadre" = documento shared/teams, 0020). */
 let staffRole = null;
 const isDirettore = () => staffRole === 'direttore';
-const readOnly = () => isDirettore() && tab !== 'squadre';
+/* Preparatori dei portieri (squadra con vedeTutte, 0028): entrano col PIN come un mister e guardano anche le altre
+   squadre, in sola lettura; la propria (presenze, registro) la modificano */
+let squadraPropria = null;
+const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
+const readOnly = () => (isDirettore() && tab !== 'squadre') || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
 const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore')));
 async function loadStaffRole(s){
@@ -190,7 +194,7 @@ function payload(name){
 }
 function save(name){
   /* Sola lettura (direttori, tranne Società): niente salvataggio, si ricarica il dato vero e la modifica sparisce */
-  if(isDirettore() && (name !== 'teams' || tab !== 'squadre')){
+  if((isDirettore() && (name !== 'teams' || tab !== 'squadre')) || guardaAltra()){
     setStatus('Sola lettura: nessuna modifica');
     db?.doc(docPath(name)).get().then(snap => { applyDoc(name, snap.data()); render(); }).catch(() => {});
     return;
@@ -345,6 +349,10 @@ async function coachLogin(pin){
   if(!tm) return false;
   db = makeCoachDb(supabaseClient, pin); coachPin = pin;
   S.teams = [withCoaches(tm)]; misterName = tm.mister || ''; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
+  if(tm.vedeTutte){
+    try{ const snap = await db.doc('shared/teams').get(); const items = snap.data()?.items;
+      if(Array.isArray(items) && items.length){ S.teams = items.map(withCoaches); squadraPropria = tm.id; } }catch(e){ /* 0028 non ancora eseguita: solo la propria squadra */ }
+  }
   if(!IN_APP_UNICA && !new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
   db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
   setStatus('Sincronizzato');

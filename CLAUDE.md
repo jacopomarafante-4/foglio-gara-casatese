@@ -151,6 +151,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
+- 0028: squadra con `vedeTutte: true` in `shared/teams` (preparatori dei portieri, `t_nt2m1iv`): `coach_get` le dà tutte le
+  squadre senza PIN e rosa/foglio/calendario/registro di tutte; nel Portale `squadraPropria` + `guardaAltra()` = sola lettura
+  sulle altre (`save()` non scrive), la propria (presenze) la modificano. `coach_giocatori(pin)`: Scouting → Giocatori, osservati
+  dell'annata della squadra (esclusa l'Academy) con segnalazioni e valutazioni, mai contatti né note del giocatore.
+  Presenze dei preparatori: `scripts/import-adb/importa.mjs --squadra=SGS` da `private/adb/SGS.csv`
 - 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
   in Squadra → Calendario); admin e direttori leggono i `calendar/<squadra>` direttamente
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano

@@ -1,11 +1,13 @@
 // =====================================================================
 // Attività di base: squadre, rose e presenze nel Portale dai fogli presenze (CSV)
-// Uso: node --env-file=.env.local scripts/import-adb/importa.mjs [--conferma]
+// Uso: node --env-file=.env.local scripts/import-adb/importa.mjs [--squadra=SGS] [--conferma]
 // Senza --conferma è una simulazione.
 //
-// I fogli stanno in private/adb/U13.csv … U8.csv (NON su git: nomi di minori), scaricati dai fogli Google
+// I fogli stanno in private/adb/U13.csv … U8.csv, SGS.csv (NON su git: nomi di minori), scaricati dai fogli Google
 // "ACM_Uxx_anno_PRESENZE" (foglio ALLENAMENTI): N°, Cognome, Nome, [Ruoli], poi una colonna per allenamento
 // sotto il mese. Valori: 1 presente, 0/A/V assente giustificato (motivi familiari), M malato, I infortunio.
+// Mese non scritto sopra una colonna: quello a sinistra, o il successivo quando il giorno torna indietro
+// (nel foglio dei preparatori dei portieri i mesi sono scritti solo in parte).
 // Crea solo ciò che manca: una squadra, una rosa o un registro già presenti non si toccano.
 // =====================================================================
 import { readFile } from 'node:fs/promises';
@@ -30,7 +32,10 @@ const SQUADRE = [
   { file: 'U10', id: 't_u10', category: 'Under 10 - Attività di base', annata: 2017 },
   { file: 'U9', id: 't_u9', category: 'Under 9 - Attività di base', annata: 2018 },
   { file: 'U8', id: 't_u8', category: 'Under 8 - Attività di base', annata: 2019 },
+  // Preparatori dei portieri: la squadra "SGS" esiste già in Società
+  { file: 'SGS', id: 't_nt2m1iv', category: 'SGS', annata: 'portieri' },
 ];
+const SOLO = process.argv.find((a) => a.startsWith('--squadra='))?.slice(10);
 const MESI = { AGOSTO: 8, SETTEMBRE: 9, OTTOBRE: 10, NOVEMBRE: 11, DICEMBRE: 12, GENNAIO: 1, FEBBRAIO: 2, MARZO: 3, APRILE: 4, MAGGIO: 5, GIUGNO: 6 };
 const PRESENZA = { '1': 'P', '0': 'FAM', A: 'FAM', M: 'MAL', I: 'INF', V: 'FAM' };   // assenze giustificate come in U14/U15
 
@@ -54,18 +59,22 @@ const proprio = (s) => s.trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|[
 const { data: teamsDoc } = await db.from('docs').select('data').eq('path', 'shared/teams').single();
 const teams = teamsDoc.data.items ?? [];
 
-for (const sq of SQUADRE) {
+for (const sq of SQUADRE.filter((x) => !SOLO || x.file === SOLO || x.id === SOLO)) {
   const righe = leggiCsv(await readFile(`${CARTELLA}${sq.file}.csv`, 'utf8'));
   const [mesi, giorni] = righe;
   const conRuoli = /ruol/i.test(mesi[3] ?? '');
   const prima = conRuoli ? 4 : 3;
   // Date degli allenamenti: il mese si trascina da sinistra a destra fino al successivo
-  let mese = null;
+  // Prima del primo mese scritto: il mese prima (es. "31" sotto una colonna senza mese, prima di SETTEMBRE)
+  const primoScritto = mesi.slice(prima).map((x) => MESI[(x ?? '').trim().toUpperCase()]).find(Boolean);
+  let mese = primoScritto ? (primoScritto + 10) % 12 + 1 : null, giornoPrima = 0;
   const date = [];
   for (let c = prima; c < giorni.length; c++) {
     const m = MESI[(mesi[c] ?? '').trim().toUpperCase()];
-    if (m) mese = m;
     const g = Number(giorni[c]);
+    if (m) mese = m;
+    else if (mese && Number.isInteger(g) && g >= 1 && g < giornoPrima) mese = mese % 12 + 1;   // il giorno torna indietro
+    if (Number.isInteger(g) && g >= 1) giornoPrima = g;
     if (!mese || !Number.isInteger(g) || g < 1) { date.push(null); continue; }
     const anno = mese >= 8 ? ANNO : ANNO + 1;
     date.push(`${anno}-${String(mese).padStart(2, '0')}-${String(g).padStart(2, '0')}`);

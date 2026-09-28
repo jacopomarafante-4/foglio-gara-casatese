@@ -139,7 +139,11 @@ stati dei giocatori osservati, gare da vedere, importazione delle distinte.</td>
 cambia gli stati, gestisce gare e doppioni).
 Vede anche PIN e contatti delle famiglie.</td></tr>
 <tr><td><b>Mister</b></td><td>Portale, solo la sua squadra</td><td>Prepara le partite (convocazioni, formazione, foglio gara), segna presenze,
-test e tabellini, guarda le statistiche, segnala giocatori allo scouting. Non vede l'archivio scouting.</td></tr>
+test e tabellini, guarda le statistiche, segnala giocatori allo scouting e vede i giocatori osservati della sua annata
+(con segnalazioni e valutazioni, senza contatti).</td></tr>
+<tr><td><b>Preparatori dei portieri</b></td><td>Portale: la loro squadra e, in sola lettura, tutte le altre</td><td>Segnano
+le presenze dei loro allenamenti; guardano rosa, calendario, gara, presenze e statistiche di ogni squadra senza modificarle;
+segnalano giocatori allo scouting.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
@@ -240,8 +244,8 @@ mister = copertina('Manuale del mister', 'Portale squadre: preparare le partite,
 <li>Aggiungere o togliere giocatori dalla rosa</li>
 <li>Cambiare le partite ufficiali del calendario</li>
 <li>Creare o cambiare gli schemi comuni dei calci piazzati</li>
-<li>Vedere le altre squadre</li>
-<li>Vedere l'archivio scouting e le segnalazioni degli altri</li>
+<li>Vedere le altre squadre (solo il loro calendario)</li>
+<li>Vedere l'archivio scouting delle altre annate e i contatti delle famiglie</li>
 <li>Scaricare il report PDF delle statistiche (lo fa la società)</li></ul></div>
 </div>
 {ACCESSO}
@@ -377,8 +381,12 @@ dall'area <b>Scouting</b>.</p><ol class="passi">
 <li><b>Cognome e nome</b>, oppure, se non li sai, <b>come riconoscerlo</b> ("N.8, biondo, mancino").</li>
 <li><b>Cosa hai visto</b>: la parte più importante, solo aspetti tecnici e sportivi.</li>
 <li>Prima impressione da 1 a 5, partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
-<p>La segnalazione arriva firmata con il tuo nome e la tua squadra. Non vedi l'archivio scouting: se il ragazzo c'è già,
-la tua segnalazione si aggiunge alla sua scheda.</p>''', 'Segnala un giocatore')}
+<p>La segnalazione arriva firmata con il tuo nome e la tua squadra. Se il ragazzo c'è già, la tua segnalazione si aggiunge
+alla sua scheda.</p>
+<h3>Scouting → Giocatori</h3>
+<p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), con ruolo, società e stato
+(In lista, In osservazione, Da rivedere…). Cerca per nome o società; tocca un nome per vedere valutazioni (le 4 aree) e
+segnalazioni. I contatti delle famiglie non si vedono.</p>''', 'Segnala un giocatore')}
 </section>
 """
 

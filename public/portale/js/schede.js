@@ -87,7 +87,9 @@ function renderChrome(){
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
     ? `${isDirettore() ? `<span class="badge dir" title="Squadre in sola lettura, Società e Scouting modificabili">Direttore${readOnly() ? ' · sola lettura' : ''}</span>` : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
-    : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
+    : squadraPropria
+      ? `<span class="badge coach">${esc(misterName || 'Preparatore')}</span><label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}${t.id===squadraPropria?' (la tua)':''}</option>`).join('')}</select>${guardaAltra() ? '<span class="badge dir">Sola lettura</span>' : ''}<button class="logout" data-act="logout">Esci</button>`
+      : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla Home del Portale (il PIN del mister non sta nell'indirizzo: resta entrato)
   if(IN_APP_UNICA) $('#homelink').href = '#/home'; else $('#homelink').removeAttribute('href');
   renderNav();
@@ -153,6 +155,7 @@ function render(){
   else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
   else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
   else if(tab==='segnala') v.innerHTML = viewSegnala();
+  else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
