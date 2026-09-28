@@ -289,6 +289,25 @@ a.iconbtn2{filter:none;opacity:1}
 .todo button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;background:none;padding:11px 2px;font-size:15px;font-weight:600;text-align:left;cursor:pointer;color:var(--ink)}
 .todo button span{color:var(--muted);font-size:20px}
 .kpis.hk{margin-top:4px}
+.wklist{list-style:none;margin:0;padding:0}
+.wklist li{display:flex;gap:12px;align-items:flex-start;padding:9px 0}
+.wklist li + li{border-top:1px solid var(--line)}
+.wkwhen{flex:0 0 52px;display:flex;flex-direction:column;font-family:var(--cond);line-height:1.1}
+.wkwhen b{font-size:18px}
+.wkwhen span{color:var(--muted);font-weight:700}
+.wkmatch{font-family:var(--cond);font-weight:700;font-size:19px;line-height:1.15}
+/* I tre calendari della società: Merate blu, Cernusco oro, Trasferta rosso */
+.cal-merate{--calc:#003DA5}.cal-cernusco{--calc:#D4AF37}.cal-trasferta{--calc:#C41E3A}
+.calleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:700;margin:2px 0 6px}
+.calleg span{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+.calleg span::before{content:"";width:11px;height:11px;border-radius:3px;background:var(--calc)}
+.wklist li[class*="cal-"]{border-left:4px solid var(--calc);padding-left:10px}
+.wklist li.mia{background:color-mix(in srgb,var(--calc) 12%,transparent)}
+.wklist li.mia .wkmatch::after{content:" · la tua squadra";font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted)}
+.wklist li.past{opacity:.55}
+.callist .wkwhen{flex-basis:88px}
+.wklist li.calmese{display:block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:13px;padding:16px 0 4px;border-top:0}
+.teamcard[class*="cal-"]{border-left:5px solid var(--calc)}
 /* PDF */
 .pages{display:grid;gap:14px;margin-top:14px}
 .pages canvas{width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);background:#fff}

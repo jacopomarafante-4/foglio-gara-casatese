@@ -119,6 +119,14 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `chiave` unica; `gara_unica` ora comprende la categoria. Importazione: `scripts/import-calendari/` (`prepara.py` legge i
   PDF con pdfplumber e abbina i nomi all'elenco campi del girone; `importa.mjs` simula, `--conferma` scrive; reimportando
   non tocca le gare già confermate/variate). Il pannello Gare carica solo le gare delle società che interessano.
+  Calendari Google della società (MERATE e CERNUSCO = in casa, TRASFERTA): Claude li scarica col connettore Google Calendar in
+  `private/google-calendar/*.json`, poi `google.mjs [--conferma]` mette amichevoli, tornei e attività di base nel `calendar/<squadra>`
+  del Portale (squadra dall'annata del titolo "AdB - 2014 - …", `friendly`, `tipo`, `note` senza contatti, `gcal` = id evento;
+  il campionato resta quello ufficiale). Nessun aggiornamento automatico: quando l'utente chiede "aggiorna il calendario",
+  Claude riscarica i tre calendari (list_events da oggi al 30/06 della stagione, tutte le pagine) nei file di
+  `private/google-calendar/`, fa la simulazione e poi `--conferma`.
+  La Home del Portale mostra gli impegni del weekend della settimana in corso (attività di base: di tutte le squadre).
+  Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.
   Comunicati settimanali: PDF in `private/comunicati/`, `comunicati.py` legge le tabelle "GARA VARIATA" e le regole
   "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
   `portale.mjs`. Confermata = gara tra la data del C.U. e la domenica dopo, non variata dal C.U. del suo ente
@@ -138,6 +146,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
+- 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
+  Home dell'attività di base); admin e direttori leggono i `calendar/<squadra>` direttamente
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano
   chi l'ha inserita (solo gare a mano) e admin/direttori; una gara dei calendari modificata a mano diventa "variata"
   ("Modificata a mano"), così `importa.mjs` non la sovrascrive. Partite cliccabili in Home, Gare e Attività

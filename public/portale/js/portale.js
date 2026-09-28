@@ -68,6 +68,59 @@ function renderNav(){
 
 /* ---------- Home ---------- */
 function daysUntil(d){ const a = new Date(todayISO()+'T12:00:00'), b = new Date(d+'T12:00:00'); return Math.round((b-a)/86400000); }
+/* ---------- Calendari di tutte le squadre (Calendario "Tutte le squadre", Home dell'attività di base) ----------
+   Mister: funzione coach_calendari (0027, solo nome, categoria e partite); admin e direttori leggono i documenti.
+   Si ricaricano al massimo ogni minuto; se non si possono leggere resta il calendario della propria squadra. */
+let tuttiCal = null, tuttiCalAt = 0, tuttiCalInCorso = false, calScope = 'mia';
+async function caricaTuttiCal(){
+  if(tuttiCalInCorso || Date.now() - tuttiCalAt < 60000) return;
+  tuttiCalInCorso = true;
+  try{
+    if(coachPin){
+      const { data, error } = await supabaseClient.rpc('coach_calendari', { p_pin: coachPin });
+      if(error) throw error;
+      tuttiCal = data || [];
+    } else if(db){
+      tuttiCal = await Promise.all(S.teams.map(async t => {
+        const snap = await db.doc('calendar/'+t.id).get();
+        return {id:t.id, name:t.name, category:t.category, matches:(snap.exists && snap.data()?.matches) || []};
+      }));
+    }
+  }catch(e){ /* funzione non ancora nel database o rete assente: solo la propria squadra */ }
+  tuttiCalAt = Date.now(); tuttiCalInCorso = false;
+  if(tab==='home' || tab==='calendario') render();
+}
+/* Partite di tutte le squadre, ognuna con la sua squadra (la propria dai dati aperti, amichevoli del mister comprese) */
+function partiteTutte(){
+  const mie = allCalendar().map(m => ({...m, team:TEAM()}));
+  const altre = (tuttiCal || []).filter(t => t.id !== curTeam).flatMap(t => (t.matches || []).map(m => ({...m, team:t})));
+  return [...mie, ...altre].sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
+}
+/* I tre calendari della società, ognuno col suo colore: campo di Merate, campo di Cernusco, trasferta */
+const CAL_NOMI = {merate:'Merate', cernusco:'Cernusco', trasferta:'Trasferta'};
+const calDi = m => !m.home ? 'trasferta' : /MERATE/i.test(m.venue || '') ? 'merate' : 'cernusco';
+const legendaCal = () => `<div class="calleg">${Object.entries(CAL_NOMI).map(([k,n]) => `<span class="cal-${k}">${n}</span>`).join('')}</div>`;
+const siglaSquadra = t => { const e = etaSquadra(t); return e < 99 ? 'U' + e : (t?.name || ''); };
+/* Nelle liste di tutte le squadre: "U11 · Fc Milanese" (casa o trasferta la dice il colore) */
+const nomePartita = (m, tutte) => tutte ? `${siglaSquadra(m.team)} · ${m.opponent||'Avversario'}`
+  : (m.home ? `${teamLabel()} - ${m.opponent||'Avversario'}` : `${m.opponent||'Avversario'} - ${teamLabel()}`);
+/* Una riga di partita colorata col suo calendario */
+const rigaPartita = (m, tutte, conData) => `<li class="cal-${calDi(m)}${tutte && m.team?.id===curTeam ? ' mia' : ''}">
+    <div class="wkwhen"><b>${weekday(m.date)}${conData ? ' '+fmtDate(m.date).slice(0,5) : ''}</b><span>${esc(m.time ? m.time.padStart(5,'0') : 'ora ?')}</span></div>
+    <div><div class="wkmatch">${esc(nomePartita(m, tutte))}</div>
+      <div class="note">${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</div>
+      ${conData && !m.friendly ? calStato(m) : ''}</div>
+  </li>`;
+/* Sabato e domenica della settimana in corso (da lunedì a domenica) */
+function weekendISO(){
+  const d = new Date(todayISO()+'T12:00:00'), sab = new Date(d);
+  sab.setDate(d.getDate() + 5 - (d.getDay()+6)%7);
+  const dom = new Date(sab); dom.setDate(sab.getDate()+1);
+  const iso = x => `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+  return [iso(sab), iso(dom)];
+}
+/* Amichevoli e tornei (dai calendari Google: scripts/import-calendari/google.mjs, o aggiunte dal mister) */
+const tipoPartita = m => m.friendly ? (m.tipo || 'Amichevole') : '';
 const whenTxt = d => { const n = daysUntil(d); return n===0 ? 'oggi' : n===1 ? 'domani' : n>1 ? `tra ${n} giorni` : `${-n} giorni fa`; };
 function homeTodo(){
   const today = todayISO(), items = [];
@@ -89,12 +142,18 @@ function viewHome(){
   const {team} = computeStats();
   const todo = homeTodo(), maxTodo = 6;
   const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
-  const matchCard = nm ? `<div class="hcard hmatch">
-      <div class="hlabel">Prossima partita · ${whenTxt(nm.date)}</div>
-      <div class="hbig">${esc(nm.home ? `${teamLabel()} - ${nm.opponent||'Avversario'}` : `${nm.opponent||'Avversario'} - ${teamLabel()}`)}</div>
-      <div class="note">${weekday(nm.date)} ${fmtDate(nm.date)}${nm.time?' · ore '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.friendly?' · amichevole':''}</div>
-      <div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button><button class="btn small" data-hgo="conv">Convocazioni</button></div>
-    </div>` : `<div class="hcard"><div class="hlabel">Prossima partita</div><p class="note">Nessuna partita in calendario.</p><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>`;
+  /* Impegni di sabato e domenica di questa settimana (campionato, amichevoli e tornei), colorati per calendario.
+     Attività di base: quelli di tutte le squadre, la propria evidenziata */
+  const adb = isAdb(); if(adb) caricaTuttiCal();
+  const [sab, dom] = weekendISO(), wk = (adb ? partiteTutte() : allCalendar()).filter(m => m.date===sab || m.date===dom)
+    .sort((a,b) => (a.date+(a.time||'').padStart(5,'0')).localeCompare(b.date+(b.time||'').padStart(5,'0')));
+  const matchCard = `<div class="hcard hmatch hwide">
+      <div class="hlabel">Weekend${adb ? ' di tutte le squadre' : ''} · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
+      ${wk.length ? `${legendaCal()}<ul class="wklist">${wk.map(m => rigaPartita(m, adb)).join('')}</ul>`
+        : `<p class="note">Nessun impegno questo weekend.${nm ? ` Prossima partita: ${weekday(nm.date)} ${fmtDate(nm.date)} · ${esc(nm.opponent||'')} (${whenTxt(nm.date)}).` : ''}</p>`}
+      ${nm ? `<div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button><button class="btn small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
+        : '<div class="row" style="margin-top:12px"><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>'}
+    </div>`;
   const trCard = trToday
     ? (() => { const v = S.players.map(p => attOf(trToday, p.id)); return `<div class="hcard"><div class="hlabel">Allenamento di oggi</div>
         <div class="hbig">${v.filter(x=>x==='P').length} presenti <span class="note">· ${v.filter(isAbs).length} assenti</span></div>
@@ -166,14 +225,38 @@ function calStato(m){
   if(m.stato==='confermata') return `<span class="note">Confermata${m.comunicato?' · '+esc(m.comunicato):''}</span>`;
   if(m.stato==='variata') return `<span class="note"><b>Variata</b>${m.comunicato?' · '+esc(m.comunicato):''}</span>`;
   if(m.stato==='calendario') return '<span class="note">Da calendario</span>';
+  if(m.friendly) return `<span class="note">${[tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</span>`;
   return '';
 }
+/* Righe del calendario raggruppate per mese, colorate per calendario (Merate, Cernusco, Trasferta) */
+function listaCalendario(ms, tutte){
+  const today = todayISO(); let mese = '';
+  return ms.map(m => {
+    const mm = (m.date||'').slice(0,7), testa = mm !== mese ? `<li class="calmese">${mm ? monthLabel(mm) : 'Senza data'}</li>` : '';
+    mese = mm;
+    return testa + rigaPartita(m, tutte, true).replace('<li class="', `<li class="${m.date && m.date < today ? 'past ' : ''}`);
+  }).join('');
+}
 function viewCalendario(){
-  const A = isAdmin(), today = todayISO();
-  const cal = S.calendar.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const A = isAdmin(), today = todayISO(), sigla = siglaSquadra(TEAM());
+  const scelta = `<div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <div class="seg" role="group" aria-label="Quali partite"><button data-calscope="mia" aria-pressed="${calScope==='mia'}">Solo ${esc(sigla)}</button><button data-calscope="tutte" aria-pressed="${calScope==='tutte'}">Tutte le squadre</button></div>
+      ${legendaCal()}</div>`;
+  if(calScope === 'tutte'){
+    caricaTuttiCal();
+    const ms = partiteTutte().filter(m => !m.date || m.date >= today);
+    return `<section class="panel">
+      <h2>Calendario · tutte le squadre</h2>
+      ${scelta}
+      <p class="hint">Le prossime partite di tutte le squadre della società, dalla più vicina. La tua squadra è evidenziata.</p>
+      ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
+      ${ms.length ? `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>` : '<p class="empty">Nessuna partita in programma.</p>'}
+    </section>`;
+  }
+  const cal = S.calendar.slice().sort((a,b)=>((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
   const official = A
     ? cal.map(m => `
-      <div class="teamcard">
+      <div class="teamcard cal-${calDi(m)}">
         ${calStato(m)}
         <div class="grid">
           <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
@@ -186,9 +269,10 @@ function viewCalendario(){
           <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
         </div>
       </div>`).join('')
-    : `<div class="reglist">${cal.map(m => `<div class="regrow ${m.date && m.date < today ? 'past' : ''}"><div><b>${weekday(m.date)} ${fmtDate(m.date)}</b>${m.time?' · '+esc(m.time):''} · ${esc(m.home ? `${teamLabel()} - ${m.opponent||''}` : `${m.opponent||''} - ${teamLabel()}`)}</div><span class="note">${esc(m.venue||'')}</span>${calStato(m)}</div>`).join('')}</div>`;
+    : `<ul class="wklist callist">${listaCalendario(cal, false)}</ul>`;
   return `<section class="panel">
     <h2>Calendario · ${esc(TEAM()?.name||'')}</h2>
+    ${scelta}
     <p class="hint">${A ? 'Le partite ufficiali della squadra: le modifichi solo tu.' : 'Le partite ufficiali le inserisce la società.'} Servono per la Home, per "Usa questa" in Gara → Partita e per i tabellini (Statistiche → Partite).</p>
     ${cal.length ? official : '<p class="empty">Nessuna partita in calendario.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
@@ -196,6 +280,10 @@ function viewCalendario(){
   ${viewFriendlies()}
   ${viewVenues()}`;
 }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-calscope]'); if(!b) return;
+  calScope = b.dataset.calscope; render();
+});
 function viewVenues(){
   const vs = [...new Set(allCalendar().map(m => (m.venue||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'it'));
   if(!vs.length) return '';
