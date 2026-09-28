@@ -1,6 +1,6 @@
 // Chi ha fatto una valutazione: iniziali in un cerchio colorato (stesso colore per la stessa persona, sempre),
 // nome intero al passaggio del mouse. I mister dal Portale hanno il cerchio col bordo, per riconoscerli.
-const COLORI = ['#003DA5', '#C41E3A', '#B8860B', '#6B3FA0', '#0F7C7C', '#A34A1E', '#B8336A', '#35506B', '#5C7F1E', '#1F5FA8'];
+const COLORI = ['#003DA5', '#C41E3A', '#B8860B', '#6B3FA0', '#0F7C7C', '#A34A1E', '#B8336A', '#35506B', '#4A5563', '#1F5FA8'];
 
 export type FirmaValutazione = { chiave: string; nome: string; mister: boolean };
 

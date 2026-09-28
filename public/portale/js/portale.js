@@ -550,7 +550,7 @@ const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', atta
 const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']];
 const mediaVal = v => v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null;
 /* Chi ha valutato: iniziali in un cerchio colorato, stesso colore per la stessa persona (come nello Scouting, components/Autore.tsx) */
-const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#5C7F1E','#1F5FA8'];
+const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#4A5563','#1F5FA8'];
 /* Le 3 caselle delle valutazioni (persone diverse, come nello Scouting): verdi a 3 su 3 */
 function slotValutazioni(valutazioni){
   const chi = [...new Set((valutazioni||[]).map(v => v.autore || '?'))], ok = chi.length >= 3;
