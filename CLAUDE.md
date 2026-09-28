@@ -132,7 +132,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   il campionato resta quello ufficiale). Nessun aggiornamento automatico: quando l'utente chiede "aggiorna il calendario",
   Claude riscarica i tre calendari (list_events da oggi al 30/06 della stagione, tutte le pagine) nei file di
   `private/google-calendar/`, fa la simulazione e poi `--conferma`.
-  La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha le partite da
+  La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Calendario → La mia squadra è un solo elenco
+  (campionato, amichevoli, tornei con etichetta `tipochip`; "Modifica" dalla riga: ufficiali solo admin, amichevoli anche il
+  mister) con le partite da
   giocare, "Solo Uxx" o "Tutte le squadre"; quelle giocate solo nello Storico della propria squadra (`viewStorico()`).
   "Tutte le squadre" ha la vista Giorno (`vistaGiorno()`, colonne Merate/Cernusco/Trasferta come Google Calendar, durata
   indicativa dall'età) o Elenco. Gara → Partita elenca le partite della squadra nel weekend, ognuna con "Usa questa" (`data-usacal`).

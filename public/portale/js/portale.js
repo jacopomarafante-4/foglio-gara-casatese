@@ -177,7 +177,7 @@ const nomePartita = (m, tutte) => tutte ? `${siglaSquadra(m.team)} · ${m.oppone
 const rigaPartita = (m, tutte, conData) => `<li class="cal-${calDi(m)}${tutte && m.team?.id===curTeam ? ' mia' : ''}">
     <div class="wkwhen"><b>${weekday(m.date)}${conData ? ' '+fmtDate(m.date).slice(0,5) : ''}</b><span>${esc(m.time ? m.time.padStart(5,'0') : 'ora ?')}</span></div>
     <div><div class="wkmatch">${esc(nomePartita(m, tutte))}</div>
-      <div class="note">${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</div>
+      <div class="note">${conData ? `<span class="tipochip${m.friendly ? ' am' : ''}">${esc(m.friendly ? (m.tipo || 'Amichevole') : 'Campionato')}</span> ` : ''}${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, conData ? '' : tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</div>
       ${conData && !m.friendly ? calStato(m) : ''}${perPortieri() ? chipsPortieri(m) : ''}</div>
   </li>`;
 /* Sabato e domenica della settimana in corso (da lunedì a domenica) */
@@ -304,14 +304,21 @@ function calStato(m){
   return '';
 }
 /* Righe del calendario raggruppate per mese, colorate per calendario (Merate, Cernusco, Trasferta) */
-function listaCalendario(ms, tutte){
+function listaCalendario(ms, tutte, extra){
   let mese = '';
   return ms.map(m => {
     const mm = (m.date||'').slice(0,7), testa = mm !== mese ? `<li class="calmese">${mm ? monthLabel(mm) : 'Senza data'}</li>` : '';
     mese = mm;
-    return testa + rigaPartita(m, tutte, true);
+    const riga = rigaPartita(m, tutte, true), agg = extra ? extra(m) : '';
+    return testa + (agg ? riga.replace(/<\/div>\s*<\/li>\s*$/, agg + '</div></li>') : riga);
   }).join('');
 }
+let frAperta = null;   // amichevole appena aggiunta (o in modifica): il suo "Modifica" resta aperto
+/* Uscendo da un campo dell'amichevole la riga si aggiorna (titolo, data, ordine) */
+document.addEventListener('change', e => {
+  if(!e.target.dataset?.frid || tab !== 'calendario') return;
+  frAperta = e.target.dataset.frid; render();
+});
 const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
 /* Nel calendario solo le partite da giocare; quelle giocate vanno nello storico, solo della propria squadra */
 const daGiocare = m => !m.date || m.date >= todayISO();
@@ -409,40 +416,52 @@ function viewCalendario(){
         : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>`}
     </section>`;
   }
-  const cal = inOrdine(S.calendar.filter(daGiocare));
   const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];
   if(portiereScelto && !tuttiGk.some(p => p.id === portiereScelto)) portiereScelto = '';
   const squadraGk = tuttiGk.find(p => p.id === portiereScelto)?.team?.id;
   const prossime = inOrdine(impegni().filter(daGiocare).filter(m => !squadraGk || m.team?.id === squadraGk));
   const filtroGk = tuttiGk.length ? `<div class="row" style="margin-bottom:8px;gap:8px"><label class="note" for="gk_scelto">Portiere</label>
     <select id="gk_scelto" data-gkscelto="1"><option value="">Tutti i miei portieri</option>${tuttiGk.map(p => `<option value="${esc(p.id)}" ${p.id===portiereScelto?'selected':''}>${esc(p.name)} · ${esc(siglaSquadra(p.team))}</option>`).join('')}</select></div>` : '';
-  const official = A
-    ? cal.map(m => `
-      <div class="teamcard cal-${calDi(m)}">
-        ${calStato(m)}
-        <div class="grid">
-          <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
-          <div><label class="f">Ora</label><input type="time" data-calf="time" data-calid="${m.id}" value="${esc(m.time||'')}"></div>
-          <div><label class="f">Avversario</label><input data-calf="opponent" data-calid="${m.id}" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
-          <div><label class="f">Campo</label><input data-calf="venue" data-calid="${m.id}" value="${esc(m.venue||'')}" placeholder="Campo"></div>
-        </div>
-        <div class="row" style="margin-top:10px;justify-content:space-between">
-          <label class="row" style="gap:6px"><input type="checkbox" data-calf="home" data-calid="${m.id}" ${m.home?'checked':''}> In casa</label>
-          <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
-        </div>
-      </div>`).join('')
-    : `<ul class="wklist callist">${listaCalendario(prossime, perPortieri())}</ul>`;
+  /* Un solo elenco: campionato, amichevoli e tornei, ognuno con la sua etichetta. Si modificano dalla riga:
+     le partite ufficiali solo l'admin, le amichevoli aggiunte dalla squadra anche il mister */
+  const amichevoleMia = m => (S.reg.friendlies || []).some(f => f.id === m.id);
+  const modifica = m => {
+    if(amichevoleMia(m)) return `<details class="fredit" ${m.id===frAperta ? 'open' : ''}><summary>Modifica amichevole</summary>
+      <div class="grid">
+        <div><label class="f">Data</label><input type="date" data-frid="${m.id}" data-frf="date" value="${esc(m.date||'')}"></div>
+        <div><label class="f">Ora</label><input type="time" data-frid="${m.id}" data-frf="time" value="${esc(m.time||'')}"></div>
+        <div><label class="f">Avversario</label><input data-frid="${m.id}" data-frf="opponent" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
+        <div><label class="f">Campo</label><input data-frid="${m.id}" data-frf="venue" value="${esc(m.venue||'')}" placeholder="Campo"></div>
+      </div>
+      <div class="row" style="margin-top:8px;justify-content:space-between">
+        <label class="row" style="gap:6px"><input type="checkbox" data-frid="${m.id}" data-frf="home" ${m.home?'checked':''}> In casa</label>
+        <button class="btn small ghost danger" data-frdel="${m.id}">Elimina amichevole</button>
+      </div></details>`;
+    if(A && S.calendar.some(x => x.id === m.id)) return `<details class="fredit"><summary>Modifica</summary>
+      <div class="grid">
+        <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
+        <div><label class="f">Ora</label><input type="time" data-calf="time" data-calid="${m.id}" value="${esc(m.time||'')}"></div>
+        <div><label class="f">Avversario</label><input data-calf="opponent" data-calid="${m.id}" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
+        <div><label class="f">Campo</label><input data-calf="venue" data-calid="${m.id}" value="${esc(m.venue||'')}" placeholder="Campo"></div>
+      </div>
+      <div class="row" style="margin-top:8px;justify-content:space-between">
+        <label class="row" style="gap:6px"><input type="checkbox" data-calf="home" data-calid="${m.id}" ${m.home?'checked':''}> In casa</label>
+        <button class="btn small ghost danger" data-caldel="${m.id}">Elimina partita</button>
+      </div></details>`;
+    return '';
+  };
+  const official = `<ul class="wklist callist">${listaCalendario(prossime, perPortieri(), modifica)}</ul>`;
   return `<section class="panel">
     <h2>Calendario · ${perPortieri() ? `i tuoi portieri${etaPortieri() ? ' · ' + etaPortieri().map(e => 'U'+e).join(', ') : ''}` : esc(sigla)}</h2>
     ${scelta}
     <p class="hint">${perPortieri() ? 'Le partite da giocare delle categorie dei tuoi portieri (le assegna la società). Tutta la società è in "Tutte le squadre".'
-      : `${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Squadra → Partite → Dati partita e per i Tabellini.`}</p>
+      : `Tutte le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua etichetta. ${A ? 'Tocca "Modifica" per cambiarne una.' : 'Le amichevoli che aggiungi tu si cambiano da "Modifica amichevole".'} Le partite già giocate sono nello storico, in fondo.`}</p>
     ${filtroGk}
-    ${(A ? cal.length : prossime.length) ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
-    ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
+    ${prossime.length ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
+    ${perPortieri() ? '' : `<div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button>${A ? '<button class="btn small ghost" data-act="caladd">+ Partita ufficiale</button>' : ''}</div>`}
     ${viewStorico()}
   </section>
-  ${viewFriendlies()}`;
+`;
 }
 /* Squadra → Campi: posizione esatta dei campi per il link di Google Maps */
 function viewCampi(){

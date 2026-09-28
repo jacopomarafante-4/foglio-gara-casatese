@@ -512,7 +512,7 @@ document.addEventListener('click', e => {
       const f = newFriendly();
       const g = {id:uid('gm'), calId:f.id, date:f.date, opponent:'', home:true, comp:'Amichevole', dur:DEFAULT_DUR, og:'', pl:{}};
       R.games.push(g); openGameId = g.id; save('registro'); render(); window.scrollTo(0,0); break; }
-    case 'fradd': newFriendly(); save('registro'); render(); break;
+    case 'fradd': frAperta = newFriendly().id; save('registro'); render(); break;
     case 'gmdel': {
       const g = curGame(); if(!g) break;
       const fr = (R.friendlies||[]).find(f => f.id===g.calId);

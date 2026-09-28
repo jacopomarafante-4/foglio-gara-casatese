@@ -461,28 +461,6 @@ function viewPartita(){
 `;
 }
 
-function viewFriendlies(){ /* in Calendario → La mia squadra */
-  const today = todayISO();
-  const rows = (S.reg.friendlies||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(m => `
-    <div class="teamcard ${m.date && m.date < today ? 'past' : ''}">
-      <div class="grid">
-        <div><label class="f">Data</label><input type="date" data-frid="${m.id}" data-frf="date" value="${esc(m.date||'')}"></div>
-        <div><label class="f">Ora</label><input type="time" data-frid="${m.id}" data-frf="time" value="${esc(m.time||'')}"></div>
-        <div><label class="f">Avversario</label><input data-frid="${m.id}" data-frf="opponent" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
-        <div><label class="f">Campo</label><input data-frid="${m.id}" data-frf="venue" value="${esc(m.venue||'')}" placeholder="Campo"></div>
-      </div>
-      <div class="row" style="margin-top:10px;justify-content:space-between">
-        <label class="row" style="gap:6px"><input type="checkbox" data-frid="${m.id}" data-frf="home" ${m.home?'checked':''}> In casa</label>
-        <button class="iconbtn" aria-label="Elimina amichevole" data-frdel="${m.id}">×</button>
-      </div>
-    </div>`).join('');
-  return `<section class="panel">
-    <h3 style="margin-top:0">Amichevoli</h3>
-    <p class="hint">Partite fuori dal calendario ufficiale: le può aggiungere anche il mister. Compaiono nel calendario, in "Usa questa" di Squadra → Partite → Dati partita e nei Tabellini.</p>
-    ${rows || '<p class="empty">Nessuna amichevole.</p>'}
-    <div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button></div>
-  </section>`;
-}
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};

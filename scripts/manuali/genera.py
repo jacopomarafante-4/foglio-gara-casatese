@@ -282,9 +282,11 @@ pareggiate e perse, gol, porta inviolata); tocca un riquadro per le statistiche 
 <li>I colori dicono dove si gioca: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta.</li>
 </ul>''', 'Home')}
 <h3>Calendario → La mia squadra</h3>
-<p>Le partite da giocare fino a fine stagione: ufficiali, amichevoli e tornei, inseriti dalla società. Colori: <b>blu</b> in casa
-a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le partite già giocate sono nello <b>Storico</b>, in fondo
-alla pagina: toccalo per aprirlo. Sotto ci sono le <b>Amichevoli</b> che aggiungi tu.</p>
+<p>Un solo elenco con le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua
+<b>etichetta</b> (Campionato, Amichevole, Torneo). Colori: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco,
+<b>rosso</b> in trasferta. <span class="k">+ Aggiungi amichevole</span>, in fondo, ne aggiunge una: si apre subito
+"Modifica amichevole" per data, ora, avversario e campo (lo stesso per cambiarla o eliminarla dopo). Le partite già giocate sono
+nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo.</p>
 <h3>Calendario → Tutte le squadre</h3>
 <p>Le partite da giocare di tutta la società, con la tua evidenziata; il menu <b>Categoria</b> ne mostra una sola. La vista
 <b>Giorno</b> è come Google Calendar: una colonna per Merate, Cernusco e Trasferta, le ore in verticale, le frecce ‹ › per
