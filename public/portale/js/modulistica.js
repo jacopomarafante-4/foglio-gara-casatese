@@ -2,20 +2,91 @@
    programma gare di un periodo (dal–al). PDF testuali con jsPDF (A4 verticale), intestazione della società. */
 
 const BLU_RGB = [0, 61, 165], INK_RGB = [14, 26, 43], GRIGIO_RGB = [91, 107, 128];
-/* Intestazione comune: stemma, società, titolo, sottotitolo; restituisce la y da cui continuare */
+/* ---------- Impaginazione automatica (comune a tutti i moduli) ----------
+   Ogni testo si adatta allo spazio che ha: una riga (cella, campo) prima rimpicciolisce il carattere fino a un minimo e
+   solo dopo si accorcia con "…"; un blocco (titolo, sottotitolo, cella su più righe) rimpicciolisce finché sta nelle righe
+   concesse; il testo lungo va a capo per paragrafi, con elenchi rientrati, righe giustificate e salti pagina puliti. */
+const PAG = {sx:12, dx:198, alto:16, basso:280};   // area utile (il piè di pagina è a 290)
+const LARGH = PAG.dx - PAG.sx;
+/* I caratteri del PDF (Helvetica) non hanno emoji né simboli fuori dall'alfabeto latino: si tolgono */
+const perPdf = t => String(t ?? '').replace(/[^\x00-\xFF€–—‘’“”…•]/g, '').replace(/[ \t]+$/gm, '');
+const carattere = (doc, size, bold) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); };
+/* Una riga in larghezza w: carattere da `size` fino a `min`, poi "…". Restituisce la grandezza usata */
+function riga1(doc, testo, x, y, w, {size = 10, min = 7, bold = false, align = 'left'} = {}){
+  let t = perPdf(testo).replace(/\s+/g, ' ').trim(), s = size;
+  carattere(doc, s, bold);
+  while(s > min && doc.getTextWidth(t) > w){ s = Math.max(min, s - 0.25); doc.setFontSize(s); }
+  if(doc.getTextWidth(t) > w){ while(t.length > 1 && doc.getTextWidth(t + '…') > w) t = t.slice(0, -1); t = t.trimEnd() + '…'; }
+  doc.text(t, align === 'right' ? x + w : align === 'center' ? x + w / 2 : x, y, {align});
+  return s;
+}
+/* Blocco in larghezza w e al massimo maxRighe: rimpicciolisce finché ci sta (l'ultima riga, se serve, finisce con "…") */
+function misuraBlocco(doc, testo, w, {size = 10, min = 7.5, bold = false, maxRighe = 2} = {}){
+  const t = perPdf(testo).replace(/\s+/g, ' ').trim();
+  let s = size, righe;
+  for(;;){ carattere(doc, s, bold); righe = doc.splitTextToSize(t, w); if(righe.length <= maxRighe || s <= min) break; s = Math.max(min, s - 0.25); }
+  if(righe.length > maxRighe){ righe = righe.slice(0, maxRighe); let u = righe[maxRighe - 1];
+    while(u.length > 1 && doc.getTextWidth(u + '…') > w) u = u.slice(0, -1); righe[maxRighe - 1] = u.trimEnd() + '…'; }
+  return {righe, size: s, alt: s * 0.3528 * 1.25};   // alt = interlinea in mm
+}
+function blocco(doc, testo, x, y, w, opz = {}){
+  const b = misuraBlocco(doc, testo, w, opz);
+  carattere(doc, b.size, opz.bold);
+  b.righe.forEach((r, i) => doc.text(r, opz.align === 'right' ? x + w : x, y + i * b.alt, {align: opz.align || 'left'}));
+  return b.righe.length * b.alt;
+}
+/* Riga giustificata a mano (jsPDF non giustifica una riga sola): spazi distribuiti tra le parole */
+function rigaGiustificata(doc, r, x, y, w){
+  const parole = r.trim().split(/\s+/);
+  if(parole.length < 2){ doc.text(r, x, y); return; }
+  const pieno = parole.reduce((n, p) => n + doc.getTextWidth(p), 0), spazio = (w - pieno) / (parole.length - 1);
+  if(spazio > doc.getTextWidth(' ') * 3){ doc.text(r, x, y); return; }   // troppo vuoto: meglio a bandiera
+  let cx = x; parole.forEach(p => { doc.text(p, cx, y); cx += doc.getTextWidth(p) + spazio; });
+}
+/* Testo lungo diviso in paragrafi (riga vuota) e righe; "- ", "• ", "* " o "1." = voce di elenco rientrata */
+function paragrafi(doc, testo, w, size){
+  carattere(doc, size, false);
+  const alt = size * 0.3528 * 1.45, out = [];
+  /* rientro dei numeri uguale per tutto l'elenco, largo quanto il numero più lungo ("10." più di "1.") */
+  const numeri = [...perPdf(testo).matchAll(/^\s*(\d+[.)])\s+/gm)].map(m => doc.getTextWidth(m[1]));
+  const rientroNum = Math.max(5, ...numeri.map(w => w + 2.2));
+  perPdf(testo).split(/\n\s*\n/).forEach(par => {
+    const righe = [];
+    par.split('\n').filter(r => r.trim()).forEach(r => {
+      const el = r.match(/^\s*([-•*]|\d+[.)])\s+(.*)$/);
+      const rientro = !el ? 0 : /\d/.test(el[1]) ? rientroNum : 5, testoR = el ? el[2] : r.trim();
+      doc.splitTextToSize(testoR, w - rientro).forEach((t, k, tutte) =>
+        righe.push({t, rientro, punto: el && k === 0 ? (/\d/.test(el[1]) ? el[1] : '•') : '', ultima: k === tutte.length - 1}));
+    });
+    if(righe.length) out.push({righe, alt});
+  });
+  return out;
+}
+const altezzaParagrafi = (pp, dopo) => pp.reduce((h, p) => h + p.righe.length * p.alt + dopo, 0);
+/* Pagina seguente: fascia sottile con società e titolo del modulo */
+function nuovaPagina(doc, titolo){
+  doc.addPage();
+  doc.setFillColor(...BLU_RGB); doc.rect(0, 0, 210, 9, 'F'); doc.setFillColor(212, 175, 55); doc.rect(0, 9, 150, 0.8, 'F'); doc.setFillColor(196, 30, 58); doc.rect(150, 9, 60, 0.8, 'F');
+  doc.setTextColor(255); riga1(doc, `ACADEMY CASATESE MERATE · ${titolo} (segue)`, PAG.sx, 6, LARGH, {size: 8.5, bold: true});
+  doc.setTextColor(...INK_RGB);
+  return PAG.alto + 2;
+}
+
+/* Intestazione comune: stemma, società, titolo e sottotitolo che si adattano; restituisce la y da cui continuare */
 async function intestazionePdf(doc, titolo, sotto){
   const logo = await loadLogo();
-  doc.setFillColor(...BLU_RGB); doc.rect(0, 0, 210, 30, 'F');
-  doc.setFillColor(212, 175, 55); doc.rect(0, 30, 150, 1.6, 'F'); doc.setFillColor(196, 30, 58); doc.rect(150, 30, 60, 1.6, 'F');
-  doc.setFillColor(255, 255, 255); doc.roundedRect(10, 4, 22, 22, 2, 2, 'F');
+  doc.setFillColor(...BLU_RGB); doc.rect(0, 0, 210, 32, 'F');
+  doc.setFillColor(212, 175, 55); doc.rect(0, 32, 150, 1.6, 'F'); doc.setFillColor(196, 30, 58); doc.rect(150, 32, 60, 1.6, 'F');
+  doc.setFillColor(255, 255, 255); doc.roundedRect(PAG.sx, 5, 22, 22, 2, 2, 'F');
   /* stemma: se il browser non lo lascia copiare (es. pagina aperta come file) il PDF esce lo stesso, senza stemma */
   if(logo) try{ const c = document.createElement('canvas'); c.width = logo.naturalWidth; c.height = logo.naturalHeight; c.getContext('2d').drawImage(logo, 0, 0);
-    doc.addImage(c.toDataURL('image/png'), 'PNG', 11.5, 5.5, 19, 19); }catch(e){}
-  doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.text('ACADEMY CASATESE MERATE', 38, 11);
-  doc.setFontSize(17); doc.text(doc.splitTextToSize(titolo, 160)[0], 38, 19);
-  if(sotto){ doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.text(doc.splitTextToSize(sotto, 160)[0], 38, 25.5); }
+    doc.addImage(c.toDataURL('image/png'), 'PNG', PAG.sx + 1.5, 6.5, 19, 19); }catch(e){}
+  const x = PAG.sx + 28, w = PAG.dx - x;
+  doc.setTextColor(255); riga1(doc, 'ACADEMY CASATESE MERATE', x, 10.5, w, {size: 9, bold: true});
+  riga1(doc, titolo, x, 18.5, w, {size: 17, min: 11, bold: true});
+  if(sotto) blocco(doc, sotto, x, 24, w, {size: 9.5, min: 7.5, maxRighe: 2});
   doc.setTextColor(...INK_RGB);
-  return 42;
+  return 44;
 }
 function piePdf(doc){
   const n = doc.getNumberOfPages();
@@ -68,39 +139,57 @@ async function pdfDistinta(){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   const d = distinta(), T0 = TEAM(), cat = S.sheet.senzaCategoria ? '' : String(T0?.category || '').replace(/\s*-\s*attività di base/i, '');
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
-  let y = await intestazionePdf(doc, `DISTINTA · ${d.tipo.toUpperCase()}`, [cat, d.manifestazione].filter(Boolean).join(' · '));
-  const riga = (l, v, x, w) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRIGIO_RGB); doc.text(l.toUpperCase(), x, y);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(...INK_RGB); doc.text(v || '', x, y + 5.5); doc.setDrawColor(200); doc.line(x, y + 7, x + w, y + 7); };
-  riga('Manifestazione', d.manifestazione, 10, 120); riga('Data', d.data ? fmtDate(d.data) : '', 140, 60); y += 13;
-  riga('Luogo', d.luogo, 10, 120); riga('Società', 'Academy Casatese Merate', 140, 60); y += 15;
-  // Tabella giocatori: selezionati, poi righe vuote fino a 20 da compilare a penna
+  const TITOLO = `DISTINTA · ${d.tipo.toUpperCase()}`;
+  let y = await intestazionePdf(doc, TITOLO, [cat, d.manifestazione].filter(Boolean).join(' · '));
+  /* Campi in alto: etichetta piccola, valore che si adatta alla sua riga */
+  const campo = (l, v, x, w) => { doc.setTextColor(...GRIGIO_RGB); riga1(doc, l.toUpperCase(), x, y, w, {size: 7.5, bold: true});
+    doc.setTextColor(...INK_RGB); riga1(doc, v || '', x, y + 5.5, w, {size: 11, min: 7.5}); doc.setDrawColor(200); doc.line(x, y + 7, x + w, y + 7); };
+  campo('Manifestazione', d.manifestazione, PAG.sx, 120); campo('Data', d.data ? fmtDate(d.data) : '', 140, PAG.dx - 140); y += 13;
+  campo('Luogo', d.luogo, PAG.sx, 120); campo('Società', 'Academy Casatese Merate', 140, PAG.dx - 140); y += 14;
+
   const gg = byName().filter(p => d.giocatori[p.id]?.sel).map(p => ({...d.giocatori[p.id], nome: p.name}))
-    .sort((a,b) => (+a.numero || 99) - (+b.numero || 99));
-  const cols = [[10, 14, 'N°'], [24, 86, 'Cognome e nome'], [110, 34, 'Data di nascita'], [144, 56, 'N° tessera']];
-  const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(10, y, 190, 7, 'F'); doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    cols.forEach(([x,,l]) => doc.text(l, x + 2, y + 4.8)); y += 7; doc.setTextColor(...INK_RGB); };
-  testata();
-  const righe = Math.max(gg.length, 20);
-  for(let i = 0; i < righe; i++){
-    if(y > 268){ doc.addPage(); y = 14; testata(); }
-    const g = gg[i] || {};
-    if(i % 2){ doc.setFillColor(245, 247, 250); doc.rect(10, y, 190, 7.2, 'F'); }
-    doc.setDrawColor(216, 223, 232); cols.forEach(([x, w]) => doc.rect(x, y, w, 7.2));
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-    doc.text(String(g.numero || ''), 12, y + 5); doc.text(doc.splitTextToSize(g.nome || '', 82)[0] || '', 26, y + 5);
-    doc.text(g.nascita ? fmtDate(g.nascita) : '', 112, y + 5); doc.text(g.tessera || '', 146, y + 5);
-    y += 7.2;
-  }
-  y += 6; if(y > 240){ doc.addPage(); y = 16; }
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('ALLENATORE E DIRIGENTI', 10, y); y += 3;
+    .sort((a, b) => (+a.numero || 99) - (+b.numero || 99));
   const staff = d.staff.length ? d.staff : [{ruolo:'Allenatore'}, {ruolo:'Dirigente accompagnatore'}];
-  staff.forEach(st => { y += 7; doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
-    doc.text(`${st.ruolo || ''}:`, 10, y); doc.text(st.nome || '', 58, y); doc.text(st.documento ? 'Doc. ' + st.documento : '', 130, y); doc.setDrawColor(200); doc.line(58, y + 1.5, 200, y + 1.5); });
-  if(d.note){ y += 9; doc.setFontSize(9); doc.text(doc.splitTextToSize('Note: ' + d.note, 190), 10, y); y += 5; }
-  y = Math.max(y + 14, 255); if(y > 275){ doc.addPage(); y = 40; }
-  doc.setFontSize(9); doc.setTextColor(...GRIGIO_RGB);
-  doc.text('Firma del dirigente accompagnatore', 10, y); doc.text("Firma dell'arbitro / organizzazione", 120, y);
-  doc.setDrawColor(150); doc.line(10, y + 12, 90, y + 12); doc.line(120, y + 12, 200, y + 12);
+  /* Spazio per staff, note e firme, che restano insieme dopo la tabella */
+  carattere(doc, 9, false);
+  const note = d.note ? doc.splitTextToSize(perPdf('Note: ' + d.note), LARGH).slice(0, 6) : [];
+  const coda = 10 + staff.length * 7.5 + (note.length ? note.length * 4.2 + 5 : 0) + 24;
+  /* Righe: i giocatori scelti e poi vuote fino a 20 (a penna). Stanno su una pagina se basta stringerle un po' */
+  const righe = Math.max(gg.length, 20), testataH = 7;
+  const spazio = PAG.basso - y - testataH - coda;
+  const h = Math.max(6, Math.min(7.4, (spazio - 1.5) / righe));   // 1,5 mm di margine per gli arrotondamenti
+  const cols = [[PAG.sx, 13, 'N°'], [PAG.sx + 13, 89, 'Cognome e nome'], [PAG.sx + 102, 34, 'Data di nascita'], [PAG.sx + 136, LARGH - 136, 'N° tessera']];
+  const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(PAG.sx, y, LARGH, testataH, 'F'); doc.setTextColor(255);
+    cols.forEach(([x, w, l]) => riga1(doc, l, x + 2, y + 4.8, w - 4, {size: 9, bold: true})); y += testataH; doc.setTextColor(...INK_RGB); };
+  testata();
+  const dim = Math.min(10, h * 1.45);   // carattere delle righe, in proporzione all'altezza
+  for(let i = 0; i < righe; i++){
+    if(y + h > PAG.basso){ y = nuovaPagina(doc, TITOLO); testata(); }
+    const g = gg[i] || {};
+    if(i % 2){ doc.setFillColor(245, 247, 250); doc.rect(PAG.sx, y, LARGH, h, 'F'); }
+    doc.setDrawColor(216, 223, 232); cols.forEach(([x, w]) => doc.rect(x, y, w, h));
+    const by = y + h / 2 + dim * 0.13;
+    riga1(doc, String(g.numero || ''), cols[0][0], by, cols[0][1], {size: dim, bold: true, align: 'center'});
+    riga1(doc, g.nome || '', cols[1][0] + 2, by, cols[1][1] - 4, {size: dim, min: 6.5});
+    riga1(doc, g.nascita ? fmtDate(g.nascita) : '', cols[2][0] + 2, by, cols[2][1] - 4, {size: dim});
+    riga1(doc, g.tessera || '', cols[3][0] + 2, by, cols[3][1] - 4, {size: dim, min: 6.5});
+    y += h;
+  }
+  /* Staff, note e firme insieme: se non ci stanno, tutti nella pagina dopo */
+  if(y + coda > PAG.basso) y = nuovaPagina(doc, TITOLO); else y += 6;
+  riga1(doc, 'ALLENATORE E DIRIGENTI', PAG.sx, y, LARGH, {size: 10, bold: true}); y += 3;
+  staff.forEach(st => { y += 7.5;
+    riga1(doc, `${st.ruolo || ''}:`, PAG.sx, y, 44, {size: 9.5, min: 7});
+    riga1(doc, st.nome || '', PAG.sx + 46, y, 70, {size: 9.5, min: 7});
+    riga1(doc, st.documento ? 'Doc. ' + st.documento : '', PAG.sx + 120, y, LARGH - 120, {size: 9.5, min: 7});
+    doc.setDrawColor(200); doc.line(PAG.sx + 46, y + 1.5, PAG.dx, y + 1.5); });
+  if(note.length){ y += 8; carattere(doc, 9, false); note.forEach(r => { doc.text(r, PAG.sx, y); y += 4.2; }); }
+  y = Math.max(y + 10, PAG.basso - 16);
+  doc.setTextColor(...GRIGIO_RGB);
+  riga1(doc, 'Firma del dirigente accompagnatore', PAG.sx, y, 80, {size: 9});
+  riga1(doc, "Firma dell'arbitro / organizzazione", PAG.dx - 80, y, 80, {size: 9});
+  doc.setDrawColor(150); doc.line(PAG.sx, y + 12, PAG.sx + 80, y + 12); doc.line(PAG.dx - 80, y + 12, PAG.dx, y + 12);
+  doc.setTextColor(...INK_RGB);
   await salvaPdf(doc, nomeFile('DISTINTA', cat, d.manifestazione || d.tipo, d.data));
 }
 document.addEventListener('input', e => {
@@ -125,22 +214,46 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- Comunicazione su carta intestata (dagli Avvisi) ---------- */
-/* I caratteri del PDF (Helvetica) non hanno emoji né simboli fuori dall'alfabeto latino: si tolgono */
-const perPdf = t => String(t || '').replace(/[^\x00-\xFF€–—‘’“”…•]/g, '').replace(/^[ \t]+/gm, '');
 async function pdfComunicazione(a){
-  a = {...a, titolo: perPdf(a.titolo).trim(), testo: perPdf(a.testo)};
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   let y = await intestazionePdf(doc, 'COMUNICAZIONE', squadreTesto(a.squadre));
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...GRIGIO_RGB);
-  doc.text(`Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, 200, y, {align:'right'}); y += 10;
-  if(a.titolo){ doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...BLU_RGB); doc.splitTextToSize(a.titolo, 190).forEach(r => { doc.text(r, 10, y); y += 7; }); y += 3; }
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(11.5); doc.setTextColor(...INK_RGB);
-  for(const r of doc.splitTextToSize(a.testo || '', 190)){ if(y > 275){ doc.addPage(); y = 16; } doc.text(r, 10, y); y += 6; }
-  y += 12; if(y > 270){ doc.addPage(); y = 30; }
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.text('Academy Casatese Merate', 200, y, {align:'right'});
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...GRIGIO_RGB); doc.text(a.autore || 'La società', 200, y + 5, {align:'right'});
-  await salvaPdf(doc, nomeFile('COMUNICAZIONE', a.titolo || '', a.data));
+  doc.setTextColor(...GRIGIO_RGB);
+  riga1(doc, `Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, PAG.sx, y, LARGH, {size: 10, align: 'right'}); y += 10;
+  const titolo = perPdf(a.titolo).trim();
+  /* Grandezza del testo: la più grande (da 12,5 a 9) con cui titolo, testo e firma stanno in una pagina. Se non ci stanno
+     nemmeno a 9 il testo è davvero lungo: carattere comodo (11) e più pagine */
+  const firmaH = 22, spazioParagrafo = 2.6;
+  const prova = size => {
+    const tit = titolo ? misuraBlocco(doc, titolo, LARGH, {size: Math.min(16, size + 3.5), min: 12, bold: true, maxRighe: 3}) : null;
+    const pp = paragrafi(doc, a.testo || '', LARGH, size);
+    return {tit, pp, tot: (tit ? tit.righe.length * tit.alt + 4 : 0) + altezzaParagrafi(pp, spazioParagrafo) + firmaH};
+  };
+  let size = 12.5, m = prova(size);
+  while(y + m.tot > PAG.basso && size > 9){ size -= 0.5; m = prova(size); }
+  if(y + m.tot > PAG.basso){ size = 11; m = prova(size); }
+  const {tit, pp} = m;
+  if(tit){ doc.setTextColor(...BLU_RGB); carattere(doc, tit.size, true); tit.righe.forEach(r => { doc.text(r, PAG.sx, y); y += tit.alt; }); y += 4; }
+  doc.setTextColor(...INK_RGB);
+  for(const par of pp){
+    /* niente righe orfane: se del paragrafo ne starebbe una sola in fondo alla pagina, si parte dalla pagina dopo */
+    const restano = Math.floor((PAG.basso - y) / par.alt);
+    if(restano < Math.min(2, par.righe.length)) y = nuovaPagina(doc, 'COMUNICAZIONE');
+    carattere(doc, size, false);
+    for(const r of par.righe){
+      if(y > PAG.basso){ y = nuovaPagina(doc, 'COMUNICAZIONE'); carattere(doc, size, false); }
+      if(r.punto) doc.text(r.punto, PAG.sx + r.rientro - 1.6, y, {align: 'right'});   // numero o pallino allineato a destra nel rientro
+      if(r.ultima) doc.text(r.t, PAG.sx + r.rientro, y); else rigaGiustificata(doc, r.t, PAG.sx + r.rientro, y, LARGH - r.rientro);
+      y += par.alt;
+    }
+    y += spazioParagrafo;
+  }
+  /* Firma: sempre insieme, in basso a destra */
+  if(y + firmaH - 6 > PAG.basso) y = nuovaPagina(doc, 'COMUNICAZIONE'); else y += 8;
+  riga1(doc, 'Academy Casatese Merate', PAG.sx, y, LARGH, {size: 10.5, bold: true, align: 'right'});
+  doc.setTextColor(...GRIGIO_RGB); blocco(doc, a.autore || 'La società', PAG.dx - 90, y + 5, 90, {size: 9.5, min: 8, maxRighe: 2, align: 'right'});
+  doc.setTextColor(...INK_RGB);
+  await salvaPdf(doc, nomeFile('COMUNICAZIONE', titolo, a.data));
 }
 
 /* ---------- Programma gare di un periodo (Modulistica → Programma gare) ---------- */
@@ -173,28 +286,38 @@ async function pdfProgramma(){
   const ms = programmaPartite();
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   const quali = progSquadre.length ? progSquadre.map(id => siglaSquadra((tuttiCal||S.teams).find(t => t.id===id))).join(', ') : 'Tutte le squadre';
-  let y = await intestazionePdf(doc, 'PROGRAMMA GARE', `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`);
-  const cols = [[10, 26, 'Ora'], [36, 20, 'Squadra'], [56, 82, 'Partita / evento'], [138, 62, 'Campo']];
-  const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(10, y, 190, 7, 'F'); doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    cols.forEach(([x,,l]) => doc.text(l, x + 2, y + 4.8)); y += 8; doc.setTextColor(...INK_RGB); };
+  const TITOLO = 'PROGRAMMA GARE';
+  let y = await intestazionePdf(doc, TITOLO, `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`);
+  const cols = [[PAG.sx, 24, 'Ora'], [PAG.sx + 24, 18, 'Squadra'], [PAG.sx + 42, 82, 'Partita / evento'], [PAG.sx + 124, LARGH - 124, 'Campo']];
+  const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(PAG.sx, y, LARGH, 7, 'F'); doc.setTextColor(255);
+    cols.forEach(([x, w, l]) => riga1(doc, l, x + 2, y + 4.8, w - 4, {size: 9, bold: true})); y += 8.5; doc.setTextColor(...INK_RGB); };
   testata();
+  const giornoH = 7;
+  /* Ogni partita: partita e campo su al massimo 2 righe, che si adattano; l'altezza segue la cella più alta */
+  const misura = m => {
+    const titolo = m.evento ? `${m.opponent} (${m.tipo})` : (m.home ? `Academy - ${m.opponent||'?'}` : `${m.opponent||'?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Amichevole'}` : '');
+    const campo = m.evento ? (m.venue || '') : m.home ? `In casa · ${CAL_NOMI[calDi(m)]}${m.venue ? ' · ' + m.venue : ''}` : (m.venue || 'Trasferta');
+    const b1 = misuraBlocco(doc, titolo, cols[2][1] - 4, {size: 9.5, min: 8, maxRighe: 2});
+    const b2 = misuraBlocco(doc, campo, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2});
+    return {titolo, campo, h: Math.max(b1.righe.length * b1.alt, b2.righe.length * b2.alt) + 3.2};
+  };
   let giorno = '';
   for(const m of ms){
-    if(y > 270){ doc.addPage(); y = 14; testata(); giorno = ''; }
-    if(m.date !== giorno){ giorno = m.date; doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...BLU_RGB);
-      doc.text(`${weekday(m.date)} ${fmtDate(m.date)}`.toUpperCase(), 10, y + 4); y += 6.5; doc.setTextColor(...INK_RGB); }
-    const titolo = m.evento ? `${m.opponent} (${m.tipo})` : (m.home ? `Academy - ${m.opponent||'?'}` : `${m.opponent||'?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Amichevole'}` : '');
-    const campo = m.evento ? m.venue : m.home ? `In casa · ${CAL_NOMI[calDi(m)]}` : (m.venue || 'Trasferta');
-    const r1 = doc.splitTextToSize(titolo, 80), r2 = doc.splitTextToSize(campo || '', 60), h = Math.max(r1.length, r2.length) * 4.4 + 2.4;
-    doc.setFillColor(...(calDi(m)==='merate' ? BLU_RGB : calDi(m)==='cernusco' ? [212,175,55] : [196,30,58])); doc.rect(10, y, 1.4, h - 1, 'F');
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
-    doc.text(m.time ? `${m.time.padStart(5,'0')}${m.fine ? '–'+m.fine : ''}` : 'da definire', 13, y + 4);
-    doc.setFont('helvetica', 'bold'); doc.text(m.evento ? 'Evento' : siglaSquadra(m.team), 38, y + 4);
-    doc.setFont('helvetica', 'normal'); doc.text(r1, 58, y + 4); doc.setTextColor(...GRIGIO_RGB); doc.text(r2, 140, y + 4); doc.setTextColor(...INK_RGB);
-    doc.setDrawColor(230); doc.line(10, y + h - 0.6, 200, y + h - 0.6);
-    y += h;
+    const r = misura(m), nuovoGiorno = m.date !== giorno;
+    /* il titolo del giorno non resta mai da solo in fondo alla pagina */
+    if(y + r.h + (nuovoGiorno ? giornoH : 0) > PAG.basso){ y = nuovaPagina(doc, TITOLO); testata(); giorno = ''; }
+    if(m.date !== giorno){ giorno = m.date; doc.setTextColor(...BLU_RGB);
+      riga1(doc, `${weekday(m.date)} ${fmtDate(m.date)}`.toUpperCase(), PAG.sx, y + 4, LARGH, {size: 10.5, bold: true}); y += giornoH; doc.setTextColor(...INK_RGB); }
+    doc.setFillColor(...(calDi(m)==='merate' ? BLU_RGB : calDi(m)==='cernusco' ? [212,175,55] : [196,30,58])); doc.rect(PAG.sx, y, 1.4, r.h - 1, 'F');
+    const by = y + 4;
+    riga1(doc, m.time ? `${m.time.padStart(5,'0')}${m.fine ? '–'+m.fine : ''}` : 'da definire', cols[0][0] + 3, by, cols[0][1] - 4, {size: 9.5, min: 7});
+    riga1(doc, m.evento ? 'Evento' : siglaSquadra(m.team), cols[1][0] + 2, by, cols[1][1] - 3, {size: 9.5, min: 7, bold: true});
+    blocco(doc, r.titolo, cols[2][0] + 2, by, cols[2][1] - 4, {size: 9.5, min: 8, maxRighe: 2});
+    doc.setTextColor(...GRIGIO_RGB); blocco(doc, r.campo, cols[3][0] + 2, by, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2}); doc.setTextColor(...INK_RGB);
+    doc.setDrawColor(230); doc.line(PAG.sx, y + r.h - 0.6, PAG.dx, y + r.h - 0.6);
+    y += r.h;
   }
-  if(!ms.length){ doc.setFontSize(11); doc.text('Nessun impegno nel periodo.', 10, y + 6); }
+  if(!ms.length) riga1(doc, 'Nessun impegno nel periodo.', PAG.sx, y + 6, LARGH, {size: 11});
   await salvaPdf(doc, nomeFile('PROGRAMMA', progDal, progAl));
 }
 document.addEventListener('change', e => {

@@ -185,7 +185,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
   direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`, area **Modulistica** del Portale: Distinta (`sheet.distinta`),
-  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi, PDF su carta intestata; anche Avvisi → Scarica PDF); casella
+  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi, PDF su carta intestata; anche Avvisi → Scarica PDF). Impaginazione automatica
+  in testa a `modulistica.js` (`riga1` una riga che rimpicciolisce e poi taglia con "…", `blocco`/`misuraBlocco` su più righe,
+  `paragrafi` con elenchi rientrati e righe giustificate, `nuovaPagina` con fascia "segue"): la comunicazione sceglie la grandezza
+  più grande che sta in una pagina (12,5→9, poi 11 su più pagine), la distinta stringe le righe per stare in una pagina e tiene
+  insieme staff, note e firme, il programma non lascia un giorno da solo in fondo alla pagina; casella
   "Mostra la categoria" (`sheet.senzaCategoria`) per le intestazioni di convocazioni, distinta e foglio gara
 - 0033: `documenti_tesserati` (visita medica, bonifico con `rata` = posizione in quote, altro; file in `bytea`, max 4 MB,
   foto ridotte a 1600 px nel browser): la famiglia carica con `famiglia_carica(pin, …)` e li vede in `famiglia_get`; la
