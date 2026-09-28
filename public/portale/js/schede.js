@@ -162,6 +162,7 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='eventi') v.innerHTML = viewEventi();
+  else if(tab==='mieiallenamenti') v.innerHTML = viewMieiAllenamenti();
   else if(tab==='tesserati') v.innerHTML = viewTesserati();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())

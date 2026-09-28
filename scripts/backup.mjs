@@ -29,7 +29,7 @@ const TABELLE = [
   // Distinte e storico
   'squadre', 'distinte', 'distinte_giocatori',
   // Segreteria e famiglie (0031)
-  'tesserati', 'tesserati_dati', 'risposte_convocazioni',
+  'tesserati', 'tesserati_dati', 'risposte_convocazioni', 'documenti_tesserati',
 ];
 const TENERE = 12;
 const BASE = fileURLToPath(new URL('../private/backup/', import.meta.url)); // (gli spazi nel percorso restano spazi)

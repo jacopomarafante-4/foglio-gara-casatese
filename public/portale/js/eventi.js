@@ -99,6 +99,8 @@ document.addEventListener('click', e => {
     case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'exportbackup': exportBackup(); break;
     case 'segnala': inviaSegnalazione(); break;
+    case 'valuta': inviaValutazione(); break;
+    case 'valutaannulla': segValuta = null; segEsito = null; render(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(secureMode){

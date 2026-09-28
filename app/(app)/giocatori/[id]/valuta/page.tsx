@@ -15,10 +15,11 @@ export default async function Valuta({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ errore?: string }>;
+  searchParams: Promise<{ errore?: string; gia?: string; nota?: string; contesto?: string; data?: string }>;
 }) {
   const { id } = await params;
-  const { errore } = await searchParams;
+  // gia=1: arriva da una segnalazione di un giocatore già in lista (quello che si era scritto va nel commento)
+  const { errore, gia, nota, contesto, data } = await searchParams;
   const profilo = (await getProfilo())!;
   if (!puoSegnalare(profilo.ruolo)) redirect(`/giocatori/${id}`);
 
@@ -40,6 +41,12 @@ export default async function Valuta({
 
       <form action={salvaValutazione} className="mt-6 space-y-6">
         <Avviso errore={errore} />
+        {gia && (
+          <p className="rounded-xl border-l-4 border-oro bg-carta p-4 text-sm">
+            <b>{titolo} è già in lista.</b> Invece di una nuova segnalazione, compila la valutazione: quello che avevi scritto è già
+            nel commento finale.
+          </p>
+        )}
         <input type="hidden" name="id" value={g.id} />
 
         {AREE.map((a) => (
@@ -63,15 +70,15 @@ export default async function Valuta({
               </label>
             ))}
           </div>
-          <textarea name="commento" rows={4} placeholder="Commento finale" className="campo" />
+          <textarea name="commento" rows={4} placeholder="Commento finale" className="campo" defaultValue={nota ?? ''} />
         </fieldset>
 
         <div className="grid grid-cols-[1fr_auto] gap-3">
           <Etichetta testo="Partita o occasione">
-            <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" />
+            <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
           </Etichetta>
           <Etichetta testo="Data">
-            <input type="date" name="data" defaultValue={oggiIso()} className="campo" />
+            <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
           </Etichetta>
         </div>
 

@@ -24,6 +24,7 @@ export async function salvaSegnalazione(formData: FormData) {
   if (voto !== null && (voto < 1 || voto > 5)) errore('Il voto va da 1 a 5.', giocatoreId);
 
   // Giocatore nuovo o da cercare tra quelli esistenti
+  let nuovoGiocatore = false;
   if (!giocatoreId) {
     const annata = intero(formData, 'annata');
     const cognome = maiuscoleIniziali(testo(formData, 'cognome'));
@@ -56,6 +57,16 @@ export async function salvaSegnalazione(formData: FormData) {
         .single();
       if (error || !nuovo) errore(`Giocatore non salvato: ${error?.message ?? 'errore sconosciuto'}`);
       giocatoreId = nuovo.id;
+      nuovoGiocatore = true;
+    }
+  }
+
+  // Giocatore già in lista (osservato): niente nuova segnalazione, si apre la valutazione con quello che si è scritto
+  if (!nuovoGiocatore) {
+    const { data: gia } = await supabase.from('giocatori').select('osservato').eq('id', giocatoreId).maybeSingle();
+    if (gia?.osservato) {
+      const q = new URLSearchParams({ gia: '1', nota: osservazione ?? '', ...(contesto ? { contesto } : {}), ...(data ? { data } : {}) });
+      redirect(`/giocatori/${giocatoreId}/valuta?${q}`);
     }
   }
 

@@ -44,7 +44,7 @@ h3{font-family:var(--cond);font-weight:600;font-size:20px;margin:22px 0 8px}
 .hint{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:62ch}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px}
 .panel + .panel{margin-top:14px}
-input[type=text],input[type=password],input[type=date],input[type=time],input[type=number],input:not([type]),select,textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-height:44px}
+input[type=text],input[type=password],input[type=tel],input[type=email],input[type=search],input[type=date],input[type=time],input[type=number],input:not([type]),select,textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-height:44px}
 input:focus,select:focus,textarea:focus{border-color:var(--sel);outline:none;box-shadow:0 0 0 3px color-mix(in srgb, var(--sel) 15%, transparent)}
 textarea{min-height:90px;resize:vertical}
 button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
@@ -355,6 +355,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .qrow{display:grid;grid-template-columns:1.2fr .8fr 1.2fr auto auto;gap:6px;align-items:center;margin-bottom:6px}
 @media (max-width:520px){.qrow{grid-template-columns:1fr 1fr;}}
 /* Famiglia */
+.docrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;margin-bottom:6px;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;background:var(--paper)}
+.docrow.st-accettato{border-left-color:var(--grass)}
+.docrow.st-rifiutato{border-left-color:var(--red)}
 .convfam.nc{border-color:var(--line)}
 .btn.danger-on{background:var(--red);border-color:var(--red);color:#fff}
 .avvisocert{border-left:5px solid var(--amber)}
@@ -362,6 +365,13 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .famrisp{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:middle}
 .famrisp.si{background:var(--grass);color:#fff}
 .famrisp.no{background:var(--red);color:#fff}
+/* Pagine in programma (lavori in corso) */
+.lavori{text-align:center;padding:32px 20px;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--amber) 10%,var(--paper)) 0 18px,var(--paper) 18px 36px)}
+.lavori-icona{font-size:56px;line-height:1}
+.lavori-tag{display:inline-block;margin:4px 0 10px;padding:3px 12px;border-radius:999px;background:var(--amber);color:#2B2205;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.lavori .hint{max-width:520px;margin:0 auto 8px}
+.valarea{padding:10px 0;border-bottom:1px solid var(--line)}
+.valarea textarea{margin-top:6px}
 .coachcat{display:flex;align-items:center;gap:8px;margin:0 0 10px 4px}
 .coachcat input{max-width:180px}
 .storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}

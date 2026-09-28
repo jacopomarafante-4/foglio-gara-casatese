@@ -162,6 +162,13 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0033: `documenti_tesserati` (visita medica, bonifico con `rata` = posizione in quote, altro; file in `bytea`, max 4 MB,
+  foto ridotte a 1600 px nel browser): la famiglia carica con `famiglia_carica(pin, …)` e li vede in `famiglia_get`; la
+  segreteria li apre con `documento_scarica(id)`, li accetta (bonifico → rata pagata, visita → nuova scadenza) o rifiuta con nota
+- 0032: segnalare un giocatore già in lista (osservato) apre la valutazione, per tutti: nello Scouting `segnala/actions.ts`
+  rimanda a `/giocatori/<id>/valuta?gia=1&nota=…`; nel Portale `coach_segnala` (ora jsonb) risponde `esistente` e il mister
+  valuta con `coach_valuta` (firma in `valutazioni.autore_squadra`). Portale: Squadra → Allenamento → "I miei allenamenti 🚧"
+  (lavori in corso)
 - 0031: famiglie e segreteria. Tabelle protette `tesserati` (squadra_id + giocatore_id della rosa, `pin` famiglia a 8 cifre),
   `tesserati_dati` (genitori, certificato, taglie, iscrizione, quote, note_segreteria), `risposte_convocazioni`: RLS
   `gestisce_segreteria()` (admin, direttori, segreteria). `segreteria_rose()` = squadre e rose senza PIN dei mister;

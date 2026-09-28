@@ -87,7 +87,67 @@ function viewFamigliaSegreteria(){
       ${quote.map(q => `<tr><td class="nm">${esc(q.rata||'')}</td><td>${q.importo ? '€ '+esc(q.importo) : ''}</td><td>${fmtDate(q.scadenza)}</td><td>${q.pagata ? '✓ Pagata' : '<b>Da pagare</b>'}</td></tr>`).join('')}</tbody></table></div>`
       : '<p class="note">Nessuna rata registrata.</p>'}
     <p class="note" style="margin-top:10px">Per dubbi su iscrizione e quote rivolgetevi alla segreteria della società.</p>
+  </section>
+  ${viewFamigliaDocumenti()}`;
+}
+/* ---------- Documenti: la famiglia carica visita medica, contabile di bonifico (per una rata), altro (0033) ---------- */
+const TIPI_DOC = {visita_medica:'Visita medica', bonifico:'Contabile di bonifico', altro:'Altro documento'};
+const STATI_DOC = {da_controllare:'Da controllare', accettato:'Accettato', rifiutato:'Rifiutato'};
+let famDoc = {tipo:'visita_medica', rata:'', descrizione:''}, famCarico = false;
+function viewFamigliaDocumenti(){
+  const quote = (F.dati?.quote || []).map((q, i) => ({...q, i})).filter(q => !q.pagata);
+  const docs = F.documenti || [];
+  return `<section class="panel">
+    <h2>Documenti</h2>
+    <p class="hint">Caricate qui la visita medica, la contabile del bonifico di una rata o altri documenti richiesti: basta una foto chiara o un PDF. La segreteria li controlla.</p>
+    <div class="grid">
+      <div><label class="f" for="fd_tipo">Documento</label><select id="fd_tipo" data-famdoc="tipo">${Object.entries(TIPI_DOC).map(([k,l]) => `<option value="${k}" ${k===famDoc.tipo?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${famDoc.tipo==='bonifico' ? `<div><label class="f" for="fd_rata">Rata pagata</label><select id="fd_rata" data-famdoc="rata"><option value="">Scegli la rata</option>${quote.map(q => `<option value="${q.i}" ${String(q.i)===String(famDoc.rata)?'selected':''}>${esc(q.rata||'Rata '+(q.i+1))}${q.importo ? ' · € '+esc(q.importo) : ''}</option>`).join('')}</select></div>` : ''}
+      <div><label class="f" for="fd_desc">Descrizione (facoltativa)</label><input id="fd_desc" data-famdoc="descrizione" value="${esc(famDoc.descrizione)}" placeholder="Es. certificato agonistico"></div>
+    </div>
+    <label class="f" for="fd_file" style="margin-top:8px">File</label>
+    <input id="fd_file" type="file" accept="image/jpeg,image/png,application/pdf">
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-famcarica="1" ${famCarico ? 'disabled' : ''}>${famCarico ? 'Caricamento…' : 'Carica documento'}</button></div>
+    ${docs.length ? `<h3 class="convh3" style="margin-top:16px">Caricati</h3>${docs.map(d => `<div class="docrow st-${d.stato}">
+      <div><b>${esc(TIPI_DOC[d.tipo] || d.tipo)}</b>${d.tipo==='bonifico' && d.rata != null ? ` · ${esc((F.dati?.quote||[])[d.rata]?.rata || 'rata '+(d.rata+1))}` : ''}${d.descrizione ? ' · '+esc(d.descrizione) : ''}
+        <div class="note">${esc(d.nome_file)} · ${fmtDate(String(d.caricato_il).slice(0,10))}${d.nota ? ' · '+esc(d.nota) : ''}</div></div>
+      <span class="sbadge ${d.stato==='accettato' ? 'c-ok' : d.stato==='rifiutato' ? 'c-scaduto' : 'c-scade'}">${STATI_DOC[d.stato]}</span></div>`).join('')}` : ''}
   </section>`;
+}
+/* Foto ridotte sul telefono (lato lungo 1600 px, JPEG) prima dell'invio; PDF così come sono (max 4 MB) */
+function fileInBase64(file){
+  return new Promise((ok, ko) => {
+    if(file.type === 'application/pdf'){
+      if(file.size > 4*1024*1024) return ko(new Error('Il PDF è troppo grande (massimo 4 MB).'));
+      const r = new FileReader(); r.onload = () => ok({mime:'application/pdf', b64:String(r.result).split(',')[1]}); r.onerror = () => ko(new Error('File non leggibile.')); r.readAsDataURL(file); return;
+    }
+    if(!/^image\//.test(file.type)) return ko(new Error('Carica una foto o un PDF.'));
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      ok({mime:'image/jpeg', b64:c.toDataURL('image/jpeg', 0.82).split(',')[1]});
+    };
+    img.onerror = () => ko(new Error('Foto non leggibile: prova in JPG.'));
+    img.src = url;
+  });
+}
+async function caricaDocumentoFamiglia(){
+  const file = $('#fd_file')?.files?.[0];
+  if(!file){ setStatus('Scegli il file da caricare'); return; }
+  if(famDoc.tipo==='bonifico' && famDoc.rata===''){ setStatus('Scegli la rata pagata'); return; }
+  famCarico = true; render();
+  try{
+    const {mime, b64} = await fileInBase64(file);
+    const nome = file.name.replace(/\.(heic|heif|png|jpe?g)$/i, '') + (mime==='application/pdf' ? '' : '.jpg');
+    const { error } = await supabaseClient.rpc('famiglia_carica', { p_pin: famPin, p_tipo: famDoc.tipo, p_rata: famDoc.rata==='' ? null : +famDoc.rata,
+      p_descrizione: famDoc.descrizione, p_nome_file: nome, p_mime: mime, p_base64: b64 });
+    if(error) throw error;
+    famDoc = {tipo:'visita_medica', rata:'', descrizione:''}; setStatus('Documento caricato: la segreteria lo controllerà');
+    await aggiornaFamiglia(true);
+  }catch(e){ setStatus(e.message || 'Documento non caricato: riprova'); }
+  famCarico = false; render();
 }
 const FAM_TABS = [['home','Home'],['calendario','Calendario'],['anagrafica','Anagrafica'],['segreteria','Segreteria']];
 function renderFamiglia(){
@@ -103,7 +163,8 @@ function renderFamiglia(){
 }
 document.addEventListener('click', async e => {
   if(ROLE !== 'famiglia') return;
-  const b = e.target.closest('[data-famtab],[data-famrisp],[data-famsalva]'); if(!b) return;
+  const b = e.target.closest('[data-famtab],[data-famrisp],[data-famsalva],[data-famcarica]'); if(!b) return;
+  if(b.dataset.famcarica){ caricaDocumentoFamiglia(); return; }
   if(b.dataset.famtab){ famTab = b.dataset.famtab; render(); window.scrollTo(0,0); return; }
   if(b.dataset.famrisp){
     const k = b.dataset.famrisp, v = b.dataset.v;
@@ -117,7 +178,12 @@ document.addEventListener('click', async e => {
     F.dati = {...(F.dati||{}), ...famBozza}; famBozza = null; setStatus('Salvato'); render();
   }
 });
+document.addEventListener('change', e => {
+  if(ROLE !== 'famiglia' || !e.target.dataset?.famdoc) return;
+  famDoc[e.target.dataset.famdoc] = e.target.value; if(e.target.dataset.famdoc === 'tipo') render();
+});
 document.addEventListener('input', e => {
+  if(ROLE === 'famiglia' && e.target.dataset?.famdoc === 'descrizione'){ famDoc.descrizione = e.target.value; return; }
   if(ROLE !== 'famiglia' || !e.target.dataset?.famf) return;
   famBozza ||= {...(F.dati||{})}; famBozza[e.target.dataset.famf] = e.target.value;
   const s = $('[data-famsalva]'); if(s) s.disabled = false;

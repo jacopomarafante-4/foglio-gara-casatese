@@ -17,12 +17,22 @@ CSS = f"""
 @page{{size:A4;margin:16mm 16mm 18mm}}
 :root{{--blu:#003da5;--oro:#d4af37;--rosso:#c41e3a;--ink:#0e1a2b;--grigio:#5b6b80;--linea:#d8dfe8;--carta:#f5f7fa;--verde:#2f6b45}}
 *{{box-sizing:border-box}}
-body{{margin:0;font-family:Barlow,sans-serif;font-size:10.6pt;line-height:1.48;color:var(--ink)}}
+body{{margin:0;font-family:Barlow,sans-serif;font-size:11.2pt;line-height:1.5;color:var(--ink)}}
 h1,h2,h3{{font-family:'Barlow Condensed',Barlow,sans-serif;line-height:1.1}}
-h2{{font-size:20pt;color:var(--blu);margin:0 0 3mm;padding-bottom:1.8mm;border-bottom:1.1mm solid var(--linea);break-after:avoid}}
-h3{{font-size:13.5pt;margin:4.5mm 0 1.5mm;break-after:avoid}}
+h2{{font-size:21pt;color:#fff;background:var(--blu);margin:0 0 4mm;padding:3mm 5mm;border-radius:2.5mm;
+  border-bottom:1.4mm solid var(--oro);break-after:avoid}}
+h3{{font-size:14pt;color:var(--blu);margin:5mm 0 1.8mm;padding-left:3mm;border-left:1.2mm solid var(--oro);break-after:avoid}}
 p{{margin:0 0 2.3mm}} ul,ol{{margin:0 0 3mm;padding-left:5.5mm}} li{{margin:0 0 1.1mm}}
-section{{break-before:page}}
+/* I capitoli scorrono uno dopo l'altro (niente pagina nuova per ognuno: niente pagine mezze vuote) */
+section{{break-before:auto;margin-top:10mm}}
+.cover{{break-after:page}}
+.indice{{break-after:page}}
+.indice h2{{margin-bottom:6mm}}
+.indice ol{{list-style:none;padding:0;columns:1}}
+.indice li{{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0;border-bottom:.3mm solid var(--linea);font-size:13pt;
+  font-family:'Barlow Condensed';font-weight:600}}
+.indice li b{{display:inline-grid;place-items:center;min-width:8mm;height:8mm;border-radius:50%;background:var(--blu);color:#fff;font-size:11pt}}
+.indice .intro{{margin-top:8mm;font-size:11pt;color:var(--grigio)}}
 .cover{{height:255mm;display:flex;flex-direction:column}}
 .cover .top{{background:var(--blu);color:#fff;padding:20mm 13mm 14mm;border-radius:3mm 3mm 0 0}}
 .cover img{{width:24mm;height:24mm;background:#fff;border-radius:3mm;padding:1.5mm}}
@@ -30,7 +40,8 @@ section{{break-before:page}}
 .cover .sub{{font-size:14pt;opacity:.92}}
 .stripe{{display:flex;height:2.2mm}} .stripe i{{display:block}}
 .cover .meta{{margin-top:auto;color:var(--grigio);font-size:10pt}} .cover .meta b{{color:var(--ink)}}
-table{{width:100%;border-collapse:collapse;margin:1mm 0 4mm;font-size:9.6pt}}
+table{{width:100%;border-collapse:collapse;margin:1mm 0 4mm;font-size:10pt}}
+tr:nth-child(even) td{{background:var(--carta)}}
 th{{text-align:left;font-family:'Barlow Condensed';font-size:10.5pt;color:#fff;background:var(--blu);padding:1.5mm 2.2mm}}
 td{{padding:1.3mm 2.2mm;border-bottom:.25mm solid var(--linea);vertical-align:top}}
 tr{{break-inside:avoid}}
@@ -41,12 +52,12 @@ tr{{break-inside:avoid}}
 .col h3{{margin-top:0}}
 .ok li::marker{{content:'✓  ';color:var(--verde);font-weight:700}}
 .ko li::marker{{content:'✕  ';color:var(--rosso);font-weight:700}}
-.fig{{display:grid;grid-template-columns:52mm 1fr;gap:6mm;align-items:start;margin:2mm 0 4mm;break-inside:avoid}}
-.fig img{{width:52mm;border:.3mm solid var(--linea);border-radius:3mm;box-shadow:0 1mm 3mm rgba(0,0,0,.08)}}
-.fig.stretta img{{max-height:98mm;object-fit:cover;object-position:top}}
+.fig{{display:grid;grid-template-columns:60mm 1fr;gap:7mm;align-items:start;margin:3mm 0 5mm;break-inside:avoid}}
+.fig img{{width:60mm;border:.4mm solid var(--linea);border-radius:4mm;box-shadow:0 1.5mm 5mm rgba(0,30,80,.15)}}
+.fig.stretta img{{max-height:118mm;object-fit:cover;object-position:top}}
 .duo{{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin:2mm 0 4mm;break-inside:avoid}}
 .duo img{{width:100%;border:.3mm solid var(--linea);border-radius:3mm;max-height:105mm;object-fit:cover;object-position:top}}
-.cap{{font-size:8.8pt;color:var(--grigio);margin-top:1mm}}
+.cap{{font-size:9.2pt;color:var(--grigio);margin-top:1.5mm;text-align:center;font-style:italic}}
 .passi{{counter-reset:p;list-style:none;padding-left:0}}
 .passi li{{counter-increment:p;padding-left:8mm;position:relative}}
 .passi li::before{{content:counter(p);position:absolute;left:0;top:.3mm;width:5.2mm;height:5.2mm;border-radius:50%;background:var(--blu);color:#fff;font-family:'Barlow Condensed';font-weight:700;font-size:9pt;display:grid;place-items:center}}
@@ -109,6 +120,14 @@ Tieni il telefono protetto da codice o impronta.</li>
 
 
 def pagina(titolo, corpo):
+    # Indice dopo la copertina: i titoli dei capitoli (h2)
+    import re
+    capitoli = re.findall(r'<h2>(.*?)</h2>', corpo)
+    voci = ''.join(f'<li><b>{m.group(1)}</b>{m.group(2)}</li>' if (m := re.match(r'(\d+)\.\s*(.*)', c)) else f'<li>{c}</li>' for c in capitoli)
+    indice = f'<div class="indice"><h2>Indice</h2><ol>{voci}</ol><p class="intro">Le schermate usano dati di esempio: nomi e numeri sono inventati.</p></div>'
+    fine = corpo.find('</div></div>', corpo.find('class="cover"'))
+    fine = corpo.find('</div>', corpo.find('class="meta"')) + len('</div></div>') if 'class="meta"' in corpo else fine
+    corpo = corpo[:fine] + indice + corpo[fine:]
     return f'<!doctype html><html lang="it"><head><meta charset="utf-8"><title>{titolo}</title><style>{CSS}</style></head><body>{corpo}</body></html>'
 
 
@@ -156,7 +175,7 @@ riunioni) e pubblica <b>avvisi</b> per una o più squadre, da mandare anche su W
 taglie, iscrizioni e quote; genera il PIN di ogni famiglia e lo manda su WhatsApp. Non vede lo Scouting né le squadre.</td></tr>
 <tr><td><b>Famiglia</b></td><td>Portale, solo il proprio figlio</td><td>Vede le convocazioni del figlio (ora, ritrovo, campo) e risponde
 "ci sarà / non ci sarà", il calendario della squadra, gli avvisi, l'anagrafica (aggiorna contatti e taglie), iscrizione, certificato e
-quote.</td></tr>
+quote. <b>Carica documenti</b>: visita medica, contabile del bonifico di una rata, altri documenti (foto o PDF).</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
@@ -376,7 +395,10 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 <p><span class="k">+ Nuovo test</span>, poi i tempi di ognuno come <b>minuti:secondi</b> (es. 12:51). Una parola diversa
 (es. "non svolto") resta come nota.</p>
 <h3>Statistiche</h3>
-<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%.</p>''', 'Presenze')}
+<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%.</p>
+<h3>I miei allenamenti 🚧</h3>
+<p>In arrivo: qui potrai preparare e ritrovare le tue sedute (esercizi, obiettivi, durata, materiale). Per ora la scheda
+mostra "Lavori in corso".</p>''', 'Presenze')}
 </section>
 
 <section>
@@ -412,8 +434,11 @@ dall'area <b>Scouting</b>.</p><ol class="passi">
 <li><b>Cognome e nome</b>, oppure, se non li sai, <b>come riconoscerlo</b> ("N.8, biondo, mancino").</li>
 <li><b>Cosa hai visto</b>: la parte più importante, solo aspetti tecnici e sportivi.</li>
 <li>Prima impressione da 1 a 5, partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
-<p>La segnalazione arriva firmata con il tuo nome e la tua squadra. Se il ragazzo c'è già, la tua segnalazione si aggiunge
-alla sua scheda.</p>
+<p>La segnalazione arriva firmata con il tuo nome e la tua squadra.</p>
+<div class="box"><b class="t">È già in lista? Lo valuti</b>Se il ragazzo è già nell'archivio dello scouting, la segnalazione non si
+salva: si apre la <b>Valutazione</b>. Dai un voto da 1 a 5 a Tecnica, Motoria, Tattica e Mentale (con note se vuoi), scegli il
+giudizio finale (Da prendere, Da rivedere, Non a livello) e tocca <span class="k">Salva valutazione</span>. Quello che avevi scritto
+è già nel commento finale. La valutazione arriva firmata con il tuo nome e la tua squadra.</div>
 <h3>Scouting → Giocatori</h3>
 <p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), divisi per stato, ognuno col suo
 colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In alto cerchi per nome o società e filtri per
@@ -477,7 +502,9 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <li><b>Cosa hai visto</b>: il cuore della segnalazione.</li>
 <li><b>Prima impressione</b> da 1 (non a livello) a 5 (da prendere subito), partita o occasione, data.</li>
 <li><span class="k">Salva segnalazione</span>: si apre la scheda del giocatore.</li></ol>
-<p class="small">Stesso cognome, nome e annata di un ragazzo già in archivio? La segnalazione si aggiunge alla sua scheda.</p>''', 'Segnala un giocatore')}
+<div class="box"><b class="t">È già in lista? Si valuta</b>Se il ragazzo è già in archivio (stesso cognome, nome e annata), la
+segnalazione <b>non</b> si salva: si apre subito la <b>Valutazione</b> (le 4 aree da 1 a 5 e il giudizio), con quello che avevi
+scritto già nel commento, la partita e la data.</div>''', 'Segnala un giocatore')}
 </section>
 
 <section>
@@ -601,6 +628,10 @@ mostrano chi ha il certificato da sistemare, l'iscrizione incompleta, rate da pa
 crea il PIN della famiglia; <span class="k">Manda il PIN su WhatsApp</span> apre il messaggio pronto per il genitore. In
 <b>Società → Segreteria</b> si crea l'account (e il PIN) di chi lavora in segreteria. Il mister vede nelle Convocazioni le
 risposte delle famiglie ("famiglia: ci sarà / non ci sarà").</p>
+<p><b>Documenti delle famiglie</b>: nella scheda del ragazzo, "Documenti caricati dalla famiglia" (visita medica, contabile di
+bonifico, altro). <span class="k">Apri</span> per vederlo, <span class="k">Accetta</span> o <span class="k">Rifiuta</span> (con una
+nota che la famiglia legge). Accettando un bonifico la rata diventa pagata; accettando una visita si scrive la nuova scadenza del
+certificato. Il filtro "Documenti da controllare" mostra chi ne ha di nuovi.</p>
 <h3>Eventi e avvisi</h3>
 <p>Nell'area <b>Eventi</b>: <span class="k">+ Nuovo evento</span> (titolo, tipo, data, orari, luogo, squadre coinvolte: nessuna =
 tutta la società); gli eventi compaiono nel calendario di tutti e nella vista Giorno, nella colonna del campo. In <b>Avvisi</b> scegli

@@ -19,7 +19,7 @@ const AREA_ICONS = {
    ognuno con le sue schede (seconda riga, #subtabs) e le sue statistiche */
 const GRUPPI_SQUADRA = [
   {k:'rosa', label:'Rosa', tabs:['rosa']},
-  {k:'allenamento', label:'Allenamento', tabs:['allenamenti','test','statallen']},
+  {k:'allenamento', label:'Allenamento', tabs:['allenamenti','mieiallenamenti','test','statallen']},
   {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini','statpartite','campi']}
 ];
 const AREAS = [
@@ -34,7 +34,8 @@ const AREAS = [
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
-  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi', tesserati:'Tesserati'};
+  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi', tesserati:'Tesserati',
+  mieiallenamenti:'I miei allenamenti 🚧'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -483,6 +484,17 @@ function viewCalendario(){
   </section>
 `;
 }
+/* Squadra → Allenamento → I miei allenamenti: in programma (lavori in corso) */
+function viewMieiAllenamenti(){
+  return `<section class="panel lavori">
+    <div class="lavori-icona" aria-hidden="true">🚧</div>
+    <h2>I miei allenamenti</h2>
+    <p class="lavori-tag">Lavori in corso</p>
+    <p class="hint">Qui potrai preparare e ritrovare le tue sedute: esercizi, obiettivi, durata, materiale, e riusarle durante la stagione.
+    La funzione è in programma e arriverà nei prossimi aggiornamenti.</p>
+    <p class="note">Nel frattempo le presenze si segnano in <button class="linkbtn" data-tab="allenamenti">Presenze</button>.</p>
+  </section>`;
+}
 /* Squadra → Campi: posizione esatta dei campi per il link di Google Maps */
 function viewCampi(){
   return viewVenues() || `<section class="panel"><h2>Campi</h2><p class="empty">Nessun campo: i campi arrivano dalle partite del calendario.</p></section>`;
@@ -614,8 +626,54 @@ let segDraft = {data: todayISO()}, segEsito = null, segInvio = false, societaNom
 const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampista:'Centrocampista', attaccante:'Attaccante'};
 /* stesso elenco di annateDisponibili() in lib/tipi.ts */
 function annateScouting(){ const a = new Date().getFullYear(); return Array.from({length:16}, (_, i) => String(a - 5 - i)); }
+/* Giocatore già in lista (coach_segnala risponde esistente, 0032): al posto della segnalazione la valutazione (coach_valuta) */
+let segValuta = null;
+const AREE_VALUTA = [['tecnica','Tecnica','Controllo, passaggio, tiro, uso dei due piedi'],['motoria','Motoria','Velocità, coordinazione, resistenza, forza'],
+  ['tattica','Tattica','Posizione, letture di gioco, scelte'],['mentale','Mentale','Carattere, concentrazione, reazione all\'errore']];
+function viewValutaMister(){
+  const v = segValuta;
+  return `<h2>Valutazione</h2>
+  <p class="esito" role="status" style="border-left:4px solid var(--amber)"><b>${esc(v.nome || 'Il giocatore')} (${esc(v.annata||'')}${v.societa ? ', '+esc(v.societa) : ''}) è già in lista.</b>
+    Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento finale.</p>
+  ${segEsito && !segEsito.ok ? `<p class="esito ko" role="alert">${esc(segEsito.msg)}</p>` : ''}
+  <section class="panel segform">
+    ${AREE_VALUTA.map(([k,l,aiuto]) => `<div class="valarea"><div class="row" style="justify-content:space-between;align-items:baseline"><b>${l}</b><span class="note">${aiuto}</span></div>
+      <div class="seg" role="group" aria-label="${l} da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" data-valv="${k}:${n}" aria-pressed="${String(v[k])===String(n)}">${n}</button>`).join('')}</div>
+      <textarea data-valf="${k}_note" rows="2" placeholder="Note (facoltative)">${esc(v[k+'_note']||'')}</textarea></div>`).join('')}
+    <span class="f">Giudizio finale *</span>
+    <div class="seg" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
+    <label class="f" for="val_comm">Commento finale</label><textarea id="val_comm" data-valf="commento" rows="4">${esc(v.commento||'')}</textarea>
+    <div class="grid">
+      <div><label class="f">Partita o occasione</label><input data-valf="contesto" value="${esc(v.contesto||'')}"></div>
+      <div><label class="f">Data</label><input type="date" data-valf="data" value="${esc(v.data||'')}"></div>
+    </div>
+    <div class="row" style="gap:8px;margin-top:10px"><button class="btn primary" data-act="valuta" ${segInvio?'disabled':''}>${segInvio ? 'Salvataggio…' : 'Salva valutazione'}</button>
+      <button class="btn ghost" data-act="valutaannulla">Annulla</button></div>
+  </section>`;
+}
+async function inviaValutazione(){
+  if(segInvio) return;
+  const v = segValuta, manca = AREE_VALUTA.find(([k]) => !v[k]);
+  if(manca){ segEsito = {ok:false, msg:`Manca il voto di ${manca[1]}.`}; render(); window.scrollTo(0,0); return; }
+  if(!v.giudizio){ segEsito = {ok:false, msg:'Scegli il giudizio finale.'}; render(); window.scrollTo(0,0); return; }
+  segInvio = true; render();
+  const dati = Object.fromEntries(Object.entries(v).filter(([k]) => !['giocatore_id','nome','annata','societa'].includes(k)));
+  const { error } = await supabaseClient.rpc('coach_valuta', {p_pin: coachPin, p_giocatore: v.giocatore_id, p_dati: dati});
+  segInvio = false;
+  if(error){ segEsito = {ok:false, msg: error.message || 'Valutazione non salvata, riprova.'}; render(); return; }
+  segValuta = null; segDraft = {data: todayISO()}; giocatoriAnnata = null;
+  segEsito = {ok:true, msg:'Valutazione salvata. Grazie!'}; render(); window.scrollTo(0,0);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-valv],[data-valg]'); if(!b || !segValuta) return;
+  if(b.dataset.valv){ const [k, n] = b.dataset.valv.split(':'); segValuta[k] = +n; }
+  else segValuta.giudizio = b.dataset.valg;
+  render();
+});
+document.addEventListener('input', e => { if(segValuta && e.target.dataset?.valf) segValuta[e.target.dataset.valf] = e.target.value; });
 function viewSegnala(){
   if(!coachPin) return `<h2>Segnala un giocatore</h2><section class="panel"><p class="empty">La segnalazione si fa entrando col PIN della squadra.</p></section>`;
+  if(segValuta) return viewValutaMister();
   if(societaNomi === null){
     societaNomi = [];
     supabaseClient.rpc('coach_societa', {p_pin: coachPin}).then(({data}) => { if(Array.isArray(data)){ societaNomi = data; if(tab==='segnala') render(); } });
@@ -660,9 +718,14 @@ async function inviaSegnalazione(){
   if(manca){ segEsito = {ok:false, msg:manca}; render(); window.scrollTo(0,0); return; }
   segInvio = true; render();
   let error = null;
-  try{ ({ error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d}})); }catch(e){ error = e; }
+  let risposta = null;
+  try{ ({ data: risposta, error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d}})); }catch(e){ error = e; }
   segInvio = false;
-  if(!error){ segEsito = {ok:true, msg:'Segnalazione inviata allo scouting. Grazie!'}; segDraft = {data: todayISO()}; }
+  if(!error && risposta?.esistente){
+    /* già in lista: si apre la valutazione, con quello che si era scritto nel commento */
+    segValuta = {...risposta, commento: d.testo || '', contesto: d.contesto || '', data: d.data || todayISO()}; segEsito = null;
+  }
+  else if(!error){ segEsito = {ok:true, msg:'Segnalazione inviata allo scouting. Grazie!'}; segDraft = {data: todayISO()}; }
   else if(error.code === 'PGRST202') segEsito = {ok:false, msg:'Funzione non ancora attiva: chiedi all’admin di eseguire la migrazione 0007.'};
   else if(error.code === 'PT429') segEsito = {ok:false, msg:'Troppi PIN sbagliati in poco tempo: riprova tra qualche minuto.'};
   else if(error.code === '28000') segEsito = {ok:false, msg:'PIN della squadra non più valido: rientra dalla pagina d’ingresso.'};

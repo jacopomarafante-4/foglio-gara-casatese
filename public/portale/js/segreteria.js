@@ -3,7 +3,7 @@
    Dati di minori: stanno nelle tabelle protette tesserati / tesserati_dati, mai nei documenti del Portale.
    Squadre e rose arrivano da segreteria_rose() (senza PIN dei mister). */
 
-let segRose = null, segTess = null, segErrore = '', segSquadra = '', segAperto = null, segFiltro = '';
+let segRose = null, segTess = null, segErrore = '', segSquadra = '', segAperto = null, segFiltro = '', segDocs = [];
 const SITO = 'https://academy-casatese.vercel.app';
 
 async function caricaSegreteria(){
@@ -16,6 +16,9 @@ async function caricaSegreteria(){
   if(r.error || t.error){ segErrore = 'Segreteria non disponibile: serve la migrazione 0031 (e un accesso da admin, direttore o segreteria).'; segRose = []; segTess = []; render(); return; }
   segRose = (r.data || []).filter(s => (s.players||[]).length);
   segTess = t.data || [];
+  /* documenti caricati dalle famiglie (0033), senza il contenuto */
+  const dc = await supabaseClient.from('documenti_tesserati').select('id, tesserato_id, tipo, rata, descrizione, nome_file, mime, dimensione, caricato_il, stato, nota').order('caricato_il', {ascending:false});
+  segDocs = dc.error ? [] : dc.data || [];
   if(!segSquadra || !segRose.some(s => s.id === segSquadra)) segSquadra = segRose[0]?.id || '';
   await creaMancanti();
   render();
@@ -78,17 +81,20 @@ function viewTesserati(){
     cert: ['Certificato da sistemare', conta(t => cert(t).k !== 'ok')],
     iscr: ['Iscrizione incompleta', conta(t => !datiDi(t).iscrizione_completa)],
     quote: ['Rate da pagare', conta(t => quoteDaPagare(datiDi(t)).length)],
-    pin: ['Senza PIN famiglia', conta(t => !t.pin)]
+    pin: ['Senza PIN famiglia', conta(t => !t.pin)],
+    doc: ['Documenti da controllare', conta(t => docsDi(t).some(d => d.stato==='da_controllare'))]
   };
   const lista = tess.filter(t => segFiltro==='' || (segFiltro==='cert' && cert(t).k !== 'ok') || (segFiltro==='iscr' && !datiDi(t).iscrizione_completa)
-    || (segFiltro==='quote' && quoteDaPagare(datiDi(t)).length) || (segFiltro==='pin' && !t.pin));
+    || (segFiltro==='quote' && quoteDaPagare(datiDi(t)).length) || (segFiltro==='pin' && !t.pin)
+    || (segFiltro==='doc' && docsDi(t).some(d => d.stato==='da_controllare')));
   const f = (t, k, l, tipo='text', ph='') => `<div><label class="f">${l}</label><input type="${tipo}" data-segd="${t.id}:${k}" value="${esc(datiDi(t)[k] ?? '')}" placeholder="${esc(ph)}"></div>`;
   const scheda = t => {
     const d = datiDi(t), c = cert(t), qd = quoteDaPagare(d);
     const badges = [`<span class="sbadge c-${c.k}">${c.k==='ok' ? 'Certificato ok' : c.l}</span>`,
       d.iscrizione_completa ? '<span class="sbadge c-ok">Iscritto</span>' : '<span class="sbadge c-scade">Iscrizione da completare</span>',
       qd.length ? `<span class="sbadge c-scade">${qd.length} ${qd.length===1 ? 'rata' : 'rate'} da pagare</span>` : '',
-      t.pin ? '<span class="sbadge c-ok">PIN famiglia</span>' : '<span class="sbadge c-manca">Senza PIN</span>'].join('');
+      t.pin ? '<span class="sbadge c-ok">PIN famiglia</span>' : '<span class="sbadge c-manca">Senza PIN</span>',
+      docsDi(t).some(d => d.stato==='da_controllare') ? `<span class="sbadge c-scade">📄 ${docsDi(t).filter(d => d.stato==='da_controllare').length} da controllare</span>` : ''].join('');
     const quote = (d.quote||[]).map((q, i) => `<div class="qrow">
         <input data-segq="${t.id}:${i}:rata" value="${esc(q.rata||'')}" placeholder="Es. 1ª rata" aria-label="Rata">
         <input data-segq="${t.id}:${i}:importo" value="${esc(q.importo||'')}" placeholder="€" inputmode="decimal" aria-label="Importo">
@@ -120,6 +126,15 @@ function viewTesserati(){
         <h4>Quote</h4>
         ${quote || '<p class="note">Nessuna rata.</p>'}
         <button class="btn small ghost" data-segqadd="${t.id}">+ Aggiungi rata</button>
+        <h4>Documenti caricati dalla famiglia</h4>
+        ${docsDi(t).length ? docsDi(t).map(dc => `<div class="docrow st-${dc.stato}">
+          <div><b>${TIPI_DOC_SEG[dc.tipo] || dc.tipo}</b>${dc.tipo==='bonifico' && dc.rata != null ? ' · '+esc((d.quote||[])[dc.rata]?.rata || 'rata '+(dc.rata+1)) : ''}${dc.descrizione ? ' · '+esc(dc.descrizione) : ''}
+            <div class="note">${fmtDate(String(dc.caricato_il).slice(0,10))} · ${esc(dc.nome_file)} · ${Math.round(dc.dimensione/1024)} KB${dc.nota ? ' · '+esc(dc.nota) : ''}</div></div>
+          <div class="row" style="gap:6px">
+            <button class="btn small" data-segdocapri="${dc.id}">Apri</button>
+            ${dc.stato!=='accettato' ? `<button class="btn small primary" data-segdocok="${dc.id}">Accetta</button>` : '<span class="sbadge c-ok">Accettato</span>'}
+            ${dc.stato!=='rifiutato' ? `<button class="btn small ghost danger" data-segdocno="${dc.id}">Rifiuta</button>` : '<span class="sbadge c-scaduto">Rifiutato</span>'}
+          </div></div>`).join('') : '<p class="note">Nessun documento caricato.</p>'}
         <h4>Note della segreteria <span class="note">(la famiglia non le vede)</span></h4>
         <textarea data-segd="${t.id}:note_segreteria">${esc(d.note_segreteria||'')}</textarea>
         <h4>Accesso della famiglia</h4>
@@ -141,6 +156,37 @@ function viewTesserati(){
   </section>`;
 }
 
+/* ---------- Documenti delle famiglie (0033) ---------- */
+const TIPI_DOC_SEG = {visita_medica:'Visita medica', bonifico:'Contabile di bonifico', altro:'Altro documento'};
+const docsDi = t => segDocs.filter(d => d.tesserato_id === t.id);
+async function apriDocumento(id){
+  const w = window.open('', '_blank');   // aperta subito (i telefoni bloccano le finestre aperte dopo un'attesa)
+  const { data, error } = await supabaseClient.rpc('documento_scarica', { p_id: id });
+  if(error || !data){ w?.close(); setStatus('Documento non aperto: riprova'); return; }
+  const bin = atob(data.base64), arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([arr], {type: data.mime}));
+  if(w) w.location.href = url; else location.href = url;
+}
+async function esitoDocumento(id, ok){
+  const dc = segDocs.find(x => x.id === id), t = dc && trovaTess(dc.tesserato_id); if(!dc || !t) return;
+  let nota = null;
+  if(!ok){ nota = prompt('Perché lo rifiuti? La famiglia vedrà questa nota.', 'Foto non leggibile'); if(nota === null) return; }
+  const { error } = await supabaseClient.from('documenti_tesserati').update({stato: ok ? 'accettato' : 'rifiutato', nota}).eq('id', id);
+  if(error){ setStatus('Non salvato: riprova'); return; }
+  Object.assign(dc, {stato: ok ? 'accettato' : 'rifiutato', nota});
+  /* accettato: la rata diventa pagata, la visita aggiorna la scadenza del certificato */
+  if(ok && dc.tipo === 'bonifico' && dc.rata != null){
+    const q = [...(datiDi(t).quote||[])]; if(q[dc.rata]){ q[dc.rata] = {...q[dc.rata], pagata: true}; salvaDati(t, {quote: q}); }
+  }
+  if(ok && dc.tipo === 'visita_medica'){
+    const s = prompt('Fino a quando vale il nuovo certificato? (gg/mm/aaaa)', '');
+    const m = (s||'').match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if(m) salvaDati(t, {certificato_scadenza: `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`});
+  }
+  segAperto = t.id; setStatus(ok ? 'Documento accettato' : 'Documento rifiutato'); render();
+}
+
 /* ---------- Eventi ---------- */
 const trovaTess = id => (segTess||[]).find(t => t.id === id);
 document.addEventListener('input', e => {
@@ -159,8 +205,11 @@ document.addEventListener('change', e => {
   if(ds.segd?.endsWith(':iscrizione_completa') || ds.segq?.endsWith(':pagata') || ds.segd?.endsWith(':certificato_scadenza')) render();
 });
 document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-segfiltro],[data-segqadd],[data-segqdel],[data-segpin],[data-segapri] > summary'); if(!b) return;
+  const b = e.target.closest('[data-segfiltro],[data-segqadd],[data-segqdel],[data-segpin],[data-segdocapri],[data-segdocok],[data-segdocno],[data-segapri] > summary'); if(!b) return;
   const ds = b.dataset || {};
+  if(ds.segdocapri){ apriDocumento(ds.segdocapri); return; }
+  if(ds.segdocok){ esitoDocumento(ds.segdocok, true); return; }
+  if(ds.segdocno){ esitoDocumento(ds.segdocno, false); return; }
   if(ds.segfiltro !== undefined){ segFiltro = ds.segfiltro; render(); return; }
   if(ds.segqadd){ const t = trovaTess(ds.segqadd); if(!t) return; salvaDati(t, {quote: [...(datiDi(t).quote||[]), {rata:'', importo:'', scadenza:'', pagata:false}]}); segAperto = t.id; render(); return; }
   if(ds.segqdel){ const [id, i] = ds.segqdel.split(':'), t = trovaTess(id); if(!t) return; const q = [...(datiDi(t).quote||[])]; q.splice(+i, 1); salvaDati(t, {quote: q}); segAperto = id; render(); return; }

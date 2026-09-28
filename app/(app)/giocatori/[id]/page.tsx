@@ -49,6 +49,7 @@ type Segnalazione = {
 
 type Valutazione = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; autore: Autore;
+  autore_squadra: string | null;   // valutazione di un mister dal Portale (0032)
   tecnica: number; motoria: number; tattica: number; mentale: number;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 };
@@ -280,7 +281,7 @@ export default async function SchedaGiocatore({
                   return (
                     <li key={`v${v.id}`} className="rounded-xl border-2 border-blu/30 bg-white p-4">
                       <p className="text-sm text-grigio">
-                        Valutazione di {chi(v.autore)} – {dataBreve(v.data)}
+                        Valutazione di {v.autore || !v.autore_squadra ? chi(v.autore) : `Mister ${v.autore_squadra}`} – {dataBreve(v.data)}
                         {v.contesto && ` – ${v.contesto}`}
                       </p>
                       <p className="mt-1 font-display text-xl font-bold">{GIUDIZI[v.giudizio]}</p>
