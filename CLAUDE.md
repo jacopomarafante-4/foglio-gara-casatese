@@ -160,6 +160,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `scripts/import-adb/importa.mjs` dai fogli presenze (CSV in `private/adb/`, NON su git); niente Formazione/Piazzati/Foglio gara
   (`SOLO_AGONISTICA` in `portale.js`, anche Dati partita); convocazioni da 1 a 4 partite con i loro convocati (`sheet.adb.partite`, `viewConvocazioniAdb()`), PDF orizzontale sul
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
+- Portale, calci piazzati (`shared/schemes`, comuni a tutte le squadre): schemi aggiunti in blocco da `scripts/piazzati/schemi.mjs`
+  con `scripts/piazzati/aggiungi.mjs [--conferma] [--aggiorna]` (confronto per id; coordinate in metri, bandierina a destra x = 34;
+  frecce piene = palla, tratteggiate = movimento). Filtro Tutti/A favore/A sfavore/Scelti (`filtroSchemi` in `schede.js`); in Assegna il
+  nome del compito si rinomina per tutte le sue pedine (`data-arolegrp`: admin nello schema, mister solo nella partita, `schemeEdits`)
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,

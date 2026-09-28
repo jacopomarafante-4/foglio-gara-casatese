@@ -762,9 +762,15 @@ function viewFormazione(){
   </section>`;
 }
 
+/* Filtro dell'elenco dei piazzati (ora sono tanti): tutti, a favore, a sfavore, solo quelli scelti per la partita */
+let filtroSchemi = 'tutti';
+const FILTRI_SCHEMI = {tutti:'Tutti', favore:'A favore', sfavore:'A sfavore', scelti:'Scelti'};
+document.addEventListener('click', e => { const b = e.target.closest('[data-filtroschemi]'); if(!b) return; filtroSchemi = b.dataset.filtroschemi; render(); });
 function viewSchemes(){
   const sel = S.sheet.selected, A = isAdmin();
+  const passa = sc => filtroSchemi==='tutti' || (filtroSchemi==='scelti' ? sel.includes(sc.id) : sc.side===filtroSchemi);
   const cards = S.schemes.map((sc,i) => {
+    if(!passa(sc)) return '';
     const isSel = sel.includes(sc.id);
     return `<div class="scard ${isSel?'sel':''}">
       <button class="scardmain" data-schemecard="${sc.id}" aria-pressed="${isSel}" aria-label="${isSel?'Togli dalla partita':'Seleziona per la partita'}: ${esc(sc.name)}">
@@ -788,7 +794,10 @@ function viewSchemes(){
     <h2>Calci piazzati</h2>
     ${A ? '<p class="hint">Database comune a tutte le squadre: quello che crei o modifichi qui lo vedono tutti i mister.</p>' : lockNote('Gli schemi sono comuni a tutte le squadre e li carica l\'amministratore. Tu scegli quali stampare, assegni i giocatori e, solo per la tua partita, puoi cambiare i compiti, spostare pedine o disegnare frecce: nessuna di queste modifiche cambia lo schema per gli altri.')}
     <p class="hint">Tocca uno schema per selezionarlo per questa partita: solo per quelli selezionati potrai assegnare compiti e giocatori. I giocatori si riempiono comunque in automatico dalla formazione, in base al numero di ruolo.</p>
-    <div class="sgrid">${cards || '<p class="empty">Ancora nessuno schema.</p>'}</div>
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <div class="seg" role="group" aria-label="Filtro schemi">${Object.entries(FILTRI_SCHEMI).map(([k,l]) => `<button data-filtroschemi="${k}" aria-pressed="${filtroSchemi===k}">${l}${k==='scelti' ? ` (${sel.length})` : ''}</button>`).join('')}</div>
+    </div>
+    <div class="sgrid">${cards.trim() ? cards : `<p class="empty">${S.schemes.length ? 'Nessuno schema con questo filtro.' : 'Ancora nessuno schema.'}</p>`}</div>
   </section>
   ${A ? `<section class="panel">
     <h3 style="margin-top:0">Nuovo schema</h3>
@@ -896,10 +905,13 @@ function assegnaList(sc, rm, roles){
         <input data-arole="${t.id}" list="rolelist" value="${esc(t.role)}" placeholder="Compito" aria-label="Compito della pedina ${t.slot}">
       </div>`;
     }).join('');
-    return `<div class="asgrp"><div class="scompr"><i style="background:${col}"></i>${esc(role)}</div>${righe}</div>`;
+    /* nome del compito: cambiandolo qui cambia per tutte le sue pedine (mister: solo questa partita) */
+    const nome = role==='Senza compito' ? '' : role;
+    return `<div class="asgrp"><div class="scompr asnome"><i style="background:${col}"></i><input data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="${nome ? 'Nome del compito' : 'Senza compito: scrivi un nome'}" aria-label="Nome del compito ${esc(role)}"><span aria-hidden="true">✎</span></div>${righe}</div>`;
   }).join('');
   return `<h3>Chi fa cosa</h3>
-    <p class="hint">Scegli il giocatore per ogni pedina${A ? '' : ' (vale solo per questa partita)'}: di partenza c'è chi gioca con quel numero di ruolo in formazione. Puoi anche toccare una pedina sul campo.</p>
+    <p class="hint">Scegli il giocatore per ogni pedina${A ? '' : ' (vale solo per questa partita)'}: di partenza c'è chi gioca con quel numero di ruolo in formazione. Puoi anche toccare una pedina sul campo.
+      Tocca il nome di un compito (✎) per rinominarlo${A ? ' nello schema comune' : ': cambia per tutte le sue pedine, solo per questa partita'}.</p>
     <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
     <div class="aslist">${blocchi}</div>`;
 }

@@ -162,6 +162,19 @@ document.addEventListener('change', e => {
     if(t.value) ov[t.dataset.atok] = t.value; else delete ov[t.dataset.atok];
     save('sheet'); render(); return;
   }
+  if(t.dataset.arolegrp !== undefined){
+    const sc = S.schemes.find(q=>q.id===openSchemeId); if(!sc) return;
+    const prima = t.dataset.arolegrp, nuovo = t.value.trim();
+    if(nuovo === prima) return;
+    const toks = effTokens(sc).filter(q => (q.role||'').trim() === prima);
+    if(isAdmin()){ toks.forEach(q => { const tk = sc.tokens.find(x => x.id===q.id); if(tk) tk.role = nuovo; }); save('schemes'); }
+    else { const ed = schemeEdit(sc);
+      toks.forEach(q => { const base = sc.tokens.find(x => x.id===q.id); if(!base) return;
+        if(nuovo === (base.role||'')){ if(ed.roles?.[base.id]){ delete ed.roles[base.id].role; if(!Object.keys(ed.roles[base.id]).length) delete ed.roles[base.id]; } }
+        else ((ed.roles ||= {})[base.id] ||= {}).role = nuovo; });
+      save('sheet'); }
+    render(); return;
+  }
   if(t.dataset.arole){
     const sc = S.schemes.find(q=>q.id===openSchemeId); if(!sc) return;
     if(isAdmin()){ const tk = sc.tokens.find(q=>q.id===t.dataset.arole); if(tk){ tk.role = t.value.trim(); save('schemes'); } }

@@ -127,6 +127,9 @@ summary{cursor:pointer;font-weight:600}
 .scomprow{display:grid;grid-template-columns:minmax(90px,150px) 1fr;gap:10px;align-items:start}
 .scompr{display:flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:700;font-size:15px;padding-top:3px}
 .scompr i{width:5px;height:16px;border-radius:2px;flex:none}
+.asnome input{flex:1;min-width:0;font:inherit;border:1px dashed transparent;border-radius:6px;padding:2px 6px;background:transparent;color:inherit}
+.asnome input:hover,.asnome input:focus{border-color:var(--line);background:var(--paper)}
+.asnome span{color:var(--muted);font-weight:400;font-size:13px}
 .scompp{display:flex;flex-wrap:wrap;gap:6px 12px}
 .scomp{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
 .scomp b{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:50%;border:2px solid;font-family:var(--cond);font-size:14px}
