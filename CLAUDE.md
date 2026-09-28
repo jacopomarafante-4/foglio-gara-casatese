@@ -168,6 +168,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0036: `necessita` (titolo, `annata_da`–`annata_a`, `ruolo`, `piede`, `priorita` alta/media/bassa, `note`, `aperta`): le leggono
+  admin, direttori e scout (`puo_segnalare()`), le scrivono admin e direttori (`vede_tutto()`). Pagina `/necessita` (scheda
+  "Necessità"): sotto ogni richiesta i giocatori osservati che rientrano (esclusi Academy, `inserito`, `da_non_inserire`), prima i
+  "Da prendere" poi per media; "Da verificare" = ruolo o piede non indicato
 - 0035: `carriera` (società stagione per stagione: `societa_nome` di allora, `stagione` "2025/26", `origine` iniziale/cambio/manuale,
   `nota`); trigger `registra_carriera` a ogni cambio di `societa_id` (e alla creazione se osservato; un secondo cambio nello stesso giorno
   corregge il primo), `controlla_cambio_societa` (solo admin, direttori, scout), `cambia_societa(giocatore, societa, dal, nota)` per gli

@@ -572,6 +572,14 @@ altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito co
 </section>
 
 <section>
+<h2>Necessità della società</h2>
+<p>Nella scheda <b>Necessità</b> ci sono i giocatori che la società sta cercando (annata, ruolo, piede, priorità e note),
+scritti dai direttori. Sotto ogni richiesta vedi i ragazzi già in archivio che rientrano, con stato, media dell'ultima
+valutazione e giudizio: tocca un nome per aprire la scheda. "Da verificare" sono quelli con ruolo o piede non ancora
+indicato: se li vedi, completali. Se nessuno rientra, è lì che serve cercare sui campi.</p>
+</section>
+
+<section>
 <h2>6. Gare da vedere</h2>
 {fig('s-gare', '''<ul>
 <li>Le gare dei prossimi giorni, dalla più vicina, con la <b>distanza</b> da metà strada tra Merate e Cernusco Lombardone
@@ -694,6 +702,10 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
+<li><b>Necessità</b>: che giocatori cerca la società. <span class="k">+ Nuova necessità</span> (admin e direttori): cosa cerchiamo,
+annata (anche più di una), ruolo, piede, priorità e note. Sotto ogni richiesta ci sono i giocatori già in archivio che rientrano
+(non dell'Academy, né inseriti né scartati), prima i "Da prendere", poi per media; a parte, "Da verificare", quelli con ruolo o
+piede non indicato. <span class="k">Chiudi (trovato)</span> la sposta tra le chiuse. Gli scout le vedono, così sanno cosa cercare.</li>
 <li><b>Home</b>: incarichi, numeri dell'archivio per stato e ultime segnalazioni.</li>
 <li><b>Incarichi</b>: in Home scrivi cosa c'è da fare (una squadra da vedere, un torneo da supervisionare, una partita),
 con società, categoria, data e dettagli. Direttori e scout lo prendono con "Me ne occupo io", così nessuno va in due;
