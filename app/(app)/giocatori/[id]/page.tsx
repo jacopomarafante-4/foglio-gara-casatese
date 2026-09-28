@@ -14,6 +14,7 @@ import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreS
 import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
+import { StoricoValutazioni } from '@/components/StoricoValutazioni';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
@@ -224,6 +225,9 @@ export default async function SchedaGiocatore({
             </div>
           ))}
         </dl>
+        <StoricoValutazioni
+          valutazioni={valutazioni.map((v) => ({ ...v, firma: v.autore || !v.autore_squadra ? chi(v.autore) : `Mister ${v.autore_squadra}` }))}
+        />
       </section>
 
       {/* Prossime gare della sua squadra (caricate nel pannello Gare) */}

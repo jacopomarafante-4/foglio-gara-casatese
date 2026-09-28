@@ -544,7 +544,8 @@ solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
 {fig('s-scheda', '''<ul>
 <li><b>In alto</b>: nome, stato, annata, ruolo, piede, società e <b>squadra</b> (società · categoria, es. "Under 14 - 2013").
 <span class="k">Aggiungi segnalazione</span> e <span class="k">Valuta</span>.</li>
-<li><b>Valutazioni</b>: le medie delle 4 aree.</li>
+<li><b>Valutazioni</b>: le medie delle 4 aree e, sotto, lo <b>storico valutazioni</b>: una riga per valutazione (data, chi, i 4 voti,
+media e giudizio) con ↑ o ↓ se è meglio o peggio della precedente; tocca la riga per note e commento.</li>
 <li><b>Prossime gare</b>: le partite della sua squadra caricate in Gare, con ora, campo e mappa, e "Ci vado io".</li>
 <li><b>Carriera</b>: le società in cui ha giocato, stagione per stagione. Ogni cambio di società resta scritto (chi, da quando,
 nota); accanto ci sono le stagioni lette dalle distinte. <span class="k">Cambia società</span> (admin, direttori e scout, anche sui
