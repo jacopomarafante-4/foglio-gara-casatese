@@ -145,7 +145,9 @@ test e tabellini, guarda le statistiche, segnala giocatori allo scouting e vede 
 le presenze dei loro allenamenti; guardano rosa, calendario, gara, presenze e statistiche di ogni squadra senza modificarle;
 segnalano giocatori allo scouting e in Scouting → Giocatori vedono i portieri osservati di tutte le annate. Ognuno ha le sue
 categorie di portieri (in Società, "Portieri di: Under"): in Home e in Calendario → I miei portieri vede solo le partite di
-quelle categorie; in Tutte le squadre vede tutto.</td></tr>
+quelle categorie; in Tutte le squadre vede tutto. Sotto ogni partita ci sono i portieri di quella squadra con lo stato
+della convocazione (convocato, non convocato, infortunato… o "da convocare"); in I miei portieri il menu Portiere mostra
+solo le partite di un portiere.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>

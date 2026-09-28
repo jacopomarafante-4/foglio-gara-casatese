@@ -165,7 +165,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   valutazioni, mai contatti né note del giocatore.
   Presenze dei preparatori: `scripts/import-adb/importa.mjs --squadra=SGS` da `private/adb/SGS.csv`.
   Ogni preparatore ha `coaches[].eta` (Società → "Portieri di: Under"): Home e Calendario → "I miei portieri" mostrano solo le
-  partite di quelle categorie (`impegni()`, `etaPortieri()` in `portale.js`, preparatore riconosciuto da `misterName`)
+  partite di quelle categorie (`impegni()`, `etaPortieri()` in `portale.js`, preparatore riconosciuto da `misterName`),
+  con sotto ogni partita i portieri della squadra (`registro.gk`) e lo stato della convocazione (`chipsPortieri()`: sheet.callup
+  o sheet.adb.partite[].conv), filtro per portiere. Portieri della rosa dei preparatori segnati nelle rose delle squadre con
+  `scripts/import-adb/portieri.mjs [--conferma]` (confronto per nome, stampa solo conteggi)
 - 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
   in Squadra → Calendario); admin e direttori leggono i `calendar/<squadra>` direttamente
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano

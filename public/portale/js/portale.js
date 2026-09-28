@@ -134,6 +134,37 @@ function impegni(){
   const eta = etaPortieri();
   return partiteTutte().filter(m => m.team?.id !== squadraPropria && (!eta || eta.includes(etaSquadra(m.team))));
 }
+/* Portieri delle squadre dei preparatori: per ogni partita chi sono e se il mister li ha convocati.
+   Dati letti in sola lettura (0028): rosa, registro (portieri = registro.gk) e foglio gara/convocazioni di ogni squadra. */
+let portieriDati = null, portieriAt = 0, portieriInCorso = false, portiereScelto = '';
+async function caricaPortieri(){
+  if(!perPortieri() || !db || portieriInCorso || Date.now() - portieriAt < 60000) return;
+  portieriInCorso = true;
+  const eta = etaPortieri(), out = {};
+  const leggi = p => db.doc(p).get().then(s => s.exists ? s.data() : null).catch(() => null);
+  for(const t of S.teams.filter(t => t.id !== squadraPropria && (!eta || eta.includes(etaSquadra(t))))){
+    const [r, g, sh] = await Promise.all([leggi('roster/'+t.id), leggi('registro/'+t.id), leggi('sheet/'+t.id)]);
+    out[t.id] = {team: t, gk: (g?.gk || []).map(id => (r?.players || []).find(p => p.id === id)).filter(Boolean), sheet: sh || {}};
+  }
+  portieriDati = out; portieriAt = Date.now(); portieriInCorso = false;
+  if(tab==='home' || tab==='calendario') render();
+}
+const stessaPartita = (x, m) => (x.calId && x.calId === m.id) || (x.date === m.date && (x.opponent||'').trim().toLowerCase() === (m.opponent||'').trim().toLowerCase());
+/* Stato del portiere per la partita: CON/NC/INF/SQL/ND dalla convocazione, '' se il mister non l'ha ancora fatta */
+function statoPortiere(m, pid){
+  const sh = portieriDati?.[m.team?.id]?.sheet || {};
+  const pa = (sh.adb?.partite || []).find(x => stessaPartita(x, m));
+  if(pa) return (pa.conv || []).includes(pid) ? 'CON' : 'NC';
+  if(sh.date && stessaPartita(sh, m)) return (sh.callup || {})[pid] || '';
+  return '';
+}
+function chipsPortieri(m){
+  caricaPortieri();
+  const gk = (portieriDati?.[m.team?.id]?.gk || []).filter(p => !portiereScelto || p.id === portiereScelto);
+  if(!gk.length) return '';
+  return `<div class="gkchips">${gk.map(p => { const st = statoPortiere(m, p.id);
+    return `<span class="gkchip st-${st || 'da'}">🧤 ${esc(p.name)} · ${st ? CALLUP_LABELS[st].toLowerCase() : 'da convocare'}</span>`; }).join('')}</div>`;
+}
 /* I tre calendari della società, ognuno col suo colore: campo di Merate, campo di Cernusco, trasferta */
 const CAL_NOMI = {merate:'Merate', cernusco:'Cernusco', trasferta:'Trasferta'};
 const calDi = m => !m.home ? 'trasferta' : /MERATE/i.test(m.venue || '') ? 'merate' : 'cernusco';
@@ -147,7 +178,7 @@ const rigaPartita = (m, tutte, conData) => `<li class="cal-${calDi(m)}${tutte &&
     <div class="wkwhen"><b>${weekday(m.date)}${conData ? ' '+fmtDate(m.date).slice(0,5) : ''}</b><span>${esc(m.time ? m.time.padStart(5,'0') : 'ora ?')}</span></div>
     <div><div class="wkmatch">${esc(nomePartita(m, tutte))}</div>
       <div class="note">${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</div>
-      ${conData && !m.friendly ? calStato(m) : ''}</div>
+      ${conData && !m.friendly ? calStato(m) : ''}${perPortieri() ? chipsPortieri(m) : ''}</div>
   </li>`;
 /* Sabato e domenica della settimana in corso (da lunedì a domenica) */
 function weekendISO(){
@@ -345,6 +376,7 @@ function vistaGiorno(ms){
     <p class="note">Tocca una partita per i dettagli. Durata dei blocchi indicativa: si conosce l'ora d'inizio della partita.</p>`;
 }
 document.addEventListener('change', e => {
+  if(e.target.dataset?.gkscelto){ portiereScelto = e.target.value; render(); return; }
   if(!e.target.dataset?.calcat) return;
   calCategoria = e.target.value; calGiorno = null; calScelta = null; render();
 });
@@ -377,7 +409,13 @@ function viewCalendario(){
         : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>`}
     </section>`;
   }
-  const cal = inOrdine(S.calendar.filter(daGiocare)), prossime = inOrdine(impegni().filter(daGiocare));
+  const cal = inOrdine(S.calendar.filter(daGiocare));
+  const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];
+  if(portiereScelto && !tuttiGk.some(p => p.id === portiereScelto)) portiereScelto = '';
+  const squadraGk = tuttiGk.find(p => p.id === portiereScelto)?.team?.id;
+  const prossime = inOrdine(impegni().filter(daGiocare).filter(m => !squadraGk || m.team?.id === squadraGk));
+  const filtroGk = tuttiGk.length ? `<div class="row" style="margin-bottom:8px;gap:8px"><label class="note" for="gk_scelto">Portiere</label>
+    <select id="gk_scelto" data-gkscelto="1"><option value="">Tutti i miei portieri</option>${tuttiGk.map(p => `<option value="${esc(p.id)}" ${p.id===portiereScelto?'selected':''}>${esc(p.name)} · ${esc(siglaSquadra(p.team))}</option>`).join('')}</select></div>` : '';
   const official = A
     ? cal.map(m => `
       <div class="teamcard cal-${calDi(m)}">
@@ -399,6 +437,7 @@ function viewCalendario(){
     ${scelta}
     <p class="hint">${perPortieri() ? 'Le partite da giocare delle categorie dei tuoi portieri (le assegna la società). Tutta la società è in "Tutte le squadre".'
       : `${A ? 'Le partite ufficiali da giocare: le modifichi solo tu.' : 'Le partite da giocare fino a fine stagione: campionato, amichevoli e tornei.'} Le partite già giocate sono nello storico, in fondo. Servono per la Home, per "Usa questa" in Squadra → Partite → Dati partita e per i Tabellini.`}</p>
+    ${filtroGk}
     ${(A ? cal.length : prossime.length) ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
     ${A ? '<div class="row" style="margin-top:10px"><button class="btn small" data-act="caladd">Aggiungi partita</button></div>' : ''}
     ${viewStorico()}
