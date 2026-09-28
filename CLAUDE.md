@@ -168,6 +168,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0035: `carriera` (società stagione per stagione: `societa_nome` di allora, `stagione` "2025/26", `origine` iniziale/cambio/manuale,
+  `nota`); trigger `registra_carriera` a ogni cambio di `societa_id` (e alla creazione se osservato; un secondo cambio nello stesso giorno
+  corregge il primo), `controlla_cambio_societa` (solo admin, direttori, scout), `cambia_societa(giocatore, societa, dal, nota)` per gli
+  scout anche sui giocatori degli altri, `stagione_di(date)`. `unisci_societa`/`unisci_giocatori` riscritte: spostano la carriera e non
+  la contano come cambio (`app.unione`). Scheda: `components/CarrieraGiocatore.tsx` (con le stagioni delle distinte); la società non si
+  cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
   direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`: Distinta (Squadra → Partite, `sheet.distinta`),
   Programma gare dal–al (Calendario → Programma, PDF), Comunicazione su carta intestata (Avvisi → Scarica PDF); casella

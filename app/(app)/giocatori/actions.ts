@@ -32,11 +32,7 @@ export async function aggiornaGiocatore(formData: FormData) {
   if (!cognome && !descrizione) torna(id, { errore: 'Serve il cognome o una descrizione.' });
 
   const supabase = await createClient();
-  const nomeSocieta = testo(formData, 'societa');
-  const societa = nomeSocieta
-    ? await trovaOCreaSocieta(supabase, await elencoSocieta(supabase), nomeSocieta)
-    : null;
-
+  // la società non si cambia da qui: "Cambia società" nella Carriera (0035) la registra con data e nota
   const { data, error } = await supabase
     .from('giocatori')
     .update({
@@ -47,7 +43,6 @@ export async function aggiornaGiocatore(formData: FormData) {
       data_nascita: testo(formData, 'data_nascita'),
       ruolo: valoreValido(RUOLI_CAMPO, formData.get('ruolo')),
       piede: valoreValido(PIEDI, formData.get('piede')),
-      societa_id: societa?.id ?? null,
       categoria: testo(formData, 'categoria'),
       note: testoLungo(formData, 'note'),
     })
@@ -224,4 +219,47 @@ export async function spostaStato(formData: FormData) {
   const { data, error } = await supabase.from('giocatori').update({ stato }).eq('id', id).select('id');
   if (error || !data?.length) redirect(`${dove}${sep}errore=${encodeURIComponent('Stato non aggiornato: possono cambiarlo solo admin e direttori.')}`);
   redirect(`${dove}${sep}ok=${encodeURIComponent(`Spostato in ${STATI[stato]}.`)}`);
+}
+
+/* ---------- Carriera (0035): società stagione per stagione ---------- */
+
+/** Nuova società del giocatore: admin, direttori e scout (anche sui giocatori segnalati da altri) */
+export async function cambiaSocieta(formData: FormData) {
+  const id = testo(formData, 'id')!;
+  const nome = testo(formData, 'societa');
+  if (!nome) torna(id, { errore: 'Scrivi la nuova società.' });
+  const supabase = await createClient();
+  const societa = await trovaOCreaSocieta(supabase, await elencoSocieta(supabase), nome!);
+  if (!societa) torna(id, { errore: 'Società non salvata: riprova.' });
+  const { error } = await supabase.rpc('cambia_societa', {
+    p_giocatore: id, p_societa: societa!.id, p_dal: testo(formData, 'dal'), p_nota: testoLungo(formData, 'nota'),
+  });
+  if (error) torna(id, { errore: `Società non cambiata: ${error.message}` });
+  torna(id, { ok: `Nuova società: ${societa!.nome}. Il cambio è nella carriera.` });
+}
+
+/** Stagione passata aggiunta a mano (es. "2023/24 · Usmate · Pulcini") */
+export async function aggiungiStagione(formData: FormData) {
+  const id = testo(formData, 'id')!;
+  const stagione = testo(formData, 'stagione');
+  const nome = testo(formData, 'societa');
+  if (!stagione || !/^\d{4}\/\d{2}$/.test(stagione) || !nome) torna(id, { errore: 'Scegli la stagione e scrivi la società.' });
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const societa = await trovaOCreaSocieta(supabase, await elencoSocieta(supabase), nome!);
+  const { error } = await supabase.from('carriera').insert({
+    giocatore_id: id, societa_id: societa?.id ?? null, societa_nome: societa?.nome ?? nome!.trim(), stagione,
+    categoria: testo(formData, 'categoria'), nota: testoLungo(formData, 'nota'), origine: 'manuale', autore_id: user?.id,
+  });
+  if (error) torna(id, { errore: `Stagione non salvata: ${error.message}` });
+  torna(id, { ok: `Stagione ${stagione} aggiunta alla carriera.` });
+}
+
+export async function eliminaStagione(formData: FormData) {
+  const id = testo(formData, 'id')!;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('carriera').delete().eq('id', intero(formData, 'riga') ?? 0).select('id');
+  if (error) torna(id, { errore: `Riga non eliminata: ${error.message}` });
+  if (!data?.length) torna(id, { errore: 'Puoi togliere solo le righe che hai scritto tu.' });
+  torna(id, { ok: 'Riga tolta dalla carriera.' });
 }

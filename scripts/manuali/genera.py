@@ -543,6 +543,9 @@ scritto già nel commento, la partita e la data.</div>''', 'Segnala un giocatore
 <span class="k">Aggiungi segnalazione</span> e <span class="k">Valuta</span>.</li>
 <li><b>Valutazioni</b>: le medie delle 4 aree.</li>
 <li><b>Prossime gare</b>: le partite della sua squadra caricate in Gare, con ora, campo e mappa, e "Ci vado io".</li>
+<li><b>Carriera</b>: le società in cui ha giocato, stagione per stagione. Ogni cambio di società resta scritto (chi, da quando,
+nota); accanto ci sono le stagioni lette dalle distinte. <span class="k">Cambia società</span> (admin, direttori e scout, anche sui
+giocatori segnalati da altri) e <span class="k">Aggiungi una stagione passata</span>. La società non si cambia più da Modifica dati.</li>
 <li><b>Squadre e partite</b>: lo storico dalle distinte. Il <b>percorso</b> tra le società e, per ogni stagione, squadra,
 categoria, partite, numero di maglia.</li>
 <li><b>Eventi</b>: open day, provini, allenamenti di prova.</li>

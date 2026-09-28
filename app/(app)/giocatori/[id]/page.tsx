@@ -13,6 +13,7 @@ import { categoriaDaAnnata } from '@/lib/categorie';
 import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
+import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
@@ -88,7 +89,7 @@ export default async function SchedaGiocatore({
   const g = data as unknown as Giocatore;
 
   const autore = 'autore:profiles(nome, cognome, email)';
-  const [segn, val, storico, contatti, ev, pres] = await Promise.all([
+  const [segn, val, storico, contatti, ev, pres, carr] = await Promise.all([
     supabase.from('segnalazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('valutazioni').select(`*, ${autore}`).eq('giocatore_id', id).order('data', { ascending: false }),
     supabase.from('storico_stati').select(`id, da_stato, a_stato, motivo, created_at, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
@@ -98,7 +99,10 @@ export default async function SchedaGiocatore({
       .from('distinte_giocatori')
       .select('numero, titolare, capitano, appartenenza:societa(nome), squadra:squadre(categoria, stagione, societa(nome)), distinta:distinte(id, data, stagione, categoria, competizione, casa_nome, trasferta_nome, risultato)')
       .eq('giocatore_id', id),
+    // tabella della 0035: se la migrazione non c'è ancora, la carriera mostra solo le distinte
+    supabase.from('carriera').select(`*, ${autore}`).eq('giocatore_id', id).order('created_at', { ascending: false }),
   ]);
+  const carriera = (carr.data as unknown as RigaCarriera[]) ?? [];
   const presenze = (pres.data as unknown as Presenza[]) ?? [];
   const eventi = (ev.data as unknown as Evento[]) ?? [];
 
@@ -125,7 +129,7 @@ export default async function SchedaGiocatore({
   const tutto = vedeTutto(profilo.ruolo); // admin e direttori vedono anche i contatti
   const scrive = puoSegnalare(profilo.ruolo);
   const modifica = gestore || (scrive && g.creato_da === profilo.id);
-  const societa = modifica ? await elencoSocieta(supabase) : [];
+  const societa = scrive ? await elencoSocieta(supabase) : [];
 
   const titolo = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Giocatore';
   const medie = AREE.map((a) => ({
@@ -226,7 +230,7 @@ export default async function SchedaGiocatore({
           <span className="text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
         </div>
         {!g.societa_id ? (
-          <p className="mt-3 text-grigio">Aggiungi la società nei dati del giocatore per vedere le sue gare.</p>
+          <p className="mt-3 text-grigio">Aggiungi la società (Carriera → Cambia società) per vedere le sue gare.</p>
         ) : prossimeGare.length === 0 ? (
           <p className="mt-3 text-grigio">Nessuna gara in programma della sua squadra. Le gare si caricano nel pannello Gare.</p>
         ) : (
@@ -242,6 +246,18 @@ export default async function SchedaGiocatore({
           </div>
         )}
       </section>
+
+      <CarrieraGiocatore
+        giocatoreId={g.id}
+        attuale={g.societa?.nome ?? null}
+        righe={carriera}
+        presenze={presenze}
+        scrive={scrive}
+        gestore={gestore}
+        mioId={profilo.id}
+        societa={societa}
+        chi={chi}
+      />
 
       <StoricoGiocatore presenze={presenze} />
 
@@ -450,14 +466,7 @@ export default async function SchedaGiocatore({
                     </select>
                   </Etichetta>
                 </div>
-                <Etichetta testo="Società">
-                  <input name="societa" list="societa-modifica" defaultValue={g.societa?.nome ?? ''} className="campo" autoComplete="off" />
-                  <datalist id="societa-modifica">
-                    {societa.map((s) => (
-                      <option key={s.id} value={s.nome} />
-                    ))}
-                  </datalist>
-                </Etichetta>
+                <p className="text-xs text-grigio">La società si cambia nella Carriera, con &quot;Cambia società&quot;.</p>
                 <Etichetta testo="Note interne"><textarea name="note" rows={3} defaultValue={g.note ?? ''} className="campo" /></Etichetta>
                 <button className="bottone w-full">Salva dati</button>
               </form>
