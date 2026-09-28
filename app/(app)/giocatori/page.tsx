@@ -11,6 +11,8 @@ import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
 import { StatoBadge } from '@/components/StatoBadge';
 import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
+import { ContattoFlag } from '@/components/ContattoFlag';
+import { conContatto } from '@/lib/contatti';
 
 type Riga = {
   id: string;
@@ -184,6 +186,7 @@ export default async function Giocatori({
   const giocatori = tutti.slice((pagina - 1) * PER_PAGINA, pagina * PER_PAGINA);
   if (!perGara) gare = await gareDelleSocieta(supabase, idSocieta(giocatori));
   const valuta = puoSegnalare(profilo.ruolo);
+  const contatto = await conContatto(supabase, giocatori.map((g) => g.id));   // 0037: solo sì/no
 
   const link = (cambi: Record<string, string | null>) => {
     const sp = new URLSearchParams(Object.entries(filtri).filter(([, v]) => v !== undefined) as [string, string][]);
@@ -362,8 +365,9 @@ export default async function Giocatori({
                     <tr key={r.g.id} className="hover:bg-carta">
                       {cella(r.g.annata, undefined, 'font-semibold text-blu')}
                       <td className="p-0">
-                        <Link href={r.href} title={r.nome} className={`block truncate px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
-                          {r.nome}
+                        <Link href={r.href} title={r.nome} className={`flex items-center gap-1.5 px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
+                          <span className="truncate">{r.nome}</span>
+                          {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                         </Link>
                       </td>
                       {cella(r.g.ruolo ? RUOLI_BREVI[r.g.ruolo] : <span className="text-grigio">–</span>, r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : undefined)}
@@ -385,7 +389,10 @@ export default async function Giocatori({
                 <Link href={r.href} className="absolute inset-0 rounded-xl" aria-label={`Apri ${r.nome}`} />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className={`truncate font-semibold ${r.g.cognome ? '' : 'italic'}`}>{r.nome}</p>
+                    <p className={`flex items-center gap-1.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
+                      <span className="truncate">{r.nome}</span>
+                      {contatto.has(r.g.id) && <ContattoFlag presente breve />}
+                    </p>
                     <p className="text-sm text-grigio">
                       <span className="font-semibold text-blu">{r.g.annata}</span>
                       {r.g.ruolo && ` · ${RUOLI_CAMPO[r.g.ruolo]}`}

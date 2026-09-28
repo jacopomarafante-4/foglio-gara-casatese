@@ -10,6 +10,7 @@
   --color-grigio: #5b6b80;
   --color-linea: #d8dfe8;
   --color-carta: #f5f7fa;
+  --color-verde: #2e7d4f;   /* solo per il campo, "presente" e "contatto presente" */
 
   --font-sans: 'Barlow', system-ui, sans-serif;
   --font-display: 'Barlow Condensed', 'Barlow', sans-serif;

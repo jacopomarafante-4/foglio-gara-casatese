@@ -15,6 +15,8 @@ import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
 import { StoricoValutazioni } from '@/components/StoricoValutazioni';
+import { ContattoFlag } from '@/components/ContattoFlag';
+import { conContatto } from '@/lib/contatti';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
@@ -105,6 +107,7 @@ export default async function SchedaGiocatore({
   ]);
   const carriera = (carr.data as unknown as RigaCarriera[]) ?? [];
   const presenze = (pres.data as unknown as Presenza[]) ?? [];
+  const haContatto = (await conContatto(supabase, [id])).has(id);   // 0037: anche per gli scout, solo sì/no
   const eventi = (ev.data as unknown as Evento[]) ?? [];
 
   // Squadra di appartenenza e sue prossime gare (dal pannello Gare), se la società è nota
@@ -163,6 +166,7 @@ export default async function SchedaGiocatore({
             ) : (
               <StatoBadge stato={g.stato} />
             )}
+            <ContattoFlag presente={haContatto} />
           </div>
           <p className="mt-1 text-grigio">
             {[
@@ -387,6 +391,9 @@ export default async function SchedaGiocatore({
               <p className="text-xs text-grigio">
                 Visibili solo ad admin e direttori{tutto ? '' : ' (e a te, per quelli che inserisci)'}.
               </p>
+              {!tutto && haContatto && elencoContatti.length === 0 && (
+                <p className="text-sm"><ContattoFlag presente /> <span className="text-grigio">c&apos;è già nel database: chiedi a un direttore.</span></p>
+              )}
               {elencoContatti.length > 0 && (
                 <ul className="divide-y divide-linea text-sm">
                   {elencoContatti.map((c) => (

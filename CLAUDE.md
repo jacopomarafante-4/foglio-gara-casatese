@@ -168,6 +168,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0037: `con_contatto(ids)`: quali giocatori (visibili a chi chiama) hanno un contatto con telefono o email, solo sì/no, anche per
+  gli scout; `conContatto()` in `lib/contatti.ts`, segno verde `components/ContattoFlag.tsx` (elenco Giocatori, scheda, Necessità)
 - 0036: `necessita` (titolo, `annata_da`–`annata_a`, `ruolo`, `piede`, `priorita` alta/media/bassa, `note`, `aperta`): le leggono
   admin, direttori e scout (`puo_segnalare()`), le scrivono admin e direttori (`vede_tutto()`). Pagina `/necessita` (scheda
   "Necessità"): sotto ogni richiesta i giocatori osservati che rientrano (esclusi Academy, `inserito`, `da_non_inserire`), prima i

@@ -13,6 +13,8 @@ import { dataBreve } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
+import { ContattoFlag } from '@/components/ContattoFlag';
+import { conContatto } from '@/lib/contatti';
 import { apriChiudiNecessita, eliminaNecessita, salvaNecessita } from './actions';
 
 type Necessita = {
@@ -53,7 +55,7 @@ function candidati(n: Necessita, tutti: Giocatore[]) {
   return { sicuri: ordina(sicuri), daVerificare: ordina(daVerificare) };
 }
 
-function RigaGiocatore({ g }: { g: Giocatore }) {
+function RigaGiocatore({ g, contatto }: { g: Giocatore; contatto: boolean }) {
   const v = ultima(g), m = media(v);
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
@@ -64,6 +66,7 @@ function RigaGiocatore({ g }: { g: Giocatore }) {
             .filter(Boolean).join(' · ')}
         </span>
       </Link>
+      <ContattoFlag presente={contatto} breve />
       <StatoBadge stato={g.stato} />
       <span className="w-12 text-center font-display text-lg font-bold" title="Media dell'ultima valutazione">{m ? m.toFixed(1) : '–'}</span>
       {v
@@ -143,6 +146,7 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
       .not('stato', 'in', '(inserito,da_non_inserire)');
     giocatori = ((data as unknown as Giocatore[]) ?? []).filter((g) => !academy || g.societa_id !== academy);
   }
+  const contatto = await conContatto(supabase, giocatori.map((g) => g.id));   // 0037: solo sì/no
 
   return (
     <div className="space-y-6">
@@ -190,14 +194,14 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
               Già in archivio: {sicuri.length} {sicuri.length === 1 ? 'giocatore' : 'giocatori'}
             </h3>
             {sicuri.length
-              ? <ul className="divide-y divide-linea">{sicuri.map((g) => <RigaGiocatore key={g.id} g={g} />)}</ul>
+              ? <ul className="divide-y divide-linea">{sicuri.map((g) => <RigaGiocatore key={g.id} g={g} contatto={contatto.has(g.id)} />)}</ul>
               : <p className="text-sm text-grigio">Ancora nessuno: da cercare sui campi.</p>}
             {daVerificare.length > 0 && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-semibold text-blu">
                   Da verificare: {daVerificare.length} con {n.ruolo && n.piede ? 'ruolo o piede' : n.ruolo ? 'ruolo' : 'piede'} non indicato
                 </summary>
-                <ul className="divide-y divide-linea">{daVerificare.map((g) => <RigaGiocatore key={g.id} g={g} />)}</ul>
+                <ul className="divide-y divide-linea">{daVerificare.map((g) => <RigaGiocatore key={g.id} g={g} contatto={contatto.has(g.id)} />)}</ul>
               </details>
             )}
 

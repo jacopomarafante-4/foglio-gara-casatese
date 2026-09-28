@@ -554,7 +554,9 @@ giocatori segnalati da altri) e <span class="k">Aggiungi una stagione passata</s
 categoria, partite, numero di maglia.</li>
 <li><b>Eventi</b>: open day, provini, allenamenti di prova.</li>
 <li><b>Storia</b>: tutte le segnalazioni, valutazioni e cambi di stato, con autore e data.</li>
-<li><b>Contatti</b> (vedi i tuoi) e <b>Modifica dati</b> (solo per i giocatori che hai segnalato tu).</li></ul>''', 'Scheda del giocatore')}
+<li><b>Contatti</b> (vedi i tuoi) e <b>Modifica dati</b> (solo per i giocatori che hai segnalato tu). Il segno verde
+<b>☎ Contatto presente</b> (accanto al nome, anche nell'elenco Giocatori e nelle Necessità) dice che nel database c'è già un
+contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di cercarlo di nuovo.</li></ul>''', 'Scheda del giocatore')}
 </section>
 
 <section>
