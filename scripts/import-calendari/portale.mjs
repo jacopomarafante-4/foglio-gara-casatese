@@ -1,21 +1,18 @@
 // =====================================================================
 // Calendari ufficiali → calendario delle nostre squadre nel Portale (docs calendar/<squadra>)
-// Uso: node --env-file=.env.local scripts/import-calendari/portale.mjs [--squadra=t_u15] [--date-ufficiali] [--conferma]
-// (dopo importa.mjs; senza --conferma è una simulazione)
-// --squadra=<id>: solo quella squadra del Portale;
-// --date-ufficiali: data e ora del calendario ufficiale anche per le gare non ancora confermate da un comunicato
-//   (per correggere date scritte a mano sbagliate, es. il sabato del weekend al posto della domenica)
+// Uso: node --env-file=.env.local scripts/import-calendari/portale.mjs [--squadra=t_u15] [--conferma]
+// (dopo importa.mjs e applica-comunicati.mjs; senza --conferma è una simulazione)
+// --squadra=<id>: solo quella squadra del Portale
 //
 // Squadra del Portale ↔ gare: "Under 14 - Provinciale" prende le gare "Under 14 … Provinciali …"
 // in cui gioca l'Academy Casatese Merate. Regole:
 // - partita già nel Portale (stesso avversario, casa/trasferta): si collega alla gara (garaId) e prende
-//   la dicitura (Da calendario / Confermata / Variata). Data e ora scritte a mano restano, a meno che un
-//   comunicato abbia confermato o variato la gara: allora vale il comunicato;
+//   la dicitura (Da calendario / Confermata / Variata). Data e ora: SEMPRE quelle del calendario ufficiale,
+//   o del comunicato che l'ha variata (le variazioni sono già nelle gare): quelle scritte a mano si sovrascrivono;
 // - campo: SEMPRE quello scritto nel calendario o nel comunicato, uguale lettera per lettera (venue),
 //   con l'indirizzo (address) e le coordinate del campo (ll, "lat,lon") per il link di Google Maps.
 //   Le coordinate si cercano su OpenStreetMap dall'indirizzo del campo e si salvano anche sulla gara;
 // - partita che manca: si aggiunge.
-// Le differenze tra Portale e calendario (non ancora verificate da un comunicato) si stampano.
 // =====================================================================
 import { createClient } from '@supabase/supabase-js';
 import { posizioneCampo } from '../lib/luoghi.mjs';
@@ -29,7 +26,6 @@ if (!url || !serviceKey) {
 const db = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const CONFERMA = process.argv.includes('--conferma');
 const SOLO = process.argv.find((a) => a.startsWith('--squadra='))?.slice(10);
-const DATE_UFFICIALI = process.argv.includes('--date-ufficiali');
 const NOSTRA = 'Academy Casatese Merate';
 
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
@@ -108,15 +104,11 @@ for (const team of (teamsDoc.data.items ?? []).filter((t) => !SOLO || t.id === S
     }
     const diversa = m.date !== date || (!g.ora_da_definire && (m.time || '').padStart(5, '0') !== time);
     if (!diversa) continue;
-    if (g.stato === 'confermata' || g.stato === 'variata' || DATE_UFFICIALI) {
-      console.log(`   ✎ ${m.opponent}: ${m.date} ${m.time} → ${date} ${ufficiale.time} (${g.comunicato || 'calendario ufficiale'})`);
-      Object.assign(m, { date, time: ufficiale.time || m.time });
-      aggiornate++;
-    } else {
-      console.log(`   ≠ ${m.opponent}: Portale ${m.date} ${m.time || ''} · calendario ${date} ${ufficiale.time || 'ora ?'} (resta quella del Portale)`);
-    }
+    console.log(`   ✎ ${m.opponent}: ${m.date} ${m.time} → ${date} ${ufficiale.time || 'ora ?'} (${g.comunicato || 'calendario ufficiale'})`);
+    Object.assign(m, { date, time: ufficiale.time || m.time });
+    aggiornate++;
   }
-  console.log(`   collegate ${collegate}, aggiunte ${aggiunte}, aggiornate da comunicato ${aggiornate}, campi ufficiali ${campi}`);
+  console.log(`   collegate ${collegate}, aggiunte ${aggiunte}, date e ore ufficiali ${aggiornate}, campi ufficiali ${campi}`);
   if (CONFERMA) {
     const { error: e } = await db.from('docs').upsert({ path: `calendar/${team.id}`, data: { ...(calDoc?.data ?? {}), matches }, updated_at: new Date().toISOString() });
     if (e) console.error(`   ❌ ${e.message}`);

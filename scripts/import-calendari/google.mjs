@@ -9,7 +9,7 @@
 // - si prendono gli eventi "U14 - 2013 - Avversario", "AdB - 2014 - Avversario", "AdB - 2019/20 - …"
 //   (allenamenti, Prima squadra, Serie D, … si ignorano). Squadra = annata: età = anno di fine stagione − annata;
 // - partite di campionato già nel Portale dai calendari ufficiali (garaId, stesso avversario e casa/trasferta):
-//   non si toccano (portale.mjs), si stampano solo le date diverse;
+//   non si toccano (vale il calendario ufficiale, portale.mjs), si stampano solo le date diverse;
 // - le altre (amichevoli, tornei, attività di base) si aggiungono con friendly: true e gcal = id dell'evento;
 //   reimportando si aggiornano, e quelle sparite da Google (dalla data --dal in poi, di norma oggi) si tolgono;
 // - ora = inizio gara scritto nella descrizione ("INIZIO GARA ORE 14:30", "Orario di gioco: 16:30"),
@@ -133,7 +133,7 @@ for (const team of squadre) {
     if (uff) {
       campionato++;
       if (uff.date !== p.date || (p.time && (uff.time || '').padStart(5, '0') !== p.time))
-        console.log(`   ≠ ${uff.opponent}: Portale ${uff.date} ${uff.time || ''} · Google ${p.date} ${p.time || 'ora ?'} (resta quella del Portale)`);
+        console.log(`   ≠ ${uff.opponent}: Portale ${uff.date} ${uff.time || ''} · Google ${p.date} ${p.time || 'ora ?'} (vale il calendario ufficiale)`);
       continue;
     }
     if (p.ufficiale) console.log(`   ⚠︎ ${p.date} ${p.opponent}: campionato su Google ma non nei calendari ufficiali, la aggiungo`);

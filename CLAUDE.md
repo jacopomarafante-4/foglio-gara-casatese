@@ -127,8 +127,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `private/google-calendar/`, fa la simulazione e poi `--conferma`.
   La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha tutta la
   stagione, "Solo Uxx" o "Tutte le squadre".
-  `portale.mjs --squadra=<id> --date-ufficiali`: date e ore del calendario ufficiale anche per le gare non confermate
-  (usato per l'U15, scritta a mano col sabato del weekend al posto del giorno di gioco).
+  Regola delle date nel Portale: SEMPRE il calendario ufficiale, salvo le variazioni dei comunicati (già nelle gare):
+  `portale.mjs [--squadra=<id>]` sovrascrive date e ore scritte a mano; Google non cambia mai le gare di campionato.
   Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.
   Comunicati settimanali: PDF in `private/comunicati/`, `comunicati.py` legge le tabelle "GARA VARIATA" e le regole
   "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
