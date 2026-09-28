@@ -89,7 +89,7 @@ function renderChrome(){
     ? `${isDirettore() ? `<span class="badge dir" title="Squadre in sola lettura, Società e Scouting modificabili">Direttore${readOnly() ? ' · sola lettura' : ''}</span>` : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : squadraPropria
       ? `<span class="badge coach">${esc(misterName || 'Preparatore')}</span><label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}${t.id===squadraPropria?' (la tua)':''}</option>`).join('')}</select>${guardaAltra() ? '<span class="badge dir">Sola lettura</span>' : ''}<button class="logout" data-act="logout">Esci</button>`
-      : `<span class="badge coach">Mister</span><span class="teamname">${esc([misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
+      : `<span class="badge coach">${isOrg() ? 'Organizzazione' : 'Mister'}</span><span class="teamname">${esc(isOrg() ? (misterName || 'Responsabile organizzativo') : [misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
   // Il logo riporta alla Home del Portale (il PIN del mister non sta nell'indirizzo: resta entrato)
   if(IN_APP_UNICA) $('#homelink').href = '#/home'; else $('#homelink').removeAttribute('href');
   renderNav();
@@ -159,6 +159,8 @@ function render(){
   else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
+  else if(tab==='eventi') v.innerHTML = viewEventi();
+  else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
     v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {
@@ -204,6 +206,8 @@ function viewSquadre(){
           <div><label class="f">Nome squadra</label><input data-team="${t.id}" data-tf="name" value="${esc(t.name)}"></div>
           <div><label class="f">Categoria</label><input data-team="${t.id}" data-tf="category" value="${esc(t.category)}" placeholder="Es. Under 15"></div>
         </div>
+        <label class="row" style="gap:6px;margin-top:10px"><input type="checkbox" data-teamflag="${t.id}:vedeTutte" ${t.vedeTutte?'checked':''}> Preparatori dei portieri: vedono tutte le squadre in sola lettura</label>
+        <label class="row" style="gap:6px;margin-top:6px"><input type="checkbox" data-teamflag="${t.id}:organizza" ${t.organizza?'checked':''}> Responsabile organizzativo: calendari di tutte le squadre, eventi e avvisi</label>
       </details>
     </div>`;
   }).join('');

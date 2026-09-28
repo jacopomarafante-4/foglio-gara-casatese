@@ -148,6 +148,10 @@ categorie di portieri (in Società, "Portieri di: Under"): in Home e in Calendar
 quelle categorie; in Tutte le squadre vede tutto. Sotto ogni partita ci sono i portieri di quella squadra con lo stato
 della convocazione (convocato, non convocato, infortunato… o "da convocare"); in I miei portieri il menu Portiere mostra
 solo le partite di un portiere.</td></tr>
+<tr><td><b>Responsabile organizzativo</b></td><td>Portale: Home, Calendario, Eventi</td><td>Vede il calendario di tutte
+le squadre (vista Giorno per campo: Merate, Cernusco, Trasferta), aggiunge e modifica amichevoli e tornei di ogni squadra (le partite
+di campionato no: vale il calendario ufficiale), gestisce gli <b>eventi</b> della società (tornei organizzati, open day, feste,
+riunioni) e pubblica <b>avvisi</b> per una o più squadre, da mandare anche su WhatsApp. Non vede rose né dati dei ragazzi.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
@@ -275,6 +279,7 @@ Scarica il foglio gara in PDF.</li>
 {fig('p-home', '''<h3>Home</h3><ul>
 <li><b>Weekend</b>: gli impegni di sabato e domenica di questa settimana (campionato, amichevoli, tornei) con ora, luogo
 e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario.</li>
+<li><b>Avvisi della società</b> (se ci sono): cambi campo o orario, eventi, comunicazioni per la tua squadra.</li>
 <li><b>Da fare</b>: per prima cosa le presenze dell'allenamento di oggi, poi tabellini da compilare, gol da inserire,
 portieri da segnare. Tocca una riga per andarci.</li>
 <li><b>Riepilogo stagione</b>: allenamento (allenamenti, presenza media, chi è sotto il 75%) e partite (giocate, vinte,
@@ -580,7 +585,15 @@ foglio gara, tabellini, statistiche, campi).</li>
 <p>Le schede delle <b>squadre</b> con i loro mister, poi <b>Scouting</b> (gli scout) e <b>Direttori</b>, ognuno con il suo PIN.
 Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigenerare o disattivare i PIN e sospendere un account.
 Nella squadra dei <b>preparatori dei portieri</b>, sotto ogni preparatore, il campo <b>Portieri di: Under</b> (es. 15, 14, 11)
-dice di quali categorie segue i portieri: in Home e nel suo calendario vede solo quelle partite.</p>
+dice di quali categorie segue i portieri: in Home e nel suo calendario vede solo quelle partite.
+In <b>Nome e categoria</b> di una squadra due caselle la rendono speciale: <b>Preparatori dei portieri</b> (vedono tutte le squadre
+in sola lettura) e <b>Responsabile organizzativo</b> (calendari di tutte le squadre, eventi e avvisi). Chi entra col PIN di un
+mister di quella squadra ha quei poteri.</p>
+<h3>Eventi e avvisi</h3>
+<p>Nell'area <b>Eventi</b>: <span class="k">+ Nuovo evento</span> (titolo, tipo, data, orari, luogo, squadre coinvolte: nessuna =
+tutta la società); gli eventi compaiono nel calendario di tutti e nella vista Giorno, nella colonna del campo. In <b>Avvisi</b> scegli
+le squadre e un modello (cambio campo, cambio orario, evento, libero), completa il testo e <span class="k">Pubblica avviso</span>:
+compare nella Home dei mister di quelle squadre per due settimane; <span class="k">Manda su WhatsApp</span> apre il messaggio pronto.</p>
 </section>
 
 <section>

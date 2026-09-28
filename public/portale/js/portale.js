@@ -6,6 +6,7 @@
 const AREA_ICONS = {
   home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
   calendario:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/>',
+  eventi:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6"/><path d="M7 14.5 8 20h3l-1-4.5"/>',
   squadra:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.6.3 4.5 2.4 4.5 5.8"/>',
   gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
   allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
@@ -23,6 +24,7 @@ const GRUPPI_SQUADRA = [
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
   {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte']},
+  {k:'eventi', label:'Eventi', tabs:['eventi','avvisi'], org:true},
   {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
@@ -30,20 +32,23 @@ const AREAS = [
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
-  segnala:'Segnala un giocatore', giocatori:'Giocatori'};
+  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
 const gruppoLast = {};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
-const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
+/* Eventi: admin, direttori e responsabile organizzativo; l'organizzativo non ha Squadra né Scouting */
+const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()) && (!a.org || isAdmin() || isOrg())
+  && !(isOrg() && (a.k==='squadra' || a.k==='scouting')));
 /* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF) né campi;
    in Squadra → Partite restano Convocazioni e Tabellini (presenza sì/no, con le statistiche nella stessa scheda) */
 const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf','campi','statpartite'];
 /* Test atletici: solo per l'Under 15 */
 const SOLO_U15 = ['test'];
-const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15));
+const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15)
+  && !(isOrg() && t==='calendario'));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
@@ -113,13 +118,13 @@ async function caricaTuttiCal(){
     }
   }catch(e){ /* funzione non ancora nel database o rete assente: solo la propria squadra */ }
   tuttiCalAt = Date.now(); tuttiCalInCorso = false;
-  if(tab==='calendariotutte' || (squadraPropria && (tab==='home' || tab==='calendario'))) render();
+  if(tab==='calendariotutte' || (squadraPropria && (tab==='home' || tab==='calendario')) || (isOrg() && tab==='home')) render();
 }
 /* Partite di tutte le squadre, ognuna con la sua squadra (la propria dai dati aperti, amichevoli del mister comprese) */
 function partiteTutte(){
   const mie = allCalendar().map(m => ({...m, team:TEAM()}));
   const altre = (tuttiCal || []).filter(t => t.id !== curTeam).flatMap(t => (t.matches || []).map(m => ({...m, team:t})));
-  return [...mie, ...altre].sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
+  return [...mie, ...altre, ...eventiTutti()].sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
 }
 /* Preparatori dei portieri, nella propria squadra: gli impegni sono le partite delle categorie dei loro portieri
    (c.eta del preparatore entrato, impostate in Società; se mancano, tutte le squadre) */
@@ -129,7 +134,7 @@ function etaPortieri(){
   return Array.isArray(c?.eta) && c.eta.length ? c.eta : null;
 }
 function impegni(){
-  if(!perPortieri()) return allCalendar();
+  if(!perPortieri()) return allCalendar().concat(eventiPer(curTeam));
   caricaTuttiCal();
   const eta = etaPortieri();
   return partiteTutte().filter(m => m.team?.id !== squadraPropria && (!eta || eta.includes(etaSquadra(m.team))));
@@ -167,17 +172,19 @@ function chipsPortieri(m){
 }
 /* I tre calendari della società, ognuno col suo colore: campo di Merate, campo di Cernusco, trasferta */
 const CAL_NOMI = {merate:'Merate', cernusco:'Cernusco', trasferta:'Trasferta'};
-const calDi = m => !m.home ? 'trasferta' : /MERATE/i.test(m.venue || '') ? 'merate' : 'cernusco';
+const calDi = m => m.evento ? ({merate:'merate', cernusco:'cernusco'}[m.luogo] || 'trasferta')
+  : !m.home ? 'trasferta' : /MERATE/i.test(m.venue || '') ? 'merate' : 'cernusco';
 const legendaCal = () => `<div class="calleg">${Object.entries(CAL_NOMI).map(([k,n]) => `<span class="cal-${k}">${n}</span>`).join('')}</div>`;
 const siglaSquadra = t => { const e = etaSquadra(t); return e < 99 ? 'U' + e : (t?.name || ''); };
 /* Nelle liste di tutte le squadre: "U11 · Fc Milanese" (casa o trasferta la dice il colore) */
-const nomePartita = (m, tutte) => tutte ? `${siglaSquadra(m.team)} · ${m.opponent||'Avversario'}`
+const nomePartita = (m, tutte) => m.evento ? m.opponent : tutte ? `${siglaSquadra(m.team)} · ${m.opponent||'Avversario'}`
   : (m.home ? `${teamLabel()} - ${m.opponent||'Avversario'}` : `${m.opponent||'Avversario'} - ${teamLabel()}`);
 /* Una riga di partita colorata col suo calendario */
 const rigaPartita = (m, tutte, conData) => `<li class="cal-${calDi(m)}${tutte && m.team?.id===curTeam ? ' mia' : ''}">
     <div class="wkwhen"><b>${weekday(m.date)}${conData ? ' '+fmtDate(m.date).slice(0,5) : ''}</b><span>${esc(m.time ? m.time.padStart(5,'0') : 'ora ?')}</span></div>
     <div><div class="wkmatch">${esc(nomePartita(m, tutte))}</div>
-      <div class="note">${conData ? `<span class="tipochip${m.friendly ? ' am' : ''}">${esc(m.friendly ? (m.tipo || 'Amichevole') : 'Campionato')}</span> ` : ''}${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, conData ? '' : tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}</div>
+      <div class="note">${m.evento ? `<span class="tipochip ev">${esc(m.tipo)}</span> ${[m.venue, m.fine ? 'fino alle '+m.fine : '', squadreTesto(m.evento.squadre), m.note].filter(Boolean).map(esc).join(' · ')}`
+        : `${conData ? `<span class="tipochip${m.friendly ? ' am' : ''}">${esc(m.friendly ? (m.tipo || 'Amichevole') : 'Campionato')}</span> ` : ''}${[m.home ? `In casa a ${CAL_NOMI[calDi(m)]}` : 'Trasferta', m.home ? '' : m.venue, conData ? '' : tipoPartita(m), m.note].filter(Boolean).map(esc).join(' · ')}`}</div>
       ${conData && !m.friendly ? calStato(m) : ''}${perPortieri() ? chipsPortieri(m) : ''}</div>
   </li>`;
 /* Sabato e domenica della settimana in corso (da lunedì a domenica) */
@@ -206,6 +213,7 @@ function homeTodo(){
   return items;
 }
 function viewHome(){
+  if(isOrg()) return viewHomeOrg();
   if(!curTeam) return `<section class="panel"><h2>Benvenuto</h2><p class="empty">Nessuna squadra. Creane una in Società → Squadre.</p></section>`;
   const T0 = TEAM(), nm = nextMatch(), today = todayISO();
   const trToday = S.reg.trainings.find(t => t.date===today);
@@ -245,8 +253,12 @@ function viewHome(){
         <span><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b> gol fatti-subiti</span>
         <span><b>${team.nScored ? gm.map(gameScore).filter(x => x && x.ga===0).length : '—'}</b> porta inviolata</span><span class="hrieplink">Statistiche ›</span></button>`}
     </div></div>`;
+  /* Avvisi della società per questa squadra (ultimi 14 giorni) */
+  const avvisi = avvisiSquadra(curTeam);
+  const avvisiCard = avvisi.length ? `<div class="hcard hwide havvisi"><div class="hlabel">Avvisi della società</div>
+    ${avvisi.slice(0,3).map(a => `<div class="gval gseg avviso"><div class="note">${fmtDate(a.data)}${a.autore ? ' · '+esc(a.autore) : ''}</div>${a.titolo ? `<b>${esc(a.titolo)}</b>` : ''}<p class="gtxt" style="white-space:pre-line">${esc(a.testo)}</p></div>`).join('')}</div>` : '';
   return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
-    <div class="hgrid">${matchCard}${todoCard}${numCard}</div>`;
+    <div class="hgrid">${avvisiCard}${matchCard}${todoCard}${numCard}</div>`;
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hgo]'); if(!b || !curTeam) return;
@@ -333,7 +345,8 @@ function viewStorico(){
 let calVista = 'giorno', calGiorno = null, calScelta = null, calCategoria = '';
 const CG_ORA = 56;                                   // pixel per ora
 const minuti = t => { const [h, m] = (t||'').split(':').map(Number); return h*60 + (m||0); };
-const durataPartita = m => { const e = etaSquadra(m.team); return e <= 10 ? 60 : e <= 13 ? 75 : 90; };
+const durataPartita = m => { if(m.evento) return Math.max(minuti(m.fine) - minuti(m.time), 0) || 120;
+  const e = etaSquadra(m.team); return e <= 10 ? 60 : e <= 13 ? 75 : 90; };
 const giornoLungo = d => new Date(d+'T12:00:00').toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
 /* Partite che si accavallano nella stessa colonna: affiancate, come in Google Calendar */
 function corsie(evs){
@@ -361,9 +374,9 @@ function vistaGiorno(ms){
   const px = min => (min - h0*60) / 60 * CG_ORA;
   const colonna = k => corsie(evs.filter(e => e.cal === k)).map(e => {
     const {m} = e, mia = m.team?.id === curTeam, chiave = `${m.team?.id}|${m.id}`;
-    return `<div class="cg-ev${mia ? ' mia' : ''}${chiave===calScelta ? ' scelta' : ''}" role="button" tabindex="0" data-calev="${esc(chiave)}" style="top:${px(e.inizio)}px;height:${px(e.fine) - px(e.inizio) - 2}px;left:calc(${e.corsia}/${e.corsie}*100%);width:calc(100%/${e.corsie} - 3px)"
+    return `<div class="cg-ev${mia ? ' mia' : ''}${m.evento ? ' evento' : ''}${chiave===calScelta ? ' scelta' : ''}" role="button" tabindex="0" data-calev="${esc(chiave)}" style="top:${px(e.inizio)}px;height:${px(e.fine) - px(e.inizio) - 2}px;left:calc(${e.corsia}/${e.corsie}*100%);width:calc(100%/${e.corsie} - 3px)"
         title="${esc(`${m.time} ${siglaSquadra(m.team)} · ${m.opponent||''}${m.venue ? ' · '+m.venue : ''}${m.note ? ' · '+m.note : ''}`)}">
-      <b>${esc(siglaSquadra(m.team))} · ${esc(m.opponent||'Avversario')}</b><span>${esc(m.time.padStart(5,'0'))}${k==='trasferta' && m.venue ? ' · '+esc(m.venue) : ''}</span></div>`;
+      <b>${m.evento ? '📣 '+esc(m.opponent) : `${esc(siglaSquadra(m.team))} · ${esc(m.opponent||'Avversario')}`}</b><span>${esc(m.time.padStart(5,'0'))}${k==='trasferta' && m.venue ? ' · '+esc(m.venue) : ''}</span></div>`;
   }).join('');
   const ore = Array.from({length: h1 - h0}, (_, k) => `<span style="top:${k*CG_ORA}px">${String(h0+k).padStart(2,'0')}:00</span>`).join('');
   return `<div class="cg-nav">
@@ -379,7 +392,7 @@ function vistaGiorno(ms){
         ${Object.keys(CAL_NOMI).map(k => `<div class="cg-col cal-${k}">${colonna(k)}</div>`).join('')}
       </div>
     </div>
-    ${(() => { const m = delGiorno.find(x => `${x.team?.id}|${x.id}` === calScelta); return m ? `<ul class="wklist callist cg-dettaglio">${rigaPartita(m, true, true)}</ul>` : ''; })()}
+    ${(() => { const m = delGiorno.find(x => `${x.team?.id}|${x.id}` === calScelta); return m ? `<ul class="wklist callist cg-dettaglio">${listaCalendario([m], true, modificaPartitaSquadra).replace(/<li class="calmese">.*?<\/li>/, '')}</ul>` : ''; })()}
     <p class="note">Tocca una partita per i dettagli. Durata dei blocchi indicativa: si conosce l'ora d'inizio della partita.</p>`;
 }
 document.addEventListener('change', e => {
@@ -399,9 +412,10 @@ function viewCalendario(){
   if(tab === 'calendariotutte'){
     caricaTuttiCal();
     /* Filtro per categoria: tutte, oppure una sola squadra */
-    const squadre = (tuttiCal || S.teams).filter(t => t.id === curTeam || (t.matches || []).length);
+    const squadre = (tuttiCal || S.teams).filter(t => !t.organizza && (t.id === curTeam || (t.matches || []).length));
     if(calCategoria && !squadre.some(t => t.id === calCategoria)) calCategoria = '';
-    const ms = partiteTutte().filter(daGiocare).filter(m => !calCategoria || m.team?.id === calCategoria);
+    const ms = partiteTutte().filter(daGiocare).filter(m => !calCategoria || m.team?.id === calCategoria
+      || (m.evento && (!(m.evento.squadre||[]).length || m.evento.squadre.includes(calCategoria))));
     const filtro = `<label class="note" for="cal_cat">Categoria</label> <select id="cal_cat" data-calcat="1"><option value="">Tutte le categorie</option>${
       squadre.map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category || t.name)}</option>`).join('')}</select>`;
     const vista = `<div class="seg" role="group" aria-label="Vista"><button data-calvista="giorno" aria-pressed="${calVista==='giorno'}">Giorno</button><button data-calvista="elenco" aria-pressed="${calVista==='elenco'}">Elenco</button></div>`;
@@ -413,7 +427,10 @@ function viewCalendario(){
       <div class="row" style="margin-bottom:8px;gap:8px">${filtro}</div>
       ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
       ${!ms.length ? '<p class="empty">Nessuna partita in programma.</p>'
-        : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true)}</ul>`}
+        : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true, modificaPartitaSquadra)}</ul>`}
+      ${puoOrganizzare() ? `<div class="row" style="margin-top:12px;gap:8px"><label class="note" for="tc_squadra">Nuova amichevole per</label>
+        <select id="tc_squadra">${(tuttiCal || []).filter(t => !t.organizza && !t.vedeTutte).map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>
+        <button class="btn small" data-tcadd="1">+ Aggiungi amichevole</button></div>` : ''}
     </section>`;
   }
   const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];

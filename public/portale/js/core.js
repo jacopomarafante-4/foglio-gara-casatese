@@ -97,6 +97,9 @@ const isDirettore = () => staffRole === 'direttore';
 /* Preparatori dei portieri (squadra con vedeTutte, 0028): entrano col PIN come un mister e guardano anche le altre
    squadre, in sola lettura; la propria (presenze, registro) la modificano */
 let squadraPropria = null;
+/* Responsabile organizzativo (squadra con organizza, 0029): calendari di tutte le squadre, eventi, avvisi */
+let squadraOrg = null;
+const isOrg = () => !!squadraOrg;
 const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
 const readOnly = () => (isDirettore() && tab !== 'squadre') || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
@@ -349,6 +352,11 @@ async function coachLogin(pin){
   if(!tm) return false;
   db = makeCoachDb(supabaseClient, pin); coachPin = pin;
   S.teams = [withCoaches(tm)]; misterName = tm.mister || ''; ROLE = 'coach'; curTeam = tm.id; hashLocked = true; teamsLoaded = true; tab = startTab();
+  if(tm.organizza){
+    try{ const snap = await db.doc('shared/teams').get(); const items = snap.data()?.items;
+      if(Array.isArray(items) && items.length) S.teams = items.map(withCoaches); }catch(e){ /* 0029 non ancora eseguita */ }
+    squadraOrg = tm.id;
+  }
   if(tm.vedeTutte){
     try{ const snap = await db.doc('shared/teams').get(); const items = snap.data()?.items;
       if(Array.isArray(items) && items.length){ S.teams = items.map(withCoaches); squadraPropria = tm.id; } }catch(e){ /* 0028 non ancora eseguita: solo la propria squadra */ }

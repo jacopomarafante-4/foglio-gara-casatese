@@ -160,6 +160,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
+- 0029: squadra con `organizza: true` (responsabile organizzativo, casella in Società → Nome e categoria): `coach_get` gli dà
+  tutte le squadre senza PIN e `calendar/*`; `coach_set` scrive `calendar/*`, `shared/eventi`, `shared/avvisi`. Tutti i mister
+  leggono `shared/eventi` e `shared/avvisi`. Nel Portale `public/portale/js/organizzazione.js`: area Eventi (Eventi, Avvisi),
+  Home dell'organizzativo, amichevoli e tornei di ogni squadra modificabili in Tutte le squadre (il campionato no), eventi nei
+  calendari (`eventoCome`, colonna del luogo), avvisi per 14 giorni nella Home dei mister, "Manda su WhatsApp" (wa.me)
 - 0028: squadra con `vedeTutte: true` in `shared/teams` (preparatori dei portieri, `t_nt2m1iv`): `coach_get` le dà tutte le
   squadre senza PIN e rosa/foglio/calendario/registro di tutte; nel Portale `squadraPropria` + `guardaAltra()` = sola lettura
   sulle altre (`save()` non scrive), la propria (presenze) la modificano. `coach_giocatori(pin)`: Scouting → Giocatori, osservati

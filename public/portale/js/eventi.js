@@ -149,6 +149,9 @@ document.addEventListener('change', e => {
   const t = e.target;
   if(t.dataset.asview){ const v = t.value; if(v==='admin') switchView('admin'); else switchView('coach', v.split(':')[1]); return; }
   if(t.dataset.curteam){ curTeam = t.value; openSchemeId = null; subscribeTeam(); return; }
+  /* Società: squadre speciali (preparatori dei portieri, responsabile organizzativo) */
+  if(t.dataset.teamflag){ if(!isAdmin()) return; const [tid, flag] = t.dataset.teamflag.split(':'); const tm = S.teams.find(x => x.id===tid);
+    if(tm && ['vedeTutte','organizza'].includes(flag)){ if(t.checked) tm[flag] = true; else delete tm[flag]; save('teams'); render(); } return; }
   if(t.dataset.team && t.dataset.tf==='name'){ render(); return; }
   if(!isAdmin() && (t.dataset.sc || (t.dataset.tok) || t.dataset.calid)) return;
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.dataset.calf==='home' ? t.checked : t.value; save('calendar'); } return; }
