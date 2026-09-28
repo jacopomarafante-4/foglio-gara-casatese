@@ -669,6 +669,10 @@ le squadre e un modello (cambio campo, cambio orario, evento, libero), completa 
 compare nell'app, nella Home dei mister e delle famiglie di quelle squadre, per due settimane. <span class="k">Scarica PDF</span>
 (o "Scarica come PDF" mentre lo scrivi) lo prepara su carta intestata della società, da stampare o allegare.
 I direttori, come l'organizzativo, possono modificare calendario, eventi e avvisi.</p>
+<p><b>Google Calendar</b>: amichevoli, tornei ed eventi creati o cambiati qui vanno da soli anche nei calendari Google della società
+(Merate, Cernusco o Trasferta, secondo il campo); eliminandoli qui spariscono anche da Google. <span class="k">↻ Aggiorna da Google</span>,
+in fondo a <b>Tutte le squadre</b>, porta nell'app quello che è stato scritto direttamente su Google. Il campionato resta sempre
+quello del calendario ufficiale.</p>
 </section>
 
 <section>

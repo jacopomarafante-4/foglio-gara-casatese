@@ -41,6 +41,8 @@ export async function aggiornaSessione(request: NextRequest) {
   const percorso = request.nextUrl.pathname;
   // La pagina d'ingresso (accesso col PIN) è aperta a tutti
   if (percorso === '/') return response;
+  // Calendari Google: controlla da sola chi chiama (sessione di admin/direttori o PIN dell'organizzativo)
+  if (percorso === '/api/calendario-google') return response;
   const pubblica = PAGINE_PUBBLICHE.some((p) => percorso.startsWith(p));
 
   if (!loggato && !pubblica) {

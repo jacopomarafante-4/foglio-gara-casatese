@@ -221,6 +221,13 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0021: `nome_proprio()` + trigger `giocatori_nomi`: cognome e nome dei giocatori sempre "Rossi", "Maria Elena",
   "D'Angelo" (anche da importazioni e Portale); stessa regola di `maiuscoleIniziali()` in `lib/utili.ts`
 
+Calendari Google (MERATE, CERNUSCO, TRASFERTA) ↔ Portale: `app/api/calendario-google/route.ts` (admin e direttori con la sessione,
+organizzativo col PIN; legge e scrive `calendar/<squadra>` e `shared/eventi` con i permessi di chi chiama), regole in
+`lib/calendario-google.ts`, chiamate a Google in `lib/google-calendar.ts` (account di servizio: `GOOGLE_SERVICE_ACCOUNT` = file JSON intero,
+`GCAL_ID_MERATE/CERNUSCO/TRASFERTA`; solo variabili d'ambiente, mai nel codice). Nel Portale "↻ Aggiorna da Google" (Tutte le squadre)
+e invio automatico di amichevoli, tornei ed eventi modificati (`partitaSuGoogle`, `eventoSuGoogle` in `organizzazione.js`).
+Il percorso è escluso dal controllo login di `lib/supabase/sessione.ts` (controlla da solo chi chiama).
+
 Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--tutte] [--conferma]` le ricava da
 OpenStreetMap (`scripts/lib/luoghi.mjs`: Nominatim, 1 richiesta al secondo, posizione accettata solo se nel comune giusto)
 dall'indirizzo del campo o dal centro del paese. `portale.mjs` fa lo stesso per le gare dell'Academy (`gare.lat/lon`).

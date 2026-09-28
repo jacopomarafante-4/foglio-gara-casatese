@@ -62,10 +62,10 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-evadd],[data-evdel],[data-evsq],[data-evavviso]'); if(!b || !puoOrganizzare()) return;
   if(b.dataset.evadd){ const ev = {id:uid('ev'), titolo:'', tipo:'Torneo organizzato', data:todayISO(), inizio:'', fine:'', luogo:'merate', indirizzo:'', squadre:[], note:''};
     /* il nuovo evento si apre in modifica nell'elenco di Tutte le squadre */
-    eventiSoc.push(ev); eventoAperto = ev.id; calVista = 'elenco'; calCategoria = ''; salvaCondiviso('shared/eventi', eventiSoc);
+    eventiSoc.push(ev); eventoAperto = ev.id; calVista = 'elenco'; calCategoria = ''; salvaCondiviso('shared/eventi', eventiSoc); eventoSuGoogle(ev);
     if(tab !== 'calendariotutte') goTab('calendariotutte'); else render(); return; }
   if(b.dataset.evdel){ const ev = eventiSoc.find(x => x.id===b.dataset.evdel);
-    if(ev && confirm(`Eliminare l'evento "${ev.titolo||'senza titolo'}"?`)){ eventiSoc = eventiSoc.filter(x => x!==ev); salvaCondiviso('shared/eventi', eventiSoc); render(); } return; }
+    if(ev && confirm(`Eliminare l'evento "${ev.titolo||'senza titolo'}"?`)){ eventiSoc = eventiSoc.filter(x => x!==ev); salvaCondiviso('shared/eventi', eventiSoc); togliDaGoogle(ev); render(); } return; }
   if(b.dataset.evsq){ const [id, t] = b.dataset.evsq.split(':'), ev = eventiSoc.find(x => x.id===id); if(!ev) return;
     ev.squadre = (ev.squadre||[]).includes(t) ? ev.squadre.filter(x => x!==t) : [...(ev.squadre||[]), t];
     eventoAperto = id; salvaCondiviso('shared/eventi', eventiSoc); render(); return; }
@@ -75,7 +75,7 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => {
   const t = e.target; if(!t.dataset?.evf || !puoOrganizzare()) return;
   const ev = eventiSoc.find(x => x.id===t.dataset.evid); if(!ev) return;
-  ev[t.dataset.evf] = t.value; eventoAperto = ev.id; salvaCondiviso('shared/eventi', eventiSoc);
+  ev[t.dataset.evf] = t.value; eventoAperto = ev.id; salvaCondiviso('shared/eventi', eventiSoc); eventoSuGoogle(ev);
 });
 document.addEventListener('change', e => {
   if(!e.target.dataset?.evf || tab !== 'calendariotutte') return;
@@ -186,7 +186,7 @@ document.addEventListener('input', e => {
   const [teamId, id, campo] = t.dataset.tcf.split('|');
   const m = ((tuttiCal||[]).find(x => x.id===teamId)?.matches || []).find(x => x.id===id); if(!m) return;
   m[campo] = t.type==='checkbox' ? t.checked : t.value;
-  partitaAperta = `${teamId}|${id}`; salvaCalendarioSquadra(teamId);
+  partitaAperta = `${teamId}|${id}`; salvaCalendarioSquadra(teamId); partitaSuGoogle(teamId, m);
 });
 document.addEventListener('change', e => {
   if(!e.target.dataset?.tcf || tab !== 'calendariotutte') return;
@@ -196,10 +196,10 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-tcdel],[data-tcadd]'); if(!b || !puoOrganizzare()) return;
   if(b.dataset.tcdel){ const [teamId, id] = b.dataset.tcdel.split('|'), t = (tuttiCal||[]).find(x => x.id===teamId); if(!t) return;
     const m = (t.matches||[]).find(x => x.id===id);
-    if(m && confirm(`Eliminare l'amichevole con ${m.opponent||'avversario'}?`)){ t.matches = t.matches.filter(x => x!==m); salvaCalendarioSquadra(teamId); render(); } return; }
+    if(m && confirm(`Eliminare l'amichevole con ${m.opponent||'avversario'}?`)){ t.matches = t.matches.filter(x => x!==m); salvaCalendarioSquadra(teamId); togliDaGoogle(m); render(); } return; }
   if(b.dataset.tcadd){ const sel = $('#tc_squadra'), teamId = sel?.value, t = (tuttiCal||[]).find(x => x.id===teamId); if(!t) return;
     const m = {id:uid('m'), date:todayISO(), time:'', opponent:'', home:true, venue:'', friendly:true, tipo:'Amichevole', note:''};
-    (t.matches ||= []).push(m); partitaAperta = `${teamId}|${m.id}`; calCategoria = teamId; calVista = 'elenco'; salvaCalendarioSquadra(teamId); render(); }
+    (t.matches ||= []).push(m); partitaAperta = `${teamId}|${m.id}`; calCategoria = teamId; calVista = 'elenco'; salvaCalendarioSquadra(teamId); partitaSuGoogle(teamId, m); render(); }
 });
 
 /* ---------- Home del responsabile organizzativo ---------- */
@@ -224,3 +224,76 @@ function viewHomeOrg(){
         <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="avvisi">Nuovo avviso</button></div></div>
     </div>`;
 }
+
+/* ---------- Calendari Google (MERATE, CERNUSCO, TRASFERTA) ↔ Portale: /api/calendario-google ----------
+   "Aggiorna da Google" porta nel Portale amichevoli e tornei scritti su Google; amichevoli, tornei ed eventi creati
+   o cambiati qui vanno su Google (gcal = id dell'evento, gcalCal = calendario). Solo dentro l'app (/portale/). */
+let googleAttivo = null, googleInCorso = false, googleEsito = '';
+async function chiamaGoogle(azione, dati){
+  if(!IN_APP_UNICA) throw new Error('Solo dal sito');
+  const r = await fetch('/api/calendario-google', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body: JSON.stringify({azione, ...(isOrg() && coachPin ? {pin: coachPin} : {}), ...dati})});
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw Object.assign(new Error(j.errore || 'Errore con Google Calendar'), {status: r.status});
+  return j;
+}
+async function statoGoogle(){
+  if(googleAttivo !== null || !puoOrganizzare() || !IN_APP_UNICA) return googleAttivo;
+  googleAttivo = false;
+  try{ googleAttivo = !!(await chiamaGoogle('stato')).configurato; }catch(e){}
+  if(tab === 'calendariotutte') render();
+  return googleAttivo;
+}
+/* Dopo una modifica aspetto qualche secondo (si sta ancora scrivendo), poi un solo invio per partita o evento */
+const attesaGoogle = {};
+function suGoogle(chiave, fn){
+  if(!puoOrganizzare() || !IN_APP_UNICA) return;
+  clearTimeout(attesaGoogle[chiave]);
+  attesaGoogle[chiave] = setTimeout(async () => {
+    if(!(await statoGoogle())) return;
+    try{ await fn(); }catch(e){ setStatus('Google Calendar: ' + e.message); }
+  }, 4000);
+}
+function partitaSuGoogle(teamId, m){
+  if(!m.friendly || m.garaId || !m.date) return;
+  suGoogle('p:'+m.id, async () => {
+    const j = await chiamaGoogle('partita', {squadra: teamId, partita: m});
+    if(j.gcal !== m.gcal || j.gcalCal !== m.gcalCal){ m.gcal = j.gcal; m.gcalCal = j.gcalCal; salvaCalendarioSquadra(teamId); }
+    setStatus('Salvato anche su Google');
+  });
+}
+function eventoSuGoogle(ev){
+  if(!ev.data) return;
+  suGoogle('e:'+ev.id, async () => {
+    const j = await chiamaGoogle('evento', {evento: ev});
+    if(j.gcal !== ev.gcal || j.gcalCal !== ev.gcalCal){ ev.gcal = j.gcal; ev.gcalCal = j.gcalCal; salvaCondiviso('shared/eventi', eventiSoc); }
+    setStatus('Salvato anche su Google');
+  });
+}
+function togliDaGoogle(x){
+  clearTimeout(attesaGoogle['p:'+x.id]); clearTimeout(attesaGoogle['e:'+x.id]);
+  if(!x.gcal || !x.gcalCal) return;
+  suGoogle('c:'+x.gcal, async () => { await chiamaGoogle('cancella', {gcal: x.gcal, gcalCal: x.gcalCal}); setStatus('Tolto anche da Google'); });
+}
+/* Riquadro nel Calendario · tutte le squadre */
+function barraGoogle(){
+  if(!puoOrganizzare() || !IN_APP_UNICA) return '';
+  statoGoogle();
+  if(googleAttivo === null) return '';
+  if(!googleAttivo) return '<p class="note" style="margin-top:10px">Collegamento con Google Calendar non ancora attivo.</p>';
+  return `<div class="row" style="margin-top:10px;gap:8px;align-items:center">
+    <button class="btn small" data-gimporta="1" ${googleInCorso ? 'disabled' : ''}>${googleInCorso ? 'Leggo Google…' : '↻ Aggiorna da Google'}</button>
+    <span class="note">${esc(googleEsito || 'Amichevoli, tornei ed eventi creati qui vanno anche su Google.')}</span></div>`;
+}
+document.addEventListener('click', async e => {
+  if(!e.target.closest('[data-gimporta]') || !puoOrganizzare() || googleInCorso) return;
+  googleInCorso = true; googleEsito = ''; render();
+  try{
+    const j = await chiamaGoogle('importa');
+    const n = k => j.squadre.reduce((s, x) => s + x[k], 0);
+    googleEsito = `Letti ${j.partite} impegni: ${n('aggiunte')} nuovi, ${n('aggiornate')} cambiati, ${n('tolte')} tolti.`;
+    tuttiCalAt = 0; await caricaTuttiCal();
+    if(curTeam){ const t = (tuttiCal||[]).find(x => x.id===curTeam); if(t) S.calendar = clone(t.matches||[]); }
+  }catch(err){ googleEsito = 'Non riuscito: ' + err.message; }
+  googleInCorso = false; render();
+});

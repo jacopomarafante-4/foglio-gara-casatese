@@ -435,7 +435,7 @@ function viewCalendario(){
       ${puoOrganizzare() ? `<div class="row" style="margin-top:12px;gap:8px"><label class="note" for="tc_squadra">Nuova amichevole per</label>
         <select id="tc_squadra">${(tuttiCal || []).filter(t => !t.organizza && !t.vedeTutte).map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>
         <button class="btn small" data-tcadd="1">+ Aggiungi amichevole</button>
-        <button class="btn small primary" data-evadd="1">+ Nuovo evento</button></div>` : ''}
+        <button class="btn small primary" data-evadd="1">+ Nuovo evento</button></div>${barraGoogle()}` : ''}
     </section>`;
   }
   const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];
