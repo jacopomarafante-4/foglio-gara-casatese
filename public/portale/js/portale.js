@@ -7,6 +7,7 @@ const AREA_ICONS = {
   home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
   calendario:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/>',
   eventi:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6"/><path d="M7 14.5 8 20h3l-1-4.5"/>',
+  segreteria:'<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
   squadra:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.6.3 4.5 2.4 4.5 5.8"/>',
   gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
   allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
@@ -27,12 +28,13 @@ const AREAS = [
   {k:'eventi', label:'Eventi', tabs:['eventi','avvisi'], org:true},
   {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
+  {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
   {k:'societa', label:'Società', tabs:['squadre'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
-  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi'};
+  segnala:'Segnala un giocatore', giocatori:'Giocatori', eventi:'Eventi', avvisi:'Avvisi', tesserati:'Tesserati'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -40,8 +42,9 @@ const gruppoLast = {};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
 /* Eventi: admin, direttori e responsabile organizzativo; l'organizzativo non ha Squadra né Scouting */
-const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()) && (!a.org || isAdmin() || isOrg())
-  && !(isOrg() && (a.k==='squadra' || a.k==='scouting')));
+const allowedAreas = () => isSegreteria() ? AREAS.filter(a => a.k==='segreteria')
+  : AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()) && (!a.org || isAdmin() || isOrg())
+    && !(isOrg() && (a.k==='squadra' || a.k==='scouting')));
 /* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF) né campi;
    in Squadra → Partite restano Convocazioni e Tabellini (presenza sì/no, con le statistiche nella stessa scheda) */
 const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf','campi','statpartite'];

@@ -15,6 +15,8 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 async function pannello(supabase: Supabase, userId: string, next: string) {
   const { data } = await supabase.from('profiles').select('ruolo').eq('id', userId).single();
   const ruolo = (data?.ruolo ?? null) as Ruolo | null;
+  // Segreteria: solo il Portale (area Segreteria), non lo Scouting
+  if (ruolo === 'segreteria') return '/portale/';
   if (!ruolo || !puoAccedere(ruolo)) return null;
   // Solo percorsi interni, per sicurezza
   if (next.startsWith('/') && !next.startsWith('//')) return next;
@@ -25,7 +27,9 @@ async function pannello(supabase: Supabase, userId: string, next: string) {
  * Accesso unico col PIN. Il PIN dice chi sei:
  * - PIN admin (PIN_ADMIN, solo sul server): poi email e password;
  * - PIN di un mister (o il vecchio PIN di squadra): Portale squadre, solo quella squadra;
- * - PIN personale (scout, direttori: tabella codici_accesso): Scouting Hub.
+ * - PIN di una famiglia (tesserati, 0031): Portale, solo quel ragazzo;
+ * - PIN personale (scout, direttori, segreteria: tabella codici_accesso): Scouting Hub o Portale.
+ * Il tipo di PIN lo dice tipo_pin() con UN solo controllo (e un solo errore annotato se il PIN non esiste).
  */
 export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<StatoAccesso> {
   const pin = String(formData.get('pin') ?? '').trim();
@@ -52,13 +56,26 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   // Troppi PIN sbagliati in poco tempo: il database blocca le verifiche per qualche minuto (0015)
   const BLOCCO = { errore: 'Troppi PIN sbagliati da parte di qualcuno: riprova tra qualche minuto.' };
 
+  const { data: tipoDb, error: erroreTipo } = await supabase.rpc('tipo_pin', { p_pin: pin });
+  if (erroreTipo?.code === 'PT429') return BLOCCO;
+  let tipo = tipoDb as string | null;
+  if (erroreTipo) {
+    // tipo_pin non c'è ancora (migrazione 0031 non eseguita): come prima, prima mister poi PIN personale
+    const { data: squadra, error: erroreSquadra } = await supabase.rpc('coach_team', { p_pin: pin });
+    if (erroreSquadra?.code === 'PT429') return BLOCCO;
+    tipo = squadra ? 'mister' : 'personale';
+  }
   // PIN di un mister o della squadra: il Portale apre la squadra dal link (#squadra=PIN)
-  const { data: squadra, error: erroreSquadra } = await supabase.rpc('coach_team', { p_pin: pin });
-  if (erroreSquadra?.code === 'PT429') return BLOCCO;
-  if (squadra) {
+  if (tipo === 'mister') {
     await supabase.auth.signOut({ scope: 'local' }); // su un telefono condiviso non resta aperto un altro account
     return { vai: `/portale/#squadra=${encodeURIComponent(pin)}` };
   }
+  // PIN di una famiglia: il Portale apre la pagina del ragazzo (#famiglia=PIN)
+  if (tipo === 'famiglia') {
+    await supabase.auth.signOut({ scope: 'local' });
+    return { vai: `/portale/#famiglia=${encodeURIComponent(pin)}` };
+  }
+  if (tipo !== 'personale') return { errore: 'PIN non riconosciuto. Controlla e riprova.' };
 
   // PIN personale: il PIN è anche la password dell'account
   const { data: email, error: errorePin } = await supabase.rpc('email_per_pin', { p_pin: pin });

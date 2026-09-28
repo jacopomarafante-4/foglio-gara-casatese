@@ -1,4 +1,4 @@
-export type Ruolo = 'admin' | 'direttore' | 'scout' | 'mister';
+export type Ruolo = 'admin' | 'direttore' | 'scout' | 'mister' | 'segreteria';
 
 export type Profilo = {
   id: string;
@@ -15,6 +15,7 @@ export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
   direttore: 'Direttore',
   scout: 'Scout',
   mister: 'Mister',
+  segreteria: 'Segreteria',
 };
 
 /** Ruoli che possono accedere al pannello Scouting Hub (i mister no, per ora) */
@@ -25,7 +26,7 @@ export function puoAccedere(ruolo: Ruolo) {
 /** Pannello che si apre dopo l'accesso: admin e direttori il Portale (lì c'è tutto, Scouting compreso),
  *  gli scout lo Scouting */
 export function pannelloIniziale(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'direttore' ? '/portale/' : '/home';
+  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'segreteria' ? '/portale/' : '/home';
 }
 
 /** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi */

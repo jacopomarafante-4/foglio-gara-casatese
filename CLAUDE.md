@@ -87,7 +87,7 @@ li modifica come l'admin**, 0018 e 0020),
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
-`scout` = ex "osservatore" (segnala e valuta). Rinominati in 0004; se aggiungi
+`scout` = ex "osservatore" (segnala e valuta). `segreteria` (0030): solo Portale → Segreteria. Rinominati in 0004; se aggiungi
 codice che confronta stringhe di ruolo, usa i nomi nuovi.
 
 ## Modello dati (supabase/migrations)
@@ -160,6 +160,17 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
+- 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
+  area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0031: famiglie e segreteria. Tabelle protette `tesserati` (squadra_id + giocatore_id della rosa, `pin` famiglia a 8 cifre),
+  `tesserati_dati` (genitori, certificato, taglie, iscrizione, quote, note_segreteria), `risposte_convocazioni`: RLS
+  `gestisce_segreteria()` (admin, direttori, segreteria). `segreteria_rose()` = squadre e rose senza PIN dei mister;
+  `genera_pin_famiglia()`. La famiglia entra col PIN (`tipo_pin()` in `accedi`, un solo errore annotato: con tanti accessi il
+  blocco 0015 non deve scattare) → `/portale/#famiglia=PIN` → `famiglia.js`: `famiglia_get` (solo il suo ragazzo, le sue
+  convocazioni, avvisi ed eventi della squadra), `famiglia_contatti` (genitori e taglie), `famiglia_rispondi` (ci sarà / non ci
+  sarà, chiave = calId o "data|avversario"). Il mister vede le risposte in Convocazioni (`coach_risposte`, `rispostaFamiglia()`).
+  Segreteria: `segreteria.js` (area Segreteria → Tesserati), PIN alla famiglia con "Manda su WhatsApp" (wa.me al genitore).
+  Anagrafica iniziale da importare dal file della segreteria (in `private/`, mai su git)
 - 0029: squadra con `organizza: true` (responsabile organizzativo, casella in Società → Nome e categoria): `coach_get` gli dà
   tutte le squadre senza PIN e `calendar/*`; `coach_set` scrive `calendar/*`, `shared/eventi`, `shared/avvisi`. Tutti i mister
   leggono `shared/eventi` e `shared/avvisi`. Nel Portale `public/portale/js/organizzazione.js`: area Eventi (Eventi, Avvisi),

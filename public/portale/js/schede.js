@@ -82,11 +82,12 @@ function nameLayout(tokens){
 /* ---------- Render ---------- */
 function renderChrome(){
   const opts = `<option value="admin" ${isAdmin()?'selected':''}>${staffRole === 'direttore' ? 'Direttore' : 'Amministratore'} (tu)</option>` + S.teams.map(t => `<option value="coach:${t.id}" ${!isAdmin()&&t.id===curTeam?'selected':''}>Mister ${esc(t.category||t.name)}${coachNames(t)?' · '+esc(coachNames(t)):''}</option>`).join('');
-  $('#demo').innerHTML = hashLocked ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
-  $('#demo').classList.toggle('hidden', hashLocked);
+  $('#demo').innerHTML = hashLocked || isSegreteria() ? '' : `<div class="in"><span class="tagd">ANTEPRIMA</span><label for="asview">Guarda l'app come</label><select id="asview" data-asview="1">${opts}</select></div>`;
+  $('#demo').classList.toggle('hidden', hashLocked || isSegreteria());
   const T0 = TEAM();
   $('#ctx').innerHTML = isAdmin()
-    ? `${isDirettore() ? `<span class="badge dir" title="Squadre in sola lettura, Società e Scouting modificabili">Direttore${readOnly() ? ' · sola lettura' : ''}</span>` : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
+    ? isSegreteria() ? `<span class="badge dir">Segreteria</span><button class="logout" data-act="logout">Esci</button>`
+    : `${isDirettore() ? `<span class="badge dir" title="Squadre in sola lettura, Società e Scouting modificabili">Direttore${readOnly() ? ' · sola lettura' : ''}</span>` : '<span class="badge admin">Admin</span>'}${S.teams.length ? `<label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>` : ''}<button class="logout" data-act="logout">Esci</button>`
     : squadraPropria
       ? `<span class="badge coach">${esc(misterName || 'Preparatore')}</span><label class="note" for="curteam">Squadra</label><select id="curteam" data-curteam="1">${S.teams.map(t=>`<option value="${t.id}" ${t.id===curTeam?'selected':''}>${esc(t.category||t.name)}${t.id===squadraPropria?' (la tua)':''}</option>`).join('')}</select>${guardaAltra() ? '<span class="badge dir">Sola lettura</span>' : ''}<button class="logout" data-act="logout">Esci</button>`
       : `<span class="badge coach">${isOrg() ? 'Organizzazione' : 'Mister'}</span><span class="teamname">${esc(isOrg() ? (misterName || 'Responsabile organizzativo') : [misterName, T0?.category||T0?.name].filter(Boolean).join(' · '))}</span><button class="logout" data-act="logout">Esci</button>`;
@@ -125,6 +126,7 @@ function viewGate(){
   return `<section class="panel" style="max-width:360px;margin:48px auto"><p class="hint">Accesso confermato — la pagina si aggiorna a breve.</p></section>`;
 }
 function render(){
+  if(ROLE === 'famiglia'){ renderFamiglia(); return; }
   if(!hashLocked && !adminAccessGranted()){
     // App unica: l'accesso si fa solo dalla pagina d'ingresso (PIN)
     if(IN_APP_UNICA && teamsLoaded){ location.replace('/?pin=1'); return; }
@@ -139,7 +141,7 @@ function render(){
   writeRoute(false);
   renderChrome();
   const T0 = TEAM();
-  $('#matchline').textContent = T0?.category || '';
+  $('#matchline').textContent = isSegreteria() ? 'Segreteria' : T0?.category || '';
   const v = $('#view');
   if(tab==='squadre') v.innerHTML = viewSquadre();
   else if(tab==='home') v.innerHTML = viewHome();
@@ -160,6 +162,7 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='eventi') v.innerHTML = viewEventi();
+  else if(tab==='tesserati') v.innerHTML = viewTesserati();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
@@ -240,11 +243,11 @@ const staffAdding = {};
 function loadStaff(){
   staff = 'loading';
   Promise.all([
-    supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').in('ruolo', ['direttore','scout']).order('cognome'),
+    supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').neq('ruolo', 'admin').order('cognome'),
     supabaseClient.from('codici_accesso').select('profilo_id, pin'),
   ]).then(([p, c]) => {
     const pin = new Map((c.data||[]).map(x => [x.profilo_id, x.pin]));
-    staff = (p.data||[]).map(x => ({...x, pin: pin.get(x.id) || ''}));
+    staff = (p.data||[]).filter(x => GRUPPI_STAFF[x.ruolo]).map(x => ({...x, pin: pin.get(x.id) || ''}));
     if(tab==='squadre') render();
   }).catch(() => { staff = []; });
 }
@@ -258,9 +261,15 @@ async function staffAction(body){
   }catch(e){ staffMsg = 'Operazione non riuscita: controlla la connessione.'; }
   staffBusy = false; loadStaff(); render();
 }
+/* Gruppi del personale con account e PIN (0020, 0030): titolo, sottotitolo, nome della persona */
+const GRUPPI_STAFF = {
+  scout: {titolo:'Scouting', sotto:'Academy Casatese Merate', chi:'scout', elenco:'Scout'},
+  direttore: {titolo:'Direttori', sotto:'a capo di squadre e scout', chi:'direttore', elenco:'Direttori'},
+  segreteria: {titolo:'Segreteria', sotto:'tesserati, famiglie, iscrizioni e quote', chi:'addetto di segreteria', elenco:'Segreteria'}
+};
 function viewStaffCard(ruolo){
-  const scout = ruolo === 'scout';
-  const chi = scout ? 'scout' : 'direttore';
+  const scout = ruolo === 'scout', G = GRUPPI_STAFF[ruolo];
+  const chi = G.chi;
   const persone = Array.isArray(staff) ? staff.filter(x => x.ruolo === ruolo) : [];
   const dis = staffBusy ? 'disabled' : '';
   const righe = persone.map(x => {
@@ -277,11 +286,11 @@ function viewStaffCard(ruolo){
   return `
     <div class="teamcard">
       <div class="hd">
-        <div><strong>${scout ? 'Scouting' : 'Direttori'}</strong><span class="stat"> · ${scout ? 'Academy Casatese Merate' : 'a capo di squadre e scout'}</span></div>
+        <div><strong>${G.titolo}</strong><span class="stat"> · ${G.sotto}</span></div>
         ${scout ? '<div class="row"><a class="btn small" href="/home">Apri Scouting</a></div>' : ''}
       </div>
       <div class="coachlist">
-        <div class="coachhd">${scout ? 'Scout' : 'Direttori'}</div>
+        <div class="coachhd">${G.elenco}</div>
         ${staff === 'loading' ? '<p class="note">Caricamento…</p>' : righe || `<p class="note">Nessun ${chi}: aggiungilo e genera il suo PIN.</p>`}
         ${staffAdding[ruolo]
           ? `<div class="addrow"><input id="staffnew_${ruolo}" placeholder="Nome e cognome del nuovo ${chi}" aria-label="Nuovo ${chi}">
@@ -295,7 +304,8 @@ function viewStaff(){
   if(staff === null) loadStaff();
   return `${staffMsg ? `<p class="esito ko" role="alert" style="margin-top:14px">${esc(staffMsg)}</p>` : ''}
     ${viewStaffCard('scout')}
-    ${viewStaffCard('direttore')}`;
+    ${viewStaffCard('direttore')}
+    ${viewStaffCard('segreteria')}`;
 }
 
 const gkBtn = p => `<button class="gkbtn" data-gktoggle="${p.id}" aria-pressed="${isGk(p.id)}" title="${isGk(p.id)?'Portiere (tocca per togliere)':'Segna come portiere'}">🧤</button>`;
@@ -465,6 +475,23 @@ function viewPartita(){
 `;
 }
 
+/* Risposte delle famiglie ("ci sarà / non ci sarà", 0031): il mister le legge col suo PIN, admin e direttori dal database */
+let risposteFam = null, risposteAt = 0, risposteSquadra = null;
+async function caricaRisposte(){
+  if(!supabaseClient || !curTeam || (risposteSquadra === curTeam && Date.now() - risposteAt < 60000)) return;
+  risposteAt = Date.now(); risposteSquadra = curTeam;
+  let righe = [];
+  if(coachPin){ const { data, error } = await supabaseClient.rpc('coach_risposte', { p_pin: coachPin }); if(error) return; righe = data || []; }
+  else { const { data, error } = await supabaseClient.from('risposte_convocazioni').select('partita, risposta, nota, tesserati!inner(squadra_id, giocatore_id)').eq('tesserati.squadra_id', curTeam);
+    if(error) return; righe = (data || []).map(r => ({giocatore_id: r.tesserati.giocatore_id, partita: r.partita, risposta: r.risposta, nota: r.nota})); }
+  risposteFam = Object.fromEntries(righe.map(r => [`${r.giocatore_id}|${r.partita}`, r]));
+  if(tab === 'convocazioni') render();
+}
+function rispostaFamiglia(pid, partita){
+  caricaRisposte();
+  const r = risposteFam?.[`${pid}|${partita}`]; if(!r) return '';
+  return ` <span class="famrisp ${r.risposta==='si' ? 'si' : 'no'}" title="Risposta della famiglia${r.nota ? ': '+esc(r.nota) : ''}">${r.risposta==='si' ? 'famiglia: ci sarà' : 'famiglia: non ci sarà'}</span>`;
+}
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
@@ -488,7 +515,7 @@ function viewConvocazioniAdb(){
     const f = (k, l, t = 'text', ph = '') => `<div><label class="f">${l}</label><input type="${t}" data-adbf="${k}" data-adbi="${i}" value="${esc(p[k]||'')}" placeholder="${esc(ph)}"></div>`;
     const conv = sorted.map(g => {
       const on = (p.conv||[]).includes(g.id);
-      return `<button class="convtoggle adbconv" data-adbconv="${i}:${g.id}" aria-pressed="${on}">${on ? '✓ ' : ''}${esc(g.name)}${!on && altrove(g.id) ? ' <small>· in altra partita</small>' : ''}</button>`;
+      return `<button class="convtoggle adbconv" data-adbconv="${i}:${g.id}" aria-pressed="${on}">${on ? '✓ ' : ''}${esc(g.name)}${!on && altrove(g.id) ? ' <small>· in altra partita</small>' : ''}${on ? rispostaFamiglia(g.id, p.calId || `${p.date}|${p.opponent}`) : ''}</button>`;
     }).join('');
     return `<div class="adbcard">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -556,7 +583,7 @@ function viewConvocazioni(){
     </div>`;
     const btns = CALLUP_STATUSES.map(st => `<button data-callupid="${p.id}" data-callupstatus="${st}" aria-pressed="${cur===st}" title="${CALLUP_LABELS[st]}">${st}</button>`).join('');
     return `<div class="callrow" data-status="${cur}">
-      <div class="callname">${esc(p.name)}</div>
+      <div class="callname">${esc(p.name)}${rispostaFamiglia(p.id, `${s.date}|${s.opponent}`)}</div>
       <div class="seg callseg" role="group" aria-label="Stato convocazione ${esc(p.name)}">${btns}</div>
     </div>`;
   }).join('');

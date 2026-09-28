@@ -50,6 +50,23 @@ if(IN_APP_UNICA){
     history.replaceState(null, '', location.pathname + location.search + (m[2] ? '#/' + m[2] : ''));
   }
 }
+/* PIN della famiglia (#famiglia=PIN dalla pagina d'ingresso): stessa regola del PIN del mister */
+if(IN_APP_UNICA){
+  const m = (location.hash||'').match(/famiglia=([\w-]+)/i);
+  if(m){
+    try{ sessionStorage.setItem('fg:famiglia', JSON.stringify({ pin: m[1], t: Date.now()/1000 })); }catch(e){}
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
+function famigliaPinFromUrl(){
+  if(!IN_APP_UNICA) return ((location.hash||'').match(/famiglia=([\w-]+)/i) || [])[1] || null;
+  try{
+    const v = JSON.parse(sessionStorage.getItem('fg:famiglia') || 'null');
+    if(v && accessoRecente(v.t)) return v.pin;
+    sessionStorage.removeItem('fg:famiglia');
+  }catch(e){}
+  return null;
+}
 function teamPinFromUrl(){
   if(!IN_APP_UNICA) return ((location.hash||'').match(/squadra=([\w-]+)/i) || [])[1] || null;
   try{
@@ -94,6 +111,8 @@ const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase
    Società (scheda "squadre" = documento shared/teams, 0020). */
 let staffRole = null;
 const isDirettore = () => staffRole === 'direttore';
+/* Segreteria (0030-0031): account personale, nel Portale solo l'area Segreteria (tesserati, famiglie, quote) */
+const isSegreteria = () => staffRole === 'segreteria';
 /* Preparatori dei portieri (squadra con vedeTutte, 0028): entrano col PIN come un mister e guardano anche le altre
    squadre, in sola lettura; la propria (presenze, registro) la modificano */
 let squadraPropria = null;
@@ -101,9 +120,9 @@ let squadraPropria = null;
 let squadraOrg = null;
 const isOrg = () => !!squadraOrg;
 const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
-const readOnly = () => (isDirettore() && tab !== 'squadre') || guardaAltra();
+const readOnly = () => (isDirettore() && tab !== 'squadre' && tab !== 'tesserati') || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
-const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore')));
+const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore' || staffRole === 'segreteria')));
 async function loadStaffRole(s){
   staffRole = null;
   if(!s || isAdminSession(s)) return;
@@ -263,7 +282,7 @@ function switchView(role, team){
 async function logout(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
   if(supabaseClient){ try{ await supabaseClient.auth.signOut({ scope: 'local' }); }catch(e){} }
-  if(IN_APP_UNICA){ try{ sessionStorage.removeItem('fg:pin'); }catch(e){} location.replace('/?pin=1'); return; }
+  if(IN_APP_UNICA){ try{ sessionStorage.removeItem('fg:pin'); sessionStorage.removeItem('fg:famiglia'); }catch(e){} location.replace('/?pin=1'); return; }
   adminUnlocked = false; supaSession = null; gateError = false;
   try{ localStorage.removeItem('fg:adminpin'); }catch(e){}
   if(secureMode){ history.replaceState(null, '', location.pathname + location.search); location.reload(); return; }
@@ -390,6 +409,11 @@ async function initStore(){
     let session = null;
     try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
     if(IN_APP_UNICA){ supaSession = session; await loadStaffRole(session); }
+    /* Famiglia: pagina del solo ragazzo (famiglia.js) */
+    const pinFam = famigliaPinFromUrl();
+    if(pinFam && !(sessionOk(session) && !isSegreteria())){ if(await famigliaLogin(pinFam)) return; }
+    /* Segreteria: niente documenti del Portale, solo l'area Segreteria (segreteria.js) */
+    if(isSegreteria() && sessionOk(session)){ teamsLoaded = true; tab = 'tesserati'; render(); return; }
     if(sessionOk(session) || !secureMode){
       try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
     } else {

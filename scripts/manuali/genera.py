@@ -152,6 +152,11 @@ solo le partite di un portiere.</td></tr>
 le squadre (vista Giorno per campo: Merate, Cernusco, Trasferta), aggiunge e modifica amichevoli e tornei di ogni squadra (le partite
 di campionato no: vale il calendario ufficiale), gestisce gli <b>eventi</b> della società (tornei organizzati, open day, feste,
 riunioni) e pubblica <b>avvisi</b> per una o più squadre, da mandare anche su WhatsApp. Non vede rose né dati dei ragazzi.</td></tr>
+<tr><td><b>Segreteria</b></td><td>Portale: Segreteria</td><td>Anagrafica dei tesserati, contatti dei genitori, certificati medici,
+taglie, iscrizioni e quote; genera il PIN di ogni famiglia e lo manda su WhatsApp. Non vede lo Scouting né le squadre.</td></tr>
+<tr><td><b>Famiglia</b></td><td>Portale, solo il proprio figlio</td><td>Vede le convocazioni del figlio (ora, ritrovo, campo) e risponde
+"ci sarà / non ci sarà", il calendario della squadra, gli avvisi, l'anagrafica (aggiorna contatti e taglie), iscrizione, certificato e
+quote.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
@@ -589,6 +594,13 @@ dice di quali categorie segue i portieri: in Home e nel suo calendario vede solo
 In <b>Nome e categoria</b> di una squadra due caselle la rendono speciale: <b>Preparatori dei portieri</b> (vedono tutte le squadre
 in sola lettura) e <b>Responsabile organizzativo</b> (calendari di tutte le squadre, eventi e avvisi). Chi entra col PIN di un
 mister di quella squadra ha quei poteri.</p>
+<h3>Segreteria e famiglie</h3>
+<p>Nell'area <b>Segreteria</b> scegli la squadra: per ogni ragazzo data di nascita, numero, genitori, certificato medico, taglie,
+iscrizione (con i documenti mancanti), rate delle quote e note della segreteria (la famiglia non le vede). I filtri in alto
+mostrano chi ha il certificato da sistemare, l'iscrizione incompleta, rate da pagare o nessun PIN. <span class="k">Genera PIN</span>
+crea il PIN della famiglia; <span class="k">Manda il PIN su WhatsApp</span> apre il messaggio pronto per il genitore. In
+<b>Società → Segreteria</b> si crea l'account (e il PIN) di chi lavora in segreteria. Il mister vede nelle Convocazioni le
+risposte delle famiglie ("famiglia: ci sarà / non ci sarà").</p>
 <h3>Eventi e avvisi</h3>
 <p>Nell'area <b>Eventi</b>: <span class="k">+ Nuovo evento</span> (titolo, tipo, data, orari, luogo, squadre coinvolte: nessuna =
 tutta la società); gli eventi compaiono nel calendario di tutti e nella vista Giorno, nella colonna del campo. In <b>Avvisi</b> scegli

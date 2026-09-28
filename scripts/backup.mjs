@@ -28,6 +28,8 @@ const TABELLE = [
   'doppioni_esclusi', 'sedi', 'squadre_seguite', 'gare', 'gare_osservatori', 'gare_allegati', 'incarichi',
   // Distinte e storico
   'squadre', 'distinte', 'distinte_giocatori',
+  // Segreteria e famiglie (0031)
+  'tesserati', 'tesserati_dati', 'risposte_convocazioni',
 ];
 const TENERE = 12;
 const BASE = fileURLToPath(new URL('../private/backup/', import.meta.url)); // (gli spazi nel percorso restano spazi)

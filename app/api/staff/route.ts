@@ -12,7 +12,7 @@ type Richiesta =
   | { azione: 'nome'; id: string; nome: string }
   | { azione: 'stato'; id: string; attivo: boolean };
 
-const RUOLI_STAFF = ['scout', 'direttore'];
+const RUOLI_STAFF = ['scout', 'direttore', 'segreteria'];
 
 const errore = (messaggio: string, status = 400) => Response.json({ errore: messaggio }, { status });
 
@@ -35,7 +35,7 @@ async function nuovoCodice(db: Servizio) {
   throw new Error('Nessun codice libero trovato');
 }
 
-/** Solo scout e direttori: l'admin non si gestisce da qui */
+/** Solo scout, direttori e segreteria: l'admin non si gestisce da qui */
 async function staffEsistente(db: Servizio, id: string) {
   const { data } = await db.from('profiles').select('id, nome, cognome, ruolo').eq('id', id).maybeSingle();
   return data && RUOLI_STAFF.includes(data.ruolo) ? data : null;

@@ -344,6 +344,24 @@ a.iconbtn2{filter:none;opacity:1}
 .avviso b{display:block;margin:2px 0}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .havvisi{border-left:5px solid #6B3FA0}
+/* Segreteria */
+.sbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.sbadge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.sbadge.c-ok{background:var(--paper);color:var(--muted)}
+.sbadge.c-scade{background:var(--amber);border-color:var(--amber);color:#2B2205}
+.sbadge.c-scaduto,.sbadge.c-manca{background:var(--red);border-color:var(--red);color:#fff}
+.segform{padding:4px 12px 12px}
+.segform h4{margin:14px 0 6px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:13px;color:var(--muted)}
+.qrow{display:grid;grid-template-columns:1.2fr .8fr 1.2fr auto auto;gap:6px;align-items:center;margin-bottom:6px}
+@media (max-width:520px){.qrow{grid-template-columns:1fr 1fr;}}
+/* Famiglia */
+.convfam.nc{border-color:var(--line)}
+.btn.danger-on{background:var(--red);border-color:var(--red);color:#fff}
+.avvisocert{border-left:5px solid var(--amber)}
+.avvisocert.ko{border-left-color:var(--red)}
+.famrisp{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:middle}
+.famrisp.si{background:var(--grass);color:#fff}
+.famrisp.no{background:var(--red);color:#fff}
 .coachcat{display:flex;align-items:center;gap:8px;margin:0 0 10px 4px}
 .coachcat input{max-width:180px}
 .storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
