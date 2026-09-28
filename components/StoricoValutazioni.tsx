@@ -3,9 +3,12 @@
 // Toccando la riga: note delle aree e commento.
 import { AREE, GIUDIZI, type Giudizio } from '@/lib/tipi';
 import { dataBreve } from '@/lib/utili';
+import { Autore, type FirmaValutazione } from '@/components/Autore';
+import { eliminaValutazione } from '@/app/(app)/giocatori/actions';
 
 export type ValutazioneStorico = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; firma: string;
+  f: FirmaValutazione; puoEliminare: boolean;
   tecnica: number; motoria: number; tattica: number; mentale: number;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 };
@@ -27,7 +30,7 @@ function Voto({ ora, prima }: { ora: number; prima?: number }) {
   );
 }
 
-export function StoricoValutazioni({ valutazioni }: { valutazioni: ValutazioneStorico[] }) {
+export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: ValutazioneStorico[]; giocatoreId: string }) {
   if (!valutazioni.length) return null;
   // in ordine dalla più recente; "prima" = quella subito più vecchia
   const ordinate = [...valutazioni].sort((a, b) => b.data.localeCompare(a.data));
@@ -42,6 +45,7 @@ export function StoricoValutazioni({ valutazioni }: { valutazioni: ValutazioneSt
             <li key={v.id}>
               <details className="group">
                 <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-2 p-3 hover:bg-carta">
+                  <Autore f={v.f} />
                   <span className="min-w-32 flex-1">
                     <span className="block font-semibold">{dataBreve(v.data)}</span>
                     <span className="block text-xs text-grigio">{[v.firma, v.contesto].filter(Boolean).join(' · ')}</span>
@@ -67,6 +71,13 @@ export function StoricoValutazioni({ valutazioni }: { valutazioni: ValutazioneSt
                   ))}
                   {v.commento && <p className="whitespace-pre-line">{v.commento}</p>}
                   {!note.length && !v.commento && <p className="text-grigio">Nessuna nota.</p>}
+                  {v.puoEliminare && (
+                    <form action={eliminaValutazione} className="pt-1 text-right">
+                      <input type="hidden" name="id" value={giocatoreId} />
+                      <input type="hidden" name="valutazione" value={v.id} />
+                      <button className="text-xs font-semibold text-grigio hover:text-rosso">Elimina questa valutazione</button>
+                    </form>
+                  )}
                 </div>
               </details>
             </li>

@@ -263,3 +263,13 @@ export async function eliminaStagione(formData: FormData) {
   if (!data?.length) torna(id, { errore: 'Puoi togliere solo le righe che hai scritto tu.' });
   torna(id, { ok: 'Riga tolta dalla carriera.' });
 }
+
+/** Elimina una valutazione: chi l'ha scritta, admin e direttori (regole 0018) */
+export async function eliminaValutazione(formData: FormData) {
+  const id = testo(formData, 'id')!;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('valutazioni').delete().eq('id', testo(formData, 'valutazione')!).select('id');
+  if (error) torna(id, { errore: `Valutazione non eliminata: ${error.message}` });
+  if (!data?.length) torna(id, { errore: 'Solo admin, direttori e chi l’ha scritta eliminano una valutazione.' });
+  torna(id, { ok: 'Valutazione eliminata.' });
+}

@@ -699,8 +699,7 @@ async function downloadStatsPdf(){
   pages.forEach((c,i) => { if(i) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210); });
   const name = ['REPORT', (TEAM()?.category || TEAM()?.name || '').replace(/[^\w]+/g,'_').toUpperCase(), statPeriod==='all' ? 'STAGIONE' : statPeriod, todayISO()].filter(Boolean).join('_') + '.pdf';
   try{
-    if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
-    else browserDownload(name, doc.output('blob'));
+    await consegnaPdf(name, doc.output('blob'), 'Report statistiche');
     setStatus('Report pronto');
   }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }

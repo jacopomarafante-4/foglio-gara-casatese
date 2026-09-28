@@ -15,6 +15,7 @@ import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
+import { Autori, firma } from '@/components/Autore';
 import { apriChiudiNecessita, eliminaNecessita, salvaNecessita } from './actions';
 
 type Necessita = {
@@ -24,7 +25,10 @@ type Necessita = {
 type Giocatore = {
   id: string; cognome: string | null; nome: string | null; descrizione: string | null; annata: number;
   ruolo: RuoloCampo | null; piede: Piede | null; stato: StatoGiocatore; societa_id: string | null; societa: { nome: string } | null;
-  valutazioni: { tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string }[];
+  valutazioni: {
+    tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string;
+    autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
+  }[];
 };
 
 const PRIORITA = { alta: 'Priorità alta', media: 'Priorità media', bassa: 'Priorità bassa' } as const;
@@ -72,6 +76,7 @@ function RigaGiocatore({ g, contatto }: { g: Giocatore; contatto: boolean }) {
       {v
         ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORE_GIUDIZIO[v.giudizio]}`}>{GIUDIZI[v.giudizio]}</span>
         : <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da valutare</span>}
+      {g.valutazioni.length > 0 && <Autori firme={[...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data)).map(firma)} max={2} />}
     </li>
   );
 }
@@ -141,7 +146,7 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
     const min = Math.min(...mostra.map((n) => n.annata_da)), max = Math.max(...mostra.map((n) => n.annata_a));
     const academy = idNostraSocieta(await elencoSocieta(supabase));
     const { data } = await supabase.from('giocatori')
-      .select('id, cognome, nome, descrizione, annata, ruolo, piede, stato, societa_id, societa(nome), valutazioni(tecnica, motoria, tattica, mentale, giudizio, data)')
+      .select('id, cognome, nome, descrizione, annata, ruolo, piede, stato, societa_id, societa(nome), valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))')
       .eq('osservato', true).gte('annata', min).lte('annata', max)
       .not('stato', 'in', '(inserito,da_non_inserire)');
     giocatori = ((data as unknown as Giocatore[]) ?? []).filter((g) => !academy || g.societa_id !== academy);

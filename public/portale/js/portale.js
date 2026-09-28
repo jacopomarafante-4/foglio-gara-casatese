@@ -31,13 +31,13 @@ const AREAS = [
   {k:'modulistica', label:'Modulistica', tabs:['distinta','programma','comunicazione']},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
-  {k:'societa', label:'Società', tabs:['squadre'], admin:true}
+  {k:'societa', label:'Società', tabs:['squadre','archivio'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
   segnala:'Segnala un giocatore', giocatori:'Giocatori', avvisi:'Avvisi', tesserati:'Tesserati',
-  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma gare', distinta:'Distinta', comunicazione:'Comunicazione'};
+  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma gare', distinta:'Distinta', comunicazione:'Comunicazione', archivio:'Archivio documenti'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti', eventi:'calendariotutte'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -549,6 +549,16 @@ const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_
 const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT'};
 const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']];
 const mediaVal = v => v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null;
+/* Chi ha valutato: iniziali in un cerchio colorato, stesso colore per la stessa persona (come nello Scouting, components/Autore.tsx) */
+const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#5C7F1E','#1F5FA8'];
+function autoreTondo(nome){
+  if(!nome) return '';
+  const mister = /^mister\b|·/i.test(nome), pulito = nome.replace(/^Mister\s+/i, '').split('·')[0].trim(), p = pulito.split(/\s+/).filter(Boolean);
+  const ini = ((p[0]?.[0] || '?') + (p.length > 1 ? p[p.length-1][0] : '')).toUpperCase();
+  let h = 0; for(const c of (mister ? 'm:' : '') + nome) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const col = COLORI_AUTORE[h % COLORI_AUTORE.length];
+  return `<span class="autore${mister ? ' mister' : ''}" style="--ac:${col}" title="${esc(nome)}" aria-label="Valutazione di ${esc(nome)}">${esc(ini)}</span>`;
+}
 function viewGiocatori(){
   if(!coachPin) return `<h2>Giocatori</h2><section class="panel"><p class="empty">L'elenco si vede entrando col PIN della squadra.</p></section>`;
   if(giocatoriAnnata === null && !giocatoriErrore){
@@ -596,12 +606,12 @@ function viewGiocatori(){
         <div class="gcolonne">
           ${AREE_VAL.map(([k,l]) => tile(l.slice(0,3).toUpperCase(), ultima?.[k], 'v'+ultima?.[k])).join('')}
           ${tile('SEGN', g.segnalazioni.length || null, 'conta')}
-          ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
+          ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>${autoreTondo(ultima.autore)}` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
         </div></summary>
       <div class="gdett">
         ${g.descrizione && g.cognome ? `<p class="note">${esc(g.descrizione)}</p>` : ''}
         ${g.piede ? `<p class="note">Piede ${esc(g.piede)}${g.categoria ? ' · '+esc(g.categoria) : ''}</p>` : ''}
-        ${g.valutazioni.map(v => `<div class="gval"><div class="note">${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
+        ${g.valutazioni.map(v => `<div class="gval"><div class="note">${autoreTondo(v.autore)} ${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
           ${barre(v)}<p class="gtxt"><span class="ggiud gg-${esc(v.giudizio)}">${esc(GIUDIZI[v.giudizio] || v.giudizio)}</span>${v.commento ? ' '+esc(v.commento) : ''}</p></div>`).join('')}
         ${g.segnalazioni.map(x => `<div class="gval gseg"><div class="note">Segnalazione · ${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ` · <b>${x.voto}/5</b>` : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('')}
         ${!g.valutazioni.length && !g.segnalazioni.length ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}

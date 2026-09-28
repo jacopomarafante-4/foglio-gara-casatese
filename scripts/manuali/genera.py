@@ -432,6 +432,8 @@ nascita e tessera: quello che lasci vuoto si scrive a penna), allenatore e dirig
 e con <span class="k">Scarica programma PDF</span> lo stampi.</li>
 <li><b>Comunicazione</b>: un modello (o testo libero), per chi è, titolo, testo e firma; <span class="k">Scarica PDF</span>. Non si
 pubblica: per farla arrivare nell'app usa Calendario → Avvisi.</li></ul>
+<p><b>Archivio</b>: ogni PDF che scarichi dal Portale (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia
+una copia in <b>Società → Archivio documenti</b>, con chi l'ha scaricato e quando. Lo vedono admin e direttori.</p>
 <p>In Convocazioni, Distinta e Foglio gara la casella <b>Mostra la categoria nell'intestazione del PDF</b> decide se stampare la
 categoria (es. "Under 14 - Provinciale").</p>
 <h3>Tabellini</h3><ol class="passi">
@@ -714,6 +716,9 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
+<li><b>Valutazioni nominali</b>: accanto a ogni valutazione ci sono le <b>iniziali</b> di chi l'ha fatta in un cerchio colorato
+(sempre lo stesso colore per la stessa persona; i mister dal Portale hanno il cerchio col bordo). Nella scheda, nello storico
+valutazioni, admin e direttori possono <span class="k">Elimina questa valutazione</span>.</li>
 <li><b>Calendario</b>: le partite di tutte le nostre squadre (tutte le annate) con i colori del Portale, per periodo e squadra.
 Lo vedono anche gli scout.</li>
 <li><b>Necessità</b>: che giocatori cerca la società. <span class="k">+ Nuova necessità</span> (admin e direttori): cosa cerchiamo,

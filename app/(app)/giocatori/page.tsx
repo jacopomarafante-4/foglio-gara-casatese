@@ -13,6 +13,7 @@ import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
+import { Autori, firma, type FirmaValutazione } from '@/components/Autore';
 
 type Riga = {
   id: string;
@@ -27,7 +28,10 @@ type Riga = {
   societa_id: string | null;
   updated_at: string;
   societa: { nome: string } | null;
-  valutazioni: { tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string }[];
+  valutazioni: {
+    tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string;
+    autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
+  }[];
 };
 
 type GaraBreve = {
@@ -70,8 +74,10 @@ function dataGara(iso: string, senzaOra: boolean) {
 function sintesiValutazioni(v: Riga['valutazioni']) {
   if (!v.length) return null;
   const media = v.reduce((s, x) => s + (x.tecnica + x.motoria + x.tattica + x.mentale) / 4, 0) / v.length;
-  const ultima = [...v].sort((a, b) => b.data.localeCompare(a.data))[0];
-  return { media, giudizio: ultima.giudizio, quante: v.length };
+  const ordinate = [...v].sort((a, b) => b.data.localeCompare(a.data));
+  // chi ha valutato, dal più recente (iniziali colorate nell'elenco)
+  const firme: FirmaValutazione[] = ordinate.map(firma);
+  return { media, giudizio: ordinate[0].giudizio, quante: v.length, firme };
 }
 
 /** Prossime gare (60 giorni) delle società indicate: a blocchi, per non superare i limiti delle richieste */
@@ -118,7 +124,7 @@ export default async function Giocatori({
       .from('giocatori')
       .select(
         'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
-          'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data)',
+          'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
       .order('updated_at', { ascending: false });
     const annata = Number(filtri.annata);
@@ -229,6 +235,7 @@ export default async function Giocatori({
         <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>
           {GIUDIZI[r.v.giudizio]}
         </span>
+        <Autori firme={r.v.firme} max={2} />
       </span>
     ) : null;
   const pulsanteValuta = (href: string) =>
@@ -331,7 +338,7 @@ export default async function Giocatori({
                 <col className="w-16" />
                 <col className="w-28" />
                 <col />
-                <col className="w-40" />
+                <col className="w-52" />
                 <col />
               </colgroup>
               <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">

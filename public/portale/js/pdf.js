@@ -236,6 +236,20 @@ async function buildPreview(){
   box.innerHTML = '';
   makePages().forEach((c,i) => { c.setAttribute('aria-label', `Pagina ${i+1}`); box.appendChild(c); });
 }
+/* Consegna di un PDF: lo scarica e ne lascia una copia nell'Archivio di admin e direttori (0039).
+   L'archiviazione non blocca lo scaricamento: se non riesce (rete, migrazione mancante) il file c'è comunque. */
+async function consegnaPdf(nome, blob, tipo){
+  if(downloads) await downloads.save({filename: nome, data: blob}); else browserDownload(nome, blob);
+  archiviaDocumento(nome, blob, tipo);
+}
+async function archiviaDocumento(nome, blob, tipo){
+  if(!supabaseClient || RUNNING_IN_CLAUDE) return;
+  try{
+    const b64 = await new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = ko; r.readAsDataURL(blob); });
+    const { error } = await supabaseClient.rpc('archivia_documento', {p_pin: coachPin || null, p_nome: nome, p_tipo: tipo, p_squadra_id: curTeam || null, p_dati: b64});
+    if(error && error.code !== 'PGRST202') console.warn('Archivio:', error.message);
+  }catch(e){}
+}
 function browserDownload(filename, blob){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -543,8 +557,7 @@ async function downloadConvocazione(){
   const s = pp && pp[0] ? pp[0] : S.sheet;
   const name = [fmtDate(s.date).replace(/\//g,'_'), (pp && pp.length > 1) ? `${pp.length}_PARTITE` : (s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : ''), 'CONVOCAZIONE'].filter(Boolean).join('_') + '.pdf';
   try{
-    if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
-    else browserDownload(name, doc.output('blob'));
+    await consegnaPdf(name, doc.output('blob'), 'Convocazione');
     setStatus('Convocazione pronta');
   }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }
@@ -559,8 +572,7 @@ async function downloadPdf(){
   const s = S.sheet;
   const name = [fmtDate(s.date).replace(/\//g,'_'), s.opponent ? s.opponent.replace(/[^\w]+/g,'_').toUpperCase() : '', 'FOGLIO_GARA'].filter(Boolean).join('_') + '.pdf';
   try{
-    if(downloads) await downloads.save({filename:name, data:doc.output('blob')});
-    else browserDownload(name, doc.output('blob'));
+    await consegnaPdf(name, doc.output('blob'), 'Foglio gara');
     setStatus('PDF pronto');
   }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }

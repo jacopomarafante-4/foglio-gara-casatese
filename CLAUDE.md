@@ -168,6 +168,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0039: `archivio_documenti` (PDF in bytea, max 15 MB): ogni PDF scaricato dal Portale passa da `consegnaPdf(nome, blob, tipo)` in
+  `pdf.js` (scarica + `archivia_documento(pin, nome, tipo, squadra, base64)`, col PIN per mister/organizzativo, account per lo staff).
+  Li vedono e scaricano admin e direttori (`archivio_scarica(id)`), li elimina l'admin: Società → Archivio documenti (`archivio.js`).
+  Esclusi i fogli PIN delle famiglie (credenziali) e il backup JSON. Valutazioni nominali: iniziali colorate `components/Autore.tsx`
+  (`firma()`, `Autori`) nell'elenco Giocatori, nelle Necessità e nella scheda (medie e storico, con "Elimina" per admin, direttori e
+  autore); nel Portale `autoreTondo()`
 - 0038: `calendari_squadre()` (admin, direttori, scout): squadre del Portale (senza organizzazione e preparatori) con le sole
   partite (data, ora, avversario, casa, campo, tipo). Pagina Scouting `/calendario`: tutte le annate, colori come `calDi()` del Portale,
   periodo (weekend, 2 settimane, stagione) e squadra

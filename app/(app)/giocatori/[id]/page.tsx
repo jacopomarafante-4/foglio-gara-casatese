@@ -15,6 +15,7 @@ import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
 import { StoricoValutazioni } from '@/components/StoricoValutazioni';
+import { Autori, firma } from '@/components/Autore';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
 import { Avviso } from '@/components/Avviso';
@@ -54,6 +55,7 @@ type Segnalazione = {
 type Valutazione = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; autore: Autore;
   autore_squadra: string | null;   // valutazione di un mister dal Portale (0032)
+  autore_id: string | null;
   tecnica: number; motoria: number; tattica: number; mentale: number;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 };
@@ -209,6 +211,7 @@ export default async function SchedaGiocatore({
           <span className="text-right text-sm text-grigio">
             {valutazioni.length ? (
               <>
+                <span className="mr-2 align-middle"><Autori firme={valutazioni.map(firma)} max={4} /></span>
                 media di {valutazioni.length} · <strong className="text-inchiostro">ultima il {dataBreve(valutazioni[0].data)}</strong>
               </>
             ) : (
@@ -230,7 +233,11 @@ export default async function SchedaGiocatore({
           ))}
         </dl>
         <StoricoValutazioni
-          valutazioni={valutazioni.map((v) => ({ ...v, firma: v.autore || !v.autore_squadra ? chi(v.autore) : `Mister ${v.autore_squadra}` }))}
+          giocatoreId={g.id}
+          valutazioni={valutazioni.map((v) => ({
+            ...v, firma: v.autore || !v.autore_squadra ? chi(v.autore) : `Mister ${v.autore_squadra}`, f: firma(v),
+            puoEliminare: gestore || (!!v.autore_id && v.autore_id === profilo.id),
+          }))}
         />
       </section>
 

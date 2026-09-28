@@ -93,9 +93,9 @@ function piePdf(doc){
   for(let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIGIO_RGB);
     doc.text('Academy Casatese Merate · academy-casatese.vercel.app', 10, 290); doc.text(`${i} / ${n}`, 200, 290, {align:'right'}); }
 }
-async function salvaPdf(doc, nome){
+async function salvaPdf(doc, nome, tipo){
   piePdf(doc);
-  try{ if(downloads) await downloads.save({filename: nome, data: doc.output('blob')}); else browserDownload(nome, doc.output('blob')); setStatus('PDF pronto'); }
+  try{ await consegnaPdf(nome, doc.output('blob'), tipo); setStatus('PDF pronto'); }
   catch(e){ setStatus('Download non riuscito'); }
 }
 const nomeFile = (...parti) => parti.filter(Boolean).join('_').replace(/[^\w]+/g, '_').replace(/_+/g, '_').toUpperCase() + '.pdf';
@@ -190,7 +190,7 @@ async function pdfDistinta(){
   riga1(doc, "Firma dell'arbitro / organizzazione", PAG.dx - 80, y, 80, {size: 9});
   doc.setDrawColor(150); doc.line(PAG.sx, y + 12, PAG.sx + 80, y + 12); doc.line(PAG.dx - 80, y + 12, PAG.dx, y + 12);
   doc.setTextColor(...INK_RGB);
-  await salvaPdf(doc, nomeFile('DISTINTA', cat, d.manifestazione || d.tipo, d.data));
+  await salvaPdf(doc, nomeFile('DISTINTA', cat, d.manifestazione || d.tipo, d.data), 'Distinta');
 }
 document.addEventListener('input', e => {
   const t = e.target, ds = t.dataset || {}; if(!ds.dist && !ds.distg && !ds.diststaff) return;
@@ -253,7 +253,7 @@ async function pdfComunicazione(a){
   riga1(doc, 'Academy Casatese Merate', PAG.sx, y, LARGH, {size: 10.5, bold: true, align: 'right'});
   doc.setTextColor(...GRIGIO_RGB); blocco(doc, a.autore || 'La società', PAG.dx - 90, y + 5, 90, {size: 9.5, min: 8, maxRighe: 2, align: 'right'});
   doc.setTextColor(...INK_RGB);
-  await salvaPdf(doc, nomeFile('COMUNICAZIONE', titolo, a.data));
+  await salvaPdf(doc, nomeFile('COMUNICAZIONE', titolo, a.data), 'Comunicazione');
 }
 
 /* ---------- Programma gare di un periodo (Modulistica → Programma gare) ---------- */
@@ -318,7 +318,7 @@ async function pdfProgramma(){
     y += r.h;
   }
   if(!ms.length) riga1(doc, 'Nessun impegno nel periodo.', PAG.sx, y + 6, LARGH, {size: 11});
-  await salvaPdf(doc, nomeFile('PROGRAMMA', progDal, progAl));
+  await salvaPdf(doc, nomeFile('PROGRAMMA', progDal, progAl), 'Programma gare');
 }
 document.addEventListener('change', e => {
   const t = e.target; if(!t.dataset?.prog) return;

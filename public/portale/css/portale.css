@@ -559,3 +559,10 @@ a.areabtn{text-decoration:none}
 .giafin h3{margin:0 0 6px;font-family:var(--cond);font-size:22px}
 .giariga{justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
 .giano{width:100%;margin-top:10px}
+
+/* Società → Archivio documenti */
+.archlista li.archriga{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.archinfo{min-width:0;flex:1}
+.archinfo b{word-break:break-all}
+.autore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;font-size:10px;font-weight:700;flex:none;vertical-align:middle}
+.autore.mister{background:var(--paper);color:var(--ac);border:2px solid var(--ac)}
