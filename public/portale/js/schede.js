@@ -179,7 +179,9 @@ function viewSquadre(){
           ${c.code ? `<span class="code" title="PIN personale">${esc(c.code)}</span>` : '<span class="nocode">Senza PIN</span>'}
           <button class="btn small ${c.code?'ghost':'primary'}" data-coachpin="${t.id}:${c.id}">${c.code ? 'Rigenera' : 'Genera PIN'}</button>
           <button class="iconbtn" aria-label="Togli ${esc(c.name||'mister')}" data-coachdel="${t.id}:${c.id}">×</button>
-        </div>`).join('');
+        </div>${t.vedeTutte ? `
+        <div class="coachcat"><label class="note" for="cc_${c.id}">Portieri di: Under</label>
+          <input id="cc_${c.id}" data-coachcat="${t.id}:${c.id}" value="${esc((c.eta||[]).join(', '))}" placeholder="Es. 15, 14, 11" inputmode="numeric"></div>` : ''}`).join('');
     return `
     <div class="teamcard">
       <div class="hd">

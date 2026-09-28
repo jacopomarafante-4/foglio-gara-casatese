@@ -163,7 +163,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   sulle altre (`save()` non scrive), la propria (presenze) la modificano. `coach_giocatori(pin)`: Scouting → Giocatori, osservati
   dell'annata della squadra (esclusa l'Academy; per la squadra vedeTutte i portieri di tutte le annate) con segnalazioni e
   valutazioni, mai contatti né note del giocatore.
-  Presenze dei preparatori: `scripts/import-adb/importa.mjs --squadra=SGS` da `private/adb/SGS.csv`
+  Presenze dei preparatori: `scripts/import-adb/importa.mjs --squadra=SGS` da `private/adb/SGS.csv`.
+  Ogni preparatore ha `coaches[].eta` (Società → "Portieri di: Under"): Home e Calendario → "I miei portieri" mostrano solo le
+  partite di quelle categorie (`impegni()`, `etaPortieri()` in `portale.js`, preparatore riconosciuto da `misterName`)
 - 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
   in Squadra → Calendario); admin e direttori leggono i `calendar/<squadra>` direttamente
 - 0026: pagina della partita `/gare/[id]` (dati, chi ci va, giocatori visti con `segnalazioni.gara_id`, distinte): la modificano

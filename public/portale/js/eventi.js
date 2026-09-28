@@ -126,7 +126,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if(t.dataset.seg){ segDraft[t.dataset.seg] = t.value; return; }
-  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid || t.dataset.coach)) return;
+  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid || t.dataset.coach || t.dataset.coachcat)) return;
+  /* Preparatori dei portieri: le categorie (Under) dei loro portieri, per Home e calendario */
+  if(t.dataset.coachcat){ const [tid, cid] = t.dataset.coachcat.split(':'); const c = S.teams.find(x => x.id===tid)?.coaches?.find(x => x.id===cid);
+    if(c){ c.eta = [...new Set((t.value.match(/\d{1,2}/g) || []).map(Number))]; save('teams'); } return; }
   if(t.dataset.coach){ const [tid, cid] = t.dataset.coach.split(':'); const tm = S.teams.find(x => x.id===tid); const c = tm?.coaches?.find(x => x.id===cid); if(c){ c.name = t.value; syncCoach(tm); save('teams'); } return; }
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }

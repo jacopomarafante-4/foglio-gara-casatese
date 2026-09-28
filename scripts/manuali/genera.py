@@ -143,7 +143,9 @@ test e tabellini, guarda le statistiche, segnala giocatori allo scouting e vede 
 (con segnalazioni e valutazioni, senza contatti).</td></tr>
 <tr><td><b>Preparatori dei portieri</b></td><td>Portale: la loro squadra e, in sola lettura, tutte le altre</td><td>Segnano
 le presenze dei loro allenamenti; guardano rosa, calendario, gara, presenze e statistiche di ogni squadra senza modificarle;
-segnalano giocatori allo scouting e in Scouting → Giocatori vedono i portieri osservati di tutte le annate.</td></tr>
+segnalano giocatori allo scouting e in Scouting → Giocatori vedono i portieri osservati di tutte le annate. Ognuno ha le sue
+categorie di portieri (in Società, "Portieri di: Under"): in Home e in Calendario → I miei portieri vede solo le partite di
+quelle categorie; in Tutte le squadre vede tutto.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
@@ -572,7 +574,9 @@ foglio gara, tabellini, statistiche, campi).</li>
 <p><b>Anteprima</b>: con "Guarda l'app come" vedi esattamente cosa vede il mister di una squadra.</p>''', 'La Home di una squadra')}
 <h3>Società</h3>
 <p>Le schede delle <b>squadre</b> con i loro mister, poi <b>Scouting</b> (gli scout) e <b>Direttori</b>, ognuno con il suo PIN.
-Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigenerare o disattivare i PIN e sospendere un account.</p>
+Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigenerare o disattivare i PIN e sospendere un account.
+Nella squadra dei <b>preparatori dei portieri</b>, sotto ogni preparatore, il campo <b>Portieri di: Under</b> (es. 15, 14, 11)
+dice di quali categorie segue i portieri: in Home e nel suo calendario vede solo quelle partite.</p>
 </section>
 
 <section>
