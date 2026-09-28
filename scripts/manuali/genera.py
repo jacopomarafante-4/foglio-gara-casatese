@@ -396,6 +396,7 @@ schemi anche per le prossime. Oppure <span class="k">+ Nuovo schema vuoto</span>
 <b>✋ Sposta</b> trascini pedine e pallone; <b>tocca una pedina</b> per numero di ruolo, compito, etichetta rossa e giocatore.
 Freccia, Tratteggiata, Linea e Testo per disegnare (freccia piena = palla, tratteggiata = movimento); tocca un segno per
 cancellarlo. <span class="k">+ Pedina</span>, nota sotto lo schema, <span class="k">Duplica</span> ed <span class="k">Elimina schema</span>.</li>
+<li>Se lo stesso giocatore finisce in due pedine (per esempio due pedine con il numero 5) compare un avviso rosso.</li>
 <li><b>Chi fa cosa</b>: per ogni pedina il giocatore (di partenza chi gioca con quel numero in formazione; vale per la partita) e
 il compito; tocca il nome di un compito (✎) per rinominarlo per tutte le sue pedine.</li>
 <li>La ★ mette o toglie uno schema dai preferiti. Tutto si salva da solo.</li></ul>''', 'Piazzati')}
@@ -718,6 +719,9 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
+<li><b>Tre valutazioni</b>: ogni giocatore ha <b>3 caselle</b> con le iniziali delle persone che l'hanno valutato. Servono 3 persone
+diverse per passarlo a <b>Inserito</b>: a 3 su 3 caselle e riga diventano <b>verdi</b> ✓. Ogni <b>annata</b> ha il suo colore e
+l'elenco è diviso per annata (dalla più giovane), finché non scegli un altro ordine.</li>
 <li><b>Valutazioni nominali</b>: accanto a ogni valutazione ci sono le <b>iniziali</b> di chi l'ha fatta in un cerchio colorato
 (sempre lo stesso colore per la stessa persona; i mister dal Portale hanno il cerchio col bordo). Nella scheda, nello storico
 valutazioni, admin e direttori possono <span class="k">Elimina questa valutazione</span>.</li>

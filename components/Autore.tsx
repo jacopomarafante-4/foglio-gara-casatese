@@ -51,3 +51,29 @@ export function Autori({ firme, max = 3 }: { firme: FirmaValutazione[]; max?: nu
     </span>
   );
 }
+
+/** Persone diverse che hanno valutato, dalla più recente (per le 3 caselle) */
+export const SOGLIA_VALUTAZIONI = 3;
+export function valutatori<T extends { data: string } & Parameters<typeof firma>[0]>(valutazioni: T[]): FirmaValutazione[] {
+  const ordinate = [...valutazioni].sort((a, b) => b.data.localeCompare(a.data)).map(firma);
+  return ordinate.filter((f, i) => f.chiave === '?' || ordinate.findIndex((x) => x.chiave === f.chiave) === i);
+}
+
+/** Le 3 caselle: iniziali di chi ha valutato, caselle vuote tratteggiate; a 3 su 3 diventano verdi */
+export function SlotValutazioni({ firme, piccolo = false }: { firme: FirmaValutazione[]; piccolo?: boolean }) {
+  const completo = firme.length >= SOGLIA_VALUTAZIONI;
+  const dim = piccolo ? 'h-6 w-6 text-[10px]' : 'h-7 w-7 text-[11px]';
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full p-0.5 ${completo ? 'bg-verde/15 ring-2 ring-verde' : ''}`}
+      title={completo ? `${firme.length} persone l'hanno valutato: si può inserire` : `${firme.length} di ${SOGLIA_VALUTAZIONI} valutazioni per l'inserimento`}
+      aria-label={`${Math.min(firme.length, SOGLIA_VALUTAZIONI)} valutazioni su ${SOGLIA_VALUTAZIONI}`}
+    >
+      {Array.from({ length: SOGLIA_VALUTAZIONI }, (_, i) => firme[i]
+        ? <Autore key={firme[i].chiave + i} f={firme[i]} piccolo />
+        : <span key={'v' + i} className={`inline-flex items-center justify-center rounded-full border-2 border-dashed border-linea text-grigio ${dim}`} aria-hidden="true">·</span>)}
+      {firme.length > SOGLIA_VALUTAZIONI && <span className="px-1 text-xs font-semibold text-grigio">+{firme.length - SOGLIA_VALUTAZIONI}</span>}
+      {completo && <span className="pr-1.5 text-xs font-bold text-verde" aria-hidden="true">✓</span>}
+    </span>
+  );
+}

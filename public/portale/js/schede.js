@@ -855,7 +855,13 @@ function assegnaList(sc, rm, roles){
     const nome = role==='Senza compito' ? '' : role;
     return `<div class="asgrp"><div class="scompr asnome"><i style="background:${col}"></i><input data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="${nome ? 'Nome del compito' : 'Senza compito: scrivi un nome'}" aria-label="Nome del compito ${esc(role)}"><span aria-hidden="true">✎</span></div>${righe}</div>`;
   }).join('');
+  /* stesso giocatore in più pedine (es. due pedine col numero 5): si avvisa */
+  const doppi = new Map();
+  effTokens(sc).forEach(t => { const {p} = tokenPlayer(sc, t); if(p) doppi.set(p.id, [...(doppi.get(p.id)||[]), t]); });
+  const avviso = [...doppi.entries()].filter(([, ts]) => ts.length > 1).map(([pid, ts]) =>
+    `${esc(P(pid)?.name || '')} è in ${ts.length} pedine (${ts.map(t => `n° ${t.slot}${t.role ? ' · ' + esc(t.role) : ''}`).join(', ')})`);
   return `<h3>Chi fa cosa</h3>
+    ${avviso.length ? `<p class="esito ko" role="alert">⚠ Stesso giocatore in più compiti: ${avviso.join('; ')}. Cambia il numero di ruolo di una pedina o scegli un altro giocatore.</p>` : ''}
     <p class="hint">Scegli il giocatore per ogni pedina (vale per questa partita): di partenza c'è chi gioca con quel numero di ruolo in formazione.
       Tocca il nome di un compito (✎) per rinominarlo${A ? ': cambia per tutte le sue pedine' : ': cambia per tutte le sue pedine, solo per questa partita'}.</p>
     <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>

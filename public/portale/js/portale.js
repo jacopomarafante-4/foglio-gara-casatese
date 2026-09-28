@@ -551,6 +551,12 @@ const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattic
 const mediaVal = v => v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null;
 /* Chi ha valutato: iniziali in un cerchio colorato, stesso colore per la stessa persona (come nello Scouting, components/Autore.tsx) */
 const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#5C7F1E','#1F5FA8'];
+/* Le 3 caselle delle valutazioni (persone diverse, come nello Scouting): verdi a 3 su 3 */
+function slotValutazioni(valutazioni){
+  const chi = [...new Set((valutazioni||[]).map(v => v.autore || '?'))], ok = chi.length >= 3;
+  return `<span class="slotval${ok ? ' ok' : ''}" title="${ok ? 'Valutato da 3 persone: si può inserire' : chi.length + ' di 3 valutazioni per l\'inserimento'}">${
+    [0,1,2].map(i => chi[i] ? autoreTondo(chi[i]) : '<span class="autore vuoto" aria-hidden="true">·</span>').join('')}${chi.length > 3 ? `<small>+${chi.length-3}</small>` : ''}${ok ? '<b aria-hidden="true">✓</b>' : ''}</span>`;
+}
 function autoreTondo(nome){
   if(!nome) return '';
   const mister = /^mister\b|·/i.test(nome), pulito = nome.replace(/^Mister\s+/i, '').split('·')[0].trim(), p = pulito.split(/\s+/).filter(Boolean);
@@ -597,7 +603,7 @@ function viewGiocatori(){
     const ultima = g.valutazioni[0], media = mediaVal(ultima);
     const agg = [ultima?.data, g.segnalazioni[0]?.data].filter(Boolean).sort().pop();
     const info = [portieri ? String(g.annata) : '', g.societa, agg ? 'agg. ' + fmtDate(agg).slice(0,5) : ''].filter(Boolean).map(esc).join(' · ');
-    return `<details class="grow st-${esc(g.stato)}"><summary>
+    return `<details class="grow st-${esc(g.stato)}${new Set((g.valutazioni||[]).map(v => v.autore || '?')).size >= 3 ? ' completo' : ''}"><summary>
         <div class="gtesta">
           <div class="gprinc"><div class="gnome"><b>${esc(nome)}</b>${g.ruolo ? `<span class="gruolo">${SIGLE_RUOLO[g.ruolo]}</span>` : ''}</div>
             <div class="note">${info || '&nbsp;'}</div></div>
@@ -606,7 +612,8 @@ function viewGiocatori(){
         <div class="gcolonne">
           ${AREE_VAL.map(([k,l]) => tile(l.slice(0,3).toUpperCase(), ultima?.[k], 'v'+ultima?.[k])).join('')}
           ${tile('SEGN', g.segnalazioni.length || null, 'conta')}
-          ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>${autoreTondo(ultima.autore)}` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
+          ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
+          ${slotValutazioni(g.valutazioni)}
         </div></summary>
       <div class="gdett">
         ${g.descrizione && g.cognome ? `<p class="note">${esc(g.descrizione)}</p>` : ''}

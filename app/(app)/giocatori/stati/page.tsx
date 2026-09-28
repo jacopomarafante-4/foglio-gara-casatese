@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
+import { Annata, coloreAnnata } from '@/components/Annata';
 import { getProfilo } from '@/lib/auth';
 import { gestisce } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
@@ -18,6 +20,7 @@ type Carta = {
   stato: StatoGiocatore;
   societa: { nome: string } | null;
   segnalazioni: { count: number }[];
+  valutazioni: { data: string; autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null }[];
 };
 
 /** Quante schede per colonna: le altre si vedono dall'elenco filtrato per stato */
@@ -38,7 +41,7 @@ export default async function GiocatoriPerStato({
   const nostra = idNostraSocieta(societa);
   let q = supabase
     .from('giocatori')
-    .select('id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count)')
+    .select('id, cognome, nome, descrizione, annata, ruolo, stato, societa(nome), segnalazioni(count), valutazioni(data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))')
     .eq('osservato', true) // i ragazzi visti solo nelle distinte non sono nella pipeline
     .order('updated_at', { ascending: false });
   // I giocatori dell'Academy solo con "Tutti i giocatori" (o scegliendo l'Academy come società)
@@ -117,14 +120,18 @@ export default async function GiocatoriPerStato({
                 </h2>
                 <ul className="space-y-2">
                   {lista.slice(0, PER_COLONNA).map((c) => (
-                    <li key={c.id} className="rounded-lg border border-linea bg-white p-3">
+                    <li key={c.id} className={`rounded-lg bg-white p-3 ${valutatori(c.valutazioni).length >= SOGLIA_VALUTAZIONI ? 'border-2 border-verde' : 'border border-linea'}`}
+                      style={{ borderLeftWidth: 5, borderLeftColor: coloreAnnata(c.annata)[1] }}>
                       <Link href={`/giocatori/${c.id}`} className="block font-semibold leading-tight hover:text-blu">
                         {[c.cognome, c.nome].filter(Boolean).join(' ') || <span className="italic">{c.descrizione}</span>}
                       </Link>
                       <p className="mt-0.5 truncate text-xs text-grigio">
-                        {[c.annata, c.ruolo && RUOLI_CAMPO[c.ruolo], c.societa?.nome].filter(Boolean).join(' · ')}
+                        <Annata annata={c.annata} /> {[c.ruolo && RUOLI_CAMPO[c.ruolo], c.societa?.nome].filter(Boolean).join(' · ')}
                       </p>
-                      <p className="text-xs text-grigio">{c.segnalazioni[0]?.count ?? 0} segnalazioni</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <SlotValutazioni firme={valutatori(c.valutazioni)} piccolo />
+                        <span className="text-xs text-grigio">{c.segnalazioni[0]?.count ?? 0} segn.</span>
+                      </div>
                       {admin && (
                         <form action={spostaStato} className="mt-2 flex gap-1.5">
                           <input type="hidden" name="id" value={c.id} />

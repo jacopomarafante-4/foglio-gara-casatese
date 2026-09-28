@@ -15,7 +15,8 @@ import { GaraCard } from '@/components/GaraCard';
 import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
 import { StoricoValutazioni } from '@/components/StoricoValutazioni';
-import { Autori, firma } from '@/components/Autore';
+import { Autori, firma, SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
+import { Annata } from '@/components/Annata';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
 import { Avviso } from '@/components/Avviso';
@@ -169,10 +170,11 @@ export default async function SchedaGiocatore({
               <StatoBadge stato={g.stato} />
             )}
             <ContattoFlag presente={haContatto} />
+            <SlotValutazioni firme={valutatori(valutazioni)} />
           </div>
           <p className="mt-1 text-grigio">
+            <Annata annata={g.annata} />{' '}
             {[
-              g.annata,
               g.ruolo && RUOLI_CAMPO[g.ruolo],
               g.piede && `piede ${PIEDI[g.piede].toLowerCase()}`,
               g.societa?.nome,
@@ -363,6 +365,11 @@ export default async function SchedaGiocatore({
             <form action={cambiaStato} className="space-y-3 rounded-xl border border-linea bg-white p-4">
               <h2 className="font-display text-xl font-bold">Cambia stato</h2>
               <input type="hidden" name="id" value={g.id} />
+              {valutatori(valutazioni).length < SOGLIA_VALUTAZIONI && (
+                <p className="text-xs text-grigio">
+                  Per <strong>Inserito</strong> servono {SOGLIA_VALUTAZIONI} valutazioni di persone diverse (ora {valutatori(valutazioni).length}).
+                </p>
+              )}
               <select name="stato" defaultValue={g.stato} className="campo">
                 {Object.entries(STATI).map(([v, e]) => (
                   <option key={v} value={v}>{e}</option>

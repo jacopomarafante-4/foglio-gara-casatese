@@ -174,6 +174,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0040: tre valutazioni per inserire: `valutatori_distinti(giocatore)` conta le persone diverse (account o mister), il trigger
+  `controlla_inserimento` blocca il passaggio a `inserito` sotto 3. Nell'app: 3 caselle con le iniziali (`SlotValutazioni`,
+  `valutatori()` in `components/Autore.tsx`, `slotValutazioni()` nel Portale), verdi a 3 su 3 (riga/scheda verde). Annate con un
+  colore ciascuna (`components/Annata.tsx`); elenco Giocatori di base raggruppato per annata (dalla più giovane)
 - 0039: `archivio_documenti` (PDF in bytea, max 15 MB): ogni PDF scaricato dal Portale passa da `consegnaPdf(nome, blob, tipo)` in
   `pdf.js` (scarica + `archivia_documento(pin, nome, tipo, squadra, base64)`, col PIN per mister/organizzativo, account per lo staff).
   Li vedono e scaricano admin e direttori (`archivio_scarica(id)`), li elimina l'admin: Società → Archivio documenti (`archivio.js`).

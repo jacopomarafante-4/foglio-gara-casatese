@@ -15,7 +15,8 @@ import { Etichetta } from '@/components/Etichetta';
 import { StatoBadge } from '@/components/StatoBadge';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
-import { Autori, firma } from '@/components/Autore';
+import { SlotValutazioni, valutatori } from '@/components/Autore';
+import { Annata } from '@/components/Annata';
 import { apriChiudiNecessita, eliminaNecessita, salvaNecessita } from './actions';
 
 type Necessita = {
@@ -66,17 +67,17 @@ function RigaGiocatore({ g, contatto }: { g: Giocatore; contatto: boolean }) {
       <Link href={`/giocatori/${g.id}`} className="min-w-40 flex-1 font-semibold text-blu hover:underline">
         {[g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome'}
         <span className="block text-xs font-normal text-grigio">
-          {[g.annata, g.ruolo ? RUOLI_CAMPO[g.ruolo] : 'ruolo ?', g.piede ? `piede ${PIEDI[g.piede].toLowerCase()}` : 'piede ?', g.societa?.nome]
+          <Annata annata={g.annata} /> {[g.ruolo ? RUOLI_CAMPO[g.ruolo] : 'ruolo ?', g.piede ? `piede ${PIEDI[g.piede].toLowerCase()}` : 'piede ?', g.societa?.nome]
             .filter(Boolean).join(' · ')}
         </span>
       </Link>
+      <SlotValutazioni firme={valutatori(g.valutazioni)} piccolo />
       <ContattoFlag presente={contatto} breve />
       <StatoBadge stato={g.stato} />
       <span className="w-12 text-center font-display text-lg font-bold" title="Media dell'ultima valutazione">{m ? m.toFixed(1) : '–'}</span>
       {v
         ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORE_GIUDIZIO[v.giudizio]}`}>{GIUDIZI[v.giudizio]}</span>
         : <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da valutare</span>}
-      {g.valutazioni.length > 0 && <Autori firme={[...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data)).map(firma)} max={2} />}
     </li>
   );
 }

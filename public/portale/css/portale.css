@@ -576,3 +576,11 @@ a.areabtn{text-decoration:none}
 .board.disegno{cursor:crosshair;touch-action:none}
 .pzeditor .board{touch-action:none}
 .pzaiuto{margin:8px 0 0}
+
+/* Le 3 caselle delle valutazioni (Scouting → Giocatori): verdi a 3 su 3 */
+.slotval{display:inline-flex;align-items:center;gap:3px;padding:2px;border-radius:999px;vertical-align:middle}
+.slotval.ok{background:color-mix(in srgb,#2E7D4F 15%,transparent);box-shadow:0 0 0 2px #2E7D4F}
+.slotval b{color:#2E7D4F;font-size:12px;padding-right:4px}
+.slotval small{font-size:11px;color:var(--muted);font-weight:600}
+.autore.vuoto{background:transparent;border:2px dashed var(--line);color:var(--muted)}
+details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}

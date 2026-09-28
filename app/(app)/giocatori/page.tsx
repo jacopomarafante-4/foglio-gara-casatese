@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Fragment } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
@@ -13,7 +14,8 @@ import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
 import { VistaGiocatori } from '@/components/VistaGiocatori';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
-import { Autori, firma, type FirmaValutazione } from '@/components/Autore';
+import { SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
+import { Annata, coloreAnnata } from '@/components/Annata';
 
 type Riga = {
   id: string;
@@ -75,9 +77,7 @@ function sintesiValutazioni(v: Riga['valutazioni']) {
   if (!v.length) return null;
   const media = v.reduce((s, x) => s + (x.tecnica + x.motoria + x.tattica + x.mentale) / 4, 0) / v.length;
   const ordinate = [...v].sort((a, b) => b.data.localeCompare(a.data));
-  // chi ha valutato, dal più recente (iniziali colorate nell'elenco)
-  const firme: FirmaValutazione[] = ordinate.map(firma);
-  return { media, giudizio: ordinate[0].giudizio, quante: v.length, firme };
+  return { media, giudizio: ordinate[0].giudizio, quante: v.length };
 }
 
 /** Prossime gare (60 giorni) delle società indicate: a blocchi, per non superare i limiti delle richieste */
@@ -185,7 +185,11 @@ export default async function Giocatori({
       return discendente ? -c : c;
     };
     tutti.sort(confronta);
+  } else {
+    // di base: raggruppati per annata (dalla più giovane), dentro l'annata i modificati di recente
+    tutti.sort((a, b) => b.annata - a.annata);
   }
+  const perAnnata = !ordina;
 
   const totale = tutti.length;
   const totalePagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
@@ -207,10 +211,13 @@ export default async function Giocatori({
 
   const righe = giocatori.map((g) => {
     const v = sintesi.get(g.id) ?? null;
+    const firme = valutatori(g.valutazioni);   // persone diverse che l'hanno valutato (3 caselle, 0040)
     const gara = prossimaGara(g);
     const inCasa = gara && gara.casa_id === g.societa_id;
     return {
       g,
+      firme,
+      completo: firme.length >= SOGLIA_VALUTAZIONI,
       nome: nomeDi(g),
       squadra: [g.societa?.nome ?? 'Società ?', categoriaDi(g)].join(' · '),
       v,
@@ -235,9 +242,25 @@ export default async function Giocatori({
         <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>
           {GIUDIZI[r.v.giudizio]}
         </span>
-        <Autori firme={r.v.firme} max={2} />
       </span>
     ) : null;
+  /* Titolo di gruppo quando cambia l'annata (elenco di base, per annata) */
+  const nuovaAnnata = (i: number) => perAnnata && (i === 0 || righe[i - 1].g.annata !== righe[i].g.annata);
+  const quantiAnnata = (a: number) => tutti.filter((g) => g.annata === a).length;
+  const titoloAnnata = (a: number) => (
+    <span className="flex items-center gap-2">
+      <Annata annata={a} grande />
+      <span className="font-display text-base font-bold">{categoriaDaAnnata(a).split(' - ')[0]}</span>
+      <span className="text-xs text-grigio">{quantiAnnata(a)} {quantiAnnata(a) === 1 ? 'giocatore' : 'giocatori'}</span>
+    </span>
+  );
+  /* Caselle delle 3 valutazioni, poi media e giudizio (o il pulsante Valuta) */
+  const colonnaValutazione = (r: (typeof righe)[number]) => (
+    <span className="flex items-center gap-2">
+      <SlotValutazioni firme={r.firme} piccolo />
+      {r.v ? valutazione(r) : pulsanteValuta(r.href)}
+    </span>
+  );
   const pulsanteValuta = (href: string) =>
     valuta ? (
       <Link href={`${href}/valuta`} className="relative z-10 inline-block rounded-lg border border-blu px-3 py-1 text-sm font-semibold text-blu hover:bg-blu/5">
@@ -338,7 +361,7 @@ export default async function Giocatori({
                 <col className="w-16" />
                 <col className="w-28" />
                 <col />
-                <col className="w-52" />
+                <col className="w-72" />
                 <col />
               </colgroup>
               <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">
@@ -362,15 +385,21 @@ export default async function Giocatori({
                 </tr>
               </thead>
               <tbody className="divide-y divide-linea">
-                {righe.map((r) => {
+                {righe.map((r, i) => {
                   const cella = (contenuto: React.ReactNode, title?: string, extra = '') => (
                     <td className={`p-0 first:pl-2 ${extra}`}>
                       <Link href={r.href} tabIndex={-1} title={title} className="block truncate px-2 py-2.5">{contenuto}</Link>
                     </td>
                   );
                   return (
-                    <tr key={r.g.id} className="hover:bg-carta">
-                      {cella(r.g.annata, undefined, 'font-semibold text-blu')}
+                    <Fragment key={r.g.id}>
+                    {nuovaAnnata(i) && (
+                      <tr className="bg-carta" style={{ borderLeft: `4px solid ${coloreAnnata(r.g.annata)[1]}` }}>
+                        <td colSpan={7} className="px-2 py-1.5">{titoloAnnata(r.g.annata)}</td>
+                      </tr>
+                    )}
+                    <tr className={r.completo ? 'bg-verde/[0.07] hover:bg-verde/10' : 'hover:bg-carta'}>
+                      {cella(<Annata annata={r.g.annata} />)}
                       <td className="p-0">
                         <Link href={r.href} title={r.nome} className={`flex items-center gap-1.5 px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
                           <span className="truncate">{r.nome}</span>
@@ -380,9 +409,10 @@ export default async function Giocatori({
                       {cella(r.g.ruolo ? RUOLI_BREVI[r.g.ruolo] : <span className="text-grigio">–</span>, r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : undefined)}
                       {cella(stato(r.g))}
                       {cella(r.squadra, r.squadra)}
-                      {r.v ? cella(valutazione(r)) : <td className="px-2 py-1.5">{pulsanteValuta(r.href)}</td>}
+                      <td className="px-2 py-1.5">{colonnaValutazione(r)}</td>
                       {cella(r.gara ? r.testoGara : <span className="text-grigio">{r.testoGara}</span>, r.testoGara)}
                     </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>
@@ -391,8 +421,13 @@ export default async function Giocatori({
 
           {/* Telefono e tablet: una scheda verticale per giocatore */}
           <ul className="space-y-2 lg:hidden">
-            {righe.map((r) => (
-              <li key={r.g.id} className="relative rounded-xl border border-linea bg-white p-4">
+            {righe.map((r, i) => (
+              <Fragment key={r.g.id}>
+              {nuovaAnnata(i) && (
+                <li className="rounded-lg bg-carta px-3 py-2" style={{ borderLeft: `4px solid ${coloreAnnata(r.g.annata)[1]}` }}>{titoloAnnata(r.g.annata)}</li>
+              )}
+              <li className={`relative rounded-xl bg-white p-4 ${r.completo ? 'border-2 border-verde' : 'border border-linea'}`}
+                style={{ borderLeftWidth: 5, borderLeftColor: coloreAnnata(r.g.annata)[1] }}>
                 <Link href={r.href} className="absolute inset-0 rounded-xl" aria-label={`Apri ${r.nome}`} />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -401,7 +436,7 @@ export default async function Giocatori({
                       {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                     </p>
                     <p className="text-sm text-grigio">
-                      <span className="font-semibold text-blu">{r.g.annata}</span>
+                      <Annata annata={r.g.annata} />
                       {r.g.ruolo && ` · ${RUOLI_CAMPO[r.g.ruolo]}`}
                     </p>
                   </div>
@@ -411,11 +446,12 @@ export default async function Giocatori({
                   <dt className="text-grigio">Squadra</dt>
                   <dd className="truncate">{r.squadra}</dd>
                   <dt className="self-center text-grigio">Valutazione</dt>
-                  <dd>{r.v ? valutazione(r) : pulsanteValuta(r.href)}</dd>
+                  <dd>{colonnaValutazione(r)}</dd>
                   <dt className="text-grigio">Prossima gara</dt>
                   <dd className={r.gara ? '' : 'text-grigio'}>{r.testoGara}</dd>
                 </dl>
               </li>
+              </Fragment>
             ))}
           </ul>
         </>
