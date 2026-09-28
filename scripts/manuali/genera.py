@@ -464,8 +464,9 @@ dall'area <b>Scouting</b>.</p><ol class="passi">
 <li><b>Cosa hai visto</b>: la parte più importante, solo aspetti tecnici e sportivi.</li>
 <li>Prima impressione da 1 a 5, partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
 <p>La segnalazione arriva firmata con il tuo nome e la tua squadra.</p>
-<div class="box"><b class="t">È già in lista? Lo valuti</b>Se il ragazzo è già nell'archivio dello scouting, la segnalazione non si
-salva: si apre la <b>Valutazione</b>. Dai un voto da 1 a 5 a Tecnica, Motoria, Tattica e Mentale (con note se vuoi), scegli il
+<div class="box"><b class="t">È già in lista? Lo valuti</b>Mentre scrivi annata e cognome, se il ragazzo è già nell'archivio dello scouting compare
+<b>"Già in lista: è uno di questi?"</b>: tocca <span class="k">Valuta questo</span> (o "No, è un altro giocatore"). Anche inviando, se è
+già in lista la segnalazione non si salva: si apre la <b>Valutazione</b>. Dai un voto da 1 a 5 a Tecnica, Motoria, Tattica e Mentale (con note se vuoi), scegli il
 giudizio finale (Da prendere, Da rivedere, Non a livello) e tocca <span class="k">Salva valutazione</span>. Quello che avevi scritto
 è già nel commento finale. La valutazione arriva firmata con il tuo nome e la tua squadra.</div>
 <h3>Scouting → Giocatori</h3>
@@ -531,9 +532,11 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <li><b>Cosa hai visto</b>: il cuore della segnalazione.</li>
 <li><b>Prima impressione</b> da 1 (non a livello) a 5 (da prendere subito), partita o occasione, data.</li>
 <li><span class="k">Salva segnalazione</span>: si apre la scheda del giocatore.</li></ol>
-<div class="box"><b class="t">È già in lista? Si valuta</b>Se il ragazzo è già in archivio (stesso cognome, nome e annata), la
-segnalazione <b>non</b> si salva: si apre subito la <b>Valutazione</b> (le 4 aree da 1 a 5 e il giudizio), con quello che avevi
-scritto già nel commento, la partita e la data.</div>''', 'Segnala un giocatore')}
+<div class="box"><b class="t">È già in lista? Si valuta</b>Mentre scrivi annata e cognome compare <b>"Già in lista: è uno di
+questi?"</b> con i ragazzi già in archivio (anche con il cognome scritto un po' diverso): <span class="k">Valuta questo</span> apre subito la
+<b>Valutazione</b> (le 4 aree da 1 a 5 e il giudizio), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
+(cognome, nome e annata) la segnalazione <b>non</b> si salva e si apre la valutazione. Nella scheda di un giocatore già in lista c'è
+solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
 </section>
 
 <section>

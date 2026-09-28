@@ -9,6 +9,7 @@ import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { Voto } from '@/components/Voto';
+import { GiaInLista } from '@/components/GiaInLista';
 import { salvaSegnalazione } from './actions';
 
 export default async function Segnala({
@@ -26,10 +27,12 @@ export default async function Segnala({
   const { data: giocatore } = giocatoreId
     ? await supabase
         .from('giocatori')
-        .select('id, cognome, nome, descrizione, annata')
+        .select('id, cognome, nome, descrizione, annata, osservato')
         .eq('id', giocatoreId)
         .maybeSingle()
     : { data: null };
+  // Già in lista (osservato): niente seconda segnalazione, si valuta subito (0032)
+  if (giocatore?.osservato) redirect(`/giocatori/${giocatore.id}/valuta?gia=1`);
 
   const societa = giocatore ? [] : await elencoSocieta(supabase);
 
@@ -50,7 +53,7 @@ export default async function Segnala({
         <p className="mt-1 text-grigio">Se non sai ancora il nome, descrivilo: lo completerete dopo.</p>
       )}
 
-      <form action={salvaSegnalazione} className="mt-6 space-y-5">
+      <form id="segnala" action={salvaSegnalazione} className="mt-6 space-y-5">
         <Avviso errore={errore} />
 
         {giocatore ? (
@@ -93,6 +96,8 @@ export default async function Segnala({
                 <input name="nome" className="campo" autoComplete="off" autoCapitalize="words" />
               </Etichetta>
             </div>
+
+            <GiaInLista formId="segnala" />
 
             <Etichetta testo="Come riconoscerlo" aiuto="Obbligatorio se manca il cognome. Es. “N.8, biondo, mancino”.">
               <input name="descrizione" className="campo" autoComplete="off" />

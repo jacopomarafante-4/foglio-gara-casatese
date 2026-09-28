@@ -695,6 +695,7 @@ function viewSegnala(){
       <div><label class="f" for="sg_cognome">Cognome</label>${inp('cognome', 'autocomplete="off" autocapitalize="words"')}</div>
       <div><label class="f" for="sg_nome">Nome</label>${inp('nome', 'autocomplete="off" autocapitalize="words"')}</div>
     </div>
+    <div id="sg_gia">${giaInListaHtml()}</div>
     <label class="f" for="sg_descrizione">Come riconoscerlo</label>
     ${inp('descrizione', 'autocomplete="off" placeholder="Es. N.8, biondo, mancino"')}
     <p class="note">Obbligatorio se manca il cognome.</p>
@@ -710,6 +711,47 @@ function viewSegnala(){
     <button class="btn primary segsend" data-act="segnala" ${segInvio?'disabled':''}>${segInvio ? 'Invio…' : 'Invia allo scouting'}</button>
   </section>`;
 }
+/* Già in lista mentre si scrive: gli osservati della tua annata (coach_giocatori) con quel cognome, anche scritto
+   un po' diverso. "Valuta questo" apre subito la valutazione; "No, è un altro" nasconde l'avviso. */
+let giaNascosti = '';
+const normSeg = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function giaInLista(){
+  const d = segDraft, c = normSeg(d.cognome), n = normSeg(d.nome);
+  if(!d.annata || c.length < 3) return [];
+  if(giocatoriAnnata === null && !giocatoriErrore){
+    giocatoriAnnata = undefined;
+    supabaseClient.rpc('coach_giocatori', {p_pin: coachPin}).then(({data, error}) => {
+      if(error){ giocatoriErrore = 'Elenco non disponibile.'; giocatoriAnnata = null; } else giocatoriAnnata = data || [];
+      aggiornaGiaInLista();
+    });
+  }
+  return (giocatoriAnnata || []).filter(g => String(g.annata) === String(d.annata)
+      && (normSeg(g.cognome).startsWith(c) || (normSeg(g.cognome) && c.startsWith(normSeg(g.cognome)))))
+    .sort((a, b) => (n && normSeg(b.nome).startsWith(n)) - (n && normSeg(a.nome).startsWith(n))).slice(0, 5);
+}
+function giaInListaHtml(){
+  const tr = giaInLista(), firma = tr.map(g => g.id).join();
+  if(!tr.length || firma === giaNascosti) return '';
+  return `<div class="esito" role="status" style="border-left:4px solid var(--amber);margin-top:12px"><b>Già in lista: è uno di questi?</b>
+    <p class="note" style="margin:4px 0 8px">Se è lui, niente nuova segnalazione: valutalo (quello che hai scritto va nel commento).</p>
+    ${tr.map(g => `<div class="row" style="justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)">
+      <span><b>${esc([g.cognome, g.nome].filter(Boolean).join(' '))}</b> <span class="note">· ${esc(g.annata)}${g.societa ? ' · '+esc(g.societa) : ''}</span></span>
+      <button type="button" class="btn small primary" data-giavaluta="${esc(g.id)}">Valuta questo</button></div>`).join('')}
+    <button type="button" class="btn small ghost" data-gianascondi="${esc(firma)}" style="margin-top:6px">No, è un altro giocatore</button></div>`;
+}
+function aggiornaGiaInLista(){ const el = document.getElementById('sg_gia'); if(el) el.innerHTML = giaInListaHtml(); }
+/* (questo file si carica prima di eventi.js: la bozza la aggiorno qui, prima di cercare) */
+document.addEventListener('input', e => { const k = e.target.dataset?.seg;
+  if(['cognome','nome','annata'].includes(k)){ segDraft[k] = e.target.value; aggiornaGiaInLista(); } });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-giavaluta],[data-gianascondi]'); if(!b) return;
+  if(b.dataset.gianascondi !== undefined){ giaNascosti = b.dataset.gianascondi; aggiornaGiaInLista(); return; }
+  const g = (giocatoriAnnata || []).find(x => x.id === b.dataset.giavaluta); if(!g) return;
+  const d = segDraft;
+  segValuta = {giocatore_id: g.id, nome: [g.cognome, g.nome].filter(Boolean).join(' '), annata: g.annata, societa: g.societa || '',
+    commento: d.testo || '', contesto: d.contesto || '', data: d.data || todayISO()};
+  segEsito = null; render(); window.scrollTo(0,0);
+});
 async function inviaSegnalazione(){
   if(segInvio) return;
   const d = segDraft;

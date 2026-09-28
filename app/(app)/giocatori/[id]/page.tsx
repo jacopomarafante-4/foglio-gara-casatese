@@ -184,9 +184,12 @@ export default async function SchedaGiocatore({
         </div>
         {scrive && (
           <div className="flex gap-2">
-            <Link href={`/segnala?giocatore=${g.id}`} className="rounded-lg border border-blu px-4 py-3 font-semibold text-blu hover:bg-blu/5">
-              Aggiungi segnalazione
-            </Link>
+            {/* già in lista: si valuta e basta (0032); solo da distinta: si può ancora segnalare */}
+            {g.osservato === false && (
+              <Link href={`/segnala?giocatore=${g.id}`} className="rounded-lg border border-blu px-4 py-3 font-semibold text-blu hover:bg-blu/5">
+                Aggiungi segnalazione
+              </Link>
+            )}
             <Link href={`/giocatori/${g.id}/valuta`} className="bottone">Valuta</Link>
           </div>
         )}

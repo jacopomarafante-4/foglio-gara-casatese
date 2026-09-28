@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
 import { RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
-import { intero, maiuscoleIniziali, testo, testoLungo } from '@/lib/utili';
+import { intero, maiuscoleIniziali, normalizza, testo, testoLungo } from '@/lib/utili';
 
 function errore(msg: string, giocatoreId?: string | null): never {
   const extra = giocatoreId ? `&giocatore=${giocatoreId}` : '';
@@ -38,11 +38,13 @@ export async function salvaSegnalazione(formData: FormData) {
       errore('Serve il cognome oppure una descrizione per riconoscerlo (es. "N.8, biondo").');
 
     // Stesso cognome, nome e annata = stesso giocatore: niente doppioni
+    // (confronto senza accenti, apostrofi e spazi: "D'Angelo" = "Dangelo")
     if (cognome) {
-      let q = supabase.from('giocatori').select('id').eq('annata', annata).ilike('cognome', cognome);
-      if (nome) q = q.ilike('nome', nome);
-      const { data: trovati } = await q.limit(2);
-      if (trovati?.length === 1) giocatoreId = trovati[0].id;
+      const { data: omonimi } = await supabase.from('giocatori').select('id, cognome, nome')
+        .eq('annata', annata).ilike('cognome', `${cognome.slice(0, 2)}%`).limit(200);
+      const trovati = (omonimi ?? []).filter((g) => normalizza(g.cognome ?? '') === normalizza(cognome)
+        && (!nome || normalizza(g.nome ?? '') === normalizza(nome)));
+      if (trovati.length === 1) giocatoreId = trovati[0].id;
     }
 
     if (!giocatoreId) {
