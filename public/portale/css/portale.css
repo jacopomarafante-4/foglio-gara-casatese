@@ -566,3 +566,13 @@ a.areabtn{text-decoration:none}
 .archinfo b{word-break:break-all}
 .autore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;font-size:10px;font-weight:700;flex:none;vertical-align:middle}
 .autore.mister{background:var(--paper);color:var(--ac);border:2px solid var(--ac)}
+
+/* Calci piazzati: preferiti, copia da un modello, editor unico */
+.pzstella{color:var(--muted);font-size:18px;line-height:1}
+.pzstella.on{color:#D4AF37}
+.pzcopia{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:color-mix(in srgb,#D4AF37 14%,transparent);border-radius:12px;padding:10px 12px;margin:8px 0 12px}
+.pzcopia p{margin:0;flex:1;min-width:200px;font-size:14px}
+.pzstrumenti{flex-wrap:wrap;margin-bottom:8px}
+.board.disegno{cursor:crosshair;touch-action:none}
+.pzeditor .board{touch-action:none}
+.pzaiuto{margin:8px 0 0}

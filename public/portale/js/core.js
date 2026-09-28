@@ -183,7 +183,7 @@ const coachNames = t => (t?.coaches||[]).map(c => c.name).filter(Boolean).join('
 /* "coach" resta come testo riassuntivo per le parti che lo leggono ancora */
 function syncCoach(t){ t.coach = (t.coaches||[]).map(c => c.name).filter(Boolean).join(', '); }
 let tab = 'home', selectedPlayer = null, openSchemeId = null, selectedToken = null;
-/* boardMode: 'assign' (compiti/giocatori) | 'move' (pedine) | 'draw' (frecce, linee, testi) */
+/* boardMode: 'unico' = editor dei piazzati (piazzati.js), 'assign' = modello della società aperto da un mister */
 let boardMode = 'assign', drawTool = null, selectedDraw = null;
 let db = null, downloads = null;
 const pending = {}; const timers = {};

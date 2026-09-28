@@ -733,7 +733,7 @@ function viewFormazione(){
   const disponibili = liberi.map(p => `<div class="frow libero">${chip(p)}<button class="btn small ghost" data-bench="${p.id}">Panchina</button></div>`).join('');
   const opts = sel => `<option value="">Nessuno</option>` + S.players.filter(p => slotOf(p.id) || s.bench.includes(p.id) || p.id===sel)
     .map(p => { const n=matchNum(p.id); return `<option value="${p.id}" ${sel===p.id?'selected':''}>${esc((n?n+' ':'')+p.name)}</option>`; }).join('');
-  const piazzati = s.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
+  const piazzati = s.selected.map(schemaDa).filter(Boolean);
   return `<section class="panel">
     <h2>Formazione</h2>
     <p class="hint">Tocca una <b>posizione sul campo</b> per scegliere chi metterci, oppure tocca un giocatore <b>disponibile</b> per metterlo nella prossima posizione libera (o trascinalo sul campo). Il numerino in alto sulla pedina è il ruolo usato negli schemi.</p>
@@ -765,48 +765,6 @@ function viewFormazione(){
 }
 
 /* Filtro dell'elenco dei piazzati (ora sono tanti): tutti, a favore, a sfavore, solo quelli scelti per la partita */
-let filtroSchemi = 'tutti';
-const FILTRI_SCHEMI = {tutti:'Tutti', favore:'A favore', sfavore:'A sfavore', scelti:'Scelti'};
-document.addEventListener('click', e => { const b = e.target.closest('[data-filtroschemi]'); if(!b) return; filtroSchemi = b.dataset.filtroschemi; render(); });
-function viewSchemes(){
-  const sel = S.sheet.selected, A = isAdmin();
-  const passa = sc => filtroSchemi==='tutti' || (filtroSchemi==='scelti' ? sel.includes(sc.id) : sc.side===filtroSchemi);
-  const cards = S.schemes.map((sc,i) => {
-    if(!passa(sc)) return '';
-    const isSel = sel.includes(sc.id);
-    return `<div class="scard ${isSel?'sel':''}">
-      <button class="scardmain" data-schemecard="${sc.id}" aria-pressed="${isSel}" aria-label="${isSel?'Togli dalla partita':'Seleziona per la partita'}: ${esc(sc.name)}">
-        <span class="chk2" aria-hidden="true">${isSel?'✓':''}</span>
-        ${schemeThumb(sc)}
-        <span class="stitle">${esc(sc.name)}<span class="side ${sc.side}">${sc.side==='favore'?'A favore':'A sfavore'}</span></span>
-        <span class="ssub">${sc.subtitle?esc(sc.subtitle)+' · ':''}${sc.tokens.length} pedine</span>
-      </button>
-      <div class="row sassign" style="justify-content:space-between">
-        ${isSel ? `<button class="btn small primary" data-open="${sc.id}">Assegna</button>` : `<p class="note">Seleziona per assegnare</p>`}
-        ${A?`<span class="row" style="gap:4px">
-          <button class="iconbtn" aria-label="Modifica disegno ${esc(sc.name)}" data-open="${sc.id}" data-editmode="1">✎</button>
-          <button class="iconbtn" aria-label="Sposta su" data-up="${i}">↑</button>
-          <button class="iconbtn" aria-label="Sposta giù" data-down="${i}">↓</button>
-        </span>`:''}
-      </div>
-    </div>`;
-  }).join('');
-  const bopts = Object.entries(BASES).map(([k,b]) => `<option value="${k}">${b.name}</option>`).join('');
-  return `<section class="panel">
-    <h2>Calci piazzati</h2>
-    ${A ? '<p class="hint">Database comune a tutte le squadre: quello che crei o modifichi qui lo vedono tutti i mister.</p>' : lockNote('Gli schemi sono comuni a tutte le squadre e li carica l\'amministratore. Tu scegli quali stampare, assegni i giocatori e, solo per la tua partita, puoi cambiare i compiti, spostare pedine o disegnare frecce: nessuna di queste modifiche cambia lo schema per gli altri.')}
-    <p class="hint">Tocca uno schema per selezionarlo per questa partita: solo per quelli selezionati potrai assegnare compiti e giocatori. I giocatori si riempiono comunque in automatico dalla formazione, in base al numero di ruolo.</p>
-    <div class="row" style="justify-content:space-between;margin-bottom:10px">
-      <div class="seg" role="group" aria-label="Filtro schemi">${Object.entries(FILTRI_SCHEMI).map(([k,l]) => `<button data-filtroschemi="${k}" aria-pressed="${filtroSchemi===k}">${l}${k==='scelti' ? ` (${sel.length})` : ''}</button>`).join('')}</div>
-    </div>
-    <div class="sgrid">${cards.trim() ? cards : `<p class="empty">${S.schemes.length ? 'Nessuno schema con questo filtro.' : 'Ancora nessuno schema.'}</p>`}</div>
-  </section>
-  ${A ? `<section class="panel">
-    <h3 style="margin-top:0">Nuovo schema</h3>
-    <div class="row"><select id="base" style="max-width:260px">${bopts}</select><button class="btn primary" data-act="newscheme">Crea schema</button></div>
-  </section>` : ''}`;
-}
-
 const YS = 1.5, VX0 = -25, VX1 = 35, VY0 = -3, VY1 = 31;
 function fieldSVG(){
   const g = '#2F6B45', Y = v => v*YS;
@@ -841,11 +799,6 @@ function markG(m, i, attr, interactive, isSel){
     <text x="${m.x}" y="${m.y*YS+.6}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="2" fill="${isSel?'#1F5FA8':'#C8102E'}" pointer-events="none">${esc(m.text)}</text>
   </g>`;
 }
-function marksSVG(sc, sel){
-  const base = (sc.marks||[]).map((m,i) => markG(m, i, 'data-mark', isAdmin(), boardMode==='draw' && isAdmin() && sel && sel.kind==='mark' && sel.layer==='base' && sel.index===i)).join('');
-  const edit = effMarks(sc).map((m,i) => markG(m, i, 'data-emark', !isAdmin(), boardMode==='draw' && !isAdmin() && sel && sel.kind==='mark' && sel.layer==='edit' && sel.index===i)).join('');
-  return base + edit;
-}
 function drawG(d, i, attr, interactive, isSel){
   const dash = d.dashed ? 'stroke-dasharray=".9 .7"' : '';
   const marker = d.type==='arrow' ? 'marker-end="url(#arrowhead)"' : '';
@@ -853,11 +806,6 @@ function drawG(d, i, attr, interactive, isSel){
     ${interactive?`<line x1="${d.x1}" y1="${d.y1*YS}" x2="${d.x2}" y2="${d.y2*YS}" stroke="transparent" stroke-width="1.6" ${attr}="${i}" style="cursor:pointer"/>`:''}
     <line x1="${d.x1}" y1="${d.y1*YS}" x2="${d.x2}" y2="${d.y2*YS}" stroke="${isSel?'#1F5FA8':'#C8102E'}" stroke-width="${isSel?.45:.32}" stroke-linecap="round" ${dash} ${marker} pointer-events="none"/>
   </g>`;
-}
-function drawShapesSVG(sc, sel){
-  const base = (sc.draw||[]).map((d,i) => drawG(d, i, 'data-draw', isAdmin(), boardMode==='draw' && isAdmin() && sel && sel.kind==='draw' && sel.layer==='base' && sel.index===i)).join('');
-  const edit = effDraw(sc).map((d,i) => drawG(d, i, 'data-edraw', !isAdmin(), boardMode==='draw' && !isAdmin() && sel && sel.kind==='draw' && sel.layer==='edit' && sel.index===i)).join('');
-  return base + edit;
 }
 function renderDraftLine(d){
   const el = document.getElementById('draftline'); if(!el) return;
@@ -867,10 +815,6 @@ function renderDraftLine(d){
   el.setAttribute('marker-end', d.type==='arrow' ? 'url(#arrowhead)' : '');
   el.setAttribute('opacity', '1');
 }
-const DRAW_TOOLS = [
-  ['arrow','Freccia'], ['arrow-dash','Freccia tratteggiata'],
-  ['line','Linea'], ['line-dash','Linea tratteggiata'], ['text','Testo']
-];
 /* Sotto il campo dei piazzati: per ogni compito, numero e cognome (sul campo ci sono solo i numeri) */
 function compitiList(sc, rm){
   const gruppi = new Map();
@@ -887,10 +831,10 @@ function compitiList(sc, rm){
 }
 /* Modalità Assegna: per ogni compito le sue pedine, e per ognuna la tendina con la rosa.
    Prima voce = "Dalla formazione" (chi gioca con quel numero di ruolo); scegliere un altro giocatore
-   lo cambia solo in questo schema (*). Il compito si cambia nella stessa riga: il mister solo per
-   la sua partita, l'admin nello schema comune. */
+   lo cambia solo in questo schema (*). Il compito si cambia nella stessa riga: nei propri schemi (e l'admin in quelli
+   della società) cambia lo schema; su un modello della società, il mister lo cambia solo per la sua partita. */
 function assegnaList(sc, rm, roles){
-  const A = isAdmin();
+  const A = modificaBase(sc);
   const rosa = S.players.slice().sort((a,b) => (matchNum(a.id)||99) - (matchNum(b.id)||99) || a.name.localeCompare(b.name,'it'));
   const gruppi = new Map();
   effTokens(sc).forEach(t => { const k = (t.role||'').trim() || 'Senza compito'; if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(t); });
@@ -912,117 +856,11 @@ function assegnaList(sc, rm, roles){
     return `<div class="asgrp"><div class="scompr asnome"><i style="background:${col}"></i><input data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="${nome ? 'Nome del compito' : 'Senza compito: scrivi un nome'}" aria-label="Nome del compito ${esc(role)}"><span aria-hidden="true">✎</span></div>${righe}</div>`;
   }).join('');
   return `<h3>Chi fa cosa</h3>
-    <p class="hint">Scegli il giocatore per ogni pedina${A ? '' : ' (vale solo per questa partita)'}: di partenza c'è chi gioca con quel numero di ruolo in formazione. Puoi anche toccare una pedina sul campo.
-      Tocca il nome di un compito (✎) per rinominarlo${A ? ' nello schema comune' : ': cambia per tutte le sue pedine, solo per questa partita'}.</p>
+    <p class="hint">Scegli il giocatore per ogni pedina (vale per questa partita): di partenza c'è chi gioca con quel numero di ruolo in formazione.
+      Tocca il nome di un compito (✎) per rinominarlo${A ? ': cambia per tutte le sue pedine' : ': cambia per tutte le sue pedine, solo per questa partita'}.</p>
     <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
     <div class="aslist">${blocchi}</div>`;
 }
-/* Mister, modalità Pedine: compito ed etichetta della pedina toccata, solo per questa partita */
-function misterTokPanel(sc, roles){
-  const t = effTokens(sc).find(q => q.id===selectedToken);
-  const base = sc.tokens.find(q => q.id===selectedToken);
-  if(!t) return `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne il compito. Le modifiche restano solo su questa partita, non toccano lo schema condiviso con gli altri mister.</p>`;
-  const cambiato = (t.role||'') !== (base.role||'') || (t.tag||'') !== (base.tag||'');
-  return `<div class="tokpanel">
-    <p class="note" style="margin:0 0 8px">Pedina ${t.slot}: compito solo per questa partita.</p>
-    <div class="grid">
-      <div><label class="f">Compito</label><input data-etok="role" list="rolelist" value="${esc(t.role)}" placeholder="Es. Marcatura"></div>
-      <div><label class="f">Etichetta rossa</label><input data-etok="tag" value="${esc(t.tag)}" placeholder="Es. 1 o M"></div>
-    </div>
-    <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-    ${cambiato ? `<div class="row" style="margin-top:10px"><button class="btn small" data-act="resetrole">Torna al compito dello schema (${esc(base.role||'nessuno')})</button></div>` : ''}
-  </div>`;
-}
-function viewScheme(){
-  const sc = S.schemes.find(s => s.id===openSchemeId);
-  if(!sc){ openSchemeId=null; return viewSchemes(); }
-  const A = isAdmin();
-  const rm = roleMap(sc);
-  const eTokens = effTokens(sc);
-  const nl = nameLayout(eTokens);
-  const moveMode = boardMode==='move', drawMode = boardMode==='draw';
-  const toks = eTokens.map(t => {
-    const {p, override} = tokenPlayer(sc, t);
-    const col = tokColor(sc, t, rm);
-    const sel = selectedToken===t.id && moveMode;
-    const lbl = p ? (matchNum(p.id)||'·') : t.slot;
-    return `<g ${moveMode?`data-move-token="${t.id}" style="cursor:grab"`:`data-drop-token="${t.id}" style="cursor:pointer"`} transform="translate(${t.x} ${t.y*YS})">
-      <circle r="3" fill="transparent"/>
-      ${sel?'<circle r="2.4" fill="none" stroke="#1F5FA8" stroke-width=".35"/>':''}
-      <circle r="1.75" fill="${p?col:'#fff'}" stroke="${p?'#fff':col}" stroke-width="${p?.3:.3}" ${p?'':'stroke-dasharray=".6 .4"'}/>
-      <text y=".62" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="1.85" fill="${p?'#fff':col}">${lbl}</text>
-      ${t.tag?`<text y="-2.35" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.4" fill="#C8102E">${esc(t.tag)}</text>`:''}
-      ${p && override ? `<text x="1.55" y="-1.15" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="1.5" fill="#1F5FA8" stroke="#fff" stroke-width=".3" paint-order="stroke">*</text>` : ''}
-    </g>`;
-  }).join('');
-  const legend = [...rm.entries()].map(([r,c]) => `<span><i style="background:${c}"></i>${esc(r)}</span>`).join('');
-  const st = A ? sc.tokens.find(t => t.id===selectedToken) : null;
-  const roles = [...new Set(S.schemes.flatMap(s => s.tokens.map(t => t.role).filter(Boolean)))];
-  const slotOpts = n => Array.from({length:11},(_,i)=>`<option ${i+1===n?'selected':''}>${i+1}</option>`).join('');
-  const hasEdits = !!(S.sheet.schemeEdits && S.sheet.schemeEdits[sc.id] && (Object.keys(S.sheet.schemeEdits[sc.id].tokens||{}).length || Object.keys(S.sheet.schemeEdits[sc.id].roles||{}).length || (S.sheet.schemeEdits[sc.id].draw||[]).length || (S.sheet.schemeEdits[sc.id].marks||[]).length || S.sheet.schemeEdits[sc.id].ball));
-  const selShape = drawMode && selectedDraw && selectedDraw.kind==='draw' ? (selectedDraw.layer==='base' ? sc.draw[selectedDraw.index] : schemeEdit(sc).draw[selectedDraw.index]) : null;
-  const selMark = drawMode && selectedDraw && selectedDraw.kind==='mark' ? (selectedDraw.layer==='base' ? sc.marks[selectedDraw.index] : schemeEdit(sc).marks[selectedDraw.index]) : null;
-  let panel;
-  if(moveMode){
-    panel = (A && st) ? `<div class="tokpanel">
-      <div class="grid">
-        <div><label class="f">Numero di ruolo</label><select data-tok="slot">${slotOpts(st.slot)}</select></div>
-        <div><label class="f">Compito</label><input data-tok="role" list="rolelist" value="${esc(st.role)}" placeholder="Es. Marcatura"></div>
-        <div><label class="f">Etichetta rossa</label><input data-tok="tag" value="${esc(st.tag)}" placeholder="Es. 1 o M"></div>
-      </div>
-      <datalist id="rolelist">${roles.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-      <div class="row" style="margin-top:10px"><button class="btn small danger" data-act="deltok">Elimina pedina</button></div>
-    </div>` : (A
-      ? `<p class="note" style="margin-top:10px">Trascina pedine e pallone. Tocca una pedina per cambiarne ruolo e compito: aggiorni lo schema condiviso, lo vedono tutti i mister.</p>`
-      : misterTokPanel(sc, roles));
-  } else if(drawMode){
-    const toolBtns = DRAW_TOOLS.map(([k,label]) => `<button data-drawtool="${k}" aria-pressed="${drawTool===k}">${label}</button>`).join('');
-    panel = `<div class="tokpanel">
-      <label class="f">Strumento</label>
-      <div class="seg" role="group" aria-label="Strumento di disegno" style="flex-wrap:wrap">${toolBtns}</div>
-      <p class="hint" style="margin-top:8px">${drawTool==='text' ? 'Tocca il campo dove vuoi scrivere.' : drawTool ? 'Trascina sul campo per disegnare.' : 'Scegli uno strumento, oppure tocca una freccia/linea/testo già presente per selezionarla.'}${A?'':' Quello che disegni resta solo su questa partita.'}</p>
-      ${selShape || selMark ? `<div class="row" style="margin-top:10px">
-        ${selMark ? `<button class="btn small" data-act="edittext">Modifica testo</button>` : ''}
-        <button class="btn small danger" data-act="deldraw">Elimina selezionato</button>
-      </div>` : ''}
-    </div>`;
-  } else {
-    panel = assegnaList(sc, rm, roles);
-  }
-  return `<section class="panel">
-    <div class="row" style="justify-content:space-between;margin-bottom:10px">
-      <button class="btn small ghost" data-act="back">← Tutti gli schemi</button>
-      <div class="seg" role="group" aria-label="Modalità">
-        <button data-mode="assign" aria-pressed="${boardMode==='assign'}">Assegna</button>
-        <button data-mode="move" aria-pressed="${moveMode}">Pedine</button>
-        <button data-mode="draw" aria-pressed="${drawMode}">Disegna</button>
-      </div>
-    </div>
-    ${A ? '' : `<h2>${esc(sc.name)}<span class="side ${sc.side}">${sc.side==='favore'?'A favore':'A sfavore'}</span></h2><p class="hint">${esc(sc.subtitle||'')}</p>`}
-    <div class="grid ${A?'':'hidden'}" style="margin-bottom:12px">
-      <div><label class="f">Nome schema</label><input data-sc="name" value="${esc(sc.name)}"></div>
-      <div><label class="f">Sottotitolo</label><input data-sc="subtitle" value="${esc(sc.subtitle)}" placeholder="Es. Braccia alzate"></div>
-      <div><label class="f">Tipo</label><select data-sc="side"><option value="favore" ${sc.side==='favore'?'selected':''}>A favore</option><option value="sfavore" ${sc.side==='sfavore'?'selected':''}>A sfavore</option></select></div>
-    </div>
-    <svg class="board" id="board" viewBox="${VX0} ${VY0*YS} ${VX1-VX0} ${(VY1-VY0)*YS}" role="img" aria-label="Schema ${esc(sc.name)}">
-      <defs><marker id="arrowhead" markerWidth="3.2" markerHeight="3.2" refX="2.6" refY="1.6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L3.2,1.6 L0,3.2 Z" fill="#C8102E"/></marker></defs>
-      ${fieldSVG()}${drawShapesSVG(sc, selectedDraw)}${marksSVG(sc, selectedDraw)}${ballSVG(effBall(sc), moveMode)}${toks}
-      ${drawMode ? '<line id="draftline" x1="0" y1="0" x2="0" y2="0" stroke="#C8102E" stroke-width=".35" opacity="0" pointer-events="none"/>' : ''}
-    </svg>
-    <div class="legend">${legend}</div>
-    ${boardMode==='assign' ? '' : compitiList(sc, rm)}
-    ${moveMode && A ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="addtok">Aggiungi pedina</button></div>` : ''}
-    ${boardMode==='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetov">Ripristina dalla formazione</button></div>` : ''}
-    ${boardMode!=='assign' ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="resetedits" ${hasEdits?'':'disabled'}>Ripristina originale</button></div>` : ''}
-    ${panel}
-    ${A ? `<div style="margin-top:14px"><label class="f">Nota sotto lo schema</label><input data-sc="note" value="${esc(sc.note)}" placeholder="Es. Marcatura a uomo sui saltatori"></div>
-    <div class="row" style="margin-top:16px;justify-content:space-between">
-      <button class="btn small" data-act="dupscheme">Duplica schema</button>
-      <button class="btn small danger ghost" data-act="delscheme">Elimina schema</button>
-    </div>` : (sc.note ? `<p class="note" style="margin-top:14px"><b>Nota:</b> ${esc(sc.note)}</p>` : '')}
-  </section>`;
-}
-
 function viewPdf(){
   return `<section class="panel">
     <h2>PDF</h2>

@@ -15,7 +15,7 @@ document.addEventListener('click', e => {
   if(t.dataset.pickclose !== undefined){ slotPick = null; render(); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
-  const ADMIN_ONLY = ['padd','bulk','newscheme','addtok','deltok','dupscheme','delscheme','teamadd','exportbackup','caladd'];
+  const ADMIN_ONLY = ['padd','bulk','teamadd','exportbackup','caladd'];
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel || t.dataset.coachpin || t.dataset.coachdel || t.dataset.coachadd || t.dataset.teamcodeoff)) return;
   if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; writeRoute(true); subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
@@ -49,12 +49,10 @@ document.addEventListener('click', e => {
     return;
   }
   if(t.dataset.bench){ const id=t.dataset.bench; const b=S.sheet.bench; S.sheet.bench = b.includes(id) ? b.filter(x=>x!==id) : [...b,id]; save('sheet'); render(); return; }
-  if(t.dataset.schemecard){ const id=t.dataset.schemecard; const order=S.schemes.map(q=>q.id); let s=S.sheet.selected.filter(i=>i!==id); if(!S.sheet.selected.includes(id)) s.push(id); S.sheet.selected = s.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('sheet'); render(); return; }
-  if(t.dataset.open){ openSchemeId=t.dataset.open; boardMode = (t.dataset.editmode && isAdmin()) ? 'move' : 'assign'; selectedToken=null; drawTool=null; selectedDraw=null; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.schemecard){ const id=t.dataset.schemecard; const order=[...mieiSchemi(), ...S.schemes].map(q=>q.id); let s=S.sheet.selected.filter(i=>i!==id); if(!S.sheet.selected.includes(id)) s.push(id); S.sheet.selected = s.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('sheet'); render(); return; }
+  if(t.dataset.open){ openSchemeId=t.dataset.open; boardMode = modificaBase(schemaDa(openSchemeId)) ? 'unico' : 'assign'; selectedToken=null; drawTool=null; selectedDraw=null; render(); window.scrollTo(0,0); return; }
   if(t.dataset.up || t.dataset.down){ const i=+(t.dataset.up??t.dataset.down), j=t.dataset.up!==undefined?i-1:i+1; if(j<0||j>=S.schemes.length) return; [S.schemes[i],S.schemes[j]]=[S.schemes[j],S.schemes[i]]; const order=S.schemes.map(q=>q.id); S.sheet.selected.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('schemes'); save('sheet'); render(); return; }
-  if(t.dataset.mode){ boardMode = t.dataset.mode; selectedToken=null; selectedPlayer=null; drawTool=null; selectedDraw=null; render(); return; }
-  if(t.dataset.drawtool){ drawTool = drawTool===t.dataset.drawtool ? null : t.dataset.drawtool; selectedDraw=null; render(); return; }
-  const sc = S.schemes.find(q=>q.id===openSchemeId);
+  const sc = schemaDa(openSchemeId);
   switch(act){
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:'', coaches:[]}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
@@ -65,32 +63,9 @@ document.addEventListener('click', e => {
       lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
       save('roster'); render(); break; }
     case 'newmatch': if(confirm('Svuotare formazione, panchina, convocazioni e dati partita? Rosa e schemi restano.')){ const keep = S.sheet.selected; S.sheet = defaultSheet(); S.sheet.selected = keep; save('sheet'); render(); } break;
-    case 'newscheme': {
-      const b = BASES[$('#base').value];
-      const tokens = Array.from({length:11},(_,i)=>({id:uid('t'), slot:i+1, x:-22+i*4.5, y:28, role:'', tag:''}));
-      const q = {id:uid('s'), name:b.name, subtitle:'', side:b.side, note:'', legend:'', ball:{...b.ball}, tokens, marks:[], draw:[]};
-      S.schemes.push(q); S.sheet.selected.push(q.id); save('schemes'); save('sheet'); openSchemeId=q.id; boardMode='move'; render(); break; }
     case 'back': openSchemeId=null; selectedToken=null; boardMode='assign'; drawTool=null; selectedDraw=null; render(); break;
-    case 'addtok': if(sc){ const n={id:uid('t'), slot:1, x:0, y:30, role:'', tag:''}; sc.tokens.push(n); selectedToken=n.id; save('schemes'); render(); } break;
-    case 'deltok': if(sc){ sc.tokens = sc.tokens.filter(q=>q.id!==selectedToken); selectedToken=null; save('schemes'); render(); } break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
-    case 'resetrole': if(sc && selectedToken){ const ed = schemeEdit(sc); if(ed.roles) delete ed.roles[selectedToken]; save('sheet'); render(); } break;
-    case 'resetedits': if(sc){ delete (S.sheet.schemeEdits||{})[sc.id]; save('sheet'); render(); } break;
     case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
-    case 'deldraw': if(sc && selectedDraw){
-      const { layer, kind, index } = selectedDraw;
-      const arr = layer==='base' ? (kind==='draw' ? (sc.draw||(sc.draw=[])) : (sc.marks||(sc.marks=[]))) : (kind==='draw' ? schemeEdit(sc).draw : schemeEdit(sc).marks);
-      arr.splice(index,1); selectedDraw=null; save(layer==='base'?'schemes':'sheet'); render();
-    } break;
-    case 'edittext': if(sc && selectedDraw && selectedDraw.kind==='mark'){
-      const { layer, index } = selectedDraw;
-      const arr = layer==='base' ? sc.marks : schemeEdit(sc).marks;
-      const m = arr[index];
-      const val = prompt('Testo:', m.text);
-      if(val!=null){ const t = val.trim(); if(t) m.text = t; else arr.splice(index,1); selectedDraw=null; save(layer==='base'?'schemes':'sheet'); render(); }
-    } break;
-    case 'dupscheme': if(sc){ const q = clone(sc); q.id=uid('s'); q.name = sc.name+' (copia)'; q.tokens.forEach(t=>t.id=uid('t')); S.schemes.splice(S.schemes.indexOf(sc)+1,0,q); save('schemes'); openSchemeId=q.id; render(); } break;
-    case 'delscheme': if(sc && confirm(`Eliminare lo schema "${sc.name}"?`)){ S.schemes = S.schemes.filter(q=>q!==sc); S.sheet.selected = S.sheet.selected.filter(i=>i!==sc.id); delete S.sheet.overrides[sc.id]; save('schemes'); save('sheet'); openSchemeId=null; render(); } break;
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'downloadconv': downloadConvocazione(); break;
@@ -142,9 +117,6 @@ document.addEventListener('input', e => {
     save('sheet');
     if(t.dataset.sheet==='meetAddress'){ const a = $('#cv_mapslink'); if(a){ const u = mapsLink(S.sheet); a.href = u; a.hidden = !u; } }
   }
-  else if(t.dataset.etok){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc && selectedToken){ const ed = schemeEdit(sc); ((ed.roles ||= {})[selectedToken] ||= {})[t.dataset.etok] = t.value; save('sheet'); } }
-  else if(t.dataset.sc && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
-  else if(t.dataset.tok && t.tagName!=='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk[t.dataset.tok]=t.value; save('schemes'); } }
 });
 document.addEventListener('change', e => {
   if(e.target.dataset.staffname && isAdmin() && !readOnly()){ const x = staff.find(p => p.id===e.target.dataset.staffname); const v = e.target.value.trim(); if(x && v && v !== [x.nome, x.cognome].filter(Boolean).join(' ')) staffAction({azione:'nome', id:x.id, nome:v}); return; }
@@ -163,11 +135,11 @@ document.addEventListener('change', e => {
     save('sheet'); render(); return;
   }
   if(t.dataset.arolegrp !== undefined){
-    const sc = S.schemes.find(q=>q.id===openSchemeId); if(!sc) return;
+    const sc = schemaDa(openSchemeId); if(!sc) return;
     const prima = t.dataset.arolegrp, nuovo = t.value.trim();
     if(nuovo === prima) return;
     const toks = effTokens(sc).filter(q => (q.role||'').trim() === prima);
-    if(isAdmin()){ toks.forEach(q => { const tk = sc.tokens.find(x => x.id===q.id); if(tk) tk.role = nuovo; }); save('schemes'); }
+    if(modificaBase(sc)){ toks.forEach(q => { const tk = sc.tokens.find(x => x.id===q.id); if(tk) tk.role = nuovo; }); salvaSchema(sc); }
     else { const ed = schemeEdit(sc);
       toks.forEach(q => { const base = sc.tokens.find(x => x.id===q.id); if(!base) return;
         if(nuovo === (base.role||'')){ if(ed.roles?.[base.id]){ delete ed.roles[base.id].role; if(!Object.keys(ed.roles[base.id]).length) delete ed.roles[base.id]; } }
@@ -176,8 +148,8 @@ document.addEventListener('change', e => {
     render(); return;
   }
   if(t.dataset.arole){
-    const sc = S.schemes.find(q=>q.id===openSchemeId); if(!sc) return;
-    if(isAdmin()){ const tk = sc.tokens.find(q=>q.id===t.dataset.arole); if(tk){ tk.role = t.value.trim(); save('schemes'); } }
+    const sc = schemaDa(openSchemeId); if(!sc) return;
+    if(modificaBase(sc)){ const tk = sc.tokens.find(q=>q.id===t.dataset.arole); if(tk){ tk.role = t.value.trim(); salvaSchema(sc); } }
     else { const ed = schemeEdit(sc); const base = sc.tokens.find(q=>q.id===t.dataset.arole);
       if(base && t.value.trim() === (base.role||'')){ if(ed.roles?.[base.id]){ delete ed.roles[base.id].role; if(!Object.keys(ed.roles[base.id]).length) delete ed.roles[base.id]; } }
       else ((ed.roles ||= {})[t.dataset.arole] ||= {}).role = t.value.trim();
@@ -192,9 +164,6 @@ document.addEventListener('change', e => {
   }
   if(t.dataset.adbf && t.tagName==='SELECT'){ const p = partiteAdb()[+t.dataset.adbi]; if(p){ p[t.dataset.adbf] = t.dataset.adbf==='home' ? !!t.value : t.value; save('sheet'); render(); } return; }
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
-  else if(t.dataset.sc && t.tagName==='SELECT'){ const sc=S.schemes.find(q=>q.id===openSchemeId); if(sc){ sc[t.dataset.sc]=t.value; save('schemes'); } }
-  else if(t.dataset.tok==='slot'){ const sc=S.schemes.find(q=>q.id===openSchemeId); const tk=sc?.tokens.find(q=>q.id===selectedToken); if(tk){ tk.slot=+t.value; save('schemes'); render(); } }
-  else if(t.dataset.tok==='role' || t.dataset.etok){ render(); }
 });
 
 /* Drag giocatori (mouse e touch) */
@@ -229,78 +198,7 @@ document.addEventListener('pointerdown', e => {
     }
   }
 
-  if(boardMode==='draw'){
-    const svg = $('#board'); const sc = S.schemes.find(q=>q.id===openSchemeId);
-    if(svg && sc && svg.contains(e.target)){
-      const admin = isAdmin();
-      const toLocal = ev => { const pt = svg.createSVGPoint(); pt.x=ev.clientX; pt.y=ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
-      const clampX = v => Math.max(VX0+1, Math.min(VX1-1, +v.toFixed(2)));
-      const clampY = v => Math.max(VY0+.5, Math.min(VY1-.5, +v.toFixed(2)));
-      if(!drawTool){
-        const shapeEl = e.target.closest('[data-draw],[data-mark],[data-edraw],[data-emark]');
-        if(!shapeEl) selectedDraw = null;
-        else if(shapeEl.dataset.draw !== undefined) selectedDraw = {kind:'draw', layer:'base', index:+shapeEl.dataset.draw};
-        else if(shapeEl.dataset.mark !== undefined) selectedDraw = {kind:'mark', layer:'base', index:+shapeEl.dataset.mark};
-        else if(shapeEl.dataset.edraw !== undefined) selectedDraw = {kind:'draw', layer:'edit', index:+shapeEl.dataset.edraw};
-        else selectedDraw = {kind:'mark', layer:'edit', index:+shapeEl.dataset.emark};
-        render();
-        return;
-      }
-      if(drawTool==='text'){
-        const p = toLocal(e);
-        const txt = prompt('Testo da scrivere sul campo:', '');
-        if(txt && txt.trim()){
-          const item = {text:txt.trim(), x:clampX(p.x), y:clampY(p.y/YS)};
-          if(admin){ sc.marks = sc.marks || []; sc.marks.push(item); save('schemes'); }
-          else { schemeEdit(sc).marks.push(item); save('sheet'); }
-        }
-        render();
-        return;
-      }
-      const p0 = toLocal(e);
-      const draft = {type: drawTool.startsWith('arrow') ? 'arrow' : 'line', dashed: drawTool.endsWith('dash'), x1:clampX(p0.x), y1:clampY(p0.y/YS), x2:clampX(p0.x), y2:clampY(p0.y/YS)};
-      let moved = false;
-      const mv = ev => { const p = toLocal(ev); draft.x2 = clampX(p.x); draft.y2 = clampY(p.y/YS); moved = true; renderDraftLine(draft); };
-      const up = () => {
-        svg.removeEventListener('pointermove', mv); svg.removeEventListener('pointerup', up); svg.removeEventListener('pointercancel', up);
-        if(moved && Math.hypot(draft.x2-draft.x1, (draft.y2-draft.y1)*YS) > 1){
-          if(admin){ sc.draw = sc.draw || []; sc.draw.push(draft); save('schemes'); }
-          else { schemeEdit(sc).draw.push(draft); save('sheet'); }
-        }
-        render();
-      };
-      svg.addEventListener('pointermove', mv); svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
-      e.preventDefault();
-      return;
-    }
-  }
-
-  const tokEl = e.target.closest('[data-move-token],[data-ball]');
-  if(tokEl && boardMode==='move'){
-    const svg = $('#board'); const sc = S.schemes.find(q=>q.id===openSchemeId); if(!svg||!sc) return;
-    const admin = isAdmin();
-    const isBall = !!tokEl.dataset.ball;
-    const baseTok = isBall ? null : sc.tokens.find(q=>q.id===tokEl.dataset.moveToken);
-    if(!isBall){ selectedToken = baseTok.id; }
-    tokEl.setPointerCapture?.(e.pointerId);
-    const toLocal = ev => { const pt = svg.createSVGPoint(); pt.x=ev.clientX; pt.y=ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
-    let moved = false;
-    const mv = ev => {
-      const p = toLocal(ev);
-      const x = Math.max(VX0+1, Math.min(VX1-.5, +p.x.toFixed(2)));
-      const y = Math.max(VY0+.5, Math.min(VY1-1, +(p.y/YS).toFixed(2)));
-      if(admin){ const tk = isBall ? sc.ball : baseTok; tk.x = x; tk.y = y; }
-      else {
-        const ed = schemeEdit(sc);
-        if(isBall) ed.ball = {x,y}; else ed.tokens[baseTok.id] = {x,y};
-      }
-      tokEl.setAttribute('transform', `translate(${x} ${y*YS})`);
-      moved = true;
-    };
-    const up = () => { tokEl.removeEventListener('pointermove', mv); tokEl.removeEventListener('pointerup', up); tokEl.removeEventListener('pointercancel', up); if(moved) save(admin?'schemes':'sheet'); render(); };
-    tokEl.addEventListener('pointermove', mv); tokEl.addEventListener('pointerup', up); tokEl.addEventListener('pointercancel', up);
-    e.preventDefault();
-  }
+  /* campo dei piazzati: vedi piazzati.js */
 });
 document.addEventListener('pointermove', e => {
   if(!dnd) return;

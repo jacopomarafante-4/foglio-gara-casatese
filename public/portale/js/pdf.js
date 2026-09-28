@@ -135,7 +135,7 @@ function coverPage(total){
   const cap = P(s.captain), vice = P(s.vice);
   if(cap){ const cn=matchNum(cap.id); T(x, 'Capitano', rx, ry, {size:14, color:MUTED}); T(x, `${cn?cn+' ':''}${cap.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   if(vice){ const vn=matchNum(vice.id); T(x, 'Vice capitano', rx, ry, {size:14, color:MUTED}); T(x, `${vn?vn+' ':''}${vice.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
-  const sel = s.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
+  const sel = s.selected.map(schemaDa).filter(Boolean);
   if(sel.length){
     ry += 8; T(x, 'Calci piazzati', rx, ry, {size:21, weight:700, cond:true, color:BLU_SCURO}); ry += 26;
     sel.forEach((q,i) => { if(ry > 600) return; T(x, `p. ${i+2}`, rx, ry, {size:13, color:MUTED}); T(x, q.name + (q.subtitle?`, ${q.subtitle}`:''), rx+42, ry, {size:15, weight:600, max:220}); ry += 22; });
@@ -220,7 +220,7 @@ function schemePage(sc, page, total){
 }
 
 function makePages(){
-  const sel = S.sheet.selected.map(id => S.schemes.find(q => q.id===id)).filter(Boolean);
+  const sel = S.sheet.selected.map(schemaDa).filter(Boolean);
   const total = 1 + sel.length;
   return [coverPage(total), ...sel.map((q,i) => schemePage(q, i+2, total))];
 }

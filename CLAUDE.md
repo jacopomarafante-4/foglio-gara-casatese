@@ -160,6 +160,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `scripts/import-adb/importa.mjs` dai fogli presenze (CSV in `private/adb/`, NON su git); niente Formazione/Piazzati/Foglio gara
   (`SOLO_AGONISTICA` in `portale.js`, anche Dati partita); convocazioni da 1 a 4 partite con i loro convocati (`sheet.adb.partite`, `viewConvocazioniAdb()`), PDF orizzontale sul
   modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
+- Portale, piazzati (`public/portale/js/piazzati.js`): modelli della società (`shared/schemes`, li modifica l'admin) e "I miei schemi"
+  della squadra in `registro/<squadra>.schemi` (li salva il mister col PIN; `preferito`, `da` = modello, `aggiornato`). "Usa come
+  modello" (`usaModello`) copia posizioni, compiti e frecce e sceglie la copia per la partita. Editor unico (`boardMode = 'unico'`,
+  `viewSchemaEditor`): trascinare, toccare una pedina, strumenti di disegno; `schemaDa(id)` trova lo schema ovunque (formazione,
+  foglio gara), `modificaBase(sc)`/`salvaSchema(sc)` dicono chi lo cambia e dove si salva. I mister non modificano più i modelli
+  per la partita (resta solo la lettura delle vecchie `schemeEdits`)
 - Portale, calci piazzati (`shared/schemes`, comuni a tutte le squadre): schemi aggiunti in blocco da `scripts/piazzati/schemi.mjs`
   con `scripts/piazzati/aggiungi.mjs [--conferma] [--aggiorna]` (confronto per id; coordinate in metri, bandierina a destra x = 34;
   frecce piene = palla, tratteggiate = movimento). Filtro Tutti/A favore/A sfavore/Scelti (`filtroSchemi` in `schede.js`); in Assegna il
