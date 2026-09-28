@@ -7,7 +7,8 @@ ROOT = Path('/Users/jm4/Progetto ACM/foglio-gara-casatese')
 FONT = ROOT / 'node_modules/@fontsource'
 LOGO = ROOT / 'public/portale/casatese-logo.png'
 SITO = 'academy-casatese.vercel.app'
-DATA = '25 settembre 2026'
+DATA = '28 settembre 2026'
+VERSIONE = 2
 
 CSS = f"""
 @font-face{{font-family:Barlow;font-weight:400;src:url('file://{FONT}/barlow/files/barlow-latin-400-normal.woff2')}}
@@ -26,20 +27,29 @@ p{{margin:0 0 2.3mm}} ul,ol{{margin:0 0 3mm;padding-left:5.5mm}} li{{margin:0 0 
 /* I capitoli scorrono uno dopo l'altro (niente pagina nuova per ognuno: niente pagine mezze vuote) */
 section{{break-before:auto;margin-top:10mm}}
 .cover{{break-after:page}}
-.indice{{break-after:page}}
+.indice{{margin-bottom:2mm}}
 .indice h2{{margin-bottom:6mm}}
 .indice ol{{list-style:none;padding:0;columns:1}}
 .indice li{{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0;border-bottom:.3mm solid var(--linea);font-size:13pt;
   font-family:'Barlow Condensed';font-weight:600}}
 .indice li b{{display:inline-grid;place-items:center;min-width:8mm;height:8mm;border-radius:50%;background:var(--blu);color:#fff;font-size:11pt}}
 .indice .intro{{margin-top:8mm;font-size:11pt;color:var(--grigio)}}
-.cover{{height:255mm;display:flex;flex-direction:column}}
-.cover .top{{background:var(--blu);color:#fff;padding:20mm 13mm 14mm;border-radius:3mm 3mm 0 0}}
-.cover img{{width:24mm;height:24mm;background:#fff;border-radius:3mm;padding:1.5mm}}
-.cover h1{{font-size:36pt;margin:7mm 0 2mm}}
-.cover .sub{{font-size:14pt;opacity:.92}}
-.stripe{{display:flex;height:2.2mm}} .stripe i{{display:block}}
-.cover .meta{{margin-top:auto;color:var(--grigio);font-size:10pt}} .cover .meta b{{color:var(--ink)}}
+/* Copertina a pagina intera (senza margini), come la pagina d'ingresso del sito: blu con le linee del campo */
+@page copertina{{margin:0}}
+.cover{{page:copertina;width:210mm;height:297mm;position:relative;overflow:hidden;color:#fff;
+  background:radial-gradient(120% 80% at 80% 0%,#1a56c4 0%,var(--blu) 45%,#002a73 100%);display:flex;flex-direction:column;padding:22mm 20mm 18mm}}
+.cover .campo{{position:absolute;inset:0;width:100%;height:100%;opacity:.09}}
+.cover > *:not(.campo){{position:relative}}
+.cover .stemma{{width:34mm;height:34mm;background:#fff;border-radius:6mm;padding:2.5mm;box-shadow:0 2mm 8mm rgba(0,0,0,.25)}}
+.cover .club{{margin-top:9mm;font-family:'Barlow Condensed';font-weight:700;font-size:14pt;letter-spacing:.18em;text-transform:uppercase;color:var(--oro)}}
+.cover h1{{font-size:50pt;margin:2mm 0 4mm;line-height:1}}
+.cover .sub{{font-size:15pt;line-height:1.35;max-width:150mm;opacity:.95}}
+.stripe{{display:flex;height:2.6mm;width:120mm;margin-top:10mm;border-radius:1.3mm;overflow:hidden}} .stripe i{{display:block}}
+.cover .scheda{{margin-top:auto;background:#fff;color:var(--ink);border-radius:5mm;padding:7mm 8mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm 8mm;
+  box-shadow:0 3mm 10mm rgba(0,0,0,.25)}}
+.cover .scheda div span{{display:block;font-family:'Barlow Condensed';font-weight:700;font-size:10pt;letter-spacing:.06em;text-transform:uppercase;color:var(--grigio)}}
+.cover .scheda div b{{font-size:12pt}}
+.cover .scheda .piena{{grid-column:1 / -1;font-size:9.5pt;color:var(--grigio);border-top:.3mm solid var(--linea);padding-top:3mm}}
 table{{width:100%;border-collapse:collapse;margin:1mm 0 4mm;font-size:10pt}}
 tr:nth-child(even) td{{background:var(--carta)}}
 th{{text-align:left;font-family:'Barlow Condensed';font-size:10.5pt;color:#fff;background:var(--blu);padding:1.5mm 2.2mm}}
@@ -78,12 +88,21 @@ def duo(a, ca, b, cb):
     return f'<div class="duo"><div>{img(a, ca)}</div><div>{img(b, cb)}</div></div>'
 
 
+CAMPO_SVG = """<svg class="campo" viewBox="0 0 680 1050" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<g fill="none" stroke="#fff" stroke-width="4"><rect x="20" y="20" width="640" height="1010" rx="6"/><line x1="20" y1="525" x2="660" y2="525"/>
+<circle cx="340" cy="525" r="92"/><rect x="138" y="20" width="404" height="165"/><rect x="248" y="20" width="184" height="55"/>
+<rect x="138" y="865" width="404" height="165"/><rect x="248" y="975" width="184" height="55"/>
+<path d="M 266 185 A 92 92 0 0 0 414 185"/><path d="M 266 865 A 92 92 0 0 1 414 865"/></g><circle cx="340" cy="525" r="6" fill="#fff"/></svg>"""
+
+
 def copertina(titolo, sotto, per):
-    return f"""<div class="cover"><div class="top"><img src="file://{LOGO}" alt="">
-    <h1>{titolo}</h1><div class="sub">{sotto}</div></div>
-    <div class="stripe"><i style="flex:6;background:var(--blu)"></i><i style="flex:1;background:var(--oro)"></i><i style="flex:2;background:var(--rosso)"></i></div>
-    <div class="meta"><p><b>Per:</b> {per}</p><p><b>Indirizzo dell'app:</b> {SITO}</p>
-    <p><b>Versione:</b> 1 · {DATA}</p><p class="small">Documento per lo staff dell'Academy Casatese Merate. Le schermate usano dati di esempio.</p></div></div>"""
+    return f"""<div class="cover">{CAMPO_SVG}<img class="stemma" src="file://{LOGO}" alt="">
+    <div class="club">Academy Casatese Merate</div>
+    <h1>{titolo}</h1><div class="sub">{sotto}</div>
+    <div class="stripe"><i style="flex:6;background:#fff"></i><i style="flex:1;background:var(--oro)"></i><i style="flex:2;background:var(--rosso)"></i></div>
+    <div class="scheda"><div><span>Per</span><b>{per}</b></div><div><span>Indirizzo dell'app</span><b>{SITO}</b></div>
+    <div><span>Versione</span><b>{VERSIONE} · {DATA}</b></div><div><span>Accesso</span><b>Col tuo PIN personale</b></div>
+    <p class="piena">Documento per lo staff dell'Academy Casatese Merate. Le schermate usano dati di esempio: nomi e numeri sono inventati.</p></div></div>"""
 
 
 ACCESSO = f"""
@@ -125,8 +144,7 @@ def pagina(titolo, corpo):
     capitoli = re.findall(r'<h2>(.*?)</h2>', corpo)
     voci = ''.join(f'<li><b>{m.group(1)}</b>{m.group(2)}</li>' if (m := re.match(r'(\d+)\.\s*(.*)', c)) else f'<li>{c}</li>' for c in capitoli)
     indice = f'<div class="indice"><h2>Indice</h2><ol>{voci}</ol><p class="intro">Le schermate usano dati di esempio: nomi e numeri sono inventati.</p></div>'
-    fine = corpo.find('</div></div>', corpo.find('class="cover"'))
-    fine = corpo.find('</div>', corpo.find('class="meta"')) + len('</div></div>') if 'class="meta"' in corpo else fine
+    fine = corpo.find('</p></div></div>', corpo.find('class="scheda"')) + len('</p></div></div>')
     corpo = corpo[:fine] + indice + corpo[fine:]
     return f'<!doctype html><html lang="it"><head><meta charset="utf-8"><title>{titolo}</title><style>{CSS}</style></head><body>{corpo}</body></html>'
 
