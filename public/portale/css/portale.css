@@ -584,3 +584,39 @@ a.areabtn{text-decoration:none}
 .slotval small{font-size:11px;color:var(--muted);font-weight:600}
 .autore.vuoto{background:transparent;border:2px dashed var(--line);color:var(--muted)}
 details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}
+
+/* Piazzati: editor a due colonne come il foglio gara (campo a sinistra, riquadro Compiti a destra) */
+.pztesta{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.pztitoli{flex:1;min-width:0;display:grid;gap:4px}
+.pzeditor input.pztitolo{min-height:0;font-family:var(--cond);font-weight:700;font-size:28px;line-height:1.1;border:1px dashed transparent;border-radius:8px;padding:2px 6px;background:transparent;color:var(--ink);width:100%}
+.pzeditor input.pztitolo:hover,.pzeditor input.pztitolo:focus{border-color:var(--line);background:var(--paper)}
+.pzcomando{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.pzeditor .pzcomando input{flex:1;min-width:0;padding:6px 8px;font-size:14px;min-height:36px}
+.pzgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:900px){.pzgrid{grid-template-columns:1fr}}
+.pzbarra{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px;min-height:40px}
+.pzbarra.sel{background:color-mix(in srgb,#1F5FA8 10%,transparent);border-radius:10px;padding:6px 10px}
+.pzbarra .pzstrumenti{margin:0}
+.pzeditor textarea.pznota{min-height:60px;margin-top:10px;width:100%;font-family:var(--cond);font-weight:700;font-size:18px}
+.pznotatesto{font-family:var(--cond);font-weight:700;font-size:18px;margin:10px 0 0}
+.pzcompiti{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px}
+.pzh{font-family:var(--cond);font-size:24px;color:var(--ink);margin:10px 0 6px}
+.pzlato{margin:0}
+.pzgruppo{margin-top:12px}
+.pzgtesta{display:flex;align-items:center;gap:6px}
+.pzgtesta i{width:5px;height:20px;border-radius:2px;flex:none}
+.pzeditor .pzgnome{min-height:0;width:auto;flex:1;min-width:0;font-family:var(--cond);font-weight:700;font-size:19px;border:1px dashed transparent;border-radius:6px;padding:1px 6px;background:transparent;color:var(--ink)}
+.pzeditor input.pzgnome:hover,.pzeditor input.pzgnome:focus{border-color:var(--line);background:var(--paper)}
+.pzriga{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:10px;cursor:pointer}
+.pzriga:hover{background:var(--paper)}
+.pzriga.sel{background:var(--paper);box-shadow:0 0 0 2px #1F5FA8}
+.pzdisco{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid;font-family:var(--cond);font-size:14px;flex:none}
+.pzeditor select.pzgioc{min-height:34px;width:auto;flex:1;min-width:0;border:1px solid transparent;background:transparent;font-weight:600;padding:4px 6px;border-radius:6px;color:var(--ink)}
+.pzeditor select.pzgioc:hover,.pzeditor select.pzgioc:focus{border-color:var(--line);background:var(--paper)}
+.pzeditor select.pzgioc.ov{color:#1F5FA8}
+.pztag{color:#C8102E;font-weight:700;font-size:14px}
+.pzdett{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0 4px 34px;font-size:13px;color:var(--muted);font-weight:600}
+.pzeditor .pzdett label{display:flex;align-items:center;gap:4px;margin:0}
+.pzeditor .pzdett select,.pzeditor .pzdett input{width:auto;min-height:32px;padding:4px 6px;font-size:13px;max-width:150px}
+.pzeditor .pzdett input{width:60px}
+.pzleg{margin:14px 0 0;font-size:12px}

@@ -45,7 +45,7 @@ document.addEventListener('click', e => {
   if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); selectedPlayer=null; render(); } return; }
   if(t.dataset.dropToken){
     if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); }
-    else { const sel = document.getElementById('as_'+t.dataset.dropToken); if(sel){ sel.scrollIntoView({block:'center', behavior:'smooth'}); sel.focus(); sel.showPicker?.(); } }
+    else { const sel = document.querySelector(`[data-atok="${t.dataset.dropToken}"]`); if(sel){ sel.scrollIntoView({block:'nearest', behavior:'smooth'}); sel.focus(); sel.showPicker?.(); } }
     return;
   }
   if(t.dataset.bench){ const id=t.dataset.bench; const b=S.sheet.bench; S.sheet.bench = b.includes(id) ? b.filter(x=>x!==id) : [...b,id]; save('sheet'); render(); return; }

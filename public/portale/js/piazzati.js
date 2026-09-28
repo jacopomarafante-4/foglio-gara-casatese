@@ -89,73 +89,107 @@ const legendaCompiti = rm => `<div class="legend">${[...rm.entries()].map(([r,c]
 const opzioniGiocatore = (sc, t) => {
   const {p, override} = tokenPlayer(sc, t), dallaForm = P(S.sheet.lineup[t.slot]);
   const rosa = S.players.slice().sort((a,b) => (matchNum(a.id)||99) - (matchNum(b.id)||99) || a.name.localeCompare(b.name,'it'));
-  return `<option value="">${dallaForm ? `${matchNum(dallaForm.id) ? matchNum(dallaForm.id)+' · ' : ''}${esc(dallaForm.name)} (formazione)` : 'Nessuno in formazione'}</option>` +
+  /* prima voce: chi gioca con quel numero in formazione (senza scritte in più: il giocatore scelto a mano è in blu) */
+  return `<option value="">${dallaForm ? `${matchNum(dallaForm.id) ? matchNum(dallaForm.id)+' · ' : ''}${esc(dallaForm.name)}` : 'Nessuno in formazione'}</option>` +
     rosa.map(q => `<option value="${q.id}" ${override && p && p.id===q.id ? 'selected' : ''}>${matchNum(q.id) ? matchNum(q.id)+' · ' : ''}${esc(q.name)}</option>`).join('');
 };
 
-/* ---------- Editor unico (i miei schemi; per l'admin anche i modelli della società) ---------- */
+/* ---------- Riquadro "Compiti" (come nel foglio gara): gruppi per compito, una riga per pedina ----------
+   modifica = si cambia lo schema (nome dei compiti, pedine); il giocatore di ogni pedina vale per la partita. */
+function pannelloCompiti(sc, rm, modifica){
+  const gruppi = new Map();
+  effTokens(sc).forEach(t => { const k = (t.role||'').trim() || 'Senza compito'; if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(t); });
+  const voci = [...gruppi.entries()].sort((a,b) => (a[0]==='Senza compito') - (b[0]==='Senza compito'));
+  const compiti = [...gruppi.keys()].filter(k => k !== 'Senza compito');
+  /* stesso giocatore in più pedine: avviso */
+  const doppi = new Map();
+  effTokens(sc).forEach(t => { const {p} = tokenPlayer(sc, t); if(p) doppi.set(p.id, [...(doppi.get(p.id)||[]), t]); });
+  const avviso = [...doppi.entries()].filter(([, ts]) => ts.length > 1).map(([pid, ts]) => `${esc(surname(P(pid)?.name || ''))} (n° ${ts.map(t => t.slot).join(' e ')})`);
+  const riga = (t, col) => {
+    const {p, override} = tokenPlayer(sc, t), sel = selectedToken === t.id;
+    const disco = `<b class="pzdisco" style="background:${p?col:'transparent'};border-color:${col};color:${p?'#fff':col}">${p ? (matchNum(p.id)||t.slot) : t.slot}</b>`;
+    return `<div class="pzriga${sel ? ' sel' : ''}" data-pzsel="${t.id}">
+      ${disco}
+      <select class="pzgioc${override ? ' ov' : ''}" data-atok="${t.id}" aria-label="Giocatore della pedina ${t.slot}">${opzioniGiocatore(sc, t)}</select>
+      ${t.tag ? `<span class="pztag">${esc(t.tag)}</span>` : ''}
+      ${sel && modifica ? `<div class="pzdett">
+        <label>N° <select data-edtokid="${t.id}:slot" aria-label="Numero di ruolo">${Array.from({length:11},(_,i) => `<option ${i+1===t.slot?'selected':''}>${i+1}</option>`).join('')}</select></label>
+        <label>Compito <select data-edtokid="${t.id}:rolesel" aria-label="Compito">${compiti.map(c => `<option ${c===(t.role||'').trim()?'selected':''}>${esc(c)}</option>`).join('')}${(t.role||'').trim() ? '' : '<option selected value="">Senza compito</option>'}<option value="__nuovo">+ Nuovo compito…</option></select></label>
+        <label>Etichetta <input data-edtokid="${t.id}:tag" value="${esc(t.tag||'')}" placeholder="1, M…" maxlength="3" aria-label="Etichetta rossa"></label>
+        <button class="btn small ghost danger" data-pz="deltok">Togli</button>
+      </div>` : ''}
+    </div>`;
+  };
+  return `<aside class="pzcompiti">
+    ${modifica ? `<div class="seg pzlato" role="group" aria-label="Tipo">${['favore','sfavore'].map(k => `<button data-pzlato="${k}" aria-pressed="${sc.side===k}">${k==='favore' ? 'A favore' : 'A sfavore'}</button>`).join('')}</div>`
+      : `<span class="side ${sc.side}" style="margin:0">${sc.side==='favore'?'A favore':'A sfavore'}</span>`}
+    <h3 class="pzh">Compiti</h3>
+    ${avviso.length ? `<p class="esito ko" role="alert">⚠ Stesso giocatore in più pedine: ${avviso.join('; ')}.</p>` : ''}
+    ${voci.map(([role, toks]) => { const col = rm.get(role) || 'var(--ink)', nome = role === 'Senza compito' ? '' : role;
+      return `<div class="pzgruppo">
+        <div class="pzgtesta"><i style="background:${col}"></i>
+          ${modifica ? `<input class="pzgnome" data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="Senza compito: scrivi un nome" aria-label="Nome del compito">
+            <button class="iconbtn" data-pzaddrole="${esc(nome)}" aria-label="Aggiungi una pedina a ${esc(role)}" title="Aggiungi una pedina">+</button>`
+          : `<span class="pzgnome">${esc(role)}</span>`}
+        </div>
+        ${toks.slice().sort((a,b) => a.slot - b.slot).map(t => riga(t, col)).join('')}
+      </div>`; }).join('')}
+    ${modifica ? '<button class="btn small" data-pz="nuovocompito" style="margin-top:10px">+ Nuovo compito</button>' : ''}
+    <p class="note pzleg">${esc(sc.legend || 'Freccia piena = palla · tratteggiata = movimento')}. Il giocatore scelto vale per questa partita; <button class="linkbtn" data-act="resetov">tutti dalla formazione</button>.</p>
+  </aside>`;
+}
+
+/* ---------- Editor (i miei schemi; per l'admin anche i modelli della società) ---------- */
 function viewSchemaEditor(sc){
-  const rm = roleMap(sc), mio = isMio(sc), roles = compitiNoti();
-  const t = sc.tokens.find(q => q.id===selectedToken), te = t && effTokens(sc).find(q => q.id===t.id);
+  const rm = roleMap(sc), mio = isMio(sc);
   const segno = selectedDraw ? (selectedDraw.kind==='draw' ? (sc.draw||[])[selectedDraw.index] : (sc.marks||[])[selectedDraw.index]) : null;
-  const pannello = t ? `<div class="tokpanel">
-      <div class="row" style="justify-content:space-between"><b>Pedina ${t.slot}</b><button class="btn small ghost" data-pz="deseleziona">Fatto</button></div>
-      <div class="grid">
-        <div><label class="f" for="pz_slot">Numero di ruolo</label><select id="pz_slot" data-edtok="slot">${Array.from({length:11},(_,i) => `<option ${i+1===t.slot?'selected':''}>${i+1}</option>`).join('')}</select></div>
-        <div><label class="f" for="pz_role">Compito</label><input id="pz_role" data-edtok="role" list="rolelist" value="${esc(t.role)}" placeholder="Es. Primo palo"></div>
-        <div><label class="f" for="pz_tag">Etichetta rossa</label><input id="pz_tag" data-edtok="tag" value="${esc(t.tag)}" placeholder="Es. 1 o M"></div>
-        <div><label class="f" for="pz_gioc">Giocatore (questa partita)</label><select id="pz_gioc" data-atok="${t.id}">${opzioniGiocatore(sc, te)}</select></div>
-      </div>
-      <div class="row" style="margin-top:8px"><button class="btn small ghost danger" data-pz="deltok">Togli pedina</button></div>
-    </div>`
-    : segno ? `<div class="tokpanel"><div class="row" style="gap:8px;justify-content:space-between"><b>${selectedDraw.kind==='mark' ? 'Scritta' : 'Freccia o linea'}</b>
-        <span class="row" style="gap:6px">${selectedDraw.kind==='mark' ? '<button class="btn small" data-pz="testo">Cambia testo</button>' : ''}<button class="btn small ghost danger" data-pz="delsegno">Cancella</button><button class="btn small ghost" data-pz="deseleziona">Fatto</button></span></div></div>`
-    : `<p class="note pzaiuto">${drawTool==='text' ? 'Tocca il campo dove scrivere.' : drawTool ? 'Trascina sul campo per disegnare. Freccia piena = palla, tratteggiata = movimento.' : 'Trascina pedine e pallone. Tocca una pedina per numero, compito, etichetta e giocatore; tocca una freccia o una scritta per cancellarla.'}</p>`;
+  const barra = segno
+    ? `<div class="pzbarra sel"><b>${selectedDraw.kind==='mark' ? 'Scritta' : 'Freccia o linea'} selezionata</b>${selectedDraw.kind==='mark' ? '<button class="btn small" data-pz="testo">Cambia testo</button>' : ''}<button class="btn small ghost danger" data-pz="delsegno">Cancella</button><button class="btn small ghost" data-pz="deseleziona">Fatto</button></div>`
+    : `<div class="pzbarra"><div class="seg pzstrumenti" role="group" aria-label="Strumento">${STRUMENTI.map(([k,l]) => `<button data-pztool="${k}" aria-pressed="${(drawTool||'')===k}">${l}</button>`).join('')}</div>
+        <span class="note">${drawTool==='text' ? 'Tocca il campo dove scrivere' : drawTool ? 'Trascina sul campo' : 'Trascina pedine e pallone · tocca una pedina per modificarla'}</span></div>`;
   return `<section class="panel pzeditor">
-    <div class="row" style="justify-content:space-between;margin-bottom:10px;gap:8px">
-      <button class="btn small ghost" data-act="back">← Tutti gli schemi</button>
-      <span class="note">${mio ? `I miei schemi${sc.da && schemaDa(sc.da) ? ' · dal modello "' + esc(schemaDa(sc.da).name) + '"' : ''}` : 'Modello della società: lo vedono tutte le squadre'}</span>
-      ${mio ? `<button class="iconbtn pzstella${sc.preferito ? ' on' : ''}" data-pzpref="${sc.id}" aria-pressed="${!!sc.preferito}" aria-label="${sc.preferito ? 'Togli dai preferiti' : 'Metti tra i preferiti'}">★</button>` : ''}
+    <div class="pztesta">
+      <button class="btn small ghost" data-act="back" aria-label="Tutti gli schemi">←</button>
+      <div class="pztitoli">
+        <input class="pztitolo" data-edsc="name" value="${esc(sc.name)}" aria-label="Nome dello schema">
+        <label class="pzcomando">Comando <input data-edsc="subtitle" value="${esc(sc.subtitle||'')}" placeholder="la chiamata, es. Braccia alzate"></label>
+      </div>
+      ${mio ? `<button class="iconbtn pzstella${sc.preferito ? ' on' : ''}" data-pzpref="${sc.id}" aria-pressed="${!!sc.preferito}" aria-label="${sc.preferito ? 'Togli dai preferiti' : 'Metti tra i preferiti'}" title="Preferito">★</button>` : ''}
     </div>
-    <div class="grid" style="margin-bottom:10px">
-      <div><label class="f" for="pz_nome">Nome</label><input id="pz_nome" data-edsc="name" value="${esc(sc.name)}"></div>
-      <div><label class="f" for="pz_comando">Comando</label><input id="pz_comando" data-edsc="subtitle" value="${esc(sc.subtitle||'')}" placeholder="La chiamata, es. Braccia alzate"></div>
-      <div><label class="f" for="pz_side">Tipo</label><select id="pz_side" data-edsc="side"><option value="favore" ${sc.side==='favore'?'selected':''}>A favore</option><option value="sfavore" ${sc.side==='sfavore'?'selected':''}>A sfavore</option></select></div>
-    </div>
-    <div class="seg pzstrumenti" role="group" aria-label="Strumento">${STRUMENTI.map(([k,l]) => `<button data-pztool="${k}" aria-pressed="${(drawTool||'')===k}">${l}</button>`).join('')}</div>
-    ${campoSVG(sc, rm, true)}
-    ${legendaCompiti(rm)}
-    ${pannello}
-    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-      <button class="btn small" data-pz="addtok">+ Pedina</button>
-      <button class="btn small ghost" data-act="resetov">Giocatori dalla formazione</button>
-    </div>
-    <datalist id="rolelist">${roles.map(r => `<option value="${esc(r)}">`).join('')}</datalist>
-    ${assegnaList(sc, rm, roles)}
-    <label class="f" for="pz_nota" style="margin-top:14px">Nota sotto lo schema</label>
-    <textarea id="pz_nota" data-edsc="note" rows="2" placeholder="Es. Marcatura a uomo sui saltatori">${esc(sc.note||'')}</textarea>
-    <div class="row" style="margin-top:16px;justify-content:space-between;gap:8px">
-      <button class="btn small" data-pz="duplica">Duplica</button>
-      <button class="btn small danger ghost" data-pz="elimina">Elimina schema</button>
+    <p class="note" style="margin:-4px 0 10px">${mio ? `I miei schemi${sc.da && schemaDa(sc.da) ? ' · dal modello "' + esc(schemaDa(sc.da).name) + '"' : ''} · si salva da solo` : 'Modello della società: lo vedono tutte le squadre'}</p>
+    <div class="pzgrid">
+      <div class="pzcampo">
+        ${barra}
+        ${campoSVG(sc, rm, true)}
+        <textarea class="pznota" data-edsc="note" rows="2" placeholder="Nota sotto lo schema (es. marcatura a uomo sui saltatori)" aria-label="Nota sotto lo schema">${esc(sc.note||'')}</textarea>
+        <div class="row" style="gap:8px;margin-top:10px;justify-content:space-between">
+          <button class="btn small" data-pz="duplica">Duplica</button>
+          <button class="btn small danger ghost" data-pz="elimina">Elimina schema</button>
+        </div>
+      </div>
+      ${pannelloCompiti(sc, rm, true)}
     </div>
   </section>`;
 }
 
-/* ---------- Modello della società aperto da un mister (o da un direttore): si guarda, si assegnano i giocatori,
+/* ---------- Modello della società aperto da un mister (o da un direttore): si guarda, si scelgono i giocatori,
    e con "Usa come modello" se ne fa una copia propria da cambiare ---------- */
 function viewSchemaModello(sc){
   const rm = roleMap(sc), puo = curTeam && !readOnly();
-  return `<section class="panel">
-    <div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="btn small ghost" data-act="back">← Tutti gli schemi</button></div>
-    <h2>${esc(sc.name)}<span class="side ${sc.side}">${sc.side==='favore'?'A favore':'A sfavore'}</span></h2>
-    ${sc.subtitle ? `<p class="hint">Comando: <b>${esc(sc.subtitle)}</b></p>` : ''}
+  return `<section class="panel pzeditor">
+    <div class="pztesta">
+      <button class="btn small ghost" data-act="back" aria-label="Tutti gli schemi">←</button>
+      <div class="pztitoli"><h2 style="margin:0">${esc(sc.name)}</h2>${sc.subtitle ? `<span class="note">Comando: <b>${esc(sc.subtitle)}</b></span>` : ''}</div>
+    </div>
     ${puo ? `<div class="pzcopia"><p>Per cambiare compiti, comando, pedine o frecce fanne una copia tua: resta nei tuoi schemi, anche per le prossime partite.</p>
       <button class="btn primary" data-pzcopia="${sc.id}">Usa come modello</button></div>` : ''}
-    ${campoSVG(sc, rm, false)}
-    ${legendaCompiti(rm)}
-    ${sc.note ? `<p class="note" style="margin-top:10px"><b>Nota:</b> ${esc(sc.note)}</p>` : ''}
-    <div class="row" style="margin-top:10px"><button class="btn small ghost" data-act="resetov">Giocatori dalla formazione</button></div>
-    ${assegnaList(sc, rm, compitiNoti())}
+    <div class="pzgrid">
+      <div class="pzcampo">
+        ${campoSVG(sc, rm, false)}
+        ${sc.note ? `<p class="pznotatesto">${esc(sc.note)}</p>` : ''}
+      </div>
+      ${pannelloCompiti(sc, rm, false)}
+    </div>
   </section>`;
 }
 function viewScheme(){
@@ -194,17 +228,34 @@ function nuovoSchema(chiave, dellaSocieta){
 }
 const apri = q => { openSchemeId = q.id; boardMode = 'unico'; selectedToken = null; selectedDraw = null; drawTool = null; render(); window.scrollTo(0,0); };
 
+/* Riga del riquadro compiti: toccandola (fuori da menu e caselle) si sceglie la pedina */
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-pz],[data-pzcopia],[data-pzpref],[data-pztool]'); if(!b) return;
+  const r = e.target.closest('[data-pzsel]'); if(!r || e.target.closest('select,input,button,label')) return;
+  if(boardMode !== 'unico') return;
+  selectedToken = selectedToken === r.dataset.pzsel ? null : r.dataset.pzsel; selectedDraw = null; drawTool = null; render();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pz],[data-pzcopia],[data-pzpref],[data-pztool],[data-pzlato],[data-pzaddrole]'); if(!b) return;
   if(b.dataset.pzcopia){ const sc = schemaDa(b.dataset.pzcopia); if(sc && curTeam && !readOnly()){ apri(usaModello(sc)); setStatus('Copiato nei tuoi schemi'); } return; }
   if(b.dataset.pzpref){ const sc = schemaDa(b.dataset.pzpref); if(isMio(sc) && !readOnly()){ sc.preferito = !sc.preferito; salvaSchema(sc); render(); } return; }
   if(b.dataset.pztool !== undefined){ drawTool = b.dataset.pztool || null; selectedToken = null; selectedDraw = null; render(); return; }
+  if(b.dataset.pzlato || b.dataset.pzaddrole !== undefined){
+    const sc = schemaDa(openSchemeId); if(!sc || !modificaBase(sc)) return;
+    if(b.dataset.pzlato){ sc.side = b.dataset.pzlato; salvaSchema(sc); render(); return; }
+    const usati = new Set(sc.tokens.map(t => t.slot));
+    const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: b.dataset.pzaddrole, tag: ''};
+    sc.tokens.push(n); selectedToken = n.id; selectedDraw = null; drawTool = null; salvaSchema(sc); render(); return;
+  }
   const azione = b.dataset.pz;
   if(azione === 'nuovo'){ if(curTeam && !readOnly()) apri(nuovoSchema($('#pz_base')?.value, false)); return; }
   if(azione === 'nuovosoc'){ if(isAdmin() && !readOnly()) apri(nuovoSchema($('#pz_basesoc')?.value, true)); return; }
   const sc = schemaDa(openSchemeId); if(!sc || !modificaBase(sc)) return;
   switch(azione){
     case 'deseleziona': selectedToken = null; selectedDraw = null; render(); break;
+    case 'nuovocompito': { const nome = (prompt('Nome del nuovo compito:', '') || '').trim(); if(!nome) break;
+      const usati = new Set(sc.tokens.map(t => t.slot));
+      const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: nome, tag: ''};
+      sc.tokens.push(n); selectedToken = n.id; salvaSchema(sc); render(); break; }
     case 'addtok': { const usati = new Set(sc.tokens.map(t => t.slot)); const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: '', tag: ''};
       sc.tokens.push(n); selectedToken = n.id; selectedDraw = null; drawTool = null; salvaSchema(sc); render(); break; }
     case 'deltok': sc.tokens = sc.tokens.filter(q => q.id !== selectedToken); selectedToken = null; salvaSchema(sc); render(); break;
@@ -219,6 +270,24 @@ document.addEventListener('click', e => {
       S.sheet.selected = S.sheet.selected.filter(i => i !== sc.id); delete S.sheet.overrides[sc.id]; save('sheet');
       openSchemeId = null; boardMode = 'assign'; render(); } break;
   }
+});
+/* Riquadro compiti: numero, compito ed etichetta della pedina (data-edtokid="id:campo") */
+document.addEventListener('input', e => {
+  const v = e.target.dataset?.edtokid; if(!v || e.target.tagName === 'SELECT') return;
+  const [id, campo] = v.split(':'), sc = schemaDa(openSchemeId), tk = sc?.tokens.find(q => q.id===id);
+  if(!tk || !modificaBase(sc) || campo !== 'tag') return;
+  tk.tag = e.target.value.trim(); salvaSchema(sc);
+});
+document.addEventListener('change', e => {
+  const v = e.target.dataset?.edtokid; if(!v) return;
+  const [id, campo] = v.split(':'), sc = schemaDa(openSchemeId), tk = sc?.tokens.find(q => q.id===id);
+  if(!tk || !modificaBase(sc)) return;
+  if(campo === 'slot') tk.slot = +e.target.value;
+  if(campo === 'rolesel'){
+    if(e.target.value === '__nuovo'){ const nome = (prompt('Nome del nuovo compito:', '') || '').trim(); if(nome) tk.role = nome; }
+    else tk.role = e.target.value;
+  }
+  salvaSchema(sc); setTimeout(render, 0);
 });
 /* Nome, comando, tipo e nota; numero, compito ed etichetta della pedina scelta */
 document.addEventListener('input', e => {
@@ -275,7 +344,9 @@ document.addEventListener('pointerdown', e => {
     const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
       if(mosso) salvaSchema(sc);
       else if(tk){ selectedToken = selectedToken===tk.id ? null : tk.id; selectedDraw = null; }
-      render(); };
+      render();
+      /* sul telefono il riquadro compiti è sotto il campo: si mostra la riga della pedina scelta */
+      if(!mosso && selectedToken) document.querySelector(`[data-pzsel="${selectedToken}"]`)?.scrollIntoView({block: 'nearest', behavior: 'smooth'}); };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
     return;
   }
