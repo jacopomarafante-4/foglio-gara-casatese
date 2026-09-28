@@ -401,7 +401,9 @@ function viewGiocatori(){
       if(tab==='giocatori') render();
     });
   }
-  const eta = etaSquadra(S.teams.find(t => t.id === (squadraPropria || curTeam))), stagione = +todayISO().slice(0,4) + (+todayISO().slice(5,7) >= 7 ? 1 : 0), annata = eta < 99 ? stagione - eta : null;
+  /* Preparatori dei portieri (vedeTutte): i portieri di tutte le annate */
+  const mia = S.teams.find(t => t.id === (squadraPropria || curTeam)), portieri = !!mia?.vedeTutte;
+  const eta = etaSquadra(mia), stagione = +todayISO().slice(0,4) + (+todayISO().slice(5,7) >= 7 ? 1 : 0), annata = eta < 99 ? stagione - eta : null;
   const q = giocatoriCerca.trim().toLowerCase();
   const tutti = giocatoriAnnata || [], lista = tutti.filter(g => !q || [g.cognome, g.nome, g.descrizione, g.societa].join(' ').toLowerCase().includes(q));
   const scheda = g => {
@@ -413,15 +415,15 @@ function viewGiocatori(){
         <p class="gtxt"><b>${esc(GIUDIZI[v.giudizio] || v.giudizio)}</b>${v.commento ? ' · '+esc(v.commento) : ''}</p></div>`).join('');
     const seg = g.segnalazioni.map(x => `<div class="gval"><div class="note">${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ' · voto '+x.voto : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('');
     return `<details class="gcard"><summary>
-        <div><b>${esc(nome)}</b><div class="note">${[RUOLI_SCOUTING[g.ruolo], g.societa, g.piede ? 'piede '+g.piede : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
+        <div><b>${esc(nome)}</b><div class="note">${[portieri ? String(g.annata) : '', RUOLI_SCOUTING[g.ruolo], g.societa, g.piede ? 'piede '+g.piede : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
         <span class="gstato">${esc(STATI_SCOUTING[g.stato] || g.stato)}</span></summary>
       ${val ? `<h4>Valutazioni</h4>${val}` : ''}${seg ? `<h4>Segnalazioni</h4>${seg}` : ''}${!val && !seg ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}
     </details>`;
   };
-  return `<h2>Giocatori${annata ? ' · annata '+annata : ''}</h2>
-  <p class="hint">I giocatori osservati dallo scouting della tua annata. Tocca un nome per segnalazioni e valutazioni. Per segnalarne uno nuovo usa "Segnala un giocatore".</p>
+  return `<h2>${portieri ? 'Portieri · tutte le annate' : `Giocatori${annata ? ' · annata '+annata : ''}`}</h2>
+  <p class="hint">${portieri ? 'I portieri osservati dallo scouting, di tutte le annate.' : 'I giocatori osservati dallo scouting della tua annata.'} Tocca un nome per segnalazioni e valutazioni. Per segnalarne uno nuovo usa "Segnala un giocatore".</p>
   <section class="panel">
-    ${!annata ? '<p class="empty">Questa squadra non ha un\'annata: l\'elenco è per le squadre Under.</p>'
+    ${!annata && !portieri ? '<p class="empty">Questa squadra non ha un\'annata: l\'elenco è per le squadre Under.</p>'
       : giocatoriErrore ? `<p class="empty">${esc(giocatoriErrore)}</p>`
       : giocatoriAnnata === undefined ? '<p class="note">Carico i giocatori…</p>'
       : `<input id="gc_cerca" type="search" value="${esc(giocatoriCerca)}" placeholder="Cerca per nome o società" aria-label="Cerca giocatore">

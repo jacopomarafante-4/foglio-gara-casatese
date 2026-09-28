@@ -6,6 +6,7 @@
 -- 2) coach_giocatori(pin): nello Scouting del Portale ogni mister vede i giocatori osservati della propria annata
 --    (età della categoria "Under N" → annata = anno di fine stagione − N), esclusi quelli dell'Academy:
 --    scheda base, segnalazioni e valutazioni. Mai i contatti delle famiglie né le note interne del giocatore.
+--    I preparatori dei portieri (vedeTutte) vedono invece i portieri osservati di tutte le annate.
 
 create or replace function public.vede_tutte_squadre(p_team text)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -46,7 +47,7 @@ end $$;
 
 create or replace function public.coach_giocatori(p_pin text)
 returns jsonb language plpgsql volatile security definer set search_path = public as $$
-declare v_team text; v_cat text; v_eta int; v_annata int; v_nostra uuid;
+declare v_team text; v_cat text; v_eta int; v_annata int; v_nostra uuid; v_portieri boolean;
 begin
   v_team := public.team_for_pin(p_pin);
   if v_team is null then
@@ -57,7 +58,8 @@ begin
   from public.docs d, jsonb_array_elements(d.data -> 'items') t
   where d.path = 'shared/teams' and t ->> 'id' = v_team;
   v_eta := substring(lower(coalesce(v_cat, '')) from 'under\s*([0-9]+)')::int;
-  if v_eta is null then return '[]'::jsonb; end if;
+  v_portieri := public.vede_tutte_squadre(v_team);
+  if v_eta is null and not v_portieri then return '[]'::jsonb; end if;
   -- Stagione da luglio a giugno: anno di fine stagione − età della categoria
   v_annata := extract(year from current_date)::int + case when extract(month from current_date) >= 7 then 1 else 0 end - v_eta;
   select id into v_nostra from public.societa where nome = 'Academy Casatese Merate';
@@ -78,9 +80,10 @@ begin
                  'autore', nullif(trim(concat_ws(' ', p.nome, p.cognome)), '')) order by v.data desc)
         from public.valutazioni v left join public.profiles p on p.id = v.autore_id
         where v.giocatore_id = g.id), '[]'::jsonb)
-    ) order by g.cognome nulls last, g.nome)
+    ) order by g.annata desc, g.cognome nulls last, g.nome)
     from public.giocatori g left join public.societa s on s.id = g.societa_id
-    where g.annata = v_annata and g.osservato and g.societa_id is distinct from v_nostra), '[]'::jsonb);
+    where (case when v_portieri then g.ruolo = 'portiere' else g.annata = v_annata end)
+      and g.osservato and g.societa_id is distinct from v_nostra), '[]'::jsonb);
 end $$;
 
 revoke all on function public.coach_get(text, text) from public;

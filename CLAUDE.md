@@ -154,7 +154,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - 0028: squadra con `vedeTutte: true` in `shared/teams` (preparatori dei portieri, `t_nt2m1iv`): `coach_get` le dà tutte le
   squadre senza PIN e rosa/foglio/calendario/registro di tutte; nel Portale `squadraPropria` + `guardaAltra()` = sola lettura
   sulle altre (`save()` non scrive), la propria (presenze) la modificano. `coach_giocatori(pin)`: Scouting → Giocatori, osservati
-  dell'annata della squadra (esclusa l'Academy) con segnalazioni e valutazioni, mai contatti né note del giocatore.
+  dell'annata della squadra (esclusa l'Academy; per la squadra vedeTutte i portieri di tutte le annate) con segnalazioni e
+  valutazioni, mai contatti né note del giocatore.
   Presenze dei preparatori: `scripts/import-adb/importa.mjs --squadra=SGS` da `private/adb/SGS.csv`
 - 0027: `coach_calendari(pin)`: i mister leggono nome, categoria e partite di tutte le squadre (Calendario "Tutte le squadre",
   in Squadra → Calendario); admin e direttori leggono i `calendar/<squadra>` direttamente

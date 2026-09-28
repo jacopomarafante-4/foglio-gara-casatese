@@ -143,7 +143,7 @@ test e tabellini, guarda le statistiche, segnala giocatori allo scouting e vede 
 (con segnalazioni e valutazioni, senza contatti).</td></tr>
 <tr><td><b>Preparatori dei portieri</b></td><td>Portale: la loro squadra e, in sola lettura, tutte le altre</td><td>Segnano
 le presenze dei loro allenamenti; guardano rosa, calendario, gara, presenze e statistiche di ogni squadra senza modificarle;
-segnalano giocatori allo scouting.</td></tr>
+segnalano giocatori allo scouting e in Scouting → Giocatori vedono i portieri osservati di tutte le annate.</td></tr>
 <tr><td><b>Scout</b></td><td>Scouting</td><td>Segnala e valuta giocatori, registra open day e provini, sceglie le gare da vedere.
 Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 </table>
