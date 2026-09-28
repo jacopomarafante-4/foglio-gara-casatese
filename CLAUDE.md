@@ -205,7 +205,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   in testa a `modulistica.js` (`riga1` una riga che rimpicciolisce e poi taglia con "…", `blocco`/`misuraBlocco` su più righe,
   `paragrafi` con elenchi rientrati e righe giustificate, `nuovaPagina` con fascia "segue"): la comunicazione sceglie la grandezza
   più grande che sta in una pagina (12,5→9, poi 11 su più pagine), la distinta stringe le righe per stare in una pagina e tiene
-  insieme staff, note e firme, il programma non lascia un giorno da solo in fondo alla pagina; casella
+  insieme staff, note e firme, il programma non lascia un giorno da solo in fondo alla pagina. Foglio gara (`pdf.js`, canvas):
+  `righeTesto`, `testoInRiquadro` (scende di grandezza e poi "…"), `taglia`; nella pagina dello schema il campo si rimpicciolisce
+  per lasciare spazio alla nota (fino a 3 righe) e la legenda va in fondo al riquadro dei compiti; in copertina l'elenco dei
+  piazzati ha una sola grandezza (righe lunghe con "…", oltre lo spazio "e altri N schemi") e le note stanno nel loro riquadro; casella
   "Mostra la categoria" (`sheet.senzaCategoria`) per le intestazioni di convocazioni, distinta e foglio gara
 - 0033: `documenti_tesserati` (visita medica, bonifico con `rata` = posizione in quote, altro; file in `bytea`, max 4 MB,
   foto ridotte a 1600 px nel browser): la famiglia carica con `famiglia_carica(pin, …)` e li vede in `famiglia_get`; la

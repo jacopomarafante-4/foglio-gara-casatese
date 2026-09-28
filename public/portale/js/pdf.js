@@ -37,6 +37,27 @@ function wrap(x, s, px, py, maxW, lh, o={}, maxLines=99){
   }
   return n;
 }
+/* Impaginazione automatica (come la Modulistica): righe di un testo in una larghezza, grandezza che ci sta */
+function righeTesto(x, s, maxW){
+  const out = [];
+  for(const para of String(s||'').split('\n')){
+    let line = '';
+    for(const w of para.split(/\s+/).filter(Boolean)){ const t = line ? line+' '+w : w; if(x.measureText(t).width > maxW && line){ out.push(line); line = w; } else line = t; }
+    out.push(line);
+  }
+  return out;
+}
+/* Una riga lunga al massimo maxW: se non ci sta finisce con "…" (stessa grandezza delle altre righe) */
+function taglia(x, s, maxW){ let t = String(s||''); if(x.measureText(t).width <= maxW) return t; while(t && x.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t.trimEnd() + '…'; }
+/* Testo in un riquadro (larghezza e altezza): scende di grandezza fino a `min`; se ancora non ci sta, l'ultima riga finisce con "…" */
+function testoInRiquadro(x, s, px, py, maxW, maxH, o = {}){
+  let size = o.size || 15, righe, lh;
+  for(;;){ font(x, size, o.weight||500, o.cond); lh = size * 1.33; righe = righeTesto(x, s, maxW); if(righe.length * lh <= maxH || size <= (o.min||11)) break; size -= .5; }
+  const n = Math.max(1, Math.floor(maxH / lh));
+  if(righe.length > n){ righe = righe.slice(0, n); let u = righe[n-1]; while(u && x.measureText(u + '…').width > maxW) u = u.slice(0, -1); righe[n-1] = u.trimEnd() + '…'; }
+  righe.forEach((r, i) => T(x, r, px, py + i*lh, {...o, size}));
+  return righe.length * lh;
+}
 /* Categoria nelle intestazioni: si può togliere con la casella "Mostra la categoria" (sheet.senzaCategoria) */
 const conCategoria = t => S.sheet.senzaCategoria ? '' : t;
 function header(x, title, sub, page, total){
@@ -136,13 +157,27 @@ function coverPage(total){
   if(cap){ const cn=matchNum(cap.id); T(x, 'Capitano', rx, ry, {size:14, color:MUTED}); T(x, `${cn?cn+' ':''}${cap.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   if(vice){ const vn=matchNum(vice.id); T(x, 'Vice capitano', rx, ry, {size:14, color:MUTED}); T(x, `${vn?vn+' ':''}${vice.name}`, rx, ry+22, {size:19, weight:700, max:260}); ry += 52; }
   const sel = s.selected.map(schemaDa).filter(Boolean);
+  const fondo = H - 62, largh = W - 36 - rx - 14;
   if(sel.length){
     ry += 8; T(x, 'Calci piazzati', rx, ry, {size:21, weight:700, cond:true, color:BLU_SCURO}); ry += 26;
-    sel.forEach((q,i) => { if(ry > 600) return; T(x, `p. ${i+2}`, rx, ry, {size:13, color:MUTED}); T(x, q.name + (q.subtitle?`, ${q.subtitle}`:''), rx+42, ry, {size:15, weight:600, max:220}); ry += 22; });
+    /* una sola grandezza per tutte le righe (la più grande con cui ci stanno), lasciando spazio alle note */
+    const spazio = (s.notes ? fondo - 130 : fondo) - ry, testi = sel.map(q => q.name + (q.subtitle ? ` · ${q.subtitle}` : ''));
+    let size = 15; font(x, size, 600);
+    /* scende fino a 12,5 perché ci stiano tutte; oltre, le più lunghe finiscono con "…" */
+    while(size > 12.5 && (testi.some(t => x.measureText(t).width > largh - 42) || sel.length * size * 1.45 > spazio)){ size -= .5; font(x, size, 600); }
+    const lh = size * 1.45, quante = Math.max(1, Math.min(sel.length, Math.floor(spazio / lh)));
+    sel.slice(0, quante).forEach((q, i) => {
+      const altri = i === quante - 1 && quante < sel.length ? sel.length - quante + 1 : 0;
+      T(x, `p. ${i+2}`, rx, ry, {size: Math.min(13, size), color:MUTED});
+      font(x, size, 600);
+      if(altri) T(x, taglia(x, `e altri ${altri} schemi (pagine seguenti)`, largh-42), rx+42, ry, {size, weight:600, color:MUTED});
+      else T(x, taglia(x, testi[i], largh-42), rx+42, ry, {size, weight:600});
+      ry += lh;
+    });
   }
   if(s.notes){
     ry += 16; T(x, 'Note', rx, ry, {size:21, weight:700, cond:true, color:BLU_SCURO}); ry += 24;
-    wrap(x, s.notes, rx, ry, 262, 20, {size:15, weight:500}, Math.max(1, Math.floor((H-60-ry)/20)));
+    testoInRiquadro(x, s.notes, rx, ry, largh, fondo - ry, {size:15, min:11, weight:500});
   }
   return c;
 }
@@ -151,8 +186,12 @@ function schemePage(sc, page, total){
   const [c,x] = cv();
   header(x, sc.name, sc.subtitle, page, total);
   const fav = sc.side==='favore';
-  // Campo
-  const sx = 12, sy = sx*YS, ox = 36, oy = 140, fw = (VX1-VX0)*sx, fh = (VY1-VY0)*sy;
+  // Campo: grande quanto possibile, lasciando sotto lo spazio per la nota (fino a 3 righe)
+  const larghSx = 720, oy = 140;
+  font(x, 22, 700, true);
+  const righeNota = sc.note ? Math.min(3, righeTesto(x, sc.note, larghSx).length) : 0, notaH = righeNota ? righeNota * 26 + 14 : 0;
+  const sx = Math.min(12, larghSx / (VX1-VX0), (H - 44 - oy - notaH) / ((VY1-VY0)*YS)), sy = sx*YS;
+  const fw = (VX1-VX0)*sx, fh = (VY1-VY0)*sy, ox = 36 + (larghSx - fw) / 2;
   const X = v => ox + (v-VX0)*sx, Y = v => oy + (v-VY0)*sy;
   x.save(); x.beginPath(); x.roundRect ? x.roundRect(ox, oy, fw, fh, 8) : x.rect(ox,oy,fw,fh); x.clip();
   for(let i=0;i<10;i++){ x.fillStyle = i%2?G2:G1; x.fillRect(ox, oy+i*fh/10, fw, fh/10+0.5); }
@@ -184,10 +223,8 @@ function schemePage(sc, page, total){
     if(t.tag) T(x, t.tag, X(t.x), Y(t.y)-r-7, {size:18, weight:700, align:'center', color:RED, halo:3});
     // sul campo solo il numero: numero e cognome sono nell'elenco dei compiti a destra
   });
-  // nota e legenda sotto il campo
-  let ny = oy + fh + 30;
-  if(sc.note) { const n = wrap(x, sc.note, 36, ny, fw, 26, {size:22, weight:700, cond:true}, 3); ny += n*26 + 4; }
-  if(sc.legend) T(x, sc.legend, 36, ny, {size:15, weight:500, color:MUTED, max:fw});
+  // nota sotto il campo (al massimo 3 righe, poi "…")
+  if(sc.note) testoInRiquadro(x, sc.note, 36, oy + fh + 30, larghSx, H - 40 - (oy + fh + 22), {size:22, min:16, weight:700, cond:true});
   // Pannello compiti, in un riquadro
   const rx = 790, rw = W-36-rx;
   x.fillStyle = CARTA; rrect(x, rx-16, 128, rw+16, H-128-48, 12); x.fill();
@@ -198,7 +235,7 @@ function schemePage(sc, page, total){
   eTok.forEach(t => { const k = (t.role||'').trim() || 'Altri'; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(t); });
   const entries = [...groups.entries()].sort((a,b) => (a[0]==='Altri') - (b[0]==='Altri'));
   const lines = eTok.length + entries.length*1.6;
-  const lh = Math.min(26, (H-60-200)/Math.max(lines,1));
+  const lh = Math.min(26, (H-60-200-(sc.legend ? 50 : 0))/Math.max(lines,1));   // spazio per la legenda in fondo
   let gy = 206;
   T(x, 'Compiti', rx, 198, {size:24, weight:700, cond:true, color:BLU_SCURO});
   gy = 232;
@@ -216,6 +253,8 @@ function schemePage(sc, page, total){
     });
     gy += lh*0.5;
   });
+  // legenda in fondo al riquadro dei compiti
+  if(sc.legend) testoInRiquadro(x, sc.legend, rx, H - 88, rw - 8, 36, {size:13, min:10, weight:500, color:MUTED});
   return c;
 }
 
