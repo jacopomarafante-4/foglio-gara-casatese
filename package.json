@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "deck": "python3 scripts/deck_casatese.py",
     "backup": "node --env-file=.env.local scripts/backup.mjs",
-    "manuali": "python3 scripts/manuali/genera.py && node scripts/manuali/stampa.mjs"
+    "manuali": "python3 scripts/manuali/genera.py && node scripts/manuali/stampa.mjs",
+    "prove:portale": "node scripts/prove-portale.mjs",
+    "prove": "npm run lint && npm run typecheck && npm run prove:portale && npm run build"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
