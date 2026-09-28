@@ -551,3 +551,11 @@ a.areabtn{text-decoration:none}
 .adbconvlist{display:flex;flex-wrap:wrap;gap:6px}
 .adbconv{min-width:0;text-align:left}.adbconv small{color:var(--muted);font-weight:500}
 .adbconv[aria-pressed="true"] small{color:#fff}
+
+/* Segnala: "Già in lista. Vuoi valutare?" sopra la pagina */
+.giafondo{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+@media (min-width:640px){.giafondo{align-items:center}}
+.giafin{background:var(--paper);color:var(--ink);border-radius:16px;padding:18px;width:100%;max-width:440px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.giafin h3{margin:0 0 6px;font-family:var(--cond);font-size:22px}
+.giariga{justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.giano{width:100%;margin-top:10px}

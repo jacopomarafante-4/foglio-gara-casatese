@@ -44,7 +44,7 @@ export function GiaInLista({ formId }: { formId: string }) {
         // prima quelli con lo stesso nome
         .sort((a, b) => Number(!!n && normalizza(b.nome ?? '').startsWith(n)) - Number(!!n && normalizza(a.nome ?? '').startsWith(n)));
       setTrovati(simili.slice(0, 5));
-    }, 300);
+    }, 700);   // aspetta una pausa nella scrittura prima di aprire la finestra
     return () => { annullato = true; clearTimeout(t); };
   }, [chiave]);
 
@@ -59,24 +59,30 @@ export function GiaInLista({ formId }: { formId: string }) {
     router.push(`/giocatori/${id}/valuta?${q}`);
   };
 
+  // finestra sopra la pagina: "Vuoi valutare?"
   return (
-    <div role="status" className="rounded-xl border-2 border-oro bg-oro/10 p-4">
-      <p className="font-semibold">Già in lista: è uno di questi?</p>
-      <p className="text-sm text-grigio">Se è lui, niente nuova segnalazione: valutalo (quello che hai scritto va nel commento).</p>
-      <ul className="mt-2 divide-y divide-linea">
-        {attivi.map((g) => (
-          <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-            <span>
-              <strong>{[g.cognome, g.nome].filter(Boolean).join(' ')}</strong>
-              <span className="text-sm text-grigio"> · {g.annata}{g.societa?.nome ? ` · ${g.societa.nome}` : ''}</span>
-            </span>
-            <button type="button" onClick={() => valuta(g.id)} className="bottone px-4 py-2 text-sm">Valuta questo</button>
-          </li>
-        ))}
-      </ul>
-      <button type="button" onClick={() => setChiuso(firma)} className="mt-2 text-sm font-semibold text-blu">
-        No, è un altro giocatore
-      </button>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="gia-titolo">
+      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+        <h2 id="gia-titolo" className="font-display text-2xl font-bold">Già in lista. Vuoi valutare?</h2>
+        <p className="mt-1 text-sm text-grigio">
+          {attivi.length === 1 ? 'Questo ragazzo è' : 'Questi ragazzi sono'} già nell&apos;archivio: se è lui, niente nuova segnalazione, lo valuti
+          (quello che hai scritto va nel commento).
+        </p>
+        <ul className="mt-3 divide-y divide-linea">
+          {attivi.map((g) => (
+            <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+              <span>
+                <strong>{[g.cognome, g.nome].filter(Boolean).join(' ')}</strong>
+                <span className="text-sm text-grigio"> · {g.annata}{g.societa?.nome ? ` · ${g.societa.nome}` : ''}</span>
+              </span>
+              <button type="button" onClick={() => valuta(g.id)} className="bottone px-4 py-2 text-sm">Sì, valuta</button>
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={() => setChiuso(firma)} className="mt-3 w-full rounded-lg border border-linea px-4 py-3 font-semibold">
+          No, è un altro giocatore
+        </button>
+      </div>
     </div>
   );
 }

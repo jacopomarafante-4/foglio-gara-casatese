@@ -732,20 +732,26 @@ function giaInLista(){
 function giaInListaHtml(){
   const tr = giaInLista(), firma = tr.map(g => g.id).join();
   if(!tr.length || firma === giaNascosti) return '';
-  return `<div class="esito" role="status" style="border-left:4px solid var(--amber);margin-top:12px"><b>Già in lista: è uno di questi?</b>
-    <p class="note" style="margin:4px 0 8px">Se è lui, niente nuova segnalazione: valutalo (quello che hai scritto va nel commento).</p>
-    ${tr.map(g => `<div class="row" style="justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)">
+  /* finestra sopra la pagina: "Vuoi valutare?" */
+  return `<div class="giafondo" role="dialog" aria-modal="true" aria-labelledby="gia_titolo"><div class="giafin">
+    <h3 id="gia_titolo">Già in lista. Vuoi valutare?</h3>
+    <p class="note">${tr.length === 1 ? 'Questo ragazzo è' : 'Questi ragazzi sono'} già nell'archivio: se è lui, niente nuova segnalazione, lo valuti (quello che hai scritto va nel commento).</p>
+    ${tr.map(g => `<div class="row giariga">
       <span><b>${esc([g.cognome, g.nome].filter(Boolean).join(' '))}</b> <span class="note">· ${esc(g.annata)}${g.societa ? ' · '+esc(g.societa) : ''}</span></span>
-      <button type="button" class="btn small primary" data-giavaluta="${esc(g.id)}">Valuta questo</button></div>`).join('')}
-    <button type="button" class="btn small ghost" data-gianascondi="${esc(firma)}" style="margin-top:6px">No, è un altro giocatore</button></div>`;
+      <button type="button" class="btn small primary" data-giavaluta="${esc(g.id)}">Sì, valuta</button></div>`).join('')}
+    <button type="button" class="btn giano" data-gianascondi="${esc(firma)}">No, è un altro giocatore</button></div></div>`;
 }
-function aggiornaGiaInLista(){ const el = document.getElementById('sg_gia'); if(el) el.innerHTML = giaInListaHtml(); }
+function aggiornaGiaInLista(subito){
+  clearTimeout(aggiornaGiaInLista.t);
+  const fai = () => { const el = document.getElementById('sg_gia'); if(el) el.innerHTML = giaInListaHtml(); };
+  if(subito) fai(); else aggiornaGiaInLista.t = setTimeout(fai, 700);   // aspetta una pausa nella scrittura
+}
 /* (questo file si carica prima di eventi.js: la bozza la aggiorno qui, prima di cercare) */
 document.addEventListener('input', e => { const k = e.target.dataset?.seg;
   if(['cognome','nome','annata'].includes(k)){ segDraft[k] = e.target.value; aggiornaGiaInLista(); } });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-giavaluta],[data-gianascondi]'); if(!b) return;
-  if(b.dataset.gianascondi !== undefined){ giaNascosti = b.dataset.gianascondi; aggiornaGiaInLista(); return; }
+  if(b.dataset.gianascondi !== undefined){ giaNascosti = b.dataset.gianascondi; aggiornaGiaInLista(true); return; }
   const g = (giocatoriAnnata || []).find(x => x.id === b.dataset.giavaluta); if(!g) return;
   const d = segDraft;
   segValuta = {giocatore_id: g.id, nome: [g.cognome, g.nome].filter(Boolean).join(' '), annata: g.annata, societa: g.societa || '',
