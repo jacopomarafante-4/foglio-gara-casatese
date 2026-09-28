@@ -195,7 +195,8 @@ function trainingEditor(t){
 }
 function viewGames(){
   const g = curGame();
-  if(g) return gameEditor(g);
+  if(g) return isAdb() ? gameEditorAdb(g) : gameEditor(g);
+  if(isAdb()) return viewGamesAdb();
   const cols = matchColumns(), today = todayISO();
   const focusIdx = Math.max(cols.findIndex(c => (c.cal?.date || c.game?.date || '') > today), 0) || cols.length - 1;
   const head = cols.map(({cal, game}, ci) => {
@@ -223,6 +224,56 @@ function viewGames(){
       <p class="note legend2">Le partite arrivano dal Calendario (campionato e amichevoli): tocca una partita per segnare minuti, gol e gol subiti dal portiere. ⚽ gol · 🧤 gol subiti (portiere).</p>`
     : '<p class="empty">Nessuna partita: inserisci il calendario nella scheda Partita, oppure aggiungi un\'amichevole.</p>'}`;
 }
+/* ---------- Attività di base: tabellini con la sola presenza sì/no (x.pres), senza minuti, gol e risultato ---------- */
+function viewGamesAdb(){
+  const cols = matchColumns(), today = todayISO();
+  const giocate = cols.filter(c => c.game && gamePlayed(c.game));
+  const focusIdx = Math.max(cols.findIndex(c => (c.cal?.date || c.game?.date || '') > today), 0) || cols.length - 1;
+  const head = cols.map(({cal, game}, ci) => {
+    const i = game ? gameInfo(game) : {date:cal.date, opponent:cal.opponent||'', home:!!cal.home};
+    const future = i.date > today, attr = game ? `data-opengm="${game.id}"` : `data-opencal="${cal.id}"`;
+    const n = game ? Object.values(game.pl||{}).filter(played).length : 0;
+    return `<th class="${future?'future':''}" ${ci===focusIdx?'data-focus':''}><button class="colbtn" ${attr} title="${esc(gameTitle(game || {calId:cal.id}))}"><small>${fmtDate(i.date).slice(0,5)}</small>${esc(i.opponent || 'Amichevole')}<em>${future ? 'prossima' : n ? `${n} presenti` : 'da segnare'}</em></button></th>`;
+  }).join('');
+  const body = byName().map(p => {
+    let pres = 0;
+    const cells = cols.map(({game}) => {
+      const x = game ? (game.pl||{})[p.id] || {} : {};
+      if(played(x)){ pres++; return '<td class="c-m">✓</td>'; }
+      return `<td class="c-0">${game && gamePlayed(game) ? '–' : ''}</td>`;
+    }).join('');
+    return `<tr><th class="nm" scope="row">${esc(p.name)}</th>${cells}<td class="tot">${pres}</td><td class="tot">${giocate.length ? pctTxt(pres/giocate.length) : '—'}</td></tr>`;
+  }).join('');
+  return `<div class="row regbar"><button class="btn" data-act="gmadd">+ Amichevole</button><span class="note">finisce anche nel calendario della squadra</span></div>
+    ${cols.length ? `<div class="tblwrap gridwrap"><table class="gtbl gms">
+      <thead><tr><th class="nm">Giocatore</th>${head}<th class="tot">Pres.</th><th class="tot">%</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+      <p class="note legend2">Tocca una partita per segnare chi era presente. ✓ presente · – assente.</p>`
+    : '<p class="empty">Nessuna partita: le partite arrivano dal Calendario, oppure aggiungi un\'amichevole.</p>'}`;
+}
+function gameEditorAdb(g){
+  const pl = g.pl ||= {}, i = gameInfo(g), cal = calOf(g);
+  const n = byName().filter(p => played(pl[p.id] || {})).length;
+  const rows = byName().map(p => { const on = played(pl[p.id] || {});
+    return `<div class="attrow ${on ? 'is-p' : ''}"><div class="attmain"><b>${esc(p.name)}</b><div class="seg pa" role="group" aria-label="Presenza ${esc(p.name)}">
+      <button data-gmpres="${p.id}" data-v="1" data-pres="P" aria-pressed="${on}">Presente</button><button data-gmpres="${p.id}" data-v="0" data-pres="A" aria-pressed="${!on}">Assente</button></div></div></div>`; }).join('');
+  return `<div class="row regbar"><button class="btn small ghost" data-act="regback">← Tabellini</button></div>
+    <div class="matchcard"><small>${esc(i.comp)} · ${weekday(i.date)} ${fmtDate(i.date)}${cal?.time ? ' · '+esc(cal.time) : ''}</small><b>${esc(gameTitle(g))}</b>${i.venue ? `<span class="note">${esc(i.venue)}</span>` : ''}</div>
+    <div class="row" style="margin-top:12px;justify-content:space-between"><span class="countchip" data-status="CON"><b>${n}</b>presenti</span>
+      <button class="btn small" data-gmtutti="1">Tutti presenti</button></div>
+    <div class="attlist" style="margin-top:10px">${rows}</div>
+    <div class="row" style="margin-top:14px;justify-content:space-between"><div class="row"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo.</span></div>
+      <button class="btn small ghost danger" data-act="gmdel">${cal && !cal.friendly ? 'Svuota presenze' : 'Elimina partita'}</button></div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-gmpres],[data-gmtutti]'); if(!b) return;
+  const g = curGame(); if(!g) return;
+  const pl = g.pl ||= {};
+  if(b.dataset.gmtutti) S.players.forEach(p => { pl[p.id] = {pres:true}; });
+  else if(b.dataset.v === '1') pl[b.dataset.gmpres] = {pres:true};
+  else delete pl[b.dataset.gmpres];
+  save('registro'); render();
+});
 function gameEditor(g){
   const pl = g.pl ||= {};
   const i = gameInfo(g), cal = calOf(g), sc = gameScore(g), s = S.sheet;
@@ -358,7 +409,21 @@ function viewStatPartite(){
 /* Squadra → Partite → Tabellini: dopo la partita, minuti, gol e gol subiti */
 function viewTabellini(){
   if(!S.players.length) return `<section class="panel"><h2>Tabellini</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
-  if(curGame()) return registroPage('Tabellino', viewGames());
+  if(curGame()) return registroPage(isAdb() ? 'Presenze alla partita' : 'Tabellino', viewGames());
+  if(isAdb()){
+    const {gm, team} = computeStats();
+    const presenze = gm.reduce((a,g) => a + Object.values(g.pl||{}).filter(played).length, 0);
+    const mai = S.players.filter(p => !gm.some(g => played((g.pl||{})[p.id] || {}))).length;
+    return statHeader('Tabellini e statistiche', [
+      kpiBox(team.nG, 'Partite giocate'),
+      kpiBox(team.nG ? (presenze/team.nG).toFixed(1) : '—', 'Presenti a partita'),
+      kpiBox(team.nG ? mai : '—', 'Mai presenti', 'in nessuna partita')
+    ].join('')) + `<section class="panel">
+      <h3 class="convh3">Presenze alle partite</h3>
+      <p class="hint" style="margin-bottom:0">Per ogni partita chi era presente. Tocca una partita per segnarlo.</p>
+      ${viewGames()}
+    </section>`;
+  }
   return `<section class="panel">
     <h2>Tabellini · ${esc(TEAM()?.category || TEAM()?.name || '')}</h2>
     <p class="hint" style="margin-bottom:0">Minuti, gol e gol subiti di ogni partita. Tocca una partita per compilarla.</p>

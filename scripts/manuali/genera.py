@@ -289,8 +289,11 @@ cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte
 
 <section>
 <h2>4. Squadra → Partite: prepararla</h2>
-<p><b>Attività di base</b> (da Under 13 in giù): in Partite ci sono solo <b>Convocazioni</b>, <b>Tabellini</b>,
-<b>Statistiche</b> e <b>Campi</b>, senza foglio gara.</p>
+<p><b>Attività di base</b> (da Under 13 in giù): in Partite ci sono solo <b>Convocazioni</b> e <b>Tabellini</b>, senza
+foglio gara. Nelle convocazioni in alto trovi le <b>partite del weekend già proposte</b>: tocca <span class="k">Aggiungi alla
+convocazione</span> (o aggiungile tutte). Nei tabellini segni solo chi era <b>presente</b> o <b>assente</b> a ogni partita
+(c'è anche "Tutti presenti"); in alto, nella stessa scheda, le statistiche: partite giocate, presenti a partita, chi non è
+mai stato presente.</p>
 <h3>Dati partita</h3>
 <p>I dati della gara per il foglio gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. In alto ci sono
 tutte le partite della squadra nel weekend: tocca <span class="k">Usa questa</span> su quella da preparare e i campi si
@@ -399,7 +402,9 @@ alla sua scheda.</p>
 <p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), divisi per stato, ognuno col suo
 colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In alto cerchi per nome o società e filtri per
 stato e ruolo. Ogni riga dice ruolo, società, quante segnalazioni e valutazioni ha, l'ultimo giudizio e, a destra, la media
-dell'ultima valutazione. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni. I contatti delle famiglie
+dell'ultima valutazione. Sotto il nome, in colonne, i voti dell'ultima valutazione (<b>TEC</b> tecnica, <b>MOT</b> motoria,
+<b>TAT</b> tattica, <b>MEN</b> mentale: blu i voti alti, oro il 3, arancione e rosso i bassi) e <b>SEGN</b>, quante
+segnalazioni ha. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni. I contatti delle famiglie
 non si vedono.</p>''', 'Segnala un giocatore')}
 </section>
 """

@@ -39,7 +39,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test solo
   Under 15 `SOLO_U15`, Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
   `statpartite`, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
-  Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara (`SOLO_AGONISTICA`).
+  Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara/Campi/Statistiche partite (`SOLO_AGONISTICA`):
+  Tabellini con la sola presenza (`x.pres`, `viewGamesAdb`/`gameEditorAdb` in `registro.js`) e le statistiche in cima;
+  convocazioni con le partite del weekend proposte (`data-adbsug`, `data-adbweekend`).
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
   `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda

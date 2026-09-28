@@ -38,9 +38,9 @@ const gruppoLast = {};
 const areaLast = {};
 /* Scouting: solo per i mister (l'admin ha Scouting Hub completo) */
 const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coach || !isAdmin()));
-/* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF):
-   in Squadra → Partite restano Convocazioni, Tabellini, Statistiche e Campi */
-const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf'];
+/* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF) né campi;
+   in Squadra → Partite restano Convocazioni e Tabellini (presenza sì/no, con le statistiche nella stessa scheda) */
+const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf','campi','statpartite'];
 /* Test atletici: solo per l'Under 15 */
 const SOLO_U15 = ['test'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15));
@@ -154,10 +154,11 @@ function homeTodo(){
   const cal = allCalendar().filter(m => m.date && m.date < today).sort((a,b) => b.date.localeCompare(a.date));
   cal.forEach(m => {
     const g = S.reg.games.find(x => x.calId===m.id);
-    if(!g || !gamePlayed(g)) items.push({txt:`Tabellino da compilare: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opencal:'+m.id});
-    else if(!gameScore(g)) items.push({txt:`Gol da inserire: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opengm:'+g.id});
+    if(!g || !gamePlayed(g)) items.push({txt:`${isAdb() ? 'Presenze da segnare' : 'Tabellino da compilare'}: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opencal:'+m.id});
+    else if(!isAdb() && !gameScore(g)) items.push({txt:`Gol da inserire: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opengm:'+g.id});
   });
-  if(S.players.length && !(S.reg.gk||[]).length) items.push({txt:'Segna i portieri con 🧤 nella Rosa', go:'rosa'});
+  /* Attività di base: niente gol né portieri nei tabellini */
+  if(!isAdb() && S.players.length && !(S.reg.gk||[]).length) items.push({txt:'Segna i portieri con 🧤 nella Rosa', go:'rosa'});
   return items;
 }
 function viewHome(){
@@ -191,10 +192,14 @@ function viewHome(){
       <button class="hriepbox" data-hgo="stat:allenamento"><span class="hriepttl">Allenamento</span>
         <span><b>${team.nT}</b> allenamenti</span><span><b>${pctTxt(team.avgPct)}</b> presenza media</span>
         <span><b>${team.low}</b> sotto il ${LOW_ATT*100}%</span><span class="hrieplink">Statistiche ›</span></button>
-      <button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
+      ${isAdb() ? `<button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
+        <span><b>${team.nG}</b> giocate</span>
+        <span><b>${team.nG ? (gm.reduce((a,g) => a + Object.values(g.pl||{}).filter(played).length, 0) / team.nG).toFixed(1) : '—'}</b> presenti a partita</span>
+        <span class="hrieplink">Tabellini ›</span></button>`
+      : `<button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
         <span><b>${team.nG}</b> giocate${team.nScored ? ` · ${team.w}V ${team.d}N ${team.l}P` : ''}</span>
         <span><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b> gol fatti-subiti</span>
-        <span><b>${team.nScored ? gm.map(gameScore).filter(x => x && x.ga===0).length : '—'}</b> porta inviolata</span><span class="hrieplink">Statistiche ›</span></button>
+        <span><b>${team.nScored ? gm.map(gameScore).filter(x => x && x.ga===0).length : '—'}</b> porta inviolata</span><span class="hrieplink">Statistiche ›</span></button>`}
     </div></div>`;
   return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
     <div class="hgrid">${matchCard}${todoCard}${numCard}</div>`;
@@ -224,7 +229,7 @@ document.addEventListener('click', e => {
     openGameId = g.id; render(); return;
   }
   if(k==='opengm'){ goTab('tabellini'); openGameId = id; render(); return; }
-  if(k==='stat'){ goTab(id==='partite' ? 'statpartite' : 'statallen'); return; }
+  if(k==='stat'){ goTab(id==='partite' ? (isAdb() ? 'tabellini' : 'statpartite') : 'statallen'); return; }
   goTab(k);
 });
 
@@ -417,6 +422,20 @@ function registroPage(title, body, hint){
 let giocatoriAnnata = null, giocatoriErrore = '', giocatoriCerca = '';
 const STATI_SCOUTING = {in_lista:'In lista', in_osservazione:'In osservazione', da_rivedere:'Da rivedere', inserito:'Inserito', da_non_inserire:'Da non inserire'};
 const GIUDIZI = {da_prendere:'Da prendere', da_rivedere:'Da rivedere', non_a_livello:'Non a livello'};
+/* Convocazioni dell'attività di base: aggiungi una partita del weekend, o tutte */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-adbsug],[data-adbweekend]'); if(!b || !curTeam) return;
+  const pp = partiteAdb(), usate = new Set(pp.map(p => p.calId).filter(Boolean)), [sab, dom] = weekendISO();
+  const nuove = b.dataset.adbsug ? allCalendar().filter(m => m.id === b.dataset.adbsug)
+    : inOrdine(allCalendar().filter(m => (m.date===sab || m.date===dom) && !usate.has(m.id)));
+  /* una partita vuota (senza calendario né convocati) si riempie invece di aggiungerne un'altra */
+  for(const m of nuove){
+    if(pp.length >= ADB_MAX) break;
+    const vuota = pp.find(p => !p.calId && !p.opponent && !(p.conv||[]).length);
+    if(vuota) Object.assign(vuota, nuovaPartitaAdb(m), {id: vuota.id}); else pp.push(nuovaPartitaAdb(m));
+  }
+  save('sheet'); render();
+});
 let giocatoriStato = '', giocatoriRuolo = '';
 const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_non_inserire'];
 const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT'};
@@ -453,15 +472,24 @@ function viewGiocatori(){
         conta(cercati, g => !g.ruolo) ? chip('data-gruolo', '-', giocatoriRuolo, 'Ruolo da definire', conta(cercati, g => !g.ruolo)) : ''}</div>`}
     </div>`;
   const barre = v => AREE_VAL.map(([k,l]) => `<div class="gbar"><span>${l}</span><i><b style="width:${v[k]*20}%"></b></i><strong>${v[k]}</strong></div>${v[k+'_note'] ? `<p class="gtxt gnota">${esc(v[k+'_note'])}</p>` : ''}`).join('');
+  /* Anteprima a colonne: 4 aree dell'ultima valutazione (colore dal voto), segnalazioni, giudizio */
+  const tile = (l, v, cls = '') => `<span class="gt ${v==null || v==='' ? 'vuoto' : cls}"><small>${l}</small><b>${v==null || v==='' ? '–' : v}</b></span>`;
   const riga = g => {
     const nome = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
     const ultima = g.valutazioni[0], media = mediaVal(ultima);
-    const info = [portieri ? String(g.annata) : '', g.societa, g.segnalazioni.length ? `${g.segnalazioni.length} ${g.segnalazioni.length===1 ? 'segnalazione' : 'segnalazioni'}` : '',
-      g.valutazioni.length ? `${g.valutazioni.length} ${g.valutazioni.length===1 ? 'valutazione' : 'valutazioni'}` : ''].filter(Boolean).map(esc).join(' · ');
+    const agg = [ultima?.data, g.segnalazioni[0]?.data].filter(Boolean).sort().pop();
+    const info = [portieri ? String(g.annata) : '', g.societa, agg ? 'agg. ' + fmtDate(agg).slice(0,5) : ''].filter(Boolean).map(esc).join(' · ');
     return `<details class="grow st-${esc(g.stato)}"><summary>
-        <div class="gprinc"><div class="gnome"><b>${esc(nome)}</b>${g.ruolo ? `<span class="gruolo">${SIGLE_RUOLO[g.ruolo]}</span>` : ''}${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : ''}</div>
-          <div class="note">${info || 'Nessuna segnalazione'}</div></div>
-        <div class="gmedia${media==null ? ' vuota' : ''}" title="Media dell'ultima valutazione">${media==null ? '–' : media.toFixed(1)}</div></summary>
+        <div class="gtesta">
+          <div class="gprinc"><div class="gnome"><b>${esc(nome)}</b>${g.ruolo ? `<span class="gruolo">${SIGLE_RUOLO[g.ruolo]}</span>` : ''}</div>
+            <div class="note">${info || '&nbsp;'}</div></div>
+          <div class="gmedia ${media==null ? 'vuota' : 'v'+Math.round(media)}" title="Media dell'ultima valutazione"><small>Media</small>${media==null ? '–' : media.toFixed(1)}</div>
+        </div>
+        <div class="gcolonne">
+          ${AREE_VAL.map(([k,l]) => tile(l.slice(0,3).toUpperCase(), ultima?.[k], 'v'+ultima?.[k])).join('')}
+          ${tile('SEGN', g.segnalazioni.length || null, 'conta')}
+          ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
+        </div></summary>
       <div class="gdett">
         ${g.descrizione && g.cognome ? `<p class="note">${esc(g.descrizione)}</p>` : ''}
         ${g.piede ? `<p class="note">Piede ${esc(g.piede)}${g.categoria ? ' · '+esc(g.categoria) : ''}</p>` : ''}

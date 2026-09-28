@@ -531,10 +531,22 @@ function viewConvocazioniAdb(){
       <div class="adbconvlist">${conv}</div>
     </div>`;
   };
+  /* Partite del weekend già proposte: si aggiungono con un tocco (o tutte insieme) */
+  const [sab, dom] = weekendISO(), usate = new Set(pp.map(p => p.calId).filter(Boolean));
+  const wk = inOrdine(allCalendar().filter(m => m.date===sab || m.date===dom));
+  const mancanti = wk.filter(m => !usate.has(m.id));
+  const proposte = wk.length ? `<div class="nextmatch">
+      <span class="note">Partite del weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</span>
+      <ul class="wklist callist usalist">${wk.map(m => rigaPartita(m, false, true).replace(/<\/div>\s*<\/li>\s*$/,
+        (usate.has(m.id) ? '<div class="usata">✓ Nella convocazione</div>'
+          : pp.length < ADB_MAX ? `<button class="btn small primary" data-adbsug="${esc(m.id)}">Aggiungi alla convocazione</button>` : '') + '</div></li>')).join('')}</ul>
+      ${mancanti.length > 1 && pp.length + mancanti.length <= ADB_MAX ? `<div class="row" style="margin-top:8px"><button class="btn small" data-adbweekend="1">Aggiungi tutte le partite del weekend</button></div>` : ''}
+    </div>` : '';
   return `<section class="panel">
     <h2>Convocazioni</h2>
     <p class="hint">Attività di base: da 1 a ${ADB_MAX} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF è un foglio orizzontale con una colonna per partita.</p>
-    ${pp.length ? pp.map(card).join('') : `<p class="empty">Nessuna partita: aggiungi la prima.</p>`}
+    ${proposte}
+    ${pp.length ? pp.map(card).join('') : `<p class="empty">${wk.length ? 'Aggiungi una partita del weekend, qui sopra.' : 'Nessuna partita: aggiungi la prima.'}</p>`}
     <div class="row" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;gap:10px">
       ${pp.length < ADB_MAX ? `<button class="btn" data-act="adbadd">+ Aggiungi partita</button>` : '<span class="note">Massimo 4 partite.</span>'}
       <span class="row" style="gap:8px">
