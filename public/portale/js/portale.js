@@ -41,7 +41,9 @@ const allowedAreas = () => AREAS.filter(a => (!a.admin || isAdmin()) && (!a.coac
 /* Attività di base (da Under 13 in giù): niente foglio gara (dati partita, formazione, piazzati, PDF):
    in Squadra → Partite restano Convocazioni, Tabellini, Statistiche e Campi */
 const SOLO_AGONISTICA = ['partita','formazione','piazzati','pdf'];
-const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)));
+/* Test atletici: solo per l'Under 15 */
+const SOLO_U15 = ['test'];
+const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }

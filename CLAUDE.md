@@ -36,8 +36,8 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
 - Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area. Aree (`AREAS` in
   `portale.js`): Home (weekend, da fare, riepilogo) · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
-  Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test,
-  Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
+  Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test solo
+  Under 15 `SOLO_U15`, Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
   `statpartite`, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
   Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara (`SOLO_AGONISTICA`).
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,

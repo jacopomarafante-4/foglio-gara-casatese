@@ -353,7 +353,7 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 (malattia, infortunio, scuola / studio, motivi familiari, ingiustificata). <span class="k">Tutti presenti</span> li segna tutti in un colpo.</li>
 <li>Se serve, una nota sulla seduta (solo tecnica).</li></ol>
 <p>Gli infortuni non abbassano la percentuale di presenza del ragazzo.</p>
-<h3>Test atletici</h3>
+<h3>Test atletici (solo Under 15)</h3>
 <p><span class="k">+ Nuovo test</span>, poi i tempi di ognuno come <b>minuti:secondi</b> (es. 12:51). Una parola diversa
 (es. "non svolto") resta come nota.</p>
 <h3>Statistiche</h3>
