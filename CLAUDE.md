@@ -291,6 +291,12 @@ Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come ne
   per "adesso" nei componenti server usa `istanteTraOre()` (la regola di lint vieta `Date.now()` nel render).
 - Tipi SQL ↔ TypeScript allineati in `lib/tipi.ts`: se aggiungi uno stato, aggiornalo in entrambi.
 
+## Prove rapide
+`npm run prove` = lint, tipi, `scripts/prove-portale.mjs` (sintassi di ogni file del Portale, file di `index.html` esistenti e con
+`?v=`, nessun file dimenticato), build. Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
+"Prove rapide", senza segreti): se falliscono arriva un'email. Prima di pubblicare su Vercel lanciare `npm run prove`.
+Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` si creano dal sito di GitHub.
+
 ## Test dei profili
 `node --env-file=.env.local scripts/test-profili.mjs private/test-profili.json`: permessi di tutti i profili sul database e
 giro completo del sito vero con ogni profilo (identità di prova temporanee, cancellate alla fine). Rifarlo dopo modifiche a
