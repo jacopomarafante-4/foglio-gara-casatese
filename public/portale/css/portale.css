@@ -372,6 +372,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .lavori .hint{max-width:520px;margin:0 auto 8px}
 .valarea{padding:10px 0;border-bottom:1px solid var(--line)}
 .valarea textarea{margin-top:6px}
+/* Distinta */
+.distrow{padding:8px 0;border-bottom:1px solid var(--line)}
+.distrow.on b{color:var(--sel)}
+.distcampi{display:grid;grid-template-columns:60px 1fr 1fr;gap:6px;margin-top:6px}
 .coachcat{display:flex;align-items:center;gap:8px;margin:0 0 10px 4px}
 .coachcat input{max-width:180px}
 .storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}

@@ -20,11 +20,11 @@ const AREA_ICONS = {
 const GRUPPI_SQUADRA = [
   {k:'rosa', label:'Rosa', tabs:['rosa']},
   {k:'allenamento', label:'Allenamento', tabs:['allenamenti','mieiallenamenti','test','statallen']},
-  {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','tabellini','statpartite','campi']}
+  {k:'partite', label:'Partite', tabs:['partita','convocazioni','formazione','piazzati','pdf','distinta','tabellini','statpartite','campi']}
 ];
 const AREAS = [
   {k:'home', label:'Home', tabs:['home']},
-  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte','avvisi']},
+  {k:'calendario', label:'Calendario', tabs:['calendario','calendariotutte','programma','avvisi']},
   {k:'squadra', label:'Squadra', tabs:GRUPPI_SQUADRA.flatMap(g => g.tabs), gruppi:GRUPPI_SQUADRA},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
@@ -34,7 +34,7 @@ const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calend
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
   segnala:'Segnala un giocatore', giocatori:'Giocatori', avvisi:'Avvisi', tesserati:'Tesserati',
-  mieiallenamenti:'I miei allenamenti 🚧'};
+  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma', distinta:'Distinta'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti', eventi:'calendariotutte'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -480,7 +480,7 @@ function viewCalendario(){
       : `Tutte le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua etichetta. ${A ? 'Tocca "Modifica" per cambiarne una.' : 'Le amichevoli che aggiungi tu si cambiano da "Modifica amichevole".'} Le partite già giocate sono nello storico, in fondo.`}</p>
     ${filtroGk}
     ${prossime.length ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
-    ${perPortieri() ? '' : `<div class="row" style="margin-top:10px"><button class="btn small" data-act="fradd">+ Aggiungi amichevole</button>${A ? '<button class="btn small ghost" data-act="caladd">+ Partita ufficiale</button>' : ''}</div>`}
+    ${perPortieri() ? '' : `<div class="row" style="margin-top:10px">${isDirettore() ? '' : '<button class="btn small" data-act="fradd">+ Aggiungi amichevole</button>'}${A ? '<button class="btn small ghost" data-act="caladd">+ Partita ufficiale</button>' : ''}</div>`}
     ${viewStorico()}
   </section>
 `;

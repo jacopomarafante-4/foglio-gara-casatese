@@ -147,6 +147,7 @@ function render(){
   else if(tab==='home') v.innerHTML = viewHome();
   /* Schede che non dipendono da una squadra aperta (la segreteria non ne apre nessuna) */
   else if(tab==='tesserati') v.innerHTML = viewTesserati();
+  else if(tab==='programma') v.innerHTML = viewProgramma();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();
@@ -165,7 +166,9 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='mieiallenamenti') v.innerHTML = viewMieiAllenamenti();
+  else if(tab==='distinta') v.innerHTML = viewDistinta();
   else if(tab==='tesserati') v.innerHTML = viewTesserati();
+  else if(tab==='programma') v.innerHTML = viewProgramma();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
@@ -495,6 +498,12 @@ function rispostaFamiglia(pid, partita){
   const r = risposteFam?.[`${pid}|${partita}`]; if(!r) return '';
   return ` <span class="famrisp ${r.risposta==='si' ? 'si' : 'no'}" title="Risposta della famiglia${r.nota ? ': '+esc(r.nota) : ''}">${r.risposta==='si' ? 'famiglia: ci sarà' : 'famiglia: non ci sarà'}</span>`;
 }
+/* Casella "Mostra la categoria" nelle intestazioni di convocazioni e foglio gara (sheet.senzaCategoria) */
+const casellaCategoria = () => `<label class="row casellacat" style="gap:6px;margin:4px 0 10px"><input type="checkbox" data-senzacat="1" ${S.sheet.senzaCategoria ? '' : 'checked'}> Mostra la categoria nell'intestazione del PDF</label>`;
+document.addEventListener('change', e => {
+  if(!e.target.dataset?.senzacat) return;
+  S.sheet.senzaCategoria = !e.target.checked; save('sheet'); if(tab==='pdf') buildPreview();
+});
 const CALLUP_STATUSES = ['CON','NC','INF','SQL','ND'];
 const CALLUP_LABELS = {CON:'Convocato', NC:'Non convocato', INF:'Infortunato', SQL:'Squalificato', ND:'Non disponibile'};
 const CALLUP_COLOR_VAR = {CON:'--grass', NC:'--muted', INF:'--red', SQL:'--ink', ND:'--amber'};
@@ -558,6 +567,7 @@ function viewConvocazioniAdb(){
     </div>` : '';
   return `<section class="panel">
     <h2>Convocazioni</h2>
+    ${casellaCategoria()}
     <p class="hint">Attività di base: da 1 a ${ADB_MAX} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF è un foglio orizzontale con una colonna per partita.</p>
     ${proposte}
     ${pp.length ? pp.map(card).join('') : `<p class="empty">${wk.length ? 'Aggiungi una partita del weekend, qui sopra.' : 'Nessuna partita: aggiungi la prima.'}</p>`}
@@ -596,6 +606,7 @@ function viewConvocazioni(){
   const nm = nextMatch();
   return `<section class="panel">
     <h2>Convocazioni</h2>
+    ${casellaCategoria()}
     ${nm ? `<div class="nextmatch">
       <span class="note">Nessuna partita questo weekend · prossima in calendario</span>
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
@@ -1001,6 +1012,7 @@ function viewScheme(){
 function viewPdf(){
   return `<section class="panel">
     <h2>PDF</h2>
+    ${casellaCategoria()}
     <p class="hint">A4 orizzontale: prima pagina con distinta e formazione, poi una pagina per ogni schema spuntato.</p>
     <div class="row">
       <button class="btn primary" data-act="download">Scarica PDF</button>

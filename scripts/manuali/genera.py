@@ -334,6 +334,9 @@ pareggiate e perse, gol, porta inviolata); tocca un riquadro per le statistiche 
 <b>rosso</b> in trasferta. <span class="k">+ Aggiungi amichevole</span>, in fondo, ne aggiunge una: si apre subito
 "Modifica amichevole" per data, ora, avversario e campo (lo stesso per cambiarla o eliminarla dopo). Le partite già giocate sono
 nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo.</p>
+<h3>Calendario → Programma</h3>
+<p>Scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre: vedi partite ed eventi giorno per giorno e con
+<span class="k">Scarica programma PDF</span> lo stampi.</p>
 <h3>Calendario → Tutte le squadre</h3>
 <p>Le partite da giocare di tutta la società, con la tua evidenziata; il menu <b>Categoria</b> ne mostra una sola. La vista
 <b>Giorno</b> è come Google Calendar: una colonna per Merate, Cernusco e Trasferta, le ore in verticale, le frecce ‹ › per
@@ -421,6 +424,12 @@ mostra "Lavori in corso".</p>''', 'Presenze')}
 
 <section>
 <h2>8. Squadra → Partite: tabellini e statistiche</h2>
+<h3>Distinta</h3>
+<p>Per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di nascita e
+tessera: quello che lasci vuoto si scrive a penna), allenatore e dirigenti con il documento, note. <span class="k">Scarica distinta
+PDF</span> prepara il foglio con le righe per le firme.</p>
+<p>In Convocazioni, Distinta e Foglio gara la casella <b>Mostra la categoria nell'intestazione del PDF</b> decide se stampare la
+categoria (es. "Under 14 - Provinciale").</p>
 <h3>Tabellini</h3><ol class="passi">
 <li>Nella tabella dei tabellini tocca una partita.</li>
 <li>Segna chi ha giocato, i <b>minuti</b>, i <b>gol</b>, i cartellini, e i <b>gol subiti</b> dei portieri.</li>
@@ -657,7 +666,9 @@ data, orari, luogo, squadre coinvolte: nessuna = tutta la società) e si apre "M
 basta aprire lo stesso "Modifica evento" nell'elenco o nel dettaglio della vista Giorno. Gli eventi compaiono nel calendario di tutti e
 nella vista Giorno, nella colonna del campo. In <b>Calendario → Avvisi</b> scegli
 le squadre e un modello (cambio campo, cambio orario, evento, libero), completa il testo e <span class="k">Pubblica avviso</span>:
-compare nell'app, nella Home dei mister e delle famiglie di quelle squadre, per due settimane.</p>
+compare nell'app, nella Home dei mister e delle famiglie di quelle squadre, per due settimane. <span class="k">Scarica PDF</span>
+(o "Scarica come PDF" mentre lo scrivi) lo prepara su carta intestata della società, da stampare o allegare.
+I direttori, come l'organizzativo, possono modificare calendario, eventi e avvisi.</p>
 </section>
 
 <section>

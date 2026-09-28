@@ -37,6 +37,8 @@ function wrap(x, s, px, py, maxW, lh, o={}, maxLines=99){
   }
   return n;
 }
+/* Categoria nelle intestazioni: si può togliere con la casella "Mostra la categoria" (sheet.senzaCategoria) */
+const conCategoria = t => S.sheet.senzaCategoria ? '' : t;
 function header(x, title, sub, page, total){
   const s = S.sheet;
   // Fascia blu con logo, titolo e dati della partita; sotto la striscia blu-oro-rosso
@@ -52,7 +54,7 @@ function header(x, title, sub, page, total){
   if(sub) T(x, sub, tx, 86, {size:16, weight:500, color:'#C9D6EE', max:560});
   const luogo = luogoPartita(s);
   const right = [s.opponent ? (s.home ? `${teamLabel()} – ${s.opponent}` : `${s.opponent} – ${teamLabel()}`) : teamLabel(),
-    [fmtDate(s.date), s.time].filter(Boolean).join(' · ore '), [luogo.venue, s.category].filter(Boolean).join(' · ')].filter(Boolean);
+    [fmtDate(s.date), s.time].filter(Boolean).join(' · ore '), [luogo.venue, conCategoria(s.category)].filter(Boolean).join(' · ')].filter(Boolean);
   right.forEach((r,i) => T(x, r, W-36, 40+i*24, {size:i?15:21, weight:i?500:700, align:'right', color:i?'#C9D6EE':'#fff', cond:!i, max:470}));
   // Piè di pagina
   x.fillStyle = LINE_C; x.fillRect(36, H-26, W-72, 1);
@@ -289,7 +291,7 @@ function convocazioneAdbSheet(logoImg, figcImg, pp){
   const cx = PW/2, cmax = PW - 2*mx - lw - rw - 40;
   T(x, 'CONVOCAZIONE', cx, y+30, {size:30, weight:700, align:'center', max:cmax});
   T(x, 'ACADEMY CASATESE MERATE', cx, y+56, {size:16, weight:700, align:'center', max:cmax, color:BLU_SCURO});
-  T(x, String(TEAM()?.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase(), cx, y+80, {size:19, weight:700, align:'center', max:cmax});
+  T(x, conCategoria(String(TEAM()?.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase()), cx, y+80, {size:19, weight:700, align:'center', max:cmax});
   y += hh + 8;
   striscia(x, mx, y, tw, 4); y += 12;
 
@@ -371,7 +373,7 @@ function convocazioneAdbPage(logoImg, figcImg, p, n = 1, tot = 1){
   const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
   T(x, 'CONVOCAZIONE', cx, y+34, {size:32, weight:700, align:'center', max:cmax});
   T(x, 'ACADEMY CASATESE MERATE', cx, y+66, {size:18, weight:700, align:'center', max:cmax, color:BLU_SCURO});
-  T(x, String(TEAM()?.category || s.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase() + (tot > 1 ? ` · PARTITA ${n} DI ${tot}` : ''), cx, y+96, {size:22, weight:700, align:'center', max:cmax});
+  T(x, [conCategoria(String(TEAM()?.category || s.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase()), tot > 1 ? `PARTITA ${n} DI ${tot}` : ''].filter(Boolean).join(' · '), cx, y+96, {size:22, weight:700, align:'center', max:cmax});
   y += hh + 10;
   striscia(x, mx, y, tw, 5); y += 18;
 
@@ -446,7 +448,7 @@ function convocazionePage(logoImg, figcImg){
   const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
   T(x, 'ACADEMY', cx, y+28, {size:26, weight:700, align:'center', max:cmax});
   T(x, 'CASATESE MERATE', cx, y+60, {size:30, weight:700, align:'center', max:cmax});
-  T(x, (s.category || TEAM()?.category || teamLabel()).toUpperCase(), cx, y+88, {size:21, weight:700, align:'center', max:cmax});
+  T(x, conCategoria((s.category || TEAM()?.category || teamLabel()).toUpperCase()), cx, y+88, {size:21, weight:700, align:'center', max:cmax});
   y += hh + 14;
   const cellRow = (label, value, lw, h, fs) => {
     x.fillStyle = LABEL_BG; x.fillRect(mx, y, lw, h);

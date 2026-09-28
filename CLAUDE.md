@@ -164,6 +164,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
+  direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`: Distinta (Squadra → Partite, `sheet.distinta`),
+  Programma gare dal–al (Calendario → Programma, PDF), Comunicazione su carta intestata (Avvisi → Scarica PDF); casella
+  "Mostra la categoria" (`sheet.senzaCategoria`) per le intestazioni di convocazioni, distinta e foglio gara
 - 0033: `documenti_tesserati` (visita medica, bonifico con `rata` = posizione in quote, altro; file in `bytea`, max 4 MB,
   foto ridotte a 1600 px nel browser): la famiglia carica con `famiglia_carica(pin, …)` e li vede in `famiglia_get`; la
   segreteria li apre con `documento_scarica(id)`, li accetta (bonifico → rata pagata, visita → nuova scadenza) o rifiuta con nota

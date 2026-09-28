@@ -5,7 +5,8 @@
 
 /* ---------- Dati condivisi: eventi e avvisi ---------- */
 let eventiSoc = [], avvisiSoc = [], condivisiAt = 0, condivisiInCorso = false;
-const puoOrganizzare = () => isOrg() || (isAdmin() && !isDirettore());
+/* Calendario, eventi e avvisi: admin, direttori (0034) e responsabile organizzativo (0029) */
+const puoOrganizzare = () => isOrg() || isAdmin();
 async function caricaCondivisi(forza){
   if(!db || condivisiInCorso || (!forza && Date.now() - condivisiAt < 60000)) return;
   condivisiInCorso = true;
@@ -100,10 +101,10 @@ function viewAvvisi(){
   const elenco = avvisiSoc.slice().sort((x,y) => (y.data||'').localeCompare(x.data||''));
   const scheda = a => `<div class="gval gseg avviso"><div class="note">${fmtDate(a.data)} · ${esc(squadreTesto(a.squadre))}${a.autore ? ' · '+esc(a.autore) : ''}</div>
       ${a.titolo ? `<b>${esc(a.titolo)}</b>` : ''}<p class="gtxt" style="white-space:pre-line">${esc(a.testo)}</p>
-      ${P ? `<div class="row" style="margin-top:6px"><button class="btn small ghost danger" data-avdel="${a.id}">Elimina</button></div>` : ''}</div>`;
+      <div class="row" style="margin-top:6px"><button class="btn small" data-avpdf="${a.id}">Scarica PDF</button>${P ? `<button class="btn small ghost danger" data-avdel="${a.id}">Elimina</button>` : ''}</div></div>`;
   return `${P ? `<section class="panel">
     <h2>Nuovo avviso</h2>
-    <p class="hint">Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. "Pubblica" lo mette nell'app: nella Home dei mister e delle famiglie delle squadre scelte.</p>
+    <p class="hint">Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. "Pubblica" lo mette nell'app: nella Home dei mister e delle famiglie delle squadre scelte. "Scarica come PDF" lo prepara su carta intestata (anche senza pubblicarlo).</p>
     <label class="f">Squadre</label>
     <div class="gchips" style="flex-wrap:wrap">${squadre.map(t => `<button class="gchip" data-avsq="${t.id}" aria-pressed="${b.squadre.includes(t.id)}">${esc(siglaSquadra(t))}</button>`).join('')}</div>
     <div class="grid" style="margin-top:10px">
@@ -114,6 +115,7 @@ function viewAvvisi(){
     <textarea id="av_txt" data-avf="testo" rows="6" placeholder="Scrivi l'avviso. Le parti tra [ ] vanno completate.">${esc(b.testo)}</textarea>
     <div class="row" style="margin-top:10px;gap:8px">
       <button class="btn primary" data-avpub="1" ${b.testo.trim() ? '' : 'disabled'}>Pubblica avviso</button>
+      <button class="btn" data-avbozzapdf="1">Scarica come PDF</button>
     </div>
   </section>` : ''}
   <section class="panel">
