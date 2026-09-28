@@ -488,6 +488,26 @@ function convocazioneAdbPage(logoImg, figcImg, p, n = 1, tot = 1){
   if(!conv.length) T(x, 'Nessun giocatore convocato per questa partita.', mx+12, y+20, {size:13, color:MUTED});
   return c;
 }
+/* Intestazione della società (convocazione e comunicazione): logo FIGC-SGS a sinistra, ACADEMY / CASATESE MERATE /
+   categoria al centro, stemma a destra. Disegna da y e restituisce l'altezza usata (96). */
+function intestazioneSocieta(x, PW, mx, y, logoImg, figcImg, categoria){
+  const hh = 96, lw = 200, rw = 88;
+  if(figcImg){ const fh = lw*figcImg.height/figcImg.width; x.drawImage(figcImg, mx, y+(hh-fh)/2, lw, fh); }
+  if(logoImg) x.drawImage(logoImg, PW-mx-rw, y+(hh-rw)/2, rw, rw);
+  const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
+  T(x, 'ACADEMY', cx, y+(categoria ? 28 : 38), {size:26, weight:700, align:'center', max:cmax});
+  T(x, 'CASATESE MERATE', cx, y+(categoria ? 60 : 72), {size:30, weight:700, align:'center', max:cmax});
+  if(categoria) T(x, categoria.toUpperCase(), cx, y+88, {size:21, weight:700, align:'center', max:cmax});
+  return hh;
+}
+/* La stessa intestazione come immagine (per i PDF di testo, es. la comunicazione): larga 800, alta 126 */
+function immagineIntestazione(logoImg, figcImg, categoria){
+  const PW = 800, PH = 126, PK = 3;
+  const c = document.createElement('canvas'); c.width = PW*PK; c.height = PH*PK;
+  const x = c.getContext('2d'); x.scale(PK,PK); x.fillStyle = '#fff'; x.fillRect(0,0,PW,PH);
+  intestazioneSocieta(x, PW, 40, 30, logoImg, figcImg, categoria);
+  return c;
+}
 function convocazionePage(logoImg, figcImg){
   const PW = 800, PH = 1131, PK = 2;
   const c = document.createElement('canvas'); c.width = PW*PK; c.height = PH*PK;
@@ -495,13 +515,7 @@ function convocazionePage(logoImg, figcImg){
   const s = S.sheet;
   const mx = 40, tw = PW - mx*2;
   let y = 30;
-  const hh = 96, lw = 200, rw = 88;
-  if(figcImg){ const fh = lw*figcImg.height/figcImg.width; x.drawImage(figcImg, mx, y+(hh-fh)/2, lw, fh); }
-  if(logoImg) x.drawImage(logoImg, PW-mx-rw, y+(hh-rw)/2, rw, rw);
-  const cx = (mx+lw + PW-mx-rw)/2, cmax = PW - 2*mx - lw - rw - 16;
-  T(x, 'ACADEMY', cx, y+28, {size:26, weight:700, align:'center', max:cmax});
-  T(x, 'CASATESE MERATE', cx, y+60, {size:30, weight:700, align:'center', max:cmax});
-  T(x, conCategoria((s.category || TEAM()?.category || teamLabel()).toUpperCase()), cx, y+88, {size:21, weight:700, align:'center', max:cmax});
+  const hh = intestazioneSocieta(x, PW, mx, y, logoImg, figcImg, conCategoria(s.category || TEAM()?.category || teamLabel()));
   y += hh + 14;
   const cellRow = (label, value, lw, h, fs) => {
     x.fillStyle = LABEL_BG; x.fillRect(mx, y, lw, h);

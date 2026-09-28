@@ -217,9 +217,19 @@ document.addEventListener('click', e => {
 async function pdfComunicazione(a){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
-  let y = await intestazionePdf(doc, 'COMUNICAZIONE', squadreTesto(a.squadre));
+  /* categoria nell'intestazione: quella scelta (Modulistica) o, dagli Avvisi, la squadra se è una sola */
+  const categoria = a.mostraCat === false ? '' : (a.categoria ?? ((a.squadre||[]).length === 1 ? (S.teams.find(t => t.id === a.squadre[0])?.category || '') : ''));
+  /* stessa intestazione della convocazione (FIGC-SGS, ACADEMY / CASATESE MERATE / categoria, stemma) */
+  let y;
+  try{
+    const [logo, figc] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]); await ensureFonts();
+    const img = immagineIntestazione(logo, figc, categoria), hMm = 210 * img.height / img.width;
+    doc.addImage(img.toDataURL('image/png'), 'PNG', 0, 0, 210, hMm); y = hMm + 2;
+  }catch(e){ y = await intestazionePdf(doc, 'COMUNICAZIONE', categoria); }   // (pagina aperta come file: niente stemmi)
+  doc.setDrawColor(...BLU_RGB); doc.setLineWidth(0.6); doc.line(PAG.sx, y, PAG.dx, y); y += 7;
+  doc.setTextColor(...BLU_RGB); riga1(doc, 'COMUNICAZIONE', PAG.sx, y, 100, {size: 13, bold: true});
   doc.setTextColor(...GRIGIO_RGB);
-  riga1(doc, `Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, PAG.sx, y, LARGH, {size: 10, align: 'right'}); y += 10;
+  riga1(doc, `Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, PAG.sx, y, LARGH, {size: 10, align: 'right'}); y += 11;
   const titolo = perPdf(a.titolo).trim();
   /* Grandezza del testo: la più grande (da 12,5 a 9) con cui titolo, testo e firma stanno in una pagina. Se non ci stanno
      nemmeno a 9 il testo è davvero lungo: carattere comodo (11) e più pagine */
@@ -338,15 +348,20 @@ document.addEventListener('click', e => {
    Non si salva e non si pubblica: per mandarla alle famiglie nell'app c'è Calendario → Avvisi. */
 let bozzaCom = null;
 function viewComunicazione(){
-  bozzaCom ||= {modello:'libero', squadre:[], titolo:'', testo:'', autore: misterName || (isAdmin() ? 'La società' : '')};
-  const b = bozzaCom, squadre = S.teams.filter(t => !t.organizza && !t.vedeTutte);
+  const mister = !isAdmin() && !isOrg(), mia = TEAM()?.category || '';
+  bozzaCom ||= {modello:'libero', titolo:'', testo:'', autore: misterName || (isAdmin() ? 'La società' : ''),
+    mostraCat: mister && !!mia, categoria: mister ? mia : ''};
+  const b = bozzaCom, categorie = [...new Set(S.teams.filter(t => !t.organizza && !t.vedeTutte).map(t => t.category).filter(Boolean))];
   return `<section class="panel">
     <h2>Comunicazione</h2>
     <p class="hint">Un foglio su carta intestata della società, da stampare o allegare. Per farla arrivare nell'app a mister e famiglie usa Calendario → Avvisi.</p>
     <label class="f" for="com_modello">Modello</label>
     <select id="com_modello" data-com="modello">${Object.entries(MODELLI_AVVISO).map(([k, m]) => `<option value="${k}" ${k===b.modello?'selected':''}>${esc(m.label)}</option>`).join('')}</select>
-    <label class="f" style="margin-top:8px">Per <span class="note">(nessuna scelta = tutta la società)</span></label>
-    <div class="gchips" style="flex-wrap:wrap">${squadre.map(t => `<button class="gchip" data-comsq="${esc(t.id)}" aria-pressed="${b.squadre.includes(t.id)}">${esc(siglaSquadra(t))}</button>`).join('')}</div>
+    <div class="comcat">
+      <label class="row" style="gap:8px;margin:0"><input type="checkbox" data-com="mostraCat" ${b.mostraCat ? 'checked' : ''}> Mostra la categoria nell'intestazione</label>
+      ${mister ? (mia ? `<span class="note">${esc(mia)}</span>` : '')
+        : `<select data-com="categoria" aria-label="Categoria nell'intestazione" ${b.mostraCat ? '' : 'disabled'}><option value="">Scegli la categoria</option>${categorie.map(c => `<option ${c===b.categoria?'selected':''}>${esc(c)}</option>`).join('')}</select>`}
+    </div>
     <label class="f" for="com_titolo">Titolo</label><input id="com_titolo" data-com="titolo" value="${esc(b.titolo)}" placeholder="Es. Cambio orario allenamenti">
     <label class="f" for="com_testo">Testo</label><textarea id="com_testo" data-com="testo" rows="10">${esc(b.testo)}</textarea>
     <label class="f" for="com_autore">Firma</label><input id="com_autore" data-com="autore" value="${esc(b.autore)}" placeholder="Es. Il responsabile del settore giovanile">
@@ -354,14 +369,16 @@ function viewComunicazione(){
       <button class="btn ghost" data-comvuota="1">Svuota</button></div>
   </section>`;
 }
-document.addEventListener('input', e => { const k = e.target.dataset?.com; if(!k || !bozzaCom || k === 'modello') return;
+document.addEventListener('input', e => { const k = e.target.dataset?.com; if(!k || !bozzaCom || ['modello','mostraCat','categoria'].includes(k)) return;
   bozzaCom[k] = e.target.value; const p = document.querySelector('[data-compdf]'); if(p) p.disabled = !bozzaCom.testo.trim(); });
+document.addEventListener('change', e => { const k = e.target.dataset?.com; if(!bozzaCom || (k !== 'mostraCat' && k !== 'categoria')) return;
+  if(k === 'mostraCat') bozzaCom.mostraCat = e.target.checked; else bozzaCom.categoria = e.target.value;
+  setTimeout(render, 0); });
 document.addEventListener('change', e => { if(e.target.dataset?.com !== 'modello' || !bozzaCom) return;
   const m = MODELLI_AVVISO[e.target.value]; bozzaCom.modello = e.target.value;
   if(m){ bozzaCom.titolo = m.titolo; bozzaCom.testo = m.testo; } setTimeout(render, 0); });
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-comsq],[data-compdf],[data-comvuota]'); if(!b || !bozzaCom) return;
-  if(b.dataset.comsq){ const id = b.dataset.comsq; bozzaCom.squadre = bozzaCom.squadre.includes(id) ? bozzaCom.squadre.filter(x => x!==id) : [...bozzaCom.squadre, id]; render(); return; }
+  const b = e.target.closest('[data-compdf],[data-comvuota]'); if(!b || !bozzaCom) return;
   if(b.dataset.comvuota){ bozzaCom = null; render(); return; }
   if(b.dataset.compdf) pdfComunicazione({...bozzaCom, data: todayISO()});
 });

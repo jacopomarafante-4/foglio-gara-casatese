@@ -202,7 +202,8 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
   direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`, area **Modulistica** del Portale: Distinta (`sheet.distinta`),
-  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi, PDF su carta intestata; anche Avvisi → Scarica PDF). Impaginazione automatica
+  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi; PDF con la stessa intestazione della convocazione,
+  `intestazioneSocieta`/`immagineIntestazione` in `pdf.js`; spunta "Mostra la categoria": mister = la sua, staff la sceglie; anche Avvisi → Scarica PDF). Impaginazione automatica
   in testa a `modulistica.js` (`riga1` una riga che rimpicciolisce e poi taglia con "…", `blocco`/`misuraBlocco` su più righe,
   `paragrafi` con elenchi rientrati e righe giustificate, `nuovaPagina` con fascia "segue"): la comunicazione sceglie la grandezza
   più grande che sta in una pagina (12,5→9, poi 11 su più pagine), la distinta stringe le righe per stare in una pagina e tiene

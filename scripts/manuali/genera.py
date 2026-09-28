@@ -435,7 +435,9 @@ nascita e tessera: quello che lasci vuoto si scrive a penna), allenatore e dirig
 <span class="k">Scarica distinta PDF</span> prepara il foglio con le righe per le firme.</li>
 <li><b>Programma gare</b>: scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi giorno per giorno
 e con <span class="k">Scarica programma PDF</span> lo stampi.</li>
-<li><b>Comunicazione</b>: un modello (o testo libero), per chi è, titolo, testo e firma; <span class="k">Scarica PDF</span>. Non si
+<li><b>Comunicazione</b>: un modello (o testo libero), titolo, testo e firma; <span class="k">Scarica PDF</span>. L'intestazione è
+quella della convocazione; con <b>Mostra la categoria nell'intestazione</b> ci metti la categoria: il mister ha già la sua, i
+direttori la scelgono dall'elenco. Non si
 pubblica: per farla arrivare nell'app usa Calendario → Avvisi.</li></ul>
 <p><b>Archivio</b>: ogni PDF che scarichi dal Portale (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia
 una copia in <b>Società → Archivio documenti</b>, con chi l'ha scaricato e quando. Lo vedono admin e direttori.</p>
