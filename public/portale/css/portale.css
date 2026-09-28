@@ -308,6 +308,29 @@ a.iconbtn2{filter:none;opacity:1}
 .wklist li.calmese{display:block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:13px;padding:16px 0 4px;border-top:0}
 .teamcard[class*="cal-"]{border-left:5px solid var(--calc)}
 .storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+/* Vista a giornata (Calendario → Tutte le squadre) */
+.cg-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 10px}
+.cg-nav b{font-family:var(--cond);font-size:20px;text-transform:capitalize;text-align:center}
+.cg-nav .iconbtn{font-size:24px;min-width:44px;min-height:44px}
+.cg-nav .iconbtn:disabled{opacity:.3;cursor:default}
+.cg-senzaora span{display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:8px;border-left:4px solid var(--calc);background:var(--bg);color:var(--ink)}
+.cg{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
+.cg-testa,.cg-corpo{display:grid;grid-template-columns:44px repeat(3,1fr)}
+.cg-testa span{padding:8px 4px;text-align:center;font-family:var(--cond);font-weight:700;font-size:15px;border-bottom:3px solid var(--calc,transparent);border-left:1px solid var(--line)}
+.cg-testa span:first-child{border-left:0}
+.cg-corpo{position:relative;background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 56px)}
+.cg-ore{position:relative}
+.cg-ore span{position:absolute;right:4px;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:600;background:var(--paper);padding:0 2px}
+.cg-ore span:first-child{transform:none}
+.cg-col{position:relative;border-left:1px solid var(--line)}
+.cg-ev{position:absolute;box-sizing:border-box;margin-left:2px;padding:3px 5px;border-radius:6px;background:var(--calc);color:#fff;overflow:hidden;font-size:11px;line-height:1.2;display:flex;flex-direction:column;gap:1px;box-shadow:0 0 0 1px var(--paper)}
+.cg-ev b{font-weight:700;font-size:12px}
+.cg-ev span{opacity:.9}
+.cal-cernusco .cg-ev{color:#2B2205}
+.cg-ev.mia{box-shadow:0 0 0 2px var(--ink);z-index:1}
+.cg-ev{cursor:pointer}
+.cg-ev.scelta{outline:3px dashed var(--ink);outline-offset:2px;z-index:2}
+.cg-dettaglio{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:0 10px}
 .storico summary{font-family:var(--cond);font-size:17px;padding:4px 0}
 /* PDF */
 .pages{display:grid;gap:14px;margin-top:14px}

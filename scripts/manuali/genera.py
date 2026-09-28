@@ -277,7 +277,9 @@ da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai ins
 <p>Tocca il guanto <b>🧤</b> per segnare chi fa il portiere: servono per i gol subiti nelle statistiche.</p>
 <h3>Squadra → Calendario</h3>
 <p>Le partite da giocare fino a fine stagione: ufficiali, amichevoli e tornei, inseriti dalla società. In alto scegli <b>Solo</b>
-la tua squadra oppure <b>Tutte le squadre</b>: le partite da giocare di tutta la società, con la tua evidenziata. Le partite già
+la tua squadra oppure <b>Tutte le squadre</b>: le partite da giocare di tutta la società, con la tua evidenziata. In <b>Tutte le squadre</b> la vista
+<b>Giorno</b> è come Google Calendar: una colonna per Merate, Cernusco e Trasferta, le ore in verticale, le frecce ‹ › per
+cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte in fila. Le partite già
 giocate della tua squadra sono nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo. Colori: <b>blu</b> in casa a Merate,
 <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Le tue amichevoli le aggiungi da
 <b>Statistiche → Partite → + Amichevole</b>: compaiono anche qui.</p>''', 'Rosa')}
