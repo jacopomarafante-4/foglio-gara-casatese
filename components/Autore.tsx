@@ -1,21 +1,9 @@
 // Chi ha fatto una valutazione: iniziali in un cerchio colorato (stesso colore per la stessa persona, sempre),
 // nome intero al passaggio del mouse. I mister dal Portale hanno il cerchio col bordo, per riconoscerli.
+import { firma, valutatori, SOGLIA_VALUTAZIONI, type FirmaValutazione } from '@/lib/valutazioni';
+export { firma, valutatori, SOGLIA_VALUTAZIONI, type FirmaValutazione };
+
 const COLORI = ['#003DA5', '#C41E3A', '#B8860B', '#6B3FA0', '#0F7C7C', '#A34A1E', '#B8336A', '#35506B', '#4A5563', '#1F5FA8'];
-
-export type FirmaValutazione = { chiave: string; nome: string; mister: boolean };
-
-/** Chi firma: account dello staff (nome e cognome) o mister dal Portale ("Mister Rossi · Under 14") */
-export function firma(v: {
-  autore_id?: string | null; autore_squadra?: string | null;
-  autore?: { nome: string | null; cognome: string | null; email?: string } | null;
-}): FirmaValutazione {
-  if (v.autore) {
-    const nome = [v.autore.nome, v.autore.cognome].filter(Boolean).join(' ') || v.autore.email || 'Staff';
-    return { chiave: v.autore_id ?? nome, nome, mister: false };
-  }
-  if (v.autore_squadra) return { chiave: 'm:' + v.autore_squadra, nome: `Mister ${v.autore_squadra}`, mister: true };
-  return { chiave: '?', nome: 'Autore non disponibile', mister: false };
-}
 
 function iniziali(nome: string) {
   const parole = nome.replace(/^Mister\s+/i, '').split('·')[0].trim().split(/\s+/).filter(Boolean);
@@ -50,13 +38,6 @@ export function Autori({ firme, max = 3 }: { firme: FirmaValutazione[]; max?: nu
       {uniche.length > max && <span className="pl-2.5 text-xs font-semibold text-grigio">+{uniche.length - max}</span>}
     </span>
   );
-}
-
-/** Persone diverse che hanno valutato, dalla più recente (per le 3 caselle) */
-export const SOGLIA_VALUTAZIONI = 3;
-export function valutatori<T extends { data: string } & Parameters<typeof firma>[0]>(valutazioni: T[]): FirmaValutazione[] {
-  const ordinate = [...valutazioni].sort((a, b) => b.data.localeCompare(a.data)).map(firma);
-  return ordinate.filter((f, i) => f.chiave === '?' || ordinate.findIndex((x) => x.chiave === f.chiave) === i);
 }
 
 /** Le 3 caselle: iniziali di chi ha valutato, caselle vuote tratteggiate; a 3 su 3 diventano verdi */

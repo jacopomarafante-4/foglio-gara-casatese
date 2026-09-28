@@ -292,7 +292,9 @@ Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come ne
 - Tipi SQL ↔ TypeScript allineati in `lib/tipi.ts`: se aggiungi uno stato, aggiornalo in entrambi.
 
 ## Prove rapide
-`npm run prove` = lint, tipi, `scripts/prove-portale.mjs` (sintassi di ogni file del Portale, file di `index.html` esistenti e con
+`npm run prove` = lint, tipi, regole di calcolo (`npm run prove:regole`: `tests/*.test.mjs` con `node --test`, indirizzi `@/` tradotti da
+`tests/registra.mjs`; categorie, testi e date, doppioni, 3 valutazioni in `lib/valutazioni.ts`, calendari Google, impaginazione dei PDF
+del Portale caricata in un ambiente finto), `scripts/prove-portale.mjs` (sintassi di ogni file del Portale, file di `index.html` esistenti e con
 `?v=`, nessun file dimenticato), build. Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
 "Prove rapide", senza segreti): se falliscono arriva un'email. Prima di pubblicare su Vercel lanciare `npm run prove`.
 Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` si creano dal sito di GitHub.
