@@ -330,6 +330,8 @@ a.iconbtn2{filter:none;opacity:1}
 .cg-ev.mia{box-shadow:0 0 0 2px var(--ink);z-index:1}
 .cg-ev{cursor:pointer}
 .cg-ev.scelta{outline:3px dashed var(--ink);outline-offset:2px;z-index:2}
+.usalist .btn,.usalist .usata{margin-top:8px}
+.usata{font-weight:700;font-size:14px;color:var(--sel)}
 .cg-dettaglio{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:0 10px}
 .storico summary{font-family:var(--cond);font-size:17px;padding:4px 0}
 /* PDF */

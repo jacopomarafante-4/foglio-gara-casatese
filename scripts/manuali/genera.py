@@ -291,7 +291,8 @@ giocate della tua squadra sono nello <b>Storico</b>, in fondo alla pagina: tocca
 <p>I dati della gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. Se la partita è in calendario
 tocca <span class="k">Usa questa</span> e i campi si compilano da soli.</p>
 {fig('p-convocazioni', '''<h3>Convocazioni</h3><ol class="passi">
-<li>Tocca <span class="k">Usa questa</span> per prendere la prossima partita dal calendario.</li>
+<li>In alto ci sono tutte le partite della squadra nel weekend: tocca <span class="k">Usa questa</span> su quella da preparare
+(se nel weekend non ce ne sono, c'è la prossima in calendario). Quella scelta è segnata "✓ Nel foglio gara".</li>
 <li><b>Attività di base</b> (da Under 13 in giù): non ci sono formazione, piazzati e foglio gara; la convocazione PDF è
 quella della società (data, indirizzo, orari, avversario, <b>mister presente</b>, note e l'elenco dei convocati).
 Nelle convocazioni puoi mettere <b>da 1 a 4 partite</b> (+ Aggiungi partita), ognuna scelta dal calendario o scritta a mano,

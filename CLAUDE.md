@@ -128,7 +128,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   La Home del Portale mostra gli impegni della squadra nel weekend della settimana in corso; Squadra → Calendario ha le partite da
   giocare, "Solo Uxx" o "Tutte le squadre"; quelle giocate solo nello Storico della propria squadra (`viewStorico()`).
   "Tutte le squadre" ha la vista Giorno (`vistaGiorno()`, colonne Merate/Cernusco/Trasferta come Google Calendar, durata
-  indicativa dall'età) o Elenco.
+  indicativa dall'età) o Elenco. Gara → Partita elenca le partite della squadra nel weekend, ognuna con "Usa questa" (`data-usacal`).
   Regola delle date nel Portale: SEMPRE il calendario ufficiale, salvo le variazioni dei comunicati (già nelle gare):
   `portale.mjs [--squadra=<id>]` sovrascrive date e ore scritte a mano; Google non cambia mai le gare di campionato.
   Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.

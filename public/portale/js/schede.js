@@ -420,10 +420,20 @@ function viewPartita(){
         <button class="iconbtn" aria-label="Elimina partita" data-caldel="${m.id}">×</button>
       </div>
     </div>`).join('');
+  /* Tutte le partite della squadra nel weekend di questa settimana, ognuna con "Usa questa" */
+  const [sab, dom] = weekendISO(), usata = m => s.date===m.date && (s.opponent||'').trim().toLowerCase()===(m.opponent||'').trim().toLowerCase();
+  const wk = inOrdine(allCalendar().filter(m => m.date===sab || m.date===dom));
+  const weekend = wk.length ? `<div class="nextmatch">
+      <span class="note">Partite del weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</span>
+      <ul class="wklist callist usalist">${wk.map(m => rigaPartita(m, false, true).replace(/<\/div>\s*<\/li>\s*$/,
+        (usata(m) ? '<div class="usata">✓ Nel foglio gara</div>' : `<button class="btn small primary" data-act="usenext" data-usacal="${esc(m.id)}">Usa questa</button>`) + '</div></li>')).join('')}</ul>
+      <p class="hint" style="margin:6px 0 0">Scegli la partita da preparare, oppure scrivi qui sotto i dati di un'altra partita (amichevole, recupero, ecc.).</p>
+    </div>` : '';
   return `<section class="panel">
     <h2>Partita</h2>
-    ${nm ? `<div class="nextmatch">
-      <span class="note">Prossima partita in calendario</span>
+    ${weekend}
+    ${!wk.length && nm ? `<div class="nextmatch">
+      <span class="note">Nessuna partita questo weekend · prossima in calendario</span>
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
         <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}${nm.friendly?' · <span class="note">amichevole</span>':''}</div>
         <button class="btn small primary" data-act="usenext">Usa questa</button>
@@ -556,7 +566,7 @@ function viewConvocazioni(){
   return `<section class="panel">
     <h2>Convocazioni</h2>
     ${nm ? `<div class="nextmatch">
-      <span class="note">Prossima partita in calendario</span>
+      <span class="note">Nessuna partita questo weekend · prossima in calendario</span>
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap">
         <div><b>${esc(nm.opponent||'Avversario')}</b> — ${fmtDate(nm.date)}${nm.time?', '+esc(nm.time):''}${nm.venue?' · '+esc(nm.venue):''}${nm.home?' · Casa':''}${nm.friendly?' · <span class="note">amichevole</span>':''}</div>
         <button class="btn small primary" data-act="usenext">Usa questa</button>
