@@ -1,0 +1,35 @@
+# Prove rapide a ogni salvataggio su GitHub (e sulle richieste di modifica): controllo del codice (lint), tipi,
+# Portale (sintassi e file caricati), build. Se qualcosa non va, GitHub manda un'email e la spunta diventa rossa.
+# Nessun segreto qui: la build usa valori finti per le variabili pubbliche (le pagine non contattano il database).
+name: Prove rapide
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: prove-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://esempio.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: chiave-finta-per-la-build
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Controllo del codice (lint)
+        run: npm run lint
+      - name: Tipi TypeScript
+        run: npm run typecheck
+      - name: Portale (sintassi e file caricati)
+        run: npm run prove:portale
+      - name: Build di produzione
+        run: npm run build
