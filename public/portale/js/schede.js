@@ -145,6 +145,10 @@ function render(){
   const v = $('#view');
   if(tab==='squadre') v.innerHTML = viewSquadre();
   else if(tab==='home') v.innerHTML = viewHome();
+  /* Schede che non dipendono da una squadra aperta (la segreteria non ne apre nessuna) */
+  else if(tab==='tesserati') v.innerHTML = viewTesserati();
+  else if(tab==='eventi') v.innerHTML = viewEventi();
+  else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();
   else if(tab==='partita') v.innerHTML = viewPartita();
