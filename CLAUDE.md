@@ -61,8 +61,17 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `distinta` e `senzaCategoria` nel foglio della squadra con `salvaDistinta`, sulla versione più recente; regole `lib/distinta.ts`,
   PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`), Comunicazione
   (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO` in `lib/condivisi.ts`, PDF `lib/pdf-comunicazione.ts`). Impaginazione
-  comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`); nel Portale resta solo `pdfComunicazione()` per
-  Calendario → Avvisi. Elenco delle schede portate: `NELL_APP` in
+  comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`); `modulistica.js` tolto dal Portale.
+  Tutto il Calendario (`/calendari/…`, non `/calendario`, che è la pagina dello Scouting): La mia squadra (`squadra`: mister,
+  preparatori con i portieri e la convocazione, admin e direttori con `?squadra=`, direttori in sola lettura; amichevoli del
+  mister in `registro/<squadra>.friendlies`, partite ufficiali solo admin in `calendar/<squadra>`), Tutte le squadre (`tutte`:
+  vista Giorno/Elenco, admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra ed eventi, Google con
+  `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`, admin, direttori, organizzativo; `?evento=id` =
+  bozza per un evento). Componenti in `components/calendario/`, regole pure in `lib/calendario-portale.ts`, dati in
+  `lib/portale-dati.ts` (`chiEntra`, `leggiDocs`, `calendariTutti`). Modifiche ai documenti del Portale dalle pagine dell'app:
+  `modificaDoc(path, modifiche)` in `app/(aree)/docs-actions.ts`, voce per voce per id (`lib/modifiche.ts`) sulla versione più
+  recente, con coach_leggi/coach_salva o salva_doc (i permessi li decide il database). Nel Portale restano righe ed elenchi del
+  calendario per Home e famiglie. Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

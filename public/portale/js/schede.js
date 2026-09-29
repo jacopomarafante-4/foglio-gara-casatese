@@ -149,7 +149,6 @@ function render(){
   else if(tab==='home') v.innerHTML = viewHome();
   /* Schede che non dipendono da una squadra aperta */
   else if(NELL_APP[tab]){ if(IN_APP_UNICA) location.replace(NELL_APP[tab]); else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
-  else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();
   else if(tab==='partita') v.innerHTML = viewPartita();
@@ -157,7 +156,6 @@ function render(){
   else if(tab==='formazione') v.innerHTML = viewFormazione();
   else if(tab==='piazzati') v.innerHTML = openSchemeId ? viewScheme() : viewSchemes();
   else if(tab==='pdf'){ v.innerHTML = viewPdf(); buildPreview(); }
-  else if(tab==='calendario' || tab==='calendariotutte') v.innerHTML = viewCalendario();
   else if(tab==='campi') v.innerHTML = viewCampi();
   else if(tab==='tabellini'){ v.innerHTML = viewTabellini(); scrollGridsToEnd(); }
   else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
@@ -167,7 +165,6 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='mieiallenamenti') v.innerHTML = viewMieiAllenamenti();
-  else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
     v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {

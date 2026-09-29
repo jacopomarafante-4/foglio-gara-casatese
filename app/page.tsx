@@ -44,6 +44,9 @@ export default async function Ingresso({
   searchParams: Promise<{ next?: string; pin?: string; uscito?: string }>;
 }) {
   const [{ next, pin, uscito }, profilo] = await Promise.all([searchParams, getProfilo()]);
+  // Già entrato e arrivato qui da una pagina che chiedeva l'accesso (?next=): si torna lì (anche subito dopo il PIN)
+  const interna = !!next && /^\/[^/?]/.test(next);   // un percorso interno, mai questa pagina (niente giri a vuoto)
+  if (profilo?.attivo && interna && profilo.ruolo !== 'segreteria' && profilo.ruolo !== 'mister') redirect(next!);
   // ?pin=1: il Portale ha rimandato qui (sessione non valida per lui) → PIN, niente giro di rimandi
   if (!pin && (profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo))) redirect('/portale/');
   if (!pin && profilo?.ruolo === 'segreteria' && profilo.attivo) redirect('/segreteria');

@@ -324,161 +324,11 @@ function listaCalendario(ms, tutte, extra){
   }).join('');
 }
 let frAperta = null;   // amichevole appena aggiunta (o in modifica): il suo "Modifica" resta aperto
-/* Uscendo da un campo dell'amichevole la riga si aggiorna (titolo, data, ordine) */
-document.addEventListener('change', e => {
-  if(!e.target.dataset?.frid || tab !== 'calendario') return;
-  frAperta = e.target.dataset.frid; setTimeout(render, 0);
-});
 const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padStart(5,'0')).localeCompare((b.date||'')+(b.time||'').padStart(5,'0')));
 /* Nel calendario solo le partite da giocare; quelle giocate vanno nello storico, solo della propria squadra */
 const daGiocare = m => !m.date || m.date >= todayISO();
-function viewStorico(){
-  const giocate = inOrdine(allCalendar().filter(m => !daGiocare(m))).reverse();
-  if(!giocate.length) return '';
-  return `<details class="storico"><summary>Storico · ${giocate.length} ${giocate.length===1 ? 'partita giocata' : 'partite giocate'}</summary>
-    <ul class="wklist callist">${listaCalendario(giocate, false)}</ul></details>`;
-}
-/* ---------- Vista a giornata (come Google Calendar): una colonna per calendario, ore in verticale ----------
-   Si conosce solo l'inizio della gara: il blocco dura in modo indicativo 60' (fino a U10), 75' (U11–U13), 90' (dopo). */
-let calVista = 'giorno', calGiorno = null, calScelta = null, calCategoria = '';
-const CG_ORA = 56;                                   // pixel per ora
-const minuti = t => { const [h, m] = (t||'').split(':').map(Number); return h*60 + (m||0); };
-const durataPartita = m => { if(m.evento) return Math.max(minuti(m.fine) - minuti(m.time), 0) || 120;
-  const e = etaSquadra(m.team); return e <= 10 ? 60 : e <= 13 ? 75 : 90; };
-const giornoLungo = d => new Date(d+'T12:00:00').toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
-/* Partite che si accavallano nella stessa colonna: affiancate, come in Google Calendar */
-function corsie(evs){
-  evs.sort((a,b) => a.inizio - b.inizio || b.fine - a.fine);
-  let gruppo = [], fineGruppo = -1;
-  const chiudi = () => { const n = Math.max(...gruppo.map(e => e.corsia)) + 1; gruppo.forEach(e => e.corsie = n); gruppo = []; };
-  for(const e of evs){
-    if(gruppo.length && e.inizio >= fineGruppo) chiudi();
-    const occupate = gruppo.filter(x => x.fine > e.inizio).map(x => x.corsia);
-    e.corsia = 0; while(occupate.includes(e.corsia)) e.corsia++;
-    gruppo.push(e); fineGruppo = Math.max(fineGruppo, e.fine);
-  }
-  if(gruppo.length) chiudi();
-  return evs;
-}
-function vistaGiorno(ms){
-  const giorni = [...new Set(ms.map(m => m.date).filter(Boolean))].sort();
-  /* Si parte dal giorno della prossima partita della propria squadra */
-  const nm = nextMatch();
-  if(!giorni.includes(calGiorno)) calGiorno = nm && giorni.includes(nm.date) ? nm.date : giorni[0];
-  const i = giorni.indexOf(calGiorno), delGiorno = ms.filter(m => m.date === calGiorno);
-  const conOra = delGiorno.filter(m => /^\d{1,2}:\d{2}$/.test(m.time||'')), senzaOra = delGiorno.filter(m => !conOra.includes(m));
-  const evs = conOra.map(m => ({m, cal:calDi(m), inizio:minuti(m.time), fine:minuti(m.time) + durataPartita(m)}));
-  const h0 = Math.min(...evs.map(e => Math.floor(e.inizio/60)), 9), h1 = Math.max(...evs.map(e => Math.ceil(e.fine/60)), h0 + 4);
-  const px = min => (min - h0*60) / 60 * CG_ORA;
-  const colonna = k => corsie(evs.filter(e => e.cal === k)).map(e => {
-    const {m} = e, mia = m.team?.id === curTeam, chiave = `${m.team?.id}|${m.id}`;
-    return `<div class="cg-ev${mia ? ' mia' : ''}${m.evento ? ' evento' : ''}${chiave===calScelta ? ' scelta' : ''}" role="button" tabindex="0" data-calev="${esc(chiave)}" style="top:${px(e.inizio)}px;height:${px(e.fine) - px(e.inizio) - 2}px;left:calc(${e.corsia}/${e.corsie}*100%);width:calc(100%/${e.corsie} - 3px)"
-        title="${esc(`${m.time} ${siglaSquadra(m.team)} · ${m.opponent||''}${m.venue ? ' · '+m.venue : ''}${m.note ? ' · '+m.note : ''}`)}">
-      <b>${m.evento ? '📣 '+esc(m.opponent) : `${esc(siglaSquadra(m.team))} · ${esc(m.opponent||'Avversario')}`}</b><span>${esc(m.time.padStart(5,'0'))}${k==='trasferta' && m.venue ? ' · '+esc(m.venue) : ''}</span></div>`;
-  }).join('');
-  const ore = Array.from({length: h1 - h0}, (_, k) => `<span style="top:${k*CG_ORA}px">${String(h0+k).padStart(2,'0')}:00</span>`).join('');
-  return `<div class="cg-nav">
-      <button class="iconbtn" data-calday="${giorni[i-1]||''}" aria-label="Giorno prima" ${i>0 ? '' : 'disabled'}>‹</button>
-      <b>${esc(giornoLungo(calGiorno))}</b>
-      <button class="iconbtn" data-calday="${giorni[i+1]||''}" aria-label="Giorno dopo" ${i<giorni.length-1 ? '' : 'disabled'}>›</button>
-    </div>
-    ${senzaOra.length ? `<p class="note cg-senzaora">Ora da definire: ${senzaOra.map(m => `<span class="cal-${calDi(m)}">${esc(siglaSquadra(m.team))} · ${esc(m.opponent||'')}</span>`).join(' ')}</p>` : ''}
-    <div class="cg">
-      <div class="cg-testa"><span></span>${Object.entries(CAL_NOMI).map(([k,n]) => `<span class="cal-${k}">${n}</span>`).join('')}</div>
-      <div class="cg-corpo" style="height:${(h1-h0)*CG_ORA}px">
-        <div class="cg-ore">${ore}</div>
-        ${Object.keys(CAL_NOMI).map(k => `<div class="cg-col cal-${k}">${colonna(k)}</div>`).join('')}
-      </div>
-    </div>
-    ${(() => { const m = delGiorno.find(x => `${x.team?.id}|${x.id}` === calScelta); return m ? `<ul class="wklist callist cg-dettaglio">${listaCalendario([m], true, modificaPartitaSquadra).replace(/<li class="calmese">.*?<\/li>/, '')}</ul>` : ''; })()}
-    <p class="note">Tocca una partita per i dettagli. Durata dei blocchi indicativa: si conosce l'ora d'inizio della partita.</p>`;
-}
-document.addEventListener('change', e => {
-  if(e.target.dataset?.gkscelto){ portiereScelto = e.target.value; render(); return; }
-  if(!e.target.dataset?.calcat) return;
-  calCategoria = e.target.value; calGiorno = null; calScelta = null; render();
-});
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-calday],[data-calvista],[data-calev]'); if(!b) return;
-  if(b.dataset.calvista){ calVista = b.dataset.calvista; render(); return; }
-  if(b.dataset.calev){ calScelta = calScelta === b.dataset.calev ? null : b.dataset.calev; render(); return; }
-  if(b.dataset.calday){ calGiorno = b.dataset.calday; calScelta = null; render(); }
-});
-function viewCalendario(){
-  const A = isAdmin(), sigla = siglaSquadra(TEAM());
-  const scelta = `<div class="row" style="justify-content:flex-end;margin-bottom:10px">${legendaCal()}</div>`;
-  if(tab === 'calendariotutte'){
-    caricaTuttiCal();
-    /* Filtro per categoria: tutte, oppure una sola squadra */
-    const squadre = (tuttiCal || S.teams).filter(t => !t.organizza && (t.id === curTeam || (t.matches || []).length));
-    if(calCategoria && !squadre.some(t => t.id === calCategoria)) calCategoria = '';
-    const ms = partiteTutte().filter(daGiocare).filter(m => !calCategoria || m.team?.id === calCategoria
-      || (m.evento && (!(m.evento.squadre||[]).length || m.evento.squadre.includes(calCategoria))));
-    const filtro = `<label class="note" for="cal_cat">Categoria</label> <select id="cal_cat" data-calcat="1"><option value="">Tutte le categorie</option>${
-      squadre.map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category || t.name)}</option>`).join('')}</select>`;
-    const vista = `<div class="seg" role="group" aria-label="Vista"><button data-calvista="giorno" aria-pressed="${calVista==='giorno'}">Giorno</button><button data-calvista="elenco" aria-pressed="${calVista==='elenco'}">Elenco</button></div>`;
-    return `<section class="panel">
-      <h2>Calendario · tutte le squadre</h2>
-      ${scelta}
-      <div class="row" style="justify-content:space-between;margin-bottom:8px">
-        <p class="hint" style="margin:0">Le partite da giocare di tutte le squadre, fino a fine stagione. La tua squadra è evidenziata.</p>${vista}</div>
-      <div class="row" style="margin-bottom:8px;gap:8px">${filtro}</div>
-      ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
-      ${!ms.length ? '<p class="empty">Nessuna partita in programma.</p>'
-        : calVista==='giorno' ? vistaGiorno(ms) : `<ul class="wklist callist">${listaCalendario(ms, true, modificaPartitaSquadra)}</ul>`}
-      ${puoOrganizzare() ? `<div class="row" style="margin-top:12px;gap:8px"><label class="note" for="tc_squadra">Nuova amichevole per</label>
-        <select id="tc_squadra">${(tuttiCal || []).filter(t => !t.organizza && !t.vedeTutte).map(t => `<option value="${esc(t.id)}" ${t.id===calCategoria?'selected':''}>${esc(t.category||t.name)}</option>`).join('')}</select>
-        <button class="btn small" data-tcadd="1">+ Aggiungi amichevole</button>
-        <button class="btn small primary" data-evadd="1">+ Nuovo evento</button></div>${barraGoogle()}` : ''}
-    </section>`;
-  }
-  const tuttiGk = perPortieri() ? Object.values(portieriDati || {}).flatMap(d => d.gk.map(p => ({...p, team: d.team}))) : [];
-  if(portiereScelto && !tuttiGk.some(p => p.id === portiereScelto)) portiereScelto = '';
-  const squadraGk = tuttiGk.find(p => p.id === portiereScelto)?.team?.id;
-  const prossime = inOrdine(impegni().filter(daGiocare).filter(m => !squadraGk || m.team?.id === squadraGk));
-  const filtroGk = tuttiGk.length ? `<div class="row" style="margin-bottom:8px;gap:8px"><label class="note" for="gk_scelto">Portiere</label>
-    <select id="gk_scelto" data-gkscelto="1"><option value="">Tutti i miei portieri</option>${tuttiGk.map(p => `<option value="${esc(p.id)}" ${p.id===portiereScelto?'selected':''}>${esc(p.name)} · ${esc(siglaSquadra(p.team))}</option>`).join('')}</select></div>` : '';
-  /* Un solo elenco: campionato, amichevoli e tornei, ognuno con la sua etichetta. Si modificano dalla riga:
-     le partite ufficiali solo l'admin, le amichevoli aggiunte dalla squadra anche il mister */
-  const amichevoleMia = m => (S.reg.friendlies || []).some(f => f.id === m.id);
-  const modifica = m => {
-    if(amichevoleMia(m)) return `<details class="fredit" ${m.id===frAperta ? 'open' : ''}><summary>Modifica amichevole</summary>
-      <div class="grid">
-        <div><label class="f">Data</label><input type="date" data-frid="${m.id}" data-frf="date" value="${esc(m.date||'')}"></div>
-        <div><label class="f">Ora</label><input type="time" data-frid="${m.id}" data-frf="time" value="${esc(m.time||'')}"></div>
-        <div><label class="f">Avversario</label><input data-frid="${m.id}" data-frf="opponent" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
-        <div><label class="f">Campo</label><input data-frid="${m.id}" data-frf="venue" value="${esc(m.venue||'')}" placeholder="Campo"></div>
-      </div>
-      <div class="row" style="margin-top:8px;justify-content:space-between">
-        <label class="row" style="gap:6px"><input type="checkbox" data-frid="${m.id}" data-frf="home" ${m.home?'checked':''}> In casa</label>
-        <button class="btn small ghost danger" data-frdel="${m.id}">Elimina amichevole</button>
-      </div></details>`;
-    if(A && S.calendar.some(x => x.id === m.id)) return `<details class="fredit"><summary>Modifica</summary>
-      <div class="grid">
-        <div><label class="f">Data</label><input type="date" data-calf="date" data-calid="${m.id}" value="${esc(m.date||'')}"></div>
-        <div><label class="f">Ora</label><input type="time" data-calf="time" data-calid="${m.id}" value="${esc(m.time||'')}"></div>
-        <div><label class="f">Avversario</label><input data-calf="opponent" data-calid="${m.id}" value="${esc(m.opponent||'')}" placeholder="Avversario"></div>
-        <div><label class="f">Campo</label><input data-calf="venue" data-calid="${m.id}" value="${esc(m.venue||'')}" placeholder="Campo"></div>
-      </div>
-      <div class="row" style="margin-top:8px;justify-content:space-between">
-        <label class="row" style="gap:6px"><input type="checkbox" data-calf="home" data-calid="${m.id}" ${m.home?'checked':''}> In casa</label>
-        <button class="btn small ghost danger" data-caldel="${m.id}">Elimina partita</button>
-      </div></details>`;
-    return '';
-  };
-  const official = `<ul class="wklist callist">${listaCalendario(prossime, perPortieri(), modifica)}</ul>`;
-  return `<section class="panel">
-    <h2>Calendario · ${perPortieri() ? `i tuoi portieri${etaPortieri() ? ' · ' + etaPortieri().map(e => 'U'+e).join(', ') : ''}` : esc(sigla)}</h2>
-    ${scelta}
-    <p class="hint">${perPortieri() ? 'Le partite da giocare delle categorie dei tuoi portieri (le assegna la società). Tutta la società è in "Tutte le squadre".'
-      : `Tutte le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua etichetta. ${A ? 'Tocca "Modifica" per cambiarne una.' : 'Le amichevoli che aggiungi tu si cambiano da "Modifica amichevole".'} Le partite già giocate sono nello storico, in fondo.`}</p>
-    ${filtroGk}
-    ${prossime.length ? official : '<p class="empty">Nessuna partita da giocare.</p>'}
-    ${perPortieri() ? '' : `<div class="row" style="margin-top:10px">${isDirettore() ? '' : '<button class="btn small" data-act="fradd">+ Aggiungi amichevole</button>'}${A ? '<button class="btn small ghost" data-act="caladd">+ Partita ufficiale</button>' : ''}</div>`}
-    ${viewStorico()}
-  </section>
-`;
-}
+/* Calendario (La mia squadra, Tutte le squadre, Avvisi): nell'app dalla tappa 3, /calendari/… (NELL_APP).
+   Qui restano le righe e gli elenchi usati da Home e famiglie. */
 /* Squadra → Allenamento → I miei allenamenti: in programma (lavori in corso) */
 function viewMieiAllenamenti(){
   return `<section class="panel lavori">
@@ -852,8 +702,6 @@ document.addEventListener('click', e => {
 
 /* Variabili di questo file cambiate anche da altri file: si cambiano solo da qui (passo verso i moduli) */
 function impostaFrAperta(v){ return (frAperta = v); }
-function impostaCalVista(v){ return (calVista = v); }
-function impostaCalCategoria(v){ return (calCategoria = v); }
 function impostaTuttiCalAt(v){ return (tuttiCalAt = v); }
 function impostaSegValuta(v){ return (segValuta = v); }
 function impostaSegEsito(v){ return (segEsito = v); }
