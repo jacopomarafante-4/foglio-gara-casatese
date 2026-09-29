@@ -55,8 +55,7 @@ function writeRoute(push){
   const h = '#' + (pin ? 'squadra=' + pin : '') + '/' + tab;
   if(location.hash !== h) history[push ? 'pushState' : 'replaceState'](null, '', h);
 }
-/* Schede già portate nell'app (tappa 3 dell'app unica): nel sito si aprono lì, stessa intestazione e stessa barra */
-const NELL_APP = {archivio:'/societa/archivio', modifiche:'/societa/modifiche', tesserati:'/segreteria'};
+/* Schede già portate nell'app (tappa 3 dell'app unica, NELL_APP in lib/condivisi.ts): nel sito si aprono lì, stessa intestazione e stessa barra */
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
   if(NELL_APP[t] && IN_APP_UNICA){ location.assign(NELL_APP[t]); return; }

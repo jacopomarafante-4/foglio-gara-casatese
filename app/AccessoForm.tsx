@@ -3,9 +3,15 @@
 import { useActionState, useEffect } from 'react';
 import { accedi, type StatoAccesso } from '@/app/auth/actions';
 
-export function AccessoForm({ next }: { next?: string }) {
+export function AccessoForm({ next, uscito }: { next?: string; uscito?: boolean }) {
   const [stato, azione, inCorso] = useActionState<StatoAccesso, FormData>(accedi, {});
   const admin = stato.passo === 'admin';
+
+  // Uscito da una pagina dell'app: si toglie anche il PIN che il Portale tiene in questa scheda (core.js)
+  useEffect(() => {
+    if (!uscito) return;
+    try { sessionStorage.removeItem('fg:pin'); sessionStorage.removeItem('fg:famiglia'); } catch { /* niente da togliere */ }
+  }, [uscito]);
 
   // Pagina completa: il Portale squadre non fa parte del router di Next
   useEffect(() => {

@@ -2,6 +2,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { accessoScaduto, cookieDiSessione } from './durata';
+import { COOKIE_MISTER, leggiTessera } from '@/lib/tessera';
 
 const PAGINE_PUBBLICHE = ['/login'];
 
@@ -43,6 +44,10 @@ export async function aggiornaSessione(request: NextRequest) {
   if (percorso === '/') return response;
   // Calendari Google: controlla da sola chi chiama (sessione di admin/direttori o PIN dell'organizzativo)
   if (percorso === '/api/calendario-google') return response;
+  // Uscita dal Portale: toglie sessione e tessera del mister
+  if (percorso === '/esci') return response;
+  // Mister con la tessera (lib/mister.ts): passa; il layout delle aree ricontrolla il PIN nel database
+  if (!loggato && (await leggiTessera(request.cookies.get(COOKIE_MISTER)?.value))) return response;
   const pubblica = PAGINE_PUBBLICHE.some((p) => percorso.startsWith(p));
 
   if (!loggato && !pubblica) {

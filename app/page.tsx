@@ -41,9 +41,9 @@ function CampoSfondo() {
 export default async function Ingresso({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; pin?: string }>;
+  searchParams: Promise<{ next?: string; pin?: string; uscito?: string }>;
 }) {
-  const [{ next, pin }, profilo] = await Promise.all([searchParams, getProfilo()]);
+  const [{ next, pin, uscito }, profilo] = await Promise.all([searchParams, getProfilo()]);
   // ?pin=1: il Portale ha rimandato qui (sessione non valida per lui) → PIN, niente giro di rimandi
   if (!pin && (profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo))) redirect('/portale/');
   if (!pin && profilo?.ruolo === 'segreteria' && profilo.attivo) redirect('/segreteria');
@@ -66,7 +66,7 @@ export default async function Ingresso({
             </div>
 
             <div className="mt-7">
-              <AccessoForm next={next} />
+              <AccessoForm next={next} uscito={!!uscito} />
             </div>
           </div>
 

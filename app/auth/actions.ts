@@ -1,8 +1,11 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { pannelloIniziale, puoAccedere, type Ruolo } from '@/lib/ruoli';
+import { COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
+import { NELL_APP } from '@/lib/condivisi';
 
 export type StatoForm = { errore?: string; ok?: string };
 
@@ -37,6 +40,9 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   if (!pin) return { errore: 'Inserisci il tuo PIN.' };
 
   const supabase = await createClient();
+  // Un nuovo PIN toglie la tessera di un mister entrato prima (telefono condiviso); la si ridà sotto se è ancora un mister
+  const biscotti = await cookies();
+  biscotti.delete(COOKIE_MISTER);
 
   const pinAdmin = process.env.PIN_ADMIN;
   if (pinAdmin && pin === pinAdmin) {
@@ -68,7 +74,12 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   // PIN di un mister o della squadra: il Portale apre la squadra dal link (#squadra=PIN)
   if (tipo === 'mister') {
     await supabase.auth.signOut({ scope: 'local' }); // su un telefono condiviso non resta aperto un altro account
-    return { vai: `/portale/#squadra=${encodeURIComponent(pin)}` };
+    // Tessera per le pagine del Portale portate nell'app (lib/mister.ts)
+    const tessera = await creaTessera(pin);
+    if (tessera) biscotti.set(COOKIE_MISTER, tessera, opzioniCookieMister);
+    // Arrivava da una di quelle pagine: si passa dal Portale (che tiene il PIN) con la sua scheda, e lui la riapre
+    const scheda = Object.entries(NELL_APP).find(([, percorso]) => percorso === next)?.[0];
+    return { vai: `/portale/#squadra=${encodeURIComponent(pin)}${scheda ? '/' + scheda : ''}` };
   }
   // PIN di una famiglia: il Portale apre la pagina del ragazzo (#famiglia=PIN)
   if (tipo === 'famiglia') {
@@ -96,7 +107,9 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
 export async function esci() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: 'local' });
-  redirect('/');
+  (await cookies()).delete(COOKIE_MISTER);
+  // ?uscito=1: la pagina d'ingresso toglie anche il PIN che il Portale tiene nella scheda del browser
+  redirect('/?uscito=1');
 }
 
 export async function cambiaPassword(_prev: StatoForm, formData: FormData): Promise<StatoForm> {

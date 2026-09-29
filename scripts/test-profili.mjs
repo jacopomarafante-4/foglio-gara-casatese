@@ -218,6 +218,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       const testo = await pg.locator('main').innerText().catch(() => '');
       const v = { nome: `${nome} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
       if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+      if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${nome}: rimandato alla pagina del PIN (tessera del mister?)`);
+      const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
       riga.viste.push(v);
       await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
       return true;

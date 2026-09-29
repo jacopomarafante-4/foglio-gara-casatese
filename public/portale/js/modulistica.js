@@ -1,5 +1,5 @@
-/* Portale · Modulistica: distinta compilabile (tornei, amichevoli omologate), comunicazione su carta intestata,
-   programma gare di un periodo (dal–al). PDF testuali con jsPDF (A4 verticale), intestazione della società. */
+/* Portale · Modulistica: distinta compilabile (tornei, amichevoli omologate), comunicazione su carta intestata
+   (il programma gare di un periodo è nell'app: /modulistica/programma, lib/programma.ts). PDF testuali con jsPDF (A4 verticale), intestazione della società. */
 
 const BLU_RGB = [0, 61, 165], INK_RGB = [14, 26, 43], GRIGIO_RGB = [91, 107, 128];
 /* ---------- Impaginazione automatica (comune a tutti i moduli) ----------
@@ -265,86 +265,8 @@ async function pdfComunicazione(a){
   await salvaPdf(doc, nomeFile('COMUNICAZIONE', titolo, a.data), 'Comunicazione');
 }
 
-/* ---------- Programma gare di un periodo (Modulistica → Programma gare) ---------- */
-let progDal = null, progAl = null, progSquadre = [];
-function viewProgramma(){
-  caricaTuttiCal();
-  if(!progDal){ const [sab, dom] = weekendISO(); const d = new Date(sab+'T12:00:00'); d.setDate(d.getDate() - 5); progDal = d.toISOString().slice(0,10); progAl = dom; }
-  const squadre = (tuttiCal || S.teams).filter(t => !t.organizza && !t.vedeTutte && ((t.matches||[]).length || t.id === curTeam));
-  const ms = programmaPartite();
-  let giorno = '';
-  const righe = ms.map(m => { const testa = m.date !== giorno ? `<li class="calmese">${weekday(m.date)} ${fmtDate(m.date)}</li>` : ''; giorno = m.date; return testa + rigaPartita(m, true, false); }).join('');
-  return `<section class="panel">
-    <h2>Programma gare</h2>
-    <p class="hint">Partite ed eventi di un periodo, per tutta la società o per le squadre che scegli. Da consultare qui o da stampare in PDF.</p>
-    <div class="grid"><div><label class="f" for="pg_dal">Dal</label><input id="pg_dal" type="date" data-prog="dal" value="${esc(progDal)}"></div>
-      <div><label class="f" for="pg_al">Al</label><input id="pg_al" type="date" data-prog="al" value="${esc(progAl)}"></div></div>
-    <label class="f" style="margin-top:8px">Squadre <span class="note">(nessuna scelta = tutte)</span></label>
-    <div class="gchips" style="flex-wrap:wrap">${squadre.map(t => `<button class="gchip" data-progsq="${esc(t.id)}" aria-pressed="${progSquadre.includes(t.id)}">${esc(siglaSquadra(t))}</button>`).join('')}</div>
-    <div class="row" style="margin:12px 0"><button class="btn primary" data-progpdf="1" ${ms.length ? '' : 'disabled'}>Scarica programma PDF</button><span class="note">${ms.length} ${ms.length===1 ? 'impegno' : 'impegni'}</span></div>
-    ${tuttiCal ? '' : '<p class="note">Carico le altre squadre…</p>'}
-    ${ms.length ? `<ul class="wklist callist">${righe}</ul>` : '<p class="empty">Nessun impegno nel periodo.</p>'}
-  </section>`;
-}
-function programmaPartite(){
-  return partiteTutte().filter(m => m.date && m.date >= progDal && m.date <= progAl)
-    .filter(m => !progSquadre.length || (m.evento ? !(m.evento.squadre||[]).length || m.evento.squadre.some(id => progSquadre.includes(id)) : progSquadre.includes(m.team?.id)));
-}
-/* Ordine del programma stampato: per categoria (dalla più grande alla più piccola, poi gli eventi della società) e,
-   nella stessa categoria, per giorno e ora */
-const categoriaProgramma = m => m.evento ? 'Eventi della società' : (m.team?.category || m.team?.name || '');
-const ordineProgramma = (a, b) => (a.evento ? 1 : 0) - (b.evento ? 1 : 0) || etaSquadra(b.team) - etaSquadra(a.team)
-  || categoriaProgramma(a).localeCompare(categoriaProgramma(b)) || (a.date || '').localeCompare(b.date || '') || (a.time || '99').localeCompare(b.time || '99');
-async function pdfProgramma(){
-  if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
-  const ms = programmaPartite().slice().sort(ordineProgramma);
-  const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
-  const quali = progSquadre.length ? progSquadre.map(id => siglaSquadra((tuttiCal||S.teams).find(t => t.id===id))).join(', ') : 'Tutte le squadre';
-  const TITOLO = 'PROGRAMMA GARE';
-  const categoria = progSquadre.length === 1 ? ((tuttiCal||S.teams).find(t => t.id===progSquadre[0])?.category || '') : '';
-  let y = await intestazionePdf(doc, TITOLO, `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`, categoria);
-  const cols = [[PAG.sx, 24, 'Giorno'], [PAG.sx + 24, 18, 'Ora'], [PAG.sx + 42, 82, 'Partita / evento'], [PAG.sx + 124, LARGH - 124, 'Campo']];
-  const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(PAG.sx, y, LARGH, 7, 'F'); doc.setTextColor(255);
-    cols.forEach(([x, w, l]) => riga1(doc, l, x + 2, y + 4.8, w - 4, {size: 9, bold: true})); y += 8.5; doc.setTextColor(...INK_RGB); };
-  testata();
-  const gruppoH = 7;
-  /* Ogni partita: partita e campo su al massimo 2 righe, che si adattano; l'altezza segue la cella più alta */
-  const misura = m => {
-    const titolo = m.evento ? `${m.opponent} (${m.tipo})` : (m.home ? `Academy - ${m.opponent||'?'}` : `${m.opponent||'?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Amichevole'}` : '');
-    const campo = m.evento ? (m.venue || '') : m.home ? `In casa · ${CAL_NOMI[calDi(m)]}${m.venue ? ' · ' + m.venue : ''}` : (m.venue || 'Trasferta');
-    const b1 = misuraBlocco(doc, titolo, cols[2][1] - 4, {size: 9.5, min: 8, maxRighe: 2});
-    const b2 = misuraBlocco(doc, campo, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2});
-    return {titolo, campo, h: Math.max(b1.righe.length * b1.alt, b2.righe.length * b2.alt) + 3.2};
-  };
-  let gruppo = '';
-  for(const m of ms){
-    const r = misura(m), cat = categoriaProgramma(m), nuovo = cat !== gruppo;
-    /* il titolo della categoria non resta mai da solo in fondo alla pagina (e si ripete in cima alla pagina dopo) */
-    if(y + r.h + (nuovo ? gruppoH : 0) > PAG.basso){ y = nuovaPagina(doc, TITOLO); testata(); gruppo = ''; }
-    if(cat !== gruppo){ gruppo = cat; doc.setTextColor(...BLU_RGB);
-      riga1(doc, cat.toUpperCase(), PAG.sx, y + 4, LARGH, {size: 10.5, bold: true}); y += gruppoH; doc.setTextColor(...INK_RGB); }
-    doc.setFillColor(...(calDi(m)==='merate' ? BLU_RGB : calDi(m)==='cernusco' ? [212,175,55] : [196,30,58])); doc.rect(PAG.sx, y, 1.4, r.h - 1, 'F');
-    const by = y + 4;
-    riga1(doc, `${weekday(m.date).slice(0, 3)} ${fmtDate(m.date).slice(0, 5)}`, cols[0][0] + 3, by, cols[0][1] - 4, {size: 9.5, min: 7, bold: true});
-    riga1(doc, m.time ? `${m.time.padStart(5,'0')}${m.fine ? '–'+m.fine : ''}` : 'da def.', cols[1][0] + 2, by, cols[1][1] - 3, {size: 9.5, min: 7});
-    blocco(doc, r.titolo, cols[2][0] + 2, by, cols[2][1] - 4, {size: 9.5, min: 8, maxRighe: 2});
-    doc.setTextColor(...GRIGIO_RGB); blocco(doc, r.campo, cols[3][0] + 2, by, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2}); doc.setTextColor(...INK_RGB);
-    doc.setDrawColor(230); doc.line(PAG.sx, y + r.h - 0.6, PAG.dx, y + r.h - 0.6);
-    y += r.h;
-  }
-  if(!ms.length) riga1(doc, 'Nessun impegno nel periodo.', PAG.sx, y + 6, LARGH, {size: 11});
-  await salvaPdf(doc, nomeFile('PROGRAMMA', progDal, progAl), 'Programma gare');
-}
-document.addEventListener('change', e => {
-  const t = e.target; if(!t.dataset?.prog) return;
-  if(t.dataset.prog === 'dal') progDal = t.value; else progAl = t.value;
-  if(progAl < progDal) progAl = progDal;
-  render();
-});
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-progsq],[data-progpdf],[data-avpdf],[data-avbozzapdf]'); if(!b) return;
-  if(b.dataset.progsq){ const id = b.dataset.progsq; progSquadre = progSquadre.includes(id) ? progSquadre.filter(x => x!==id) : [...progSquadre, id]; render(); return; }
-  if(b.dataset.progpdf){ pdfProgramma(); return; }
+  const b = e.target.closest('[data-avpdf],[data-avbozzapdf]'); if(!b) return;
   if(b.dataset.avpdf){ const a = avvisiSoc.find(x => x.id === b.dataset.avpdf); if(a) pdfComunicazione(a); return; }
   if(b.dataset.avbozzapdf){ pdfComunicazione({...bozzaAvviso, data: todayISO(), autore: misterName || 'La società'}); }
 });

@@ -293,7 +293,7 @@ function switchView(role, team){
 async function logout(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
   if(supabaseClient){ try{ await supabaseClient.auth.signOut({ scope: 'local' }); }catch(e){} }
-  if(IN_APP_UNICA){ try{ sessionStorage.removeItem('fg:pin'); sessionStorage.removeItem('fg:famiglia'); }catch(e){} location.replace('/?pin=1'); return; }
+  if(IN_APP_UNICA){ try{ sessionStorage.removeItem('fg:pin'); sessionStorage.removeItem('fg:famiglia'); }catch(e){} location.replace('/esci'); return; }   // /esci toglie anche la tessera del mister
   adminUnlocked = false; supaSession = null; gateError = false;
   try{ localStorage.removeItem('fg:adminpin'); }catch(e){}
   if(secureMode){ history.replaceState(null, '', location.pathname + location.search); location.reload(); return; }
