@@ -180,6 +180,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0047: `coach_segnala` cerca prima se il giocatore è già in lista (qualsiasi annata) e risponde "esistente"; "cosa hai visto" e
+  "portiere o movimento" obbligatori solo per un giocatore nuovo (anche in `segnala/actions.ts`). Il Portale controlla da sé solo
+  annata e nome
 - 0046: ruolo in due passi. `ruolo_campo` + 'movimento' (linea non indicata). Segnalazione: portiere o movimento obbligatorio, poi la linea
   facoltativa (`TIPI_GIOCATORE`, `LINEE` in `lib/tipi.ts`; prima = difensore, seconda = centrocampista, terza = attaccante). Valutazione:
   `ruolo_preciso` da elenco a discesa (`RUOLI_PRECISI`, SQL `ruoli_precisi()`), in `valutazioni` e, col trigger `ruolo_da_valutazione`,

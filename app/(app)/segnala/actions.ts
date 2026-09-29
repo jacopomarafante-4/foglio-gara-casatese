@@ -37,7 +37,6 @@ export async function salvaSegnalazione(formData: FormData) {
     const nomeSocieta = testo(formData, 'societa');
 
     if (!annata) errore('Indica l’annata.');
-    if (!ruolo) errore('Indica se è un portiere o un giocatore di movimento.');
     if (!cognome && !descrizione)
       errore('Serve il cognome oppure una descrizione per riconoscerlo (es. "N.8, biondo").');
 
@@ -52,6 +51,8 @@ export async function salvaSegnalazione(formData: FormData) {
     }
 
     if (!giocatoreId) {
+      // solo per un giocatore nuovo (se è già in lista si passa alla valutazione)
+      if (!ruolo) errore('Indica se è un portiere o un giocatore di movimento.');
       const societa = nomeSocieta
         ? await trovaOCreaSocieta(supabase, await elencoSocieta(supabase), nomeSocieta)
         : null;

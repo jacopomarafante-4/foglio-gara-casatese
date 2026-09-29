@@ -833,15 +833,15 @@ document.addEventListener('click', e => {
 async function inviaSegnalazione(){
   if(segInvio) return;
   const d = segDraft;
+  /* qui solo annata e nome: se è già in lista (di qualsiasi annata) coach_segnala risponde subito e si apre la valutazione;
+     "portiere o movimento" e "cosa hai visto" li chiede il database solo per un giocatore nuovo (0047) */
   const manca = !d.annata ? 'Indica l’annata.'
-    : !d.tipo ? 'Indica se è un portiere o un giocatore di movimento.'
-    : !(d.cognome||'').trim() && !(d.descrizione||'').trim() ? 'Serve il cognome oppure una descrizione per riconoscerlo.'
-    : !(d.testo||'').trim() ? 'Scrivi cosa hai visto: è la parte più importante.' : '';
+    : !(d.cognome||'').trim() && !(d.descrizione||'').trim() ? 'Serve il cognome oppure una descrizione per riconoscerlo.' : '';
   if(manca){ segEsito = {ok:false, msg:manca}; render(); window.scrollTo(0,0); return; }
   segInvio = true; render();
   let error = null;
   let risposta = null;
-  try{ ({ data: risposta, error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d, ruolo: d.tipo === 'portiere' ? 'portiere' : (d.linea || 'movimento')}})); }catch(e){ error = e; }
+  try{ ({ data: risposta, error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d, ruolo: d.tipo === 'portiere' ? 'portiere' : d.tipo === 'movimento' ? (d.linea || 'movimento') : ''}})); }catch(e){ error = e; }
   segInvio = false;
   if(!error && risposta?.esistente){
     /* già in lista: si apre la valutazione, con quello che si era scritto nel commento */
