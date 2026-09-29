@@ -71,7 +71,15 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `lib/portale-dati.ts` (`chiEntra`, `leggiDocs`, `calendariTutti`). Modifiche ai documenti del Portale dalle pagine dell'app:
   `modificaDoc(path, modifiche)` in `app/(aree)/docs-actions.ts`, voce per voce per id (`lib/modifiche.ts`) sulla versione più
   recente, con coach_leggi/coach_salva o salva_doc (i permessi li decide il database). Nel Portale restano righe ed elenchi del
-  calendario per Home e famiglie. Elenco delle schede portate: `NELL_APP` in
+  calendario per le famiglie.
+  Home (`/inizio`; `/home` è la Home dello Scouting): mister (avvisi, weekend, da fare, riepilogo della stagione: regole in
+  `lib/registro.ts`), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore` in `lib/portale-dati.ts`),
+  organizzativo (weekend per calendario, eventi, avvisi), admin e direttori con `?squadra=`. Dopo il PIN admin e direttori
+  vanno lì; i mister passano dal Portale (che tiene il PIN) e ci arrivano con `NELL_APP.home`. I pulsanti verso la Squadra
+  aprono il Portale con `#/<scheda>/<id>` (allenamento o partita da aprire) e `#/s:<squadra>/…` per lo staff (`rotta()`,
+  `squadraDaRotta()`, `apriDaRotta()` in portale.js); prima creano quello che serve con le azioni `allenamentoDiOggi`,
+  `tabellinoDi`, `preparaGara` (`app/(aree)/docs-actions.ts`, stesso controllo di versione di `modificaDoc`). Il Portale rimanda
+  all'app e riscrive l'indirizzo solo dopo aver caricato le squadre (prima la scheda è ancora "home"). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

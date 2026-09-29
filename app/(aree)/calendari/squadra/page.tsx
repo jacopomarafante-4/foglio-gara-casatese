@@ -5,10 +5,9 @@
 import { redirect } from 'next/navigation';
 import { vedeTutto } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
-import { calendariTutti, chiEntra, leggiDocs, squadreDelPortale } from '@/lib/portale-dati';
-import { etaSquadra, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
-import type { FoglioConvocazioni } from '@/lib/calendario-portale';
-import { CalendarioSquadra, type Portieri } from '@/components/calendario/CalendarioSquadra';
+import { chiEntra, datiPreparatore, leggiDocs, squadreDelPortale } from '@/lib/portale-dati';
+import type { Evento, Partita, SquadraCal } from '@/lib/programma';
+import { CalendarioSquadra } from '@/components/calendario/CalendarioSquadra';
 
 type Id = Partita & { id: string };
 
@@ -35,18 +34,7 @@ export default async function LaMiaSquadra({ searchParams }: { searchParams: Pro
 
   /* preparatori dei portieri: partite di tutte le squadre delle loro categorie, con i portieri e la convocazione */
   if (chi.mister && squadra.vedeTutte) {
-    const eta = (chi.mister.squadra.coaches ?? []).find((c) => c.name && c.name === chi.mister!.nome)?.eta;
-    const etaOk = Array.isArray(eta) && eta.length ? eta : null;
-    const { squadre: tutte } = await calendariTutti(chi);
-    const scelte = tutte.filter((t) => t.id !== squadra!.id && !t.organizza && !t.vedeTutte && (!etaOk || etaOk.includes(etaSquadra(t))));
-    const docs = await leggiDocs(chi, scelte.flatMap((t) => ['roster/' + t.id, 'registro/' + t.id, 'sheet/' + t.id]));
-    const portieri: Portieri = {};
-    for (const t of scelte) {
-      const rosa = (docs['roster/' + t.id]?.players ?? []) as { id: string; name: string }[];
-      const gk = ((docs['registro/' + t.id]?.gk ?? []) as string[]).map((id) => rosa.find((p) => p.id === id)).filter(Boolean) as { id: string; name: string }[];
-      portieri[t.id] = { team: { ...t, matches: [] }, gk, foglio: (docs['sheet/' + t.id] ?? {}) as FoglioConvocazioni };
-    }
-    const partite: Impegno[] = scelte.flatMap((t) => t.matches.map((m) => ({ ...m, team: t })));
+    const { partite, portieri, eta: etaOk } = await datiPreparatore(chi);
     return (
       <div className="space-y-5">
         <h1 className="font-display text-4xl font-bold">Calendario · i tuoi portieri{etaOk ? ' · ' + etaOk.map((e) => 'U' + e).join(', ') : ''}</h1>

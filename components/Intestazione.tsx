@@ -14,7 +14,7 @@ export function Intestazione({ profilo, mister }: { profilo?: Profilo; mister?: 
   const ruolo = profilo?.ruolo ?? 'mister';
   const nome = profilo ? nomeCompleto(profilo) : mister?.nome ?? 'Mister';
   const organizza = !!mister?.squadra.organizza;
-  const casa = ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'mister' ? '/portale/#/home'
+  const casa = ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'mister' ? '/inizio'
     : ruolo === 'segreteria' ? '/segreteria' : '/home';
   return (
     <div className="sticky top-0 z-20 bg-carta">

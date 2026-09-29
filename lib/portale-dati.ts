@@ -4,7 +4,8 @@ import { getProfilo } from '@/lib/auth';
 import { getMister, type Mister } from '@/lib/mister';
 import type { Profilo } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
-import type { Evento, Partita, SquadraCal } from '@/lib/programma';
+import { etaSquadra, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
+import type { FoglioConvocazioni } from '@/lib/calendario-portale';
 
 export type Chi = { profilo: Profilo | null; mister: Mister | null };
 type Dati = Record<string, unknown> & { items?: unknown[]; matches?: unknown[] };
@@ -65,4 +66,23 @@ export async function calendariTutti(chi: Chi): Promise<{ squadre: SquadraCal[];
   const doc = (p: string) => data?.find((d) => d.path === p)?.data;
   const squadre = ((doc('shared/teams')?.items ?? []) as SquadraCal[]).map((t) => ({ ...t, matches: (doc('calendar/' + t.id)?.matches ?? []) as Partita[] }));
   return { squadre, eventi: (doc('shared/eventi')?.items ?? []) as Evento[], errore: error?.message ?? '' };
+}
+
+export type Portieri = Record<string, { team: SquadraCal; gk: { id: string; name: string }[]; foglio: FoglioConvocazioni }>;
+/** Preparatori dei portieri (squadra con vedeTutte): partite delle squadre delle loro categorie (coaches[].eta del preparatore
+ *  entrato; se mancano, tutte) e, per ogni squadra, i portieri della rosa (registro.gk) e il foglio con le convocazioni */
+export async function datiPreparatore(chi: Chi): Promise<{ partite: Impegno[]; portieri: Portieri; eta: number[] | null }> {
+  const m = chi.mister!;
+  const eta = (m.squadra.coaches ?? []).find((c) => c.name && c.name === m.nome)?.eta;
+  const etaOk = Array.isArray(eta) && eta.length ? eta : null;
+  const { squadre } = await calendariTutti(chi);
+  const scelte = squadre.filter((t) => t.id !== m.squadra.id && !t.organizza && !t.vedeTutte && (!etaOk || etaOk.includes(etaSquadra(t))));
+  const docs = await leggiDocs(chi, scelte.flatMap((t) => ['roster/' + t.id, 'registro/' + t.id, 'sheet/' + t.id]));
+  const portieri: Portieri = {};
+  for (const t of scelte) {
+    const rosa = (docs['roster/' + t.id]?.players ?? []) as { id: string; name: string }[];
+    const gk = ((docs['registro/' + t.id]?.gk ?? []) as string[]).map((id) => rosa.find((p) => p.id === id)).filter(Boolean) as { id: string; name: string }[];
+    portieri[t.id] = { team: { ...t, matches: [] }, gk, foglio: (docs['sheet/' + t.id] ?? {}) as FoglioConvocazioni };
+  }
+  return { partite: scelte.flatMap((t) => t.matches.map((x) => ({ ...x, team: t }))), portieri, eta: etaOk };
 }

@@ -39,7 +39,7 @@ export const ICONE_AREE: Record<string, string> = {
 export const NELL_APP: Record<string, string> = {
   archivio: '/societa/archivio', modifiche: '/societa/modifiche', tesserati: '/segreteria', programma: '/modulistica/programma',
   distinta: '/modulistica/distinta', comunicazione: '/modulistica/comunicazione',
-  calendario: '/calendari/squadra', calendariotutte: '/calendari/tutte', avvisi: '/calendari/avvisi',
+  calendario: '/calendari/squadra', calendariotutte: '/calendari/tutte', avvisi: '/calendari/avvisi', home: '/inizio',
 };
 
 /** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */

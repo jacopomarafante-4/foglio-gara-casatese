@@ -37,26 +37,3 @@ function avvisiSquadra(teamId){
   const limite = da.toISOString().slice(0,10);
   return avvisiSoc.filter(a => (a.data||'') >= limite && (!(a.squadre||[]).length || a.squadre.includes(teamId))).sort((x,y) => (y.data||'').localeCompare(x.data||''));
 }
-
-/* ---------- Home del responsabile organizzativo ---------- */
-function viewHomeOrg(){
-  caricaTuttiCal(); caricaCondivisi();
-  const [sab, dom] = weekendISO(), oggi = todayISO();
-  const wk = partiteTutte().filter(m => m.date===sab || m.date===dom);
-  const conta = k => wk.filter(m => calDi(m)===k).length;
-  const prossimi = eventiSoc.filter(e => e.data && e.data >= oggi).sort((a,b) => (a.data+(a.inizio||'')).localeCompare(b.data+(b.inizio||''))).slice(0,5);
-  const avvisi = avvisiSoc.slice().sort((x,y) => (y.data||'').localeCompare(x.data||'')).slice(0,3);
-  return `<section class="hhead"><h2>Organizzazione</h2><p class="note">Calendari, campi, eventi e avvisi della società</p></section>
-    <div class="hgrid">
-      <div class="hcard hmatch hwide"><div class="hlabel">Weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
-        ${legendaCal()}
-        <div class="hriep" style="grid-template-columns:repeat(3,1fr)">${Object.entries(CAL_NOMI).map(([k,n]) => `<button class="hriepbox cal-${k}" data-hgo="calendariotutte" style="border-left:5px solid var(--calc)"><span class="hriepttl">${n}</span><span><b>${conta(k)}</b> impegni</span></button>`).join('')}</div>
-        <div class="row" style="margin-top:12px"><button class="btn primary small" data-hgo="calendariotutte">Apri la vista Giorno</button></div></div>
-      <div class="hcard"><div class="hlabel">Prossimi eventi</div>
-        ${prossimi.length ? `<ul class="todo">${prossimi.map(e => `<li><button data-hgo="calendariotutte"><span class="tdtxt">${weekday(e.data)} ${fmtDate(e.data).slice(0,5)} · ${esc(e.titolo||'Evento')}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>` : '<p class="note">Nessun evento in programma.</p>'}
-        <div class="row" style="margin-top:10px"><button class="btn small primary" data-hgo="calendariotutte">+ Nuovo evento</button></div></div>
-      <div class="hcard"><div class="hlabel">Ultimi avvisi</div>
-        ${avvisi.length ? `<ul class="todo">${avvisi.map(a => `<li><button data-hgo="avvisi"><span class="tdtxt">${fmtDate(a.data).slice(0,5)} · ${esc(a.titolo || a.testo.slice(0,40))}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>` : '<p class="note">Nessun avviso.</p>'}
-        <div class="row" style="margin-top:10px"><button class="btn small" data-hgo="avvisi">Nuovo avviso</button></div></div>
-    </div>`;
-}

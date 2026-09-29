@@ -140,15 +140,16 @@ function render(){
   document.body.classList.toggle('ro', readOnly());
   if(!allowedTabs().includes(tab)) impostaTab('home');
   areaLast[areaOf(tab).k] = tab;
-  writeRoute(false);
+  /* prima del caricamento delle squadre la scheda non è ancora quella dell'indirizzo: non lo si riscrive */
+  if(teamsLoaded) writeRoute(false);
   renderChrome();
   const T0 = TEAM();
   $('#matchline').textContent = isSegreteria() ? 'Segreteria' : T0?.category || '';
   const v = $('#view');
   if(tab==='squadre') v.innerHTML = viewSquadre();
-  else if(tab==='home') v.innerHTML = viewHome();
   /* Schede che non dipendono da una squadra aperta */
-  else if(NELL_APP[tab]){ if(IN_APP_UNICA) location.replace(NELL_APP[tab]); else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
+  /* nell'app solo dopo aver caricato le squadre: prima la scheda non è ancora quella dell'indirizzo (tab parte da 'home') */
+  else if(NELL_APP[tab]){ if(IN_APP_UNICA){ if(teamsLoaded) location.replace(NELL_APP[tab]); else v.innerHTML = '<section class="panel"><p class="note">Carico…</p></section>'; } else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();
   else if(tab==='partita') v.innerHTML = viewPartita();
