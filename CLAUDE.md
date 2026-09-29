@@ -180,6 +180,9 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0044: valutazione con 6 voti facoltativi in più (`marcamento`, `smarcamento`, `trasmissione`, `concentrazione`, `coraggio`, `estro`);
+  `DETTAGLI_VALUTAZIONE` con `gruppo` (`GRUPPI_VALUTAZIONE`: Con la palla, Senza palla, Fisico, Testa; nel Portale 4° elemento di
+  `DETTAGLI_VALUTA`); `coach_valuta` riscritta
 - 0043: le 4 aree (Tecnica, Motoria, Tattica, Mentale, voto 1–5 + nota, tutte facoltative) passano dalla valutazione alla
   segnalazione (`segnalazioni.tecnica…mentale_note`); in `valutazioni` restano per le vecchie righe (ora nullabili). Medie per area
   da segnalazioni e valutazioni insieme (`medieAree`, `mediaVoti`, `conVoti` in `lib/valutazioni.ts`); `coach_segnala`, `coach_valuta`,

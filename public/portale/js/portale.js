@@ -656,10 +656,19 @@ let segValuta = null;
 /* Segnalazione: tutte le domande nello stesso stile e facoltative; piede forte/debole sostituiti da "Piede preferito" */
 const DETTAGLI_SEGNALA = [['piede','Piede preferito',[['destro','Destro'],['sinistro','Sinistro'],['ambidestro','Entrambi']]],
   ['impressione','Prima impressione',[['positiva','Positiva'],['da_rivedere','Da rivedere'],['negativa','Negativa']]],['statura','Statura'],['forza','Forza']];
-const DETTAGLI_VALUTA = [['spunti','Spunti','Uno contro uno, cambi di passo'],['guida_palla','Guida della palla','Conduzione a testa alta, con entrambi i piedi'],
-  ['ricezione','Ricezione','Primo controllo, orientato'],['calciata','Calciata','Tiro e lancio, forza e precisione'],
-  ['contrasto','Contrasto','Tempo e decisione nel recupero palla'],['velocita','Velocità','Allungo, con e senza palla'],
-  ['reattivita','Reattività','Prontezza nei primi passi e sulle seconde palle']];
+const DETTAGLI_VALUTA = [['spunti','Spunti','Uno contro uno, cambi di passo','Con la palla'],
+  ['guida_palla','Guida della palla','Conduzione a testa alta, con entrambi i piedi','Con la palla'],
+  ['ricezione','Ricezione','Primo controllo, orientato','Con la palla'],
+  ['trasmissione','Trasmissione','Passaggio corto e lungo, tempi e precisione','Con la palla'],
+  ['calciata','Calciata','Tiro e lancio, forza e precisione','Con la palla'],
+  ['marcamento','Marcamento','Presa dell\'uomo, posizione tra avversario e porta','Senza palla'],
+  ['smarcamento','Smarcamento','Movimenti per ricevere, attacco dello spazio','Senza palla'],
+  ['contrasto','Contrasto','Tempo e decisione nel recupero palla','Senza palla'],
+  ['velocita','Velocità','Allungo, con e senza palla','Fisico'],
+  ['reattivita','Reattività','Prontezza nei primi passi e sulle seconde palle','Fisico'],
+  ['concentrazione','Concentrazione','Attento per tutta la partita, pochi errori di distrazione','Testa'],
+  ['coraggio','Coraggio','Chiede palla, entra nei contrasti, non si nasconde','Testa'],
+  ['estro','Estro','Fantasia, giocate inattese, creatività','Testa']];   /* come DETTAGLI_VALUTAZIONE in lib/tipi.ts (0041, 0044) */
 /* Moduli di segnalazione e valutazione come nello Scouting (components/Sezione.tsx): blocchi numerati nell'ordine in cui si
    compilano, una riga compatta per ogni voto 1–5 (nota solo se la si apre), pulsanti che si tolgono toccandoli di nuovo */
 const notaAperta = new Set();
@@ -685,7 +694,8 @@ function viewValutaMister(){
     `<div class="rapida giudizio" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" data-tono="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
     <label class="f" for="val_comm">Perché</label><textarea id="val_comm" data-valf="commento" rows="4" placeholder="Punti di forza, cosa migliorare, cosa rivedere la prossima volta…">${esc(v.commento||'')}</textarea>`)}
   ${sezioneForm(2, 'Nel dettaglio', 'Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere.', true,
-    DETTAGLI_VALUTA.map(([k, l, aiuto]) => rigaVoto('data-vald', k, l, aiuto, v, false)).join(''))}
+    ['Con la palla','Senza palla','Fisico','Testa'].map(gr => `<h4 class="gruppovoti">${gr}</h4>`
+      + DETTAGLI_VALUTA.filter(x => x[3] === gr).map(([k, l, aiuto]) => rigaVoto('data-vald', k, l, aiuto, v, false)).join('')).join(''))}
   ${sezioneForm(3, 'Dove e quando', '', false, `<div class="grid">
       <div><label class="f" for="val_cont">Partita o occasione</label><input id="val_cont" data-valf="contesto" value="${esc(v.contesto||'')}"></div>
       <div><label class="f" for="val_data">Data</label><input id="val_data" type="date" data-valf="data" value="${esc(v.data||'')}"></div>

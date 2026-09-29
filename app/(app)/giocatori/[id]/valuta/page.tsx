@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
-import { DETTAGLI_VALUTAZIONE, GIUDIZI } from '@/lib/tipi';
+import { DETTAGLI_VALUTAZIONE, GIUDIZI, GRUPPI_VALUTAZIONE } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -72,7 +72,14 @@ export default async function Valuta({
         </Sezione>
 
         <Sezione n={2} titolo="Nel dettaglio" sotto="Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere." facoltativo>
-          {DETTAGLI_VALUTAZIONE.map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} aiuto={d.aiuto} />)}
+          {GRUPPI_VALUTAZIONE.map((gr) => (
+            <div key={gr}>
+              <h3 className="mb-1 border-b-2 border-blu/15 pb-1 font-display text-sm font-bold uppercase tracking-wide text-blu">{gr}</h3>
+              <div className="space-y-3">
+                {DETTAGLI_VALUTAZIONE.filter((d) => d.gruppo === gr).map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} aiuto={d.aiuto} />)}
+              </div>
+            </div>
+          ))}
         </Sezione>
 
         <Sezione n={3} titolo="Dove e quando">

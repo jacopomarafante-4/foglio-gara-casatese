@@ -645,6 +645,8 @@ details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}
 .rapida.scala{flex:0 0 auto;gap:4px}
 .rapida.scala button{flex:0 0 40px;font-size:18px}
 .rvnota{flex:1 1 100%}
+.segform .gruppovoti{margin:14px 0 0;padding-bottom:4px;border-bottom:2px solid color-mix(in srgb, var(--brand) 15%, transparent);font-family:var(--cond);font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--brand)}
+.segform .gruppovoti+.rigavoto{border-top:0}
 .rvnota summary{cursor:pointer;list-style:none;color:var(--brand);font-weight:600;font-size:14px;padding:2px 0}
 .rvnota summary::-webkit-details-marker{display:none}
 .rvnota[open] summary{font-size:0}

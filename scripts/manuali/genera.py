@@ -578,7 +578,9 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
 <li><b>1 · Giudizio</b> (obbligatorio): da prendere (blu), da rivedere (oro), non a livello (rosso), e sotto il <b>perché</b>.</li>
-<li><b>2 · Nel dettaglio</b> (facoltativo): spunti, guida della palla, ricezione, calciata, contrasto, velocità, reattività da 1 a 5.
+<li><b>2 · Nel dettaglio</b> (facoltativo), voti da 1 a 5 in quattro gruppi: <b>con la palla</b> (spunti, guida della palla, ricezione,
+trasmissione, calciata), <b>senza palla</b> (marcamento, smarcamento, contrasto), <b>fisico</b> (velocità, reattività), <b>testa</b>
+(concentrazione, coraggio, estro).
 I voti per area (Tecnica, Motoria, Tattica, Mentale) si danno nella <b>segnalazione</b>.</li>
 <li><b>3 · Dove e quando</b>: partita o occasione, data.</li>
 <li><span class="k">Salva valutazione</span>.</li></ol>

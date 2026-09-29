@@ -50,15 +50,22 @@ export type Impressione = 'positiva' | 'da_rivedere' | 'negativa';
 export const IMPRESSIONI: Record<Impressione, string> = { positiva: 'Positiva', da_rivedere: 'Da rivedere', negativa: 'Negativa' };
 /** Piede preferito nella segnalazione (stesse scelte del tipo piede, "Entrambi" = ambidestro) */
 export const SCELTE_PIEDE: [Piede, string][] = [['destro', 'Destro'], ['sinistro', 'Sinistro'], ['ambidestro', 'Entrambi']];
-/** Valutazione: 7 voti tecnici da 1 a 5 facoltativi, oltre alle 4 aree (0041) */
+/** Valutazione: voti da 1 a 5 facoltativi (0041, 0044), divisi in gruppi nel modulo */
+export const GRUPPI_VALUTAZIONE = ['Con la palla', 'Senza palla', 'Fisico', 'Testa'] as const;
 export const DETTAGLI_VALUTAZIONE = [
-  { chiave: 'spunti', nome: 'Spunti', aiuto: 'Uno contro uno, cambi di passo' },
-  { chiave: 'guida_palla', nome: 'Guida della palla', aiuto: 'Conduzione a testa alta, con entrambi i piedi' },
-  { chiave: 'ricezione', nome: 'Ricezione', aiuto: 'Primo controllo, orientato' },
-  { chiave: 'calciata', nome: 'Calciata', aiuto: 'Tiro e lancio, forza e precisione' },
-  { chiave: 'contrasto', nome: 'Contrasto', aiuto: 'Tempo e decisione nel recupero palla' },
-  { chiave: 'velocita', nome: 'Velocità', aiuto: 'Allungo, con e senza palla' },
-  { chiave: 'reattivita', nome: 'Reattività', aiuto: 'Prontezza nei primi passi e sulle seconde palle' },
+  { chiave: 'spunti', nome: 'Spunti', gruppo: 'Con la palla', aiuto: 'Uno contro uno, cambi di passo' },
+  { chiave: 'guida_palla', nome: 'Guida della palla', gruppo: 'Con la palla', aiuto: 'Conduzione a testa alta, con entrambi i piedi' },
+  { chiave: 'ricezione', nome: 'Ricezione', gruppo: 'Con la palla', aiuto: 'Primo controllo, orientato' },
+  { chiave: 'trasmissione', nome: 'Trasmissione', gruppo: 'Con la palla', aiuto: 'Passaggio corto e lungo, tempi e precisione' },
+  { chiave: 'calciata', nome: 'Calciata', gruppo: 'Con la palla', aiuto: 'Tiro e lancio, forza e precisione' },
+  { chiave: 'marcamento', nome: 'Marcamento', gruppo: 'Senza palla', aiuto: 'Presa dell’uomo, posizione tra avversario e porta' },
+  { chiave: 'smarcamento', nome: 'Smarcamento', gruppo: 'Senza palla', aiuto: 'Movimenti per ricevere, attacco dello spazio' },
+  { chiave: 'contrasto', nome: 'Contrasto', gruppo: 'Senza palla', aiuto: 'Tempo e decisione nel recupero palla' },
+  { chiave: 'velocita', nome: 'Velocità', gruppo: 'Fisico', aiuto: 'Allungo, con e senza palla' },
+  { chiave: 'reattivita', nome: 'Reattività', gruppo: 'Fisico', aiuto: 'Prontezza nei primi passi e sulle seconde palle' },
+  { chiave: 'concentrazione', nome: 'Concentrazione', gruppo: 'Testa', aiuto: 'Attento per tutta la partita, pochi errori di distrazione' },
+  { chiave: 'coraggio', nome: 'Coraggio', gruppo: 'Testa', aiuto: 'Chiede palla, entra nei contrasti, non si nasconde' },
+  { chiave: 'estro', nome: 'Estro', gruppo: 'Testa', aiuto: 'Fantasia, giocate inattese, creatività' },
 ] as const;
 
 export const AREE = [
