@@ -215,7 +215,19 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       await pg.click(`#areanav [data-area="${a}"]`); await guarda(a);
       const schede = await pg.$$eval('#tabs [data-tab]', (x) => x.map((e) => e.dataset.tab));
       for (const s of schede) {
-        await pg.click(`#tabs [data-tab="${s}"]`); await guarda(`${a}/${s}`);
+        await pg.click(`#tabs [data-tab="${s}"]`);
+        /* scheda già portata nell'app (tappa 3, NELL_APP): si controlla la pagina e si torna al Portale */
+        if (await pg.waitForURL((u) => !u.pathname.startsWith('/portale'), { timeout: 3000 }).then(() => true).catch(() => false)) {
+          await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
+          const testo = await pg.locator('main').innerText().catch(() => '');
+          const v = { nome: `${a}/${s} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
+          if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+          riga.viste.push(v);
+          await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
+          await pg.click(`#areanav [data-area="${a}"]`).catch(() => {}); await pg.waitForTimeout(800);
+          continue;
+        }
+        await guarda(`${a}/${s}`);
         const sotto = await pg.$$eval('#subtabs [data-tab]', (x) => x.map((e) => e.dataset.tab)).catch(() => []);
         for (const t of sotto) { if (t === s) continue; await pg.click(`#subtabs [data-tab="${t}"]`); await guarda(`${a}/${s}/${t}`); }
         if (s === 'calendariotutte') { await pg.click('[data-calvista="elenco"]').catch(() => {}); await guarda(`${a}/${s}/elenco`); await pg.click('[data-calvista="giorno"]').catch(() => {}); }
