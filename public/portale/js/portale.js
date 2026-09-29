@@ -62,9 +62,11 @@ function writeRoute(push){
   if(location.hash !== h) history[push ? 'pushState' : 'replaceState'](null, '', h);
 }
 /* Schede già portate nell'app (tappa 3 dell'app unica, NELL_APP in lib/condivisi.ts): nel sito si aprono lì, stessa intestazione e stessa barra */
+/* admin e direttori: la squadra aperta passa alla pagina dell'app (?squadra=), i mister hanno sempre la loro */
+const indirizzoApp = t => NELL_APP[t] + (!hashLocked && curTeam ? '?squadra=' + encodeURIComponent(curTeam) : '');
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
-  if(NELL_APP[t] && IN_APP_UNICA){ location.assign(NELL_APP[t]); return; }
+  if(NELL_APP[t] && IN_APP_UNICA){ location.assign(indirizzoApp(t)); return; }
   impostaTab(t); areaLast[areaOf(t).k] = t; if(gruppoDi(t)) gruppoLast[gruppoDi(t).k] = t;
   impostaSelectedPlayer(null); impostaSlotPick(null); if(t!=='piazzati') impostaOpenSchemeId(null);
   impostaOpenTrainingId(impostaOpenGameId(impostaOpenTestId(null)));

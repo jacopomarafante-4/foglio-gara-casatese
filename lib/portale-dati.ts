@@ -86,3 +86,11 @@ export async function datiPreparatore(chi: Chi): Promise<{ partite: Impegno[]; p
   }
   return { partite: scelte.flatMap((t) => t.matches.map((x) => ({ ...x, team: t }))), portieri, eta: etaOk };
 }
+
+/** Squadra della pagina: quella del mister, o per admin e direttori quella scelta (?squadra=, se no la prima; mai
+ *  l'Organizzazione). `squadre` = l'elenco da scegliere (vuoto per i mister) */
+export async function squadraDellaPagina(chi: Chi, scelta?: string): Promise<{ squadre: SquadraCal[]; squadra: SquadraCal | undefined }> {
+  if (chi.mister) return { squadre: [], squadra: { ...chi.mister.squadra, matches: [] } };
+  const squadre = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] }));
+  return { squadre, squadra: squadre.find((t) => t.id === scelta) ?? squadre[0] };
+}

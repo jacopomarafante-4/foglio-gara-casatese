@@ -38,12 +38,12 @@ async function aggiorna<T>(chi: Chi, path: string, cambia: (base: Doc | null) =>
   return { ok: false, errore: 'Il documento cambia di continuo: riprova tra poco.' };
 }
 
-const PERCORSO = /^(calendar|registro)\/[A-Za-z0-9_-]+$|^shared\/(eventi|avvisi)$/;
+const PERCORSO = /^(calendar|registro|roster)\/[A-Za-z0-9_-]+$|^shared\/(eventi|avvisi)$/;
 
 /** Voce per voce (per id) in un elenco del documento: aggiunge, sostituisce o toglie (lib/modifiche.ts) */
 export async function modificaDoc(path: string, modifiche: Modifica[]): Promise<Esito> {
   if (!PERCORSO.test(path)) return { ok: false, errore: 'Documento non consentito.' };
-  return aggiorna(await chiEntra(), path, (base) => ({ nuovo: applicaModifiche(base, modifiche) }));
+  return aggiorna<undefined>(await chiEntra(), path, (base) => ({ nuovo: applicaModifiche(base, modifiche) }));
 }
 
 const idNuovo = (p: string) => p + Math.random().toString(36).slice(2, 9);
@@ -81,5 +81,31 @@ export async function preparaGara(squadraId: string, m: Partita & { ll?: string 
     if (s.date === m.date && (s.opponent || '').trim().toLowerCase() === (m.opponent || '').trim().toLowerCase()) return { nuovo: null };
     return { nuovo: { ...s, opponent: m.opponent || '', date: m.date || '', time: m.time || '', venue: m.venue || '', address: m.address || '',
       venueLL: m.ll || '', home: !!m.home, convType: m.friendly ? 'Amichevole' : 'Campionato' } };
+  });
+}
+
+/** Rosa → ruolo di un giocatore (registro.ruoli); "portiere" tiene allineato registro.gk (gol subiti), come setRuolo del Portale */
+export async function impostaRuolo(squadraId: string, pid: string, ruolo: string): Promise<Esito> {
+  if (!squadraOk(squadraId) || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
+  return aggiorna(await chiEntra(), 'registro/' + squadraId, (base) => {
+    const reg = (base ?? {}) as Registro & { ruoli?: Record<string, string> };
+    const ruoli = { ...(reg.ruoli ?? {}) };
+    if (ruolo) ruoli[pid] = ruolo; else delete ruoli[pid];
+    const gk = reg.gk ?? [];
+    return { nuovo: { ...reg, ruoli, gk: ruolo === 'portiere' ? [...new Set([...gk, pid])] : gk.filter((x) => x !== pid) } };
+  });
+}
+
+/** Rosa → elimina un giocatore (solo admin): dalla rosa e da formazione e panchina del foglio della squadra */
+export async function eliminaGiocatore(squadraId: string, pid: string): Promise<Esito> {
+  if (!squadraOk(squadraId) || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
+  const chi = await chiEntra();
+  const r = await aggiorna<undefined>(chi, 'roster/' + squadraId, (base) => ({ nuovo: applicaModifiche(base, [{ lista: 'players', id: pid, voce: null }]) }));
+  if (!r.ok) return r;
+  return aggiorna(chi, 'sheet/' + squadraId, (base) => {
+    const s = (base ?? {}) as Doc & { lineup?: Record<string, string>; bench?: string[] };
+    const inCampo = Object.values(s.lineup ?? {}).includes(pid), inPanchina = (s.bench ?? []).includes(pid);
+    if (!inCampo && !inPanchina) return { nuovo: null };
+    return { nuovo: { ...s, lineup: Object.fromEntries(Object.entries(s.lineup ?? {}).filter(([, v]) => v !== pid)), bench: (s.bench ?? []).filter((b) => b !== pid) } };
   });
 }
