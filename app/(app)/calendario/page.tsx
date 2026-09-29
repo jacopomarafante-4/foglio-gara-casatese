@@ -7,6 +7,7 @@ import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
 import { fineStagione } from '@/lib/categorie';
+import { CALENDARI, calendarioDi } from '@/lib/condivisi';   // stesse regole e colori del Portale
 
 type Partita = {
   id: string; date: string | null; time: string | null; opponent: string | null; home: boolean;
@@ -15,13 +16,6 @@ type Partita = {
 type Squadra = { id: string; name: string | null; category: string | null; matches: Partita[] };
 type Riga = Partita & { squadra: Squadra; eta: number };
 
-const CALENDARI = {
-  merate: { nome: 'Merate', colore: '#003DA5' },
-  cernusco: { nome: 'Cernusco', colore: '#D4AF37' },
-  trasferta: { nome: 'Trasferta', colore: '#C41E3A' },
-} as const;
-/** Stessa regola del Portale (calDi in portale.js): fuori casa = Trasferta, in casa Merate o Cernusco dal campo */
-const calDi = (m: Partita): keyof typeof CALENDARI => (!m.home ? 'trasferta' : /MERATE/i.test(m.venue ?? '') ? 'merate' : 'cernusco');
 const etaDi = (s: Squadra) => Number(String(s.category ?? '').match(/under\s*(\d+)/i)?.[1]) || 0;
 const sigla = (s: Squadra) => (etaDi(s) ? `U${etaDi(s)}` : s.name ?? '');
 
@@ -105,7 +99,7 @@ export default async function CalendarioSquadre({ searchParams }: { searchParams
             <h2 className="mb-2 font-display text-xl font-bold first-letter:uppercase">{giorno(d)}</h2>
             <ul className="space-y-2">
               {righe.filter((m) => m.date === d).map((m) => {
-                const cal = CALENDARI[calDi(m)];
+                const cal = CALENDARI[calendarioDi(m)];
                 return (
                   <li key={`${m.squadra.id}|${m.id}`} className="flex gap-3 rounded-lg border border-linea bg-white p-3"
                     style={{ borderLeft: `5px solid ${cal.colore}` }}>

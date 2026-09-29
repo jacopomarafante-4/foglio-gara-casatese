@@ -45,4 +45,3 @@ function unisci(base, mio, loro){
   }
   return mio === undefined ? loro : mio;
 }
-if(typeof module !== 'undefined') module.exports = { unisci };

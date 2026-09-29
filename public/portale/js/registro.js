@@ -474,11 +474,7 @@ function newFriendly(){ const f = {id:uid('am'), date:todayISO(), time:'', oppon
 const RUOLI_PIENI = [['portiere','Portiere'],['difensore','Difensore'],['centrocampista','Centrocampista'],['attaccante','Attaccante']];
 const RUOLI_BASE = [['portiere','Portiere'],['movimento','Giocatore di movimento']];
 /* Età della categoria della squadra: "Under 13 - Attività di base" → 13 (99 se non si capisce) */
-function etaSquadra(t = TEAM()){
-  const c = String(t?.category || t?.name || '');
-  const u = c.match(/under\s*(\d+)|\bu\s*(\d{1,2})\b/i);
-  return u ? +(u[1] || u[2]) : /esordienti/i.test(c) ? 12 : /pulcini|primi\s*calci|piccoli/i.test(c) ? 10 : 99;
-}
+function etaSquadra(t = TEAM()){ return etaCategoria(t) ?? 99; }   // regola comune con lo Scouting (condivisi.js)
 /* Attività di base: da Under 13 in giù (risultato a tempi, convocazione semplice, niente foglio gara) */
 const isAdb = (t = TEAM()) => etaSquadra(t) <= 13;
 function ruoliSquadra(){ return etaSquadra() >= 13 ? RUOLI_PIENI : RUOLI_BASE; }

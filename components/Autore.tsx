@@ -1,22 +1,11 @@
 // Chi ha fatto una valutazione: iniziali in un cerchio colorato (stesso colore per la stessa persona, sempre),
 // nome intero al passaggio del mouse. I mister dal Portale hanno il cerchio col bordo, per riconoscerli.
 import { firma, valutatori, SOGLIA_VALUTAZIONI, type FirmaValutazione } from '@/lib/valutazioni';
+import { coloreAutore, inizialiAutore } from '@/lib/condivisi';   // stesse iniziali e stesso colore nel Portale
 export { firma, valutatori, SOGLIA_VALUTAZIONI, type FirmaValutazione };
 
-const COLORI = ['#003DA5', '#C41E3A', '#B8860B', '#6B3FA0', '#0F7C7C', '#A34A1E', '#B8336A', '#35506B', '#4A5563', '#1F5FA8'];
-
-function iniziali(nome: string) {
-  const parole = nome.replace(/^Mister\s+/i, '').split('·')[0].trim().split(/\s+/).filter(Boolean);
-  return ((parole[0]?.[0] ?? '?') + (parole.length > 1 ? parole[parole.length - 1][0] : '')).toUpperCase();
-}
-function colore(chiave: string) {
-  let h = 0;
-  for (const c of chiave) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return COLORI[h % COLORI.length];
-}
-
 export function Autore({ f, piccolo = false }: { f: FirmaValutazione; piccolo?: boolean }) {
-  const c = colore(f.chiave);
+  const c = coloreAutore(f.nome, f.mister);
   return (
     <span
       title={f.nome}
@@ -24,7 +13,7 @@ export function Autore({ f, piccolo = false }: { f: FirmaValutazione; piccolo?: 
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${piccolo ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs'}`}
       style={f.mister ? { border: `2px solid ${c}`, color: c, background: '#fff' } : { background: c, color: '#fff' }}
     >
-      {iniziali(f.nome)}
+      {inizialiAutore(f.nome)}
     </span>
   );
 }
