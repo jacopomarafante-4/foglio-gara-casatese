@@ -13,7 +13,7 @@ import { writeFileSync } from 'node:fs';
 import { randomInt } from 'node:crypto';
 
 const OUT = process.argv[2];
-const BASE = 'https://academy-casatese.vercel.app';
+const BASE = process.env.BASE_URL || 'https://academy-casatese.vercel.app';   // BASE_URL=http://localhost:3000 per provare in locale
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const anon = () => createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
@@ -189,7 +189,7 @@ async function ui(browser, profilo, pin, opzioni = {}) {
   await pg.goto(BASE + '/?pin=1', { waitUntil: 'domcontentloaded' });
   await pg.fill('input[name=pin]', pin);
   await pg.click('button[type=submit]');
-  try { await pg.waitForURL(/\/portale\/|\/home/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
+  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
   riga.arrivo = pg.url().replace(BASE, '');
   if (riga.arrivo.startsWith('/portale')) {
     await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => riga.problemi.push('Portale: pagina vuota dopo l\'accesso'));
@@ -211,22 +211,25 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     if (!aree.length) {   // famiglia: solo le schede
       for (const k of await pg.$$eval('#tabs [data-famtab]', (x) => x.map((e) => e.dataset.famtab))) { await pg.click(`[data-famtab="${k}"]`); await guarda('famiglia/' + k); }
     }
+    /* pagina portata nell'app (tappa 3, NELL_APP): si controlla e si torna al Portale */
+    const nellApp = async (nome) => {
+      if (!await pg.waitForURL((u) => !u.pathname.startsWith('/portale'), { timeout: 3000 }).then(() => true).catch(() => false)) return false;
+      await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
+      const testo = await pg.locator('main').innerText().catch(() => '');
+      const v = { nome: `${nome} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
+      if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+      riga.viste.push(v);
+      await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
+      return true;
+    };
     for (const a of aree) {
-      await pg.click(`#areanav [data-area="${a}"]`); await guarda(a);
+      await pg.click(`#areanav [data-area="${a}"]`);
+      if (await nellApp(a)) continue;   // area con la sola scheda portata nell'app (es. Segreteria)
+      await guarda(a);
       const schede = await pg.$$eval('#tabs [data-tab]', (x) => x.map((e) => e.dataset.tab));
       for (const s of schede) {
         await pg.click(`#tabs [data-tab="${s}"]`);
-        /* scheda già portata nell'app (tappa 3, NELL_APP): si controlla la pagina e si torna al Portale */
-        if (await pg.waitForURL((u) => !u.pathname.startsWith('/portale'), { timeout: 3000 }).then(() => true).catch(() => false)) {
-          await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
-          const testo = await pg.locator('main').innerText().catch(() => '');
-          const v = { nome: `${a}/${s} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
-          if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
-          riga.viste.push(v);
-          await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
-          await pg.click(`#areanav [data-area="${a}"]`).catch(() => {}); await pg.waitForTimeout(800);
-          continue;
-        }
+        if (await nellApp(`${a}/${s}`)) { await pg.click(`#areanav [data-area="${a}"]`).catch(() => {}); await pg.waitForTimeout(800); continue; }
         await guarda(`${a}/${s}`);
         const sotto = await pg.$$eval('#subtabs [data-tab]', (x) => x.map((e) => e.dataset.tab)).catch(() => []);
         for (const t of sotto) { if (t === s) continue; await pg.click(`#subtabs [data-tab="${t}"]`); await guarda(`${a}/${s}/${t}`); }
@@ -238,6 +241,20 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       await pg.waitForTimeout(1500); await guarda('altra squadra: ' + opzioni.altraSquadra);
       riga.solaLettura = await pg.locator('body.ro, .badge.dir').count() > 0;
     }
+  } else if (riga.arrivo.startsWith('/segreteria')) {
+    // Segreteria: la sua area è una pagina dell'app (tappa 3); si apre un ragazzo senza scrivere nulla
+    riga.tempoAccesso = Date.now() - t0;
+    await pg.waitForTimeout(1500);
+    await pg.locator('main details summary').first().click().catch(() => riga.problemi.push('Segreteria: nessun ragazzo da aprire'));
+    await pg.waitForTimeout(800);
+    const testo = await pg.locator('main').innerText().catch(() => '');
+    const v = { nome: '/segreteria', caratteri: testo.length };
+    if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+    const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
+    if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
+    riga.viste.push(v);
+    // e dal Portale torna qui
+    await pg.goto(BASE + '/portale/'); await pg.waitForURL(/\/segreteria/, { timeout: 15000 }).catch(() => riga.problemi.push('Portale: la segreteria non torna a /segreteria'));
   } else if (riga.arrivo.startsWith('/home')) {
     riga.tempoAccesso = Date.now() - t0;
     for (const pagina of ['/home', '/giocatori', '/gare', '/segnala', '/profilo', '/giocatori/stati']) {

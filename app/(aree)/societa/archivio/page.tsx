@@ -15,7 +15,7 @@ const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeForma
 
 export default async function Archivio({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const profilo = (await getProfilo())!;
-  if (!vedeTutto(profilo.ruolo)) redirect('/home');
+  if (!vedeTutto(profilo.ruolo)) redirect(profilo.ruolo === 'segreteria' ? '/segreteria' : '/home');
   const { tipo = '', squadra = '', q = '', ok, errore, mostra } = await searchParams;
   const supabase = await createClient();
   const { data, error } = await supabase.from('archivio_documenti')

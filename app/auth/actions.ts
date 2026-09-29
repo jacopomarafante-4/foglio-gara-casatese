@@ -15,8 +15,8 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 async function pannello(supabase: Supabase, userId: string, next: string) {
   const { data } = await supabase.from('profiles').select('ruolo').eq('id', userId).single();
   const ruolo = (data?.ruolo ?? null) as Ruolo | null;
-  // Segreteria: solo il Portale (area Segreteria), non lo Scouting
-  if (ruolo === 'segreteria') return '/portale/';
+  // Segreteria: solo la sua area (/segreteria), non lo Scouting
+  if (ruolo === 'segreteria') return '/segreteria';
   if (!ruolo || !puoAccedere(ruolo)) return null;
   // Solo percorsi interni, per sicurezza
   if (next.startsWith('/') && !next.startsWith('//')) return next;

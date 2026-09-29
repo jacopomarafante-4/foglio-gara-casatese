@@ -18,6 +18,7 @@ async function aggiornaFamiglia(forza){
   const { data, error } = await supabaseClient.rpc('famiglia_get', { p_pin: famPin });
   if(!error && data){ F = data; famAt = Date.now(); if(!famBozza) render(); }
 }
+const giorniA = d => d ? Math.round((new Date(d+'T12:00:00') - new Date(todayISO()+'T12:00:00')) / 86400000) : null;
 const chiavePartita = c => c.calId || `${c.date}|${c.opponent}`;
 const mapsDi = c => c.ll ? 'https://www.google.com/maps/dir/?api=1&destination=' + c.ll
   : (c.venue || c.address) ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([c.venue, c.address].filter(Boolean).join(', ')) : '';
