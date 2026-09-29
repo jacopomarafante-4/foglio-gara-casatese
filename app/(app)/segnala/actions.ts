@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
-import { DETTAGLI_SEGNALAZIONE, IMPRESSIONI, PIEDI, RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
+import { AREE, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, PIEDI, RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
 import { intero, maiuscoleIniziali, normalizza, testo, testoLungo } from '@/lib/utili';
 
 function errore(msg: string, giocatoreId?: string | null): never {
@@ -77,6 +77,11 @@ export async function salvaSegnalazione(formData: FormData) {
   const dettagli = Object.fromEntries(DETTAGLI_SEGNALAZIONE.map((d) => {
     const v = intero(formData, d.chiave); return [d.chiave, v && v >= 1 && v <= 5 ? v : null];
   }));
+  // le 4 aree (0043): voto facoltativo e note
+  const aree = Object.fromEntries(AREE.flatMap((a) => {
+    const v = intero(formData, a.chiave);
+    return [[a.chiave, v && v >= 1 && v <= 5 ? v : null], [`${a.chiave}_note`, testoLungo(formData, `${a.chiave}_note`)]];
+  }));
   const { error } = await supabase.from('segnalazioni').insert({
     giocatore_id: giocatoreId,
     testo: osservazione,
@@ -84,6 +89,7 @@ export async function salvaSegnalazione(formData: FormData) {
     piede: valoreValido(PIEDI, formData.get('piede')),
     impressione: valoreValido(IMPRESSIONI, formData.get('impressione')),
     ...dettagli,
+    ...aree,
     contesto,
     ...(data ? { data } : {}),
   });

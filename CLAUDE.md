@@ -180,6 +180,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0043: le 4 aree (Tecnica, Motoria, Tattica, Mentale, voto 1–5 + nota, tutte facoltative) passano dalla valutazione alla
+  segnalazione (`segnalazioni.tecnica…mentale_note`); in `valutazioni` restano per le vecchie righe (ora nullabili). Medie per area
+  da segnalazioni e valutazioni insieme (`medieAree`, `mediaVoti`, `conVoti` in `lib/valutazioni.ts`); `coach_segnala`, `coach_valuta`,
+  `coach_giocatori` riscritte. Portale: blocco "Voti per area" in `viewSegnala`, niente aree in `viewValutaMister`
 - 0042: `segnalazioni.impressione` (positiva / da_rivedere / negativa, `IMPRESSIONI` in `lib/tipi.ts`) al posto del voto 1–5 della
   prima impressione (vecchi voti convertiti: 4–5 positiva, 3 da rivedere, 1–2 negativa); `coach_segnala` riscritta. Nella segnalazione
   tutte le domande facoltative nello stesso stile (`Voto facoltativo` con `voci`): piede preferito (`SCELTE_PIEDE`, al posto di piede
@@ -218,7 +222,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
   direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`, area **Modulistica** del Portale: Distinta (`sheet.distinta`),
-  Programma gare dal–al (PDF), Comunicazione (`viewComunicazione`, modelli degli avvisi; PDF con la stessa intestazione della convocazione,
+  Programma gare dal–al (PDF in ordine di categoria, dalla più grande, poi giorno e ora: `ordineProgramma`), Comunicazione (`viewComunicazione`, modelli degli avvisi; PDF con la stessa intestazione della convocazione,
   `intestazioneSocieta`/`immagineIntestazione` in `pdf.js`; spunta "Mostra la categoria": mister = la sua, staff la sceglie; anche Avvisi → Scarica PDF). Impaginazione automatica
   in testa a `modulistica.js` (`riga1` una riga che rimpicciolisce e poi taglia con "…", `blocco`/`misuraBlocco` su più righe,
   `paragrafi` con elenchi rientrati e righe giustificate, `nuovaPagina` con fascia "segue"): la comunicazione sceglie la grandezza

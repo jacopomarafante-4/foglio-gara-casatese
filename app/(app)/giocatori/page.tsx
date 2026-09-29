@@ -15,6 +15,7 @@ import { VistaGiocatori } from '@/components/VistaGiocatori';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
 import { SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
+import { medieAree } from '@/lib/valutazioni';
 import { Annata, coloreAnnata } from '@/components/Annata';
 
 type Riga = {
@@ -30,9 +31,9 @@ type Riga = {
   societa_id: string | null;
   updated_at: string;
   societa: { nome: string } | null;
-  segnalazioni: { data: string; impressione: Impressione | null }[];
+  segnalazioni: { data: string; impressione: Impressione | null; tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null }[];
   valutazioni: {
-    tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string;
+    tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; giudizio: Giudizio; data: string;
     autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
   }[];
 };
@@ -84,11 +85,12 @@ function dataGara(iso: string, senzaOra: boolean) {
 }
 
 /** Media delle 4 aree su tutte le valutazioni, e giudizio dell'ultima */
-function sintesiValutazioni(v: Riga['valutazioni']) {
-  if (!v.length) return null;
-  const media = v.reduce((s, x) => s + (x.tecnica + x.motoria + x.tattica + x.mentale) / 4, 0) / v.length;
-  const ordinate = [...v].sort((a, b) => b.data.localeCompare(a.data));
-  return { media, giudizio: ordinate[0].giudizio, quante: v.length };
+/* Media dei voti per area (segnalazioni dalla 0043 e valutazioni già fatte) e giudizio dell'ultima valutazione */
+function sintesiValutazioni(g: Pick<Riga, 'valutazioni' | 'segnalazioni'>) {
+  const m = medieAree([...(g.segnalazioni ?? []), ...g.valutazioni]);
+  const ultima = [...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data))[0];
+  if (m.media === null && !ultima) return null;
+  return { media: m.media, giudizio: ultima?.giudizio ?? null, quante: m.quanti };
 }
 
 /** Prossime gare (60 giorni) delle società indicate: a blocchi, per non superare i limiti delle richieste */
@@ -135,7 +137,7 @@ export default async function Giocatori({
       .from('giocatori')
       .select(
         'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
-          'segnalazioni(data, impressione), ' +
+          'segnalazioni(data, impressione, tecnica, motoria, tattica, mentale), ' +
           'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
       .order('updated_at', { ascending: false });
@@ -173,7 +175,7 @@ export default async function Giocatori({
 
   const nomeDi = (g: Riga) => [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
   const categoriaDi = (g: Riga) => (g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0]).replace(/^Under\s*/i, 'U');
-  const sintesi = new Map(tutti.map((g) => [g.id, sintesiValutazioni(g.valutazioni)]));
+  const sintesi = new Map(tutti.map((g) => [g.id, sintesiValutazioni(g)]));
 
   // Prossime gare: di tutti se si ordina per gara, se no solo della pagina
   const perGara = ordina === 'gara';
@@ -260,11 +262,13 @@ export default async function Giocatori({
     );
   const valutazione = (r: (typeof righe)[number]) =>
     r.v ? (
-      <span className="flex items-center gap-1.5" title={`Media di ${r.v.quante} ${r.v.quante === 1 ? 'valutazione' : 'valutazioni'} (1–5)`}>
-        <span className="font-semibold text-blu">{r.v.media.toFixed(1).replace('.', ',')}</span>
-        <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>
-          {GIUDIZI[r.v.giudizio]}
-        </span>
+      <span className="flex items-center gap-1.5" title={`Media dei voti per area da ${r.v.quante} ${r.v.quante === 1 ? 'segnalazione o valutazione' : 'segnalazioni e valutazioni'} (1–5)`}>
+        {r.v.media !== null && <span className="font-semibold text-blu">{r.v.media.toFixed(1).replace('.', ',')}</span>}
+        {r.v.giudizio && (
+          <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>
+            {GIUDIZI[r.v.giudizio]}
+          </span>
+        )}
       </span>
     ) : null;
   /* Titolo di gruppo quando cambia l'annata (elenco di base, per annata) */
@@ -281,7 +285,8 @@ export default async function Giocatori({
   const colonnaValutazione = (r: (typeof righe)[number]) => (
     <span className="flex items-center gap-2">
       <SlotValutazioni firme={r.firme} piccolo />
-      {r.v ? valutazione(r) : pulsanteValuta(r.href)}
+      {r.v && valutazione(r)}
+      {!r.v?.giudizio && pulsanteValuta(r.href)}
     </span>
   );
   const pulsanteValuta = (href: string) =>

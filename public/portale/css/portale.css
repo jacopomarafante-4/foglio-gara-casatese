@@ -628,4 +628,5 @@ details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}
 /* Voti facoltativi (segnalazione e valutazione dei mister) */
 .votifac{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 16px;margin:6px 0 8px}
 .votofac span{display:block;font-size:13px;font-weight:600;margin-bottom:3px}
-.votofac .seg button{min-width:0;flex:1;padding:6px 0}
+.votofac .seg{display:flex;width:100%}
+.votofac .seg button{min-width:0;flex:1;padding:6px 4px;min-height:44px;font-size:14px;line-height:1.15}

@@ -28,3 +28,17 @@ test('valutazioni storiche senza autore contano una per una (come nel database)'
   const ignoto = (data) => ({ data, autore_id: null, autore_squadra: null, autore: null });
   assert.equal(valutatori([ignoto('2026-01-01'), ignoto('2026-02-01')]).length, 2);
 });
+
+test('voti per area: contano solo le aree votate, da segnalazioni e valutazioni insieme', async () => {
+  const { mediaVoti, medieAree, conVoti } = await import('@/lib/valutazioni');
+  assert.equal(mediaVoti({ tecnica: 4, motoria: null, tattica: 2 }), 3);
+  assert.equal(mediaVoti({ tecnica: null }), null);
+  const segnalazione = { data: '2026-09-20', tecnica: 4, motoria: 3, tattica: null, mentale: null };
+  const valutazioneVecchia = { data: '2026-05-01', tecnica: 2, motoria: 3, tattica: 3, mentale: 4 };
+  const senzaVoti = { data: '2026-09-25' };
+  const m = medieAree([segnalazione, valutazioneVecchia, senzaVoti]);
+  assert.equal(m.per.tecnica, 3);
+  assert.equal(m.per.tattica, 3);
+  assert.equal(m.quanti, 2);
+  assert.equal(conVoti([valutazioneVecchia, segnalazione, senzaVoti])[0], segnalazione, 'la più recente con voti');
+});

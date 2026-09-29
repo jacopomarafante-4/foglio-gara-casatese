@@ -16,6 +16,7 @@ import { StoricoGiocatore, type Presenza } from '@/components/StoricoGiocatore';
 import { CarrieraGiocatore, type RigaCarriera } from '@/components/CarrieraGiocatore';
 import { StoricoValutazioni } from '@/components/StoricoValutazioni';
 import { Autori, firma, SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
+import { medieAree } from '@/lib/valutazioni';
 import { Annata } from '@/components/Annata';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
@@ -53,13 +54,15 @@ type Segnalazione = {
   squadra: string | null; // segnalazione di un mister dal Portale squadre
   impressione: keyof typeof IMPRESSIONI | null; // 0042
   piede: Piede | null; piede_forte: number | null; piede_debole: number | null; statura: number | null; forza: number | null; // 0041
+  tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; // 0043, facoltativi
+  tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 };
 
 type Valutazione = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; autore: Autore;
   autore_squadra: string | null;   // valutazione di un mister dal Portale (0032)
   autore_id: string | null;
-  tecnica: number; motoria: number; tattica: number; mentale: number;
+  tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; // dalla 0043 si danno nella segnalazione
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 };
 
@@ -141,12 +144,9 @@ export default async function SchedaGiocatore({
   const societa = scrive ? await elencoSocieta(supabase) : [];
 
   const titolo = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Giocatore';
-  const medie = AREE.map((a) => ({
-    ...a,
-    media: valutazioni.length
-      ? valutazioni.reduce((s, v) => s + v[a.chiave], 0) / valutazioni.length
-      : null,
-  }));
+  // voti per area: da segnalazioni (0043) e valutazioni già fatte, contando solo dove c'è un voto
+  const aree = medieAree([...segnalazioni, ...valutazioni]);
+  const medie = AREE.map((a) => ({ ...a, media: aree.per[a.chiave] }));
 
   // Storia unica: creazione scheda, segnalazioni, valutazioni e cambi di stato
   const storia = [
@@ -211,15 +211,14 @@ export default async function SchedaGiocatore({
       {/* Medie delle valutazioni */}
       <section className="rounded-xl border border-linea bg-white p-5">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-2xl font-bold">Valutazioni</h2>
+          <h2 className="font-display text-2xl font-bold">Voti per area</h2>
           <span className="text-right text-sm text-grigio">
-            {valutazioni.length ? (
-              <>
+            {aree.quanti ? <>da {aree.quanti} {aree.quanti === 1 ? 'segnalazione o valutazione' : 'segnalazioni e valutazioni'}</> : 'ancora nessun voto'}
+            {valutazioni.length > 0 && (
+              <span className="block">
                 <span className="mr-2 align-middle"><Autori firme={valutazioni.map(firma)} max={4} /></span>
-                media di {valutazioni.length} · <strong className="text-inchiostro">ultima il {dataBreve(valutazioni[0].data)}</strong>
-              </>
-            ) : (
-              'ancora nessuna'
+                {valutazioni.length} {valutazioni.length === 1 ? 'valutazione' : 'valutazioni'} · <strong className="text-inchiostro">ultima il {dataBreve(valutazioni[0].data)}</strong>
+              </span>
             )}
           </span>
         </div>
@@ -313,6 +312,17 @@ export default async function SchedaGiocatore({
                           : s.voto && <span className="ml-2 font-semibold text-inchiostro">voto {s.voto}/5</span>}
                       </p>
                       <p className="mt-2 whitespace-pre-line">{s.testo}</p>
+                      {AREE.some((a) => s[a.chiave]) && (
+                        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
+                          {AREE.filter((a) => s[a.chiave]).map((a) => (
+                            <div key={a.chiave}>
+                              <dt className="text-grigio">{a.nome}</dt>
+                              <dd className="font-semibold">{s[a.chiave]}/5</dd>
+                              {s[`${a.chiave}_note`] && <dd className="text-grigio">{s[`${a.chiave}_note`]}</dd>}
+                            </div>
+                          ))}
+                        </dl>
+                      )}
                       {(s.piede || DETTAGLI_SEGNALAZIONE.some((d) => s[d.chiave])) && (
                         <p className="mt-2 flex flex-wrap gap-1.5 text-xs">
                           {s.piede && <span className="rounded-full bg-carta px-2 py-0.5 font-semibold">Piede {PIEDI[s.piede].toLowerCase()}</span>}

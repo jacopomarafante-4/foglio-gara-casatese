@@ -290,19 +290,24 @@ function programmaPartite(){
   return partiteTutte().filter(m => m.date && m.date >= progDal && m.date <= progAl)
     .filter(m => !progSquadre.length || (m.evento ? !(m.evento.squadre||[]).length || m.evento.squadre.some(id => progSquadre.includes(id)) : progSquadre.includes(m.team?.id)));
 }
+/* Ordine del programma stampato: per categoria (dalla più grande alla più piccola, poi gli eventi della società) e,
+   nella stessa categoria, per giorno e ora */
+const categoriaProgramma = m => m.evento ? 'Eventi della società' : (m.team?.category || m.team?.name || '');
+const ordineProgramma = (a, b) => (a.evento ? 1 : 0) - (b.evento ? 1 : 0) || etaSquadra(b.team) - etaSquadra(a.team)
+  || categoriaProgramma(a).localeCompare(categoriaProgramma(b)) || (a.date || '').localeCompare(b.date || '') || (a.time || '99').localeCompare(b.time || '99');
 async function pdfProgramma(){
   if(!window.jspdf){ setStatus('Libreria PDF non caricata'); return; }
-  const ms = programmaPartite();
+  const ms = programmaPartite().slice().sort(ordineProgramma);
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   const quali = progSquadre.length ? progSquadre.map(id => siglaSquadra((tuttiCal||S.teams).find(t => t.id===id))).join(', ') : 'Tutte le squadre';
   const TITOLO = 'PROGRAMMA GARE';
   const categoria = progSquadre.length === 1 ? ((tuttiCal||S.teams).find(t => t.id===progSquadre[0])?.category || '') : '';
   let y = await intestazionePdf(doc, TITOLO, `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`, categoria);
-  const cols = [[PAG.sx, 24, 'Ora'], [PAG.sx + 24, 18, 'Squadra'], [PAG.sx + 42, 82, 'Partita / evento'], [PAG.sx + 124, LARGH - 124, 'Campo']];
+  const cols = [[PAG.sx, 24, 'Giorno'], [PAG.sx + 24, 18, 'Ora'], [PAG.sx + 42, 82, 'Partita / evento'], [PAG.sx + 124, LARGH - 124, 'Campo']];
   const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(PAG.sx, y, LARGH, 7, 'F'); doc.setTextColor(255);
     cols.forEach(([x, w, l]) => riga1(doc, l, x + 2, y + 4.8, w - 4, {size: 9, bold: true})); y += 8.5; doc.setTextColor(...INK_RGB); };
   testata();
-  const giornoH = 7;
+  const gruppoH = 7;
   /* Ogni partita: partita e campo su al massimo 2 righe, che si adattano; l'altezza segue la cella più alta */
   const misura = m => {
     const titolo = m.evento ? `${m.opponent} (${m.tipo})` : (m.home ? `Academy - ${m.opponent||'?'}` : `${m.opponent||'?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Amichevole'}` : '');
@@ -311,17 +316,17 @@ async function pdfProgramma(){
     const b2 = misuraBlocco(doc, campo, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2});
     return {titolo, campo, h: Math.max(b1.righe.length * b1.alt, b2.righe.length * b2.alt) + 3.2};
   };
-  let giorno = '';
+  let gruppo = '';
   for(const m of ms){
-    const r = misura(m), nuovoGiorno = m.date !== giorno;
-    /* il titolo del giorno non resta mai da solo in fondo alla pagina */
-    if(y + r.h + (nuovoGiorno ? giornoH : 0) > PAG.basso){ y = nuovaPagina(doc, TITOLO); testata(); giorno = ''; }
-    if(m.date !== giorno){ giorno = m.date; doc.setTextColor(...BLU_RGB);
-      riga1(doc, `${weekday(m.date)} ${fmtDate(m.date)}`.toUpperCase(), PAG.sx, y + 4, LARGH, {size: 10.5, bold: true}); y += giornoH; doc.setTextColor(...INK_RGB); }
+    const r = misura(m), cat = categoriaProgramma(m), nuovo = cat !== gruppo;
+    /* il titolo della categoria non resta mai da solo in fondo alla pagina (e si ripete in cima alla pagina dopo) */
+    if(y + r.h + (nuovo ? gruppoH : 0) > PAG.basso){ y = nuovaPagina(doc, TITOLO); testata(); gruppo = ''; }
+    if(cat !== gruppo){ gruppo = cat; doc.setTextColor(...BLU_RGB);
+      riga1(doc, cat.toUpperCase(), PAG.sx, y + 4, LARGH, {size: 10.5, bold: true}); y += gruppoH; doc.setTextColor(...INK_RGB); }
     doc.setFillColor(...(calDi(m)==='merate' ? BLU_RGB : calDi(m)==='cernusco' ? [212,175,55] : [196,30,58])); doc.rect(PAG.sx, y, 1.4, r.h - 1, 'F');
     const by = y + 4;
-    riga1(doc, m.time ? `${m.time.padStart(5,'0')}${m.fine ? '–'+m.fine : ''}` : 'da definire', cols[0][0] + 3, by, cols[0][1] - 4, {size: 9.5, min: 7});
-    riga1(doc, m.evento ? 'Evento' : siglaSquadra(m.team), cols[1][0] + 2, by, cols[1][1] - 3, {size: 9.5, min: 7, bold: true});
+    riga1(doc, `${weekday(m.date).slice(0, 3)} ${fmtDate(m.date).slice(0, 5)}`, cols[0][0] + 3, by, cols[0][1] - 4, {size: 9.5, min: 7, bold: true});
+    riga1(doc, m.time ? `${m.time.padStart(5,'0')}${m.fine ? '–'+m.fine : ''}` : 'da def.', cols[1][0] + 2, by, cols[1][1] - 3, {size: 9.5, min: 7});
     blocco(doc, r.titolo, cols[2][0] + 2, by, cols[2][1] - 4, {size: 9.5, min: 8, maxRighe: 2});
     doc.setTextColor(...GRIGIO_RGB); blocco(doc, r.campo, cols[3][0] + 2, by, cols[3][1] - 4, {size: 8.5, min: 7, maxRighe: 2}); doc.setTextColor(...INK_RGB);
     doc.setDrawColor(230); doc.line(PAG.sx, y + r.h - 0.6, PAG.dx, y + r.h - 0.6);

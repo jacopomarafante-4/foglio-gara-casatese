@@ -433,8 +433,7 @@ mostra "Lavori in corso".</p>''', 'Presenze')}
 <li><b>Distinta</b>, per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di
 nascita e tessera: quello che lasci vuoto si scrive a penna), allenatore e dirigenti con il documento, note.
 <span class="k">Scarica distinta PDF</span> prepara il foglio con le righe per le firme.</li>
-<li><b>Programma gare</b>: scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi giorno per giorno
-e con <span class="k">Scarica programma PDF</span> lo stampi.</li>
+<li><b>Programma gare</b>: scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi; il PDF è in ordine di <b>categoria</b> (dalla più grande) e, nella stessa categoria, di giorno e ora; con <span class="k">Scarica programma PDF</span> lo stampi.</li>
 <li><b>Comunicazione</b>: un modello (o testo libero), titolo, testo e firma; <span class="k">Scarica PDF</span>. L'intestazione è
 quella della convocazione; con <b>Mostra la categoria nell'intestazione</b> ci metti la categoria: il mister ha già la sua, i
 direttori la scelgono dall'elenco. Non si
@@ -473,18 +472,19 @@ dall'area <b>Scouting</b>.</p><ol class="passi">
 <li><b>Società</b>: scegli dall'elenco o scrivila.</li>
 <li><b>Cognome e nome</b>, oppure, se non li sai, <b>come riconoscerlo</b> ("N.8, biondo, mancino").</li>
 <li><b>Cosa hai visto</b>: la parte più importante, solo aspetti tecnici e sportivi.</li>
-<li>Prima impressione da 1 a 5, partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
+<li>Se vuoi, i <b>voti per area</b> da 1 a 5 con una nota: Tecnica, Motoria, Tattica, Mentale ("–" se non l'hai visto).</li>
+<li>Qualche dettaglio facoltativo (piede preferito, prima impressione, statura, forza), partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
 <p>La segnalazione arriva firmata con il tuo nome e la tua squadra.</p>
 <div class="box"><b class="t">È già in lista? Lo valuti</b>Mentre scrivi annata e cognome, se il ragazzo è già nell'archivio dello scouting si apre la finestra
 <b>"Già in lista. Vuoi valutare?"</b>: tocca <span class="k">Sì, valuta</span> (o "No, è un altro giocatore"). Anche inviando, se è
-già in lista la segnalazione non si salva: si apre la <b>Valutazione</b>. Dai un voto da 1 a 5 a Tecnica, Motoria, Tattica e Mentale (con note se vuoi), scegli il
+già in lista la segnalazione non si salva: si apre la <b>Valutazione</b>. Se vuoi dai i voti del dettaglio (spunti, guida della palla, ricezione…), scegli il
 giudizio finale (Da prendere, Da rivedere, Non a livello) e tocca <span class="k">Salva valutazione</span>. Quello che avevi scritto
 è già nel commento finale. La valutazione arriva firmata con il tuo nome e la tua squadra.</div>
 <h3>Scouting → Giocatori</h3>
 <p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), divisi per stato, ognuno col suo
 colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In alto cerchi per nome o società e filtri per
 stato e ruolo. Ogni riga dice ruolo, società, quante segnalazioni e valutazioni ha, l'ultimo giudizio e, a destra, la media
-dell'ultima valutazione. Sotto il nome, in colonne, i voti dell'ultima valutazione (<b>TEC</b> tecnica, <b>MOT</b> motoria,
+dei voti per area più recenti. Sotto il nome, in colonne, gli ultimi voti per area, dati in una segnalazione o in una vecchia valutazione (<b>TEC</b> tecnica, <b>MOT</b> motoria,
 <b>TAT</b> tattica, <b>MEN</b> mentale: blu i voti alti, oro il 3, arancione e rosso i bassi) e <b>SEGN</b>, quante
 segnalazioni ha. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni. I contatti delle famiglie
 non si vedono.</p>''', 'Segnala un giocatore')}
@@ -499,7 +499,7 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <div class="si">
 <div class="col"><h3>Puoi</h3><ul class="ok">
 <li>Segnalare un giocatore, anche senza sapere il nome</li>
-<li>Valutarlo su 4 aree (Tecnica, Motoria, Tattica, Mentale)</li>
+<li>Dare i voti per area (Tecnica, Motoria, Tattica, Mentale) già nella segnalazione, e poi valutarlo</li>
 <li>Registrare open day, provini e allenamenti di prova, con presenza ed esito</li>
 <li>Consultare l'archivio, le schede, lo storico delle squadre e le prossime gare di ogni ragazzo</li>
 <li>Scegliere le gare da vedere con "Ci vado io"</li>
@@ -541,11 +541,12 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <li><b>Società</b>: scegli dall'elenco mentre scrivi; se è nuova, la aggiungo io.</li>
 <li><b>Cognome e nome</b>. Se non li sai, compila <b>Come riconoscerlo</b> ("N.8, biondo, mancino"): si completa dopo.</li>
 <li><b>Cosa hai visto</b>: il cuore della segnalazione.</li>
-<li><b>Prima impressione</b> da 1 (non a livello) a 5 (da prendere subito), partita o occasione, data.</li>
+<li><b>Voti per area</b> (facoltativi): Tecnica, Motoria, Tattica, Mentale da 1 a 5, ognuna con la sua nota; "–" se non l'hai visto.</li>
+<li><b>Qualche dettaglio</b> (facoltativo): piede preferito, prima impressione (positiva, da rivedere, negativa), statura, forza; partita o occasione, data.</li>
 <li><span class="k">Salva segnalazione</span>: si apre la scheda del giocatore.</li></ol>
 <div class="box"><b class="t">È già in lista? Si valuta</b>Mentre scrivi annata e cognome si apre la finestra <b>"Già in lista. Vuoi
 valutare?"</b> con i ragazzi già in archivio (anche con il cognome scritto un po' diverso): <span class="k">Sì, valuta</span> apre subito la
-<b>Valutazione</b> (le 4 aree da 1 a 5, il dettaglio facoltativo su spunti, guida della palla, ricezione, calciata, contrasto,
+<b>Valutazione</b> (il dettaglio facoltativo su spunti, guida della palla, ricezione, calciata, contrasto,
 velocità e reattività, e il giudizio), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
 (cognome, nome e annata) la segnalazione <b>non</b> si salva e si apre la valutazione. Nella scheda di un giocatore già in lista c'è
 solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
@@ -556,7 +557,7 @@ solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
 {fig('s-scheda', '''<ul>
 <li><b>In alto</b>: nome, stato, annata, ruolo, piede, società e <b>squadra</b> (società · categoria, es. "Under 14 - 2013").
 <span class="k">Aggiungi segnalazione</span> e <span class="k">Valuta</span>.</li>
-<li><b>Valutazioni</b>: le medie delle 4 aree e, sotto, lo <b>storico valutazioni</b>: una riga per valutazione (data, chi, i 4 voti,
+<li><b>Voti per area</b>: le medie delle 4 aree, da tutte le segnalazioni e valutazioni che le hanno; sotto, lo <b>storico valutazioni</b>: una riga per valutazione (data, chi, i 4 voti,
 media e giudizio) con ↑ o ↓ se è meglio o peggio della precedente; tocca la riga per note e commento.</li>
 <li><b>Prossime gare</b>: le partite della sua squadra caricate in Gare, con ora, campo e mappa, e "Ci vado io".</li>
 <li><b>Carriera</b>: le società in cui ha giocato, stagione per stagione. Ogni cambio di società resta scritto (chi, da quando,
@@ -575,14 +576,13 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 <h2>5. Valutare ed eventi</h2>
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
-<li>Per ogni area un voto da <b>1 a 5</b> e, se vuoi, una nota: <b>Tecnica</b> (conduzione, passaggio, tiro, primo controllo),
-<b>Motoria</b> (rapidità, coordinazione, equilibrio, resistenza), <b>Tattica</b> (posizione, scelte, lettura del gioco),
-<b>Mentale</b> (atteggiamento, reazione all'errore, personalità).</li>
+<li><b>Nel dettaglio</b> (facoltativo): spunti, guida della palla, ricezione, calciata, contrasto, velocità, reattività da 1 a 5.
+I voti per area (Tecnica, Motoria, Tattica, Mentale) ora si danno nella <b>segnalazione</b>.</li>
 <li><b>Giudizio finale</b>: da prendere, da rivedere, non a livello; un commento, la partita, la data.</li>
 <li><span class="k">Salva valutazione</span>.</li></ol>
 <h3>Eventi</h3>
 <p>Nella scheda, sezione <b>Eventi</b> → <span class="k">Aggiungi evento</span>: tipo (open day, provino, allenamento di prova,
-altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito con <b>Aggiorna presenza ed esito</b>.</p>''', 'Valutazione a 4 aree')}
+altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito con <b>Aggiorna presenza ed esito</b>.</p>''', 'Valutazione')}
 </section>
 
 <section>
@@ -725,9 +725,9 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
 <li><b>Segnalazione</b>: oltre a cosa hai visto, alcune domande facoltative tutte nello stesso stile ("–" se non l'hai visto):
-<b>piede preferito</b> (destro, sinistro, entrambi), <b>prima impressione</b> (positiva, da rivedere, negativa), statura e forza da 1 a 5.
+<b>piede preferito</b> (destro, sinistro, entrambi), <b>prima impressione</b> (positiva, da rivedere, negativa), statura e forza da 1 a 5, e i <b>voti per area</b> (Tecnica, Motoria, Tattica, Mentale, con note).
 Nell'elenco Giocatori la colonna <b>Impressione</b> mostra quella dell'ultima segnalazione: si ordina toccando l'intestazione e si
-filtra con "Ogni impressione". <b>Valutazione</b>: le 4 aree obbligatorie e, <b>nel dettaglio</b> (facoltativo), spunti,
+filtra con "Ogni impressione". <b>Valutazione</b>: giudizio, commento e, <b>nel dettaglio</b> (facoltativo), spunti,
 guida della palla, ricezione, calciata, contrasto, velocità e reattività. Si vedono nella storia e nello storico valutazioni della scheda.</li>
 <li><b>Tre valutazioni</b>: ogni giocatore ha <b>3 caselle</b> con le iniziali delle persone che l'hanno valutato. Servono 3 persone
 diverse per passarlo a <b>Inserito</b>: a 3 su 3 caselle e riga diventano <b>verdi</b> ✓. Ogni <b>annata</b> ha il suo colore e

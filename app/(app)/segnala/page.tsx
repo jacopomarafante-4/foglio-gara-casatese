@@ -4,7 +4,7 @@ import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta } from '@/lib/societa';
-import { annateDisponibili, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, RUOLI_CAMPO, SCELTE_PIEDE } from '@/lib/tipi';
+import { annateDisponibili, AREE, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, RUOLI_CAMPO, SCELTE_PIEDE } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -107,6 +107,16 @@ export default async function Segnala({
         <Etichetta testo="Cosa hai visto *">
           <textarea name="testo" required rows={5} className="campo" />
         </Etichetta>
+
+        {/* le 4 aree (dalla 0043 qui e non più nella valutazione): voto 1–5 e note, facoltative */}
+        {AREE.map((a) => (
+          <fieldset key={a.chiave} className="space-y-3 rounded-xl border border-linea bg-white p-4">
+            <legend className="px-1 font-display text-2xl font-bold">{a.nome} <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
+            <p className="-mt-2 text-sm text-grigio">{a.aiuto}</p>
+            <Voto nome={a.chiave} facoltativo />
+            <textarea name={`${a.chiave}_note`} rows={2} placeholder="Note (facoltative)" className="campo" />
+          </fieldset>
+        ))}
 
         {/* tutte le domande nello stesso stile, tutte facoltative ("–" = non rispondo) */}
         <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">

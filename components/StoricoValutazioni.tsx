@@ -1,29 +1,35 @@
 // Scheda del giocatore: storico delle valutazioni sotto le medie. Una riga per valutazione (dalla più recente):
-// data, chi, i 4 voti, media e giudizio, con la freccia rispetto alla valutazione precedente.
+// data, chi, i 4 voti (solo nelle valutazioni fino alla 0043; dopo, il dettaglio), media e giudizio, con la freccia rispetto alla precedente.
 // Toccando la riga: note delle aree e commento.
 import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, type Giudizio } from '@/lib/tipi';
 import { dataBreve } from '@/lib/utili';
 import { Autore, type FirmaValutazione } from '@/components/Autore';
+import { mediaVoti } from '@/lib/valutazioni';
 import { eliminaValutazione } from '@/app/(app)/giocatori/actions';
 
 export type ValutazioneStorico = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; firma: string;
   f: FirmaValutazione; puoEliminare: boolean;
-  tecnica: number; motoria: number; tattica: number; mentale: number;
+  tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
   spunti?: number | null; guida_palla?: number | null; ricezione?: number | null; calciata?: number | null;
   contrasto?: number | null; velocita?: number | null; reattivita?: number | null;   // 0041, facoltativi
 };
 
-const media = (v: ValutazioneStorico) => (v.tecnica + v.motoria + v.tattica + v.mentale) / 4;
+/* media: delle 4 aree se ci sono (valutazioni vecchie), se no del dettaglio */
+const media = (v: ValutazioneStorico) => mediaVoti(v) ?? (() => {
+  const d = DETTAGLI_VALUTAZIONE.map((x) => v[x.chiave]).filter((x): x is number => typeof x === 'number');
+  return d.length ? d.reduce((a, b) => a + b, 0) / d.length : null;
+})();
 const COLORE_GIUDIZIO: Record<Giudizio, string> = {
   da_prendere: 'bg-blu text-white',
   da_rivedere: 'bg-oro/30 text-inchiostro',
   non_a_livello: 'bg-rosso/15 text-rosso',
 };
 /** Voto con la freccia rispetto a prima (↑ meglio, ↓ peggio) */
-function Voto({ ora, prima }: { ora: number; prima?: number }) {
-  const d = prima === undefined ? 0 : ora - prima;
+function Voto({ ora, prima }: { ora: number | null; prima?: number | null }) {
+  if (ora == null) return <span className="font-display text-lg font-bold text-grigio">–</span>;
+  const d = prima == null ? 0 : ora - prima;
   return (
     <span className="font-display text-lg font-bold">
       {ora}
@@ -53,7 +59,11 @@ export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: 
                     <span className="block text-xs text-grigio">{[v.firma, v.contesto].filter(Boolean).join(' · ')}</span>
                   </span>
                   <span className="grid grid-cols-5 gap-3 text-center">
-                    {AREE.map((a) => (
+                    {mediaVoti(v) === null ? (
+                      <span className="col-span-4 self-center text-left text-xs text-grigio">
+                        {DETTAGLI_VALUTAZIONE.filter((d) => v[d.chiave]).map((d) => `${d.nome} ${v[d.chiave]}`).join(' · ') || 'Senza voti'}
+                      </span>
+                    ) : AREE.map((a) => (
                       <span key={a.chiave}>
                         <small className="block text-[10px] font-semibold uppercase text-grigio">{a.nome.slice(0, 3)}</small>
                         <Voto ora={v[a.chiave]} prima={p?.[a.chiave]} />
@@ -61,7 +71,7 @@ export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: 
                     ))}
                     <span>
                       <small className="block text-[10px] font-semibold uppercase text-grigio">Media</small>
-                      <span className="font-display text-lg font-bold">{media(v).toFixed(1)}</span>
+                      <span className="font-display text-lg font-bold">{media(v)?.toFixed(1) ?? '–'}</span>
                     </span>
                   </span>
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORE_GIUDIZIO[v.giudizio]}`}>{GIUDIZI[v.giudizio]}</span>

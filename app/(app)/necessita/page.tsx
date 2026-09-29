@@ -17,6 +17,7 @@ import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
 import { SlotValutazioni, valutatori } from '@/components/Autore';
 import { Annata } from '@/components/Annata';
+import { conVoti, mediaVoti } from '@/lib/valutazioni';
 import { apriChiudiNecessita, eliminaNecessita, salvaNecessita } from './actions';
 
 type Necessita = {
@@ -27,9 +28,10 @@ type Giocatore = {
   id: string; cognome: string | null; nome: string | null; descrizione: string | null; annata: number;
   ruolo: RuoloCampo | null; piede: Piede | null; stato: StatoGiocatore; societa_id: string | null; societa: { nome: string } | null;
   valutazioni: {
-    tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string;
+    tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; giudizio: Giudizio; data: string;
     autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
   }[];
+  segnalazioni: { data: string; tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null }[];
 };
 
 const PRIORITA = { alta: 'Priorità alta', media: 'Priorità media', bassa: 'Priorità bassa' } as const;
@@ -40,7 +42,8 @@ const COLORE_GIUDIZIO: Record<Giudizio, string> = {
 const PESO_GIUDIZIO: Record<string, number> = { da_prendere: 0, da_rivedere: 1, nessuno: 2, non_a_livello: 3 };
 
 const ultima = (g: Giocatore) => [...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data))[0];
-const media = (v?: Giocatore['valutazioni'][number]) => (v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null);
+/* media dei voti per area dell'ultima segnalazione o valutazione che ne ha (0043) */
+const mediaG = (g: Giocatore) => { const r = conVoti([...g.segnalazioni, ...g.valutazioni])[0]; return r ? mediaVoti(r) : null; };
 const annate = (n: Pick<Necessita, 'annata_da' | 'annata_a'>) =>
   n.annata_da === n.annata_a ? `${n.annata_da} (${categoriaDaAnnata(n.annata_da).split(' - ')[0]})` : `${n.annata_da}–${n.annata_a}`;
 
@@ -55,13 +58,13 @@ function candidati(n: Necessita, tutti: Giocatore[]) {
   }
   const ordina = (l: Giocatore[]) => l.sort((a, b) => {
     const va = ultima(a), vb = ultima(b);
-    return PESO_GIUDIZIO[va?.giudizio ?? 'nessuno'] - PESO_GIUDIZIO[vb?.giudizio ?? 'nessuno'] || (media(vb) ?? 0) - (media(va) ?? 0);
+    return PESO_GIUDIZIO[va?.giudizio ?? 'nessuno'] - PESO_GIUDIZIO[vb?.giudizio ?? 'nessuno'] || (mediaG(b) ?? 0) - (mediaG(a) ?? 0);
   });
   return { sicuri: ordina(sicuri), daVerificare: ordina(daVerificare) };
 }
 
 function RigaGiocatore({ g, contatto }: { g: Giocatore; contatto: boolean }) {
-  const v = ultima(g), m = media(v);
+  const v = ultima(g), m = mediaG(g);
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
       <Link href={`/giocatori/${g.id}`} className="min-w-40 flex-1 font-semibold text-blu hover:underline">
@@ -74,7 +77,7 @@ function RigaGiocatore({ g, contatto }: { g: Giocatore; contatto: boolean }) {
       <SlotValutazioni firme={valutatori(g.valutazioni)} piccolo />
       <ContattoFlag presente={contatto} breve />
       <StatoBadge stato={g.stato} />
-      <span className="w-12 text-center font-display text-lg font-bold" title="Media dell'ultima valutazione">{m ? m.toFixed(1) : '–'}</span>
+      <span className="w-12 text-center font-display text-lg font-bold" title="Media dei voti per area dell'ultima segnalazione o valutazione">{m ? m.toFixed(1) : '–'}</span>
       {v
         ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORE_GIUDIZIO[v.giudizio]}`}>{GIUDIZI[v.giudizio]}</span>
         : <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da valutare</span>}
@@ -147,7 +150,7 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
     const min = Math.min(...mostra.map((n) => n.annata_da)), max = Math.max(...mostra.map((n) => n.annata_a));
     const academy = idNostraSocieta(await elencoSocieta(supabase));
     const { data } = await supabase.from('giocatori')
-      .select('id, cognome, nome, descrizione, annata, ruolo, piede, stato, societa_id, societa(nome), valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))')
+      .select('id, cognome, nome, descrizione, annata, ruolo, piede, stato, societa_id, societa(nome), segnalazioni(data, tecnica, motoria, tattica, mentale), valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))')
       .eq('osservato', true).gte('annata', min).lte('annata', max)
       .not('stato', 'in', '(inserito,da_non_inserire)');
     giocatori = ((data as unknown as Giocatore[]) ?? []).filter((g) => !academy || g.societa_id !== academy);

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { mediaVoti } from '@/lib/valutazioni';
 import { getProfilo } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETICHETTA_RUOLO, nomeCompleto } from '@/lib/ruoli';
@@ -9,7 +10,7 @@ import { PasswordForm } from './PasswordForm';
 type Giocatore = { id: string; cognome: string | null; nome: string | null; descrizione: string | null; annata: number } | null;
 type Segnalazione = { id: string; data: string; contesto: string | null; voto: number | null; giocatore: Giocatore };
 type Valutazione = {
-  id: string; data: string; tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio;
+  id: string; data: string; tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; giudizio: Giudizio;
   giocatore: Giocatore;
 };
 type Prenotazione = {
@@ -137,7 +138,7 @@ export default async function Attivita() {
                       {v.giocatore && <span className="text-grigio"> · {v.giocatore.annata}</span>}
                     </span>
                     <span className="shrink-0 font-semibold text-blu">
-                      {((v.tecnica + v.motoria + v.tattica + v.mentale) / 4).toFixed(1).replace('.', ',')}
+                      {mediaVoti(v)?.toFixed(1).replace('.', ',') ?? '–'}
                     </span>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[v.giudizio]}`}>
                       {GIUDIZI[v.giudizio]}

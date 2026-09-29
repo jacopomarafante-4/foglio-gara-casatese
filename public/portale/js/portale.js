@@ -548,7 +548,10 @@ let giocatoriStato = '', giocatoriRuolo = '';
 const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_non_inserire'];
 const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT'};
 const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']];
-const mediaVal = v => v ? (v.tecnica + v.motoria + v.tattica + v.mentale) / 4 : null;
+/* media dei voti per area presenti (dalla 0043 si danno nella segnalazione; le valutazioni vecchie li hanno ancora) */
+const mediaVal = v => { const x = v ? ['tecnica','motoria','tattica','mentale'].map(k => v[k]).filter(n => typeof n === 'number') : []; return x.length ? x.reduce((a, b) => a + b, 0) / x.length : null; };
+/* l'ultima segnalazione o valutazione con voti per area */
+const ultimiVoti = g => [...(g.segnalazioni||[]), ...(g.valutazioni||[])].filter(x => mediaVal(x) !== null).sort((a, b) => (b.data||'').localeCompare(a.data||''))[0];
 /* Chi ha valutato: iniziali in un cerchio colorato, stesso colore per la stessa persona (come nello Scouting, components/Autore.tsx) */
 const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#4A5563','#1F5FA8'];
 /* Le 3 caselle delle valutazioni (persone diverse, come nello Scouting): verdi a 3 su 3 */
@@ -595,22 +598,22 @@ function viewGiocatori(){
         Object.keys(SIGLE_RUOLO).filter(k => conta(cercati, g => g.ruolo===k)).map(k => chip('data-gruolo', k, giocatoriRuolo, RUOLI_SCOUTING[k], conta(cercati, g => g.ruolo===k))).join('')}${
         conta(cercati, g => !g.ruolo) ? chip('data-gruolo', '-', giocatoriRuolo, 'Ruolo da definire', conta(cercati, g => !g.ruolo)) : ''}</div>`}
     </div>`;
-  const barre = v => AREE_VAL.map(([k,l]) => `<div class="gbar"><span>${l}</span><i><b style="width:${v[k]*20}%"></b></i><strong>${v[k]}</strong></div>${v[k+'_note'] ? `<p class="gtxt gnota">${esc(v[k+'_note'])}</p>` : ''}`).join('');
+  const barre = v => AREE_VAL.filter(([k]) => typeof v[k] === 'number').map(([k,l]) => `<div class="gbar"><span>${l}</span><i><b style="width:${v[k]*20}%"></b></i><strong>${v[k]}</strong></div>${v[k+'_note'] ? `<p class="gtxt gnota">${esc(v[k+'_note'])}</p>` : ''}`).join('');
   /* Anteprima a colonne: 4 aree dell'ultima valutazione (colore dal voto), segnalazioni, giudizio */
   const tile = (l, v, cls = '') => `<span class="gt ${v==null || v==='' ? 'vuoto' : cls}"><small>${l}</small><b>${v==null || v==='' ? '–' : v}</b></span>`;
   const riga = g => {
     const nome = [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
-    const ultima = g.valutazioni[0], media = mediaVal(ultima);
+    const ultima = g.valutazioni[0], voti = ultimiVoti(g), media = mediaVal(voti);
     const agg = [ultima?.data, g.segnalazioni[0]?.data].filter(Boolean).sort().pop();
     const info = [portieri ? String(g.annata) : '', g.societa, agg ? 'agg. ' + fmtDate(agg).slice(0,5) : ''].filter(Boolean).map(esc).join(' · ');
     return `<details class="grow st-${esc(g.stato)}${new Set((g.valutazioni||[]).map(v => v.autore || '?')).size >= 3 ? ' completo' : ''}"><summary>
         <div class="gtesta">
           <div class="gprinc"><div class="gnome"><b>${esc(nome)}</b>${g.ruolo ? `<span class="gruolo">${SIGLE_RUOLO[g.ruolo]}</span>` : ''}</div>
             <div class="note">${info || '&nbsp;'}</div></div>
-          <div class="gmedia ${media==null ? 'vuota' : 'v'+Math.round(media)}" title="Media dell'ultima valutazione"><small>Media</small>${media==null ? '–' : media.toFixed(1)}</div>
+          <div class="gmedia ${media==null ? 'vuota' : 'v'+Math.round(media)}" title="Media dei voti per area (ultima segnalazione o valutazione)"><small>Media</small>${media==null ? '–' : media.toFixed(1)}</div>
         </div>
         <div class="gcolonne">
-          ${AREE_VAL.map(([k,l]) => tile(l.slice(0,3).toUpperCase(), ultima?.[k], 'v'+ultima?.[k])).join('')}
+          ${AREE_VAL.map(([k,l]) => tile(l.slice(0,3).toUpperCase(), voti?.[k], 'v'+voti?.[k])).join('')}
           ${tile('SEGN', g.segnalazioni.length || null, 'conta')}
           ${ultima ? `<span class="ggiud gg-${esc(ultima.giudizio)}">${esc(GIUDIZI[ultima.giudizio]||'')}</span>` : '<span class="ggiud gg-nessuno">Da valutare</span>'}
           ${slotValutazioni(g.valutazioni)}
@@ -620,7 +623,7 @@ function viewGiocatori(){
         ${g.piede ? `<p class="note">Piede ${esc(g.piede)}${g.categoria ? ' · '+esc(g.categoria) : ''}</p>` : ''}
         ${g.valutazioni.map(v => `<div class="gval"><div class="note">${autoreTondo(v.autore)} ${fmtDate(v.data)}${v.contesto ? ' · '+esc(v.contesto) : ''}${v.autore ? ' · '+esc(v.autore) : ''}</div>
           ${barre(v)}<p class="gtxt"><span class="ggiud gg-${esc(v.giudizio)}">${esc(GIUDIZI[v.giudizio] || v.giudizio)}</span>${v.commento ? ' '+esc(v.commento) : ''}</p></div>`).join('')}
-        ${g.segnalazioni.map(x => `<div class="gval gseg"><div class="note">Segnalazione · ${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.voto ? ` · <b>${x.voto}/5</b>` : ''}</div><p class="gtxt">${esc(x.testo)}</p></div>`).join('')}
+        ${g.segnalazioni.map(x => `<div class="gval gseg"><div class="note">Segnalazione · ${fmtDate(x.data)}${x.contesto ? ' · '+esc(x.contesto) : ''}${x.autore ? ' · '+esc(x.autore) : ''}${x.impressione ? ` · <b>${esc({positiva:'Positiva',da_rivedere:'Da rivedere',negativa:'Negativa'}[x.impressione] || '')}</b>` : x.voto ? ` · <b>${x.voto}/5</b>` : ''}</div>${barre(x)}<p class="gtxt">${esc(x.testo)}</p></div>`).join('')}
         ${!g.valutazioni.length && !g.segnalazioni.length ? '<p class="note">Nessuna segnalazione o valutazione.</p>' : ''}
       </div></details>`;
   };
@@ -669,9 +672,6 @@ function viewValutaMister(){
     Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento finale.</p>
   ${segEsito && !segEsito.ok ? `<p class="esito ko" role="alert">${esc(segEsito.msg)}</p>` : ''}
   <section class="panel segform">
-    ${AREE_VALUTA.map(([k,l,aiuto]) => `<div class="valarea"><div class="row" style="justify-content:space-between;align-items:baseline"><b>${l}</b><span class="note">${aiuto}</span></div>
-      <div class="seg" role="group" aria-label="${l} da 1 a 5">${[1,2,3,4,5].map(n => `<button type="button" data-valv="${k}:${n}" aria-pressed="${String(v[k])===String(n)}">${n}</button>`).join('')}</div>
-      <textarea data-valf="${k}_note" rows="2" placeholder="Note (facoltative)">${esc(v[k+'_note']||'')}</textarea></div>`).join('')}
     <span class="f">Nel dettaglio (facoltativo)</span>
     ${votiFacoltativi('data-vald', DETTAGLI_VALUTA, v)}
     <span class="f">Giudizio finale *</span>
@@ -687,8 +687,7 @@ function viewValutaMister(){
 }
 async function inviaValutazione(){
   if(segInvio) return;
-  const v = segValuta, manca = AREE_VALUTA.find(([k]) => !v[k]);
-  if(manca){ segEsito = {ok:false, msg:`Manca il voto di ${manca[1]}.`}; render(); window.scrollTo(0,0); return; }
+  const v = segValuta;   // le 4 aree dalla 0043 si danno nella segnalazione
   if(!v.giudizio){ segEsito = {ok:false, msg:'Scegli il giudizio finale.'}; render(); window.scrollTo(0,0); return; }
   segInvio = true; render();
   const dati = Object.fromEntries(Object.entries(v).filter(([k]) => !['giocatore_id','nome','annata','societa'].includes(k)));
@@ -734,6 +733,11 @@ function viewSegnala(){
     <p class="note">Obbligatorio se manca il cognome.</p>
     <label class="f" for="sg_testo">Cosa hai visto *</label>
     <textarea id="sg_testo" data-seg="testo" rows="5">${esc(d.testo||'')}</textarea>
+    <span class="f">Voti per area (facoltativi)</span>
+    <p class="note" style="margin:0">Da 1 a 5; "–" se non l'hai visto.</p>
+    ${AREE_VALUTA.map(([k,l,aiuto]) => `<div class="valarea"><div class="row" style="justify-content:space-between;align-items:baseline"><b>${l}</b><span class="note">${aiuto}</span></div>
+      ${votiFacoltativi('data-segd', [[k, '']], d)}
+      <textarea data-seg="${k}_note" rows="2" placeholder="Note (facoltative)">${esc(d[k+'_note']||'')}</textarea></div>`).join('')}
     <span class="f">Qualche dettaglio (facoltativo)</span>
     <p class="note" style="margin:0">Lascia "–" su quello che non hai visto.</p>
     ${votiFacoltativi('data-segd', DETTAGLI_SEGNALA, d)}
