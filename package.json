@@ -15,7 +15,8 @@
     "prove:portale": "node scripts/prove-portale.mjs && node scripts/prove-schede.mjs",
     "prove": "npm run lint && npm run typecheck && npm run prove:regole && npm run prove:portale && npm run build",
     "prove:regole": "node --import ./tests/registra.mjs --test 'tests/*.test.mjs'",
-    "condivisi": "node scripts/genera-condivisi.mjs"
+    "condivisi": "node scripts/genera-condivisi.mjs",
+    "portale:versioni": "node scripts/versioni-portale.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

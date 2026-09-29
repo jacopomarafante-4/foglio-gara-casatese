@@ -23,7 +23,10 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
 
 ## Portale squadre (`public/portale/`)
 - JavaScript classico senza build, variabili globali condivise, caricato nell'ordine di
-  `index.html`; ESLint lo ignora. Dopo ogni modifica a CSS/JS aumenta il `?v=` in `index.html`.
+  `index.html`; ESLint lo ignora. Dopo ogni modifica a CSS/JS lancia `npm run portale:versioni`: il `?v=` di ogni file è
+  l'impronta del suo contenuto (scripts/versioni-portale.mjs; le prove falliscono se non è aggiornato).
+- Una variabile globale si cambia solo nel file che la dichiara: dagli altri file con la sua `impostaX()` (es. `impostaTab('rosa')`,
+  `impostaCurTeam(id)`), in fondo al file proprietario. Le prove falliscono se un file cambia la variabile di un altro.
 - Regole comuni con lo Scouting (calendari e colori, età della categoria, colori delle annate, iniziali e colore di chi valuta) in
   `lib/condivisi.ts`, UNA volta sola: `npm run condivisi` genera `public/portale/js/condivisi.js` (non modificarlo a mano; le prove
   falliscono se non è aggiornato). Se aggiungi una regola usata da tutte e due le parti, mettila lì.

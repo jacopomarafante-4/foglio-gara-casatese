@@ -210,9 +210,9 @@ function viewSchemaModello(sc){
 }
 function viewScheme(){
   const sc = schemaDa(openSchemeId);
-  if(!sc){ openSchemeId = null; return viewSchemes(); }
-  if(modificaBase(sc)){ if(boardMode !== 'unico'){ boardMode = 'unico'; } return viewSchemaEditor(sc); }
-  boardMode = 'assign';
+  if(!sc){ impostaOpenSchemeId(null); return viewSchemes(); }
+  if(modificaBase(sc)){ if(boardMode !== 'unico'){ impostaBoardMode('unico'); } return viewSchemaEditor(sc); }
+  impostaBoardMode('assign');
   return viewSchemaModello(sc);
 }
 
@@ -242,7 +242,7 @@ function nuovoSchema(chiave, dellaSocieta){
   if(!S.sheet.selected.includes(q.id)){ S.sheet.selected.push(q.id); save('sheet'); }
   return q;
 }
-const apri = q => { openSchemeId = q.id; boardMode = 'unico'; selectedToken = null; selectedDraw = null; drawTool = null; render(); window.scrollTo(0,0); };
+const apri = q => { impostaOpenSchemeId(q.id); impostaBoardMode('unico'); impostaSelectedToken(null); impostaSelectedDraw(null); impostaDrawTool(null); render(); window.scrollTo(0,0); };
 
 /* Indicazioni scritte dal mister su un modello: valgono solo per questa partita (schemeEdits[id].note) */
 document.addEventListener('input', e => {
@@ -256,43 +256,43 @@ document.addEventListener('input', e => {
 document.addEventListener('click', e => {
   const r = e.target.closest('[data-pzsel]'); if(!r || e.target.closest('select,input,button,label')) return;
   if(boardMode !== 'unico') return;
-  selectedToken = selectedToken === r.dataset.pzsel ? null : r.dataset.pzsel; selectedDraw = null; drawTool = null; render();
+  impostaSelectedToken(selectedToken === r.dataset.pzsel ? null : r.dataset.pzsel); impostaSelectedDraw(null); impostaDrawTool(null); render();
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-pz],[data-pzcopia],[data-pzpref],[data-pztool],[data-pzlato],[data-pzaddrole]'); if(!b) return;
   if(b.dataset.pzcopia){ const sc = schemaDa(b.dataset.pzcopia); if(sc && curTeam && !readOnly()){ apri(usaModello(sc)); setStatus('Copiato nei tuoi schemi'); } return; }
   if(b.dataset.pzpref){ const sc = schemaDa(b.dataset.pzpref); if(isMio(sc) && !readOnly()){ sc.preferito = !sc.preferito; salvaSchema(sc); render(); } return; }
-  if(b.dataset.pztool !== undefined){ drawTool = b.dataset.pztool || null; selectedToken = null; selectedDraw = null; render(); return; }
+  if(b.dataset.pztool !== undefined){ impostaDrawTool(b.dataset.pztool || null); impostaSelectedToken(null); impostaSelectedDraw(null); render(); return; }
   if(b.dataset.pzlato || b.dataset.pzaddrole !== undefined){
     const sc = schemaDa(openSchemeId); if(!sc || !modificaBase(sc)) return;
     if(b.dataset.pzlato){ sc.side = b.dataset.pzlato; salvaSchema(sc); render(); return; }
     const usati = new Set(sc.tokens.map(t => t.slot));
     const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: b.dataset.pzaddrole, tag: ''};
-    sc.tokens.push(n); selectedToken = n.id; selectedDraw = null; drawTool = null; salvaSchema(sc); render(); return;
+    sc.tokens.push(n); impostaSelectedToken(n.id); impostaSelectedDraw(null); impostaDrawTool(null); salvaSchema(sc); render(); return;
   }
   const azione = b.dataset.pz;
   if(azione === 'nuovo'){ if(curTeam && !readOnly()) apri(nuovoSchema($('#pz_base')?.value, false)); return; }
   if(azione === 'nuovosoc'){ if(isAdmin() && !readOnly()) apri(nuovoSchema($('#pz_basesoc')?.value, true)); return; }
   const sc = schemaDa(openSchemeId); if(!sc || !modificaBase(sc)) return;
   switch(azione){
-    case 'deseleziona': selectedToken = null; selectedDraw = null; render(); break;
+    case 'deseleziona': impostaSelectedToken(null); impostaSelectedDraw(null); render(); break;
     case 'nuovocompito': { const nome = (prompt('Nome del nuovo compito:', '') || '').trim(); if(!nome) break;
       const usati = new Set(sc.tokens.map(t => t.slot));
       const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: nome, tag: ''};
-      sc.tokens.push(n); selectedToken = n.id; salvaSchema(sc); render(); break; }
+      sc.tokens.push(n); impostaSelectedToken(n.id); salvaSchema(sc); render(); break; }
     case 'addtok': { const usati = new Set(sc.tokens.map(t => t.slot)); const n = {id: uid('t'), slot: [...Array(11)].map((_,i) => i+1).find(k => !usati.has(k)) || 1, x: 0, y: 24, role: '', tag: ''};
-      sc.tokens.push(n); selectedToken = n.id; selectedDraw = null; drawTool = null; salvaSchema(sc); render(); break; }
-    case 'deltok': sc.tokens = sc.tokens.filter(q => q.id !== selectedToken); selectedToken = null; salvaSchema(sc); render(); break;
-    case 'delsegno': if(selectedDraw){ (selectedDraw.kind==='draw' ? sc.draw : sc.marks).splice(selectedDraw.index, 1); selectedDraw = null; salvaSchema(sc); render(); } break;
+      sc.tokens.push(n); impostaSelectedToken(n.id); impostaSelectedDraw(null); impostaDrawTool(null); salvaSchema(sc); render(); break; }
+    case 'deltok': sc.tokens = sc.tokens.filter(q => q.id !== selectedToken); impostaSelectedToken(null); salvaSchema(sc); render(); break;
+    case 'delsegno': if(selectedDraw){ (selectedDraw.kind==='draw' ? sc.draw : sc.marks).splice(selectedDraw.index, 1); impostaSelectedDraw(null); salvaSchema(sc); render(); } break;
     case 'testo': if(selectedDraw?.kind==='mark'){ const m = sc.marks[selectedDraw.index], v = prompt('Testo:', m.text);
-      if(v != null){ if(v.trim()) m.text = v.trim(); else sc.marks.splice(selectedDraw.index, 1); selectedDraw = null; salvaSchema(sc); render(); } } break;
+      if(v != null){ if(v.trim()) m.text = v.trim(); else sc.marks.splice(selectedDraw.index, 1); impostaSelectedDraw(null); salvaSchema(sc); render(); } } break;
     case 'duplica': { const q = clone(sc); Object.assign(q, {id: uid('s'), name: sc.name + ' (copia)', aggiornato: todayISO()}); q.tokens.forEach(t => t.id = uid('t'));
       if(isMio(sc)) S.reg.schemi.splice(S.reg.schemi.indexOf(sc) + 1, 0, q); else S.schemes.splice(S.schemes.indexOf(sc) + 1, 0, q);
       salvaSchema(q); apri(q); break; }
     case 'elimina': if(confirm(`Eliminare lo schema "${sc.name}"?`)){
       if(isMio(sc)){ S.reg.schemi = S.reg.schemi.filter(q => q !== sc); save('registro'); } else { S.schemes = S.schemes.filter(q => q !== sc); save('schemes'); }
       S.sheet.selected = S.sheet.selected.filter(i => i !== sc.id); delete S.sheet.overrides[sc.id]; save('sheet');
-      openSchemeId = null; boardMode = 'assign'; render(); } break;
+      impostaOpenSchemeId(null); impostaBoardMode('assign'); render(); } break;
   }
 });
 /* Riquadro compiti: numero, compito ed etichetta della pedina (data-edtokid="id:campo") */
@@ -367,7 +367,7 @@ document.addEventListener('pointerdown', e => {
     };
     const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
       if(mosso) salvaSchema(sc);
-      else if(tk){ selectedToken = selectedToken===tk.id ? null : tk.id; selectedDraw = null; }
+      else if(tk){ impostaSelectedToken(selectedToken===tk.id ? null : tk.id); impostaSelectedDraw(null); }
       render();
       /* sul telefono il riquadro compiti è sotto il campo: si mostra la riga della pedina scelta */
       if(!mosso && selectedToken) document.querySelector(`[data-pzsel="${selectedToken}"]`)?.scrollIntoView({block: 'nearest', behavior: 'smooth'}); };
@@ -375,7 +375,7 @@ document.addEventListener('pointerdown', e => {
     return;
   }
   const segno = e.target.closest('[data-ed-draw],[data-ed-mark]');
-  selectedToken = null;
-  selectedDraw = !segno ? null : segno.dataset.edDraw !== undefined ? {kind: 'draw', index: +segno.dataset.edDraw} : {kind: 'mark', index: +segno.dataset.edMark};
+  impostaSelectedToken(null);
+  impostaSelectedDraw(!segno ? null : segno.dataset.edDraw !== undefined ? {kind: 'draw', index: +segno.dataset.edDraw} : {kind: 'mark', index: +segno.dataset.edMark});
   render();
 });

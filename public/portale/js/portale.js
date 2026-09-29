@@ -69,14 +69,14 @@ function writeRoute(push){
 }
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
-  tab = t; areaLast[areaOf(t).k] = t; if(gruppoDi(t)) gruppoLast[gruppoDi(t).k] = t;
-  selectedPlayer = null; slotPick = null; if(t!=='piazzati') openSchemeId = null;
-  openTrainingId = openGameId = openTestId = null;
+  impostaTab(t); areaLast[areaOf(t).k] = t; if(gruppoDi(t)) gruppoLast[gruppoDi(t).k] = t;
+  impostaSelectedPlayer(null); impostaSlotPick(null); if(t!=='piazzati') impostaOpenSchemeId(null);
+  impostaOpenTrainingId(impostaOpenGameId(impostaOpenTestId(null)));
   writeRoute(true); render(); window.scrollTo(0,0);
 }
 window.addEventListener('popstate', () => {
   const t = routeTab();
-  if(t && allowedTabs().includes(t) && t !== tab){ tab = t; openTrainingId = openGameId = openTestId = null; render(); window.scrollTo(0,0); }
+  if(t && allowedTabs().includes(t) && t !== tab){ impostaTab(t); impostaOpenTrainingId(impostaOpenGameId(impostaOpenTestId(null))); render(); window.scrollTo(0,0); }
 });
 function renderNav(){
   const cur = areaOf(tab);
@@ -282,17 +282,17 @@ document.addEventListener('click', e => {
     goTab('allenamenti');
     let tr = S.reg.trainings.find(t => t.date===todayISO());
     if(!tr){ tr = {id:uid('tr'), date:todayISO(), note:'', att:Object.fromEntries(S.players.map(p => [p.id,'P']))}; S.reg.trainings.push(tr); save('registro'); }
-    openTrainingId = tr.id; render(); return;
+    impostaOpenTrainingId(tr.id); render(); return;
   }
-  if(k==='tr'){ goTab('allenamenti'); openTrainingId = id; render(); return; }
+  if(k==='tr'){ goTab('allenamenti'); impostaOpenTrainingId(id); render(); return; }
   if(k==='opencal'){
     goTab('tabellini');
     const m = allCalendar().find(x => x.id===id); if(!m) return;
     let g = S.reg.games.find(x => x.calId===m.id);
     if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; S.reg.games.push(g); save('registro'); }
-    openGameId = g.id; render(); return;
+    impostaOpenGameId(g.id); render(); return;
   }
-  if(k==='opengm'){ goTab('tabellini'); openGameId = id; render(); return; }
+  if(k==='opengm'){ goTab('tabellini'); impostaOpenGameId(id); render(); return; }
   if(k==='stat'){ goTab(id==='partite' ? (isAdb() ? 'tabellini' : 'statpartite') : 'statallen'); return; }
   goTab(k);
 });
@@ -300,15 +300,15 @@ document.addEventListener('click', e => {
 /* ---------- Posizione esatta dei campi (salvata nel registro: la può impostare anche il mister) ---------- */
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-pinedit],[data-pinsave],[data-pindel],[data-pincancel]'); if(!b || !curTeam) return;
-  if(b.dataset.pinedit){ pinEditing = venueKey(b.dataset.pinedit); render(); $('#pin_in')?.focus(); return; }
-  if(b.dataset.pincancel){ pinEditing = null; render(); return; }
+  if(b.dataset.pinedit){ impostaPinEditing(venueKey(b.dataset.pinedit)); render(); $('#pin_in')?.focus(); return; }
+  if(b.dataset.pincancel){ impostaPinEditing(null); render(); return; }
   const R = S.reg; R.venues ||= {};
-  if(b.dataset.pindel){ delete R.venues[venueKey(b.dataset.pindel)]; pinEditing = null; save('registro'); render(); return; }
+  if(b.dataset.pindel){ delete R.venues[venueKey(b.dataset.pindel)]; impostaPinEditing(null); save('registro'); render(); return; }
   const v = b.dataset.pinsave, raw = ($('#pin_in')?.value || '').trim(), ll = parseLL(raw);
   if(ll) R.venues[venueKey(v)] = {name:v, ll};
   else if(/^https?:\/\/\S+$/.test(raw)) R.venues[venueKey(v)] = {name:v, url:raw};
   else { setStatus('Coordinate non riconosciute'); $('#pin_in')?.focus(); return; }
-  pinEditing = null; save('registro'); render(); setStatus('Posizione del campo salvata');
+  impostaPinEditing(null); save('registro'); render(); setStatus('Posizione del campo salvata');
 });
 document.addEventListener('change', e => { if(e.target.id==='cv_meetaddr') render(); });
 document.addEventListener('keydown', e => { if(e.target.id==='pin_in' && e.key==='Enter'){ e.preventDefault(); document.querySelector('[data-pinsave]')?.click(); } });
@@ -859,3 +859,11 @@ document.addEventListener('click', e => {
   const [k, n] = (b.dataset.segd || b.dataset.vald).split(':'), dati = b.dataset.segd ? segDraft : segValuta; if(!dati) return;
   dati[k] = n === '' || String(dati[k]) === n ? '' : n; render();
 });
+
+/* Variabili di questo file cambiate anche da altri file: si cambiano solo da qui (passo verso i moduli) */
+function impostaFrAperta(v){ return (frAperta = v); }
+function impostaCalVista(v){ return (calVista = v); }
+function impostaCalCategoria(v){ return (calCategoria = v); }
+function impostaTuttiCalAt(v){ return (tuttiCalAt = v); }
+function impostaSegValuta(v){ return (segValuta = v); }
+function impostaSegEsito(v){ return (segEsito = v); }

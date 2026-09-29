@@ -62,7 +62,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-evadd],[data-evdel],[data-evsq],[data-evavviso]'); if(!b || !puoOrganizzare()) return;
   if(b.dataset.evadd){ const ev = {id:uid('ev'), titolo:'', tipo:'Torneo organizzato', data:todayISO(), inizio:'', fine:'', luogo:'merate', indirizzo:'', squadre:[], note:''};
     /* il nuovo evento si apre in modifica nell'elenco di Tutte le squadre */
-    eventiSoc.push(ev); eventoAperto = ev.id; calVista = 'elenco'; calCategoria = ''; salvaCondiviso('shared/eventi', eventiSoc); eventoSuGoogle(ev);
+    eventiSoc.push(ev); eventoAperto = ev.id; impostaCalVista('elenco'); impostaCalCategoria(''); salvaCondiviso('shared/eventi', eventiSoc); eventoSuGoogle(ev);
     if(tab !== 'calendariotutte') goTab('calendariotutte'); else render(); return; }
   if(b.dataset.evdel){ const ev = eventiSoc.find(x => x.id===b.dataset.evdel);
     if(ev && confirm(`Eliminare l'evento "${ev.titolo||'senza titolo'}"?`)){ eventiSoc = eventiSoc.filter(x => x!==ev); salvaCondiviso('shared/eventi', eventiSoc); togliDaGoogle(ev); render(); } return; }
@@ -155,7 +155,7 @@ function avvisiSquadra(teamId){
 let partitaAperta = null;
 function salvaCalendarioSquadra(teamId){
   const t = (tuttiCal||[]).find(x => x.id===teamId); if(!t || !puoOrganizzare()) return;
-  tuttiCalAt = Date.now(); setStatus('Salvataggio…');
+  impostaTuttiCalAt(Date.now()); setStatus('Salvataggio…');
   const path = 'calendar/'+teamId;
   clearTimeout(timers[path]);
   timers[path] = setTimeout(async () => {
@@ -199,7 +199,7 @@ document.addEventListener('click', e => {
     if(m && confirm(`Eliminare l'amichevole con ${m.opponent||'avversario'}?`)){ t.matches = t.matches.filter(x => x!==m); salvaCalendarioSquadra(teamId); togliDaGoogle(m); render(); } return; }
   if(b.dataset.tcadd){ const sel = $('#tc_squadra'), teamId = sel?.value, t = (tuttiCal||[]).find(x => x.id===teamId); if(!t) return;
     const m = {id:uid('m'), date:todayISO(), time:'', opponent:'', home:true, venue:'', friendly:true, tipo:'Amichevole', note:''};
-    (t.matches ||= []).push(m); partitaAperta = `${teamId}|${m.id}`; calCategoria = teamId; calVista = 'elenco'; salvaCalendarioSquadra(teamId); partitaSuGoogle(teamId, m); render(); }
+    (t.matches ||= []).push(m); partitaAperta = `${teamId}|${m.id}`; impostaCalCategoria(teamId); impostaCalVista('elenco'); salvaCalendarioSquadra(teamId); partitaSuGoogle(teamId, m); render(); }
 });
 
 /* ---------- Home del responsabile organizzativo ---------- */
@@ -292,7 +292,7 @@ document.addEventListener('click', async e => {
     const j = await chiamaGoogle('importa');
     const n = k => j.squadre.reduce((s, x) => s + x[k], 0);
     googleEsito = `Letti ${j.partite} impegni: ${n('aggiunte')} nuovi, ${n('aggiornate')} cambiati, ${n('tolte')} tolti.`;
-    tuttiCalAt = 0; await caricaTuttiCal();
+    impostaTuttiCalAt(0); await caricaTuttiCal();
     if(curTeam){ const t = (tuttiCal||[]).find(x => x.id===curTeam); if(t) S.calendar = clone(t.matches||[]); }
   }catch(err){ googleEsito = 'Non riuscito: ' + err.message; }
   googleInCorso = false; render();

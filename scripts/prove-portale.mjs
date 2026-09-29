@@ -4,7 +4,9 @@
 // - ogni file .js della cartella è caricato da index.html (niente file dimenticati);
 // - effetti collaterali tra file (variabili globali condivise): nessun nome dichiarato in due file (una funzione con lo
 //   stesso nome sostituirebbe l'altra senza avvisi), nessun nome usato ma mai definito (errore solo quando si apre la scheda);
-// - public/portale/js/condivisi.js uguale a quello generato da lib/condivisi.ts (npm run condivisi).
+// - nessun file cambia una variabile dichiarata in un altro file: si usa la funzione impostaX del file proprietario;
+// - public/portale/js/condivisi.js uguale a quello generato da lib/condivisi.ts (npm run condivisi);
+// - ?v= di ogni file = impronta del suo contenuto (npm run portale:versioni).
 // Uso: node scripts/prove-portale.mjs   (parte da sola con npm run prove e su GitHub a ogni salvataggio)
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { Script } from 'node:vm';
@@ -15,11 +17,11 @@ import globals from 'globals';
 
 const DIR = 'public/portale', errori = [];
 const html = readFileSync(`${DIR}/index.html`, 'utf8');
-const caricati = [...html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+)(\?v=\d+)?"/g)].map((m) => ({ file: m[1], versione: m[2] }));
+const caricati = [...html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+)(\?v=[^"]+)?"/g)].map((m) => ({ file: m[1], versione: m[2] }));
 
-for (const { file, versione } of caricati) {
+for (const { file } of caricati) {   // la versione la controlla versioni-portale.mjs
   if (!existsSync(`${DIR}/${file}`)) errori.push(`index.html carica ${file}, che non esiste`);
-  if (!versione) errori.push(`index.html carica ${file} senza versione (?v=): i telefoni terrebbero la copia vecchia`);
+
 }
 const doppi = caricati.map((c) => c.file).filter((f, i, a) => a.indexOf(f) !== i);
 if (doppi.length) errori.push(`index.html carica due volte: ${[...new Set(doppi)].join(', ')}`);
@@ -65,9 +67,30 @@ for (const f of ordine) {
   }
 }
 
+/* ---------- Nessun file cambia le variabili di un altro (passo verso i moduli: tappa 2) ---------- */
+const cambiaAltri = { create(ctx) { return { 'Program:exit'() {
+  for (const ref of ctx.sourceCode.scopeManager.globalScope.through) {
+    const nome = ref.identifier.name, di = dichiarati.get(nome);
+    if (ref.isWrite() && di && di !== ctx.filename) ctx.report({ node: ref.identifier, message: `${nome}|${di}` });
+  }
+} }; } };
+for (const f of ordine) {
+  /* senza i nomi degli altri file tra i globali: così le loro variabili restano "da fuori" (through) e si vedono le scritture */
+  for (const m of linter.verify(testi[f], [{ languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: { ...globals.browser, ...esterni } },
+    plugins: { portale: { rules: { 'cambia-altri': cambiaAltri } } }, rules: { 'portale/cambia-altri': 'error' } }], { filename: f })) {
+    if (m.ruleId !== 'portale/cambia-altri') continue;
+    const [nome, di] = m.message.split('|');
+    errori.push(`${f}:${m.line} cambia "${nome}", che è di ${di}: usa imposta${nome[0].toUpperCase() + nome.slice(1)}() (da aggiungere in ${di} se manca)`);
+  }
+}
+
+/* ---------- Versioni automatiche ---------- */
+try { execFileSync(process.execPath, ['scripts/versioni-portale.mjs', '--controlla'], { stdio: 'pipe' }); }
+catch (e) { errori.push(String(e.stderr || e.message).trim()); }
+
 /* ---------- Regole comuni con lo Scouting ---------- */
 try { execFileSync(process.execPath, ['scripts/genera-condivisi.mjs', '--controlla'], { stdio: 'pipe' }); }
 catch (e) { errori.push(String(e.stderr || e.message).trim()); }
 
 if (errori.length) { console.error('✗ Portale:\n  ' + errori.join('\n  ')); process.exit(1); }
-console.log(`✓ Portale: ${js.length} file JavaScript senza errori di sintassi, ${caricati.length} file caricati con la loro versione, ${dichiarati.size} nomi globali senza doppioni né nomi mancanti, regole comuni aggiornate`);
+console.log(`✓ Portale: ${js.length} file JavaScript senza errori di sintassi, ${caricati.length} file caricati con la loro versione, ${dichiarati.size} nomi globali senza doppioni né nomi mancanti, nessun file cambia le variabili di un altro, versioni e regole comuni aggiornate`);
