@@ -214,13 +214,21 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     /* pagina portata nell'app (tappa 3, NELL_APP): si controlla e si torna al Portale */
     const nellApp = async (nome) => {
       if (!await pg.waitForURL((u) => !u.pathname.startsWith('/portale'), { timeout: 3000 }).then(() => true).catch(() => false)) return false;
-      await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
-      const testo = await pg.locator('main').innerText().catch(() => '');
-      const v = { nome: `${nome} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
-      if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
-      if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${nome}: rimandato alla pagina del PIN (tessera del mister?)`);
-      const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
-      riga.viste.push(v);
+      const controlla = async () => {
+        await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
+        const testo = await pg.locator('main').innerText().catch(() => '');
+        const v = { nome: `${nome} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
+        if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+        if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${nome}: rimandato alla pagina del PIN (tessera del mister?)`);
+        const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
+        if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
+        riga.viste.push(v);
+      };
+      await controlla();
+      /* le altre schede dell'area che sono già nell'app */
+      const qui = new URL(pg.url()).pathname;
+      const altre = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('/portale'))).catch(() => []);
+      for (const h of altre.filter((h) => h !== qui)) { await pg.goto(BASE + h); await controlla(); }
       await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
       return true;
     };

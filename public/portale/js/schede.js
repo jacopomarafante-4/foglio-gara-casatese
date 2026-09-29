@@ -148,7 +148,6 @@ function render(){
   if(tab==='squadre') v.innerHTML = viewSquadre();
   else if(tab==='home') v.innerHTML = viewHome();
   /* Schede che non dipendono da una squadra aperta */
-  else if(tab==='comunicazione') v.innerHTML = viewComunicazione();
   else if(NELL_APP[tab]){ if(IN_APP_UNICA) location.replace(NELL_APP[tab]); else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
@@ -168,7 +167,6 @@ function render(){
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   else if(tab==='mieiallenamenti') v.innerHTML = viewMieiAllenamenti();
-  else if(tab==='distinta') v.innerHTML = viewDistinta();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){

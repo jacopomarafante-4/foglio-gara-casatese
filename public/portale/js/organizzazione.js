@@ -84,12 +84,7 @@ document.addEventListener('change', e => {
 });
 
 /* ---------- Avvisi (Comunicazioni): per una o più squadre, solo nell'app (Home di mister e famiglie; niente WhatsApp) ---------- */
-const MODELLI_AVVISO = {
-  libero: {label:'Avviso libero', titolo:'', testo:''},
-  campo: {label:'Cambio campo', titolo:'Cambio campo', testo:'⚠️ CAMBIO CAMPO\nLa partita di [giorno] contro [avversario] si gioca a [campo, indirizzo].\nOrario invariato: ritrovo alle [ora].'},
-  orario: {label:'Cambio orario', titolo:'Cambio orario', testo:'⚠️ CAMBIO ORARIO\nLa partita di [giorno] contro [avversario] inizia alle [ora] (ritrovo alle [ora ritrovo]).'},
-  evento: {label:'Evento', titolo:'', testo:''}
-};
+/* MODELLI_AVVISO: in lib/condivisi.ts (li usa anche Modulistica → Comunicazione nell'app) */
 let bozzaAvviso = {modello:'libero', squadre:[], titolo:'', testo:''};
 function testoEvento(ev){
   const luogo = ev.luogo==='altro' ? (ev.indirizzo || 'luogo da definire') : LUOGHI_EVENTO[ev.luogo];
