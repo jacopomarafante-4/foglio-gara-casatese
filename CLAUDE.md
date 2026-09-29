@@ -164,7 +164,10 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   della squadra in `registro/<squadra>.schemi` (li salva il mister col PIN; `preferito`, `da` = modello, `aggiornato`). "Usa come
   modello" (`usaModello`) copia posizioni, compiti e frecce e sceglie la copia per la partita. Editor unico (`boardMode = 'unico'`,
   `viewSchemaEditor`), impaginato come il foglio gara: campo a sinistra, riquadro Compiti a destra (`pannelloCompiti`: nome dei
-  compiti, + pedina per compito, giocatore per riga, riga della pedina scelta con numero/compito/etichetta, `data-edtokid`); `schemaDa(id)` trova lo schema ovunque (formazione,
+  compiti, + pedina per compito, giocatore per riga, riga della pedina scelta con numero/compito/etichetta, `data-edtokid`); la pagina dello schema
+  è il foglio del PDF (`foglioSchema(sc, rm, livello)`, classi `.foglio`/`.fg*`: intestazione con la partita, campo, indicazioni, Compiti,
+  piè di pagina); sui modelli della società il mister scrive indicazioni (`schemeEdits[id].note`, `effNote()` usata anche da `schemePage`)
+  e nomi dei compiti (`schemeEdits[id].roles`) solo per la partita; `schemaDa(id)` trova lo schema ovunque (formazione,
   foglio gara), `modificaBase(sc)`/`salvaSchema(sc)` dicono chi lo cambia e dove si salva. I mister non modificano più i modelli
   per la partita (resta solo la lettura delle vecchie `schemeEdits`)
 - Portale, calci piazzati (`shared/schemes`, comuni a tutte le squadre): schemi aggiunti in blocco da `scripts/piazzati/schemi.mjs`

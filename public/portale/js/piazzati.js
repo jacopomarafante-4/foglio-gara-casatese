@@ -96,7 +96,7 @@ const opzioniGiocatore = (sc, t) => {
 
 /* ---------- Riquadro "Compiti" (come nel foglio gara): gruppi per compito, una riga per pedina ----------
    modifica = si cambia lo schema (nome dei compiti, pedine); il giocatore di ogni pedina vale per la partita. */
-function pannelloCompiti(sc, rm, modifica){
+function pannelloCompiti(sc, rm, modifica, rinomina = modifica){
   const gruppi = new Map();
   effTokens(sc).forEach(t => { const k = (t.role||'').trim() || 'Senza compito'; if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(t); });
   const voci = [...gruppi.entries()].sort((a,b) => (a[0]==='Senza compito') - (b[0]==='Senza compito'));
@@ -128,15 +128,47 @@ function pannelloCompiti(sc, rm, modifica){
     ${voci.map(([role, toks]) => { const col = rm.get(role) || 'var(--ink)', nome = role === 'Senza compito' ? '' : role;
       return `<div class="pzgruppo">
         <div class="pzgtesta"><i style="background:${col}"></i>
-          ${modifica ? `<input class="pzgnome" data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="Senza compito: scrivi un nome" aria-label="Nome del compito">
-            <button class="iconbtn" data-pzaddrole="${esc(nome)}" aria-label="Aggiungi una pedina a ${esc(role)}" title="Aggiungi una pedina">+</button>`
-          : `<span class="pzgnome">${esc(role)}</span>`}
+          ${rinomina ? `<input class="pzgnome" data-arolegrp="${esc(nome)}" value="${esc(nome)}" placeholder="Senza compito: scrivi un nome" aria-label="Nome del compito">` : `<span class="pzgnome">${esc(role)}</span>`}
+          ${modifica ? `<button class="iconbtn" data-pzaddrole="${esc(nome)}" aria-label="Aggiungi una pedina a ${esc(role)}" title="Aggiungi una pedina">+</button>` : ''}
         </div>
         ${toks.slice().sort((a,b) => a.slot - b.slot).map(t => riga(t, col)).join('')}
       </div>`; }).join('')}
     ${modifica ? '<button class="btn small" data-pz="nuovocompito" style="margin-top:10px">+ Nuovo compito</button>' : ''}
-    <p class="note pzleg">${esc(sc.legend || 'Freccia piena = palla · tratteggiata = movimento')}. Il giocatore scelto vale per questa partita; <button class="linkbtn" data-act="resetov">tutti dalla formazione</button>.</p>
+    <p class="pzleg">${esc(sc.legend || 'Freccia piena = palla · tratteggiata = movimento')}</p>
+    <p class="note pzleg2">Il giocatore scelto vale per questa partita; <button class="linkbtn" data-act="resetov">tutti dalla formazione</button>.</p>
   </aside>`;
+}
+
+/* ---------- Il foglio: la pagina dello schema com'è nel PDF (schemePage in pdf.js), modificabile sul posto ----------
+   livello 'tutto' = lo schema stesso (i miei schemi; l'admin sui modelli della società): nome, comando, pedine, frecce, nota;
+   'partita' = mister su un modello della società: indicazioni e nomi dei compiti solo per questa partita (schemeEdits);
+   '' = sola lettura (direttori). Il giocatore di ogni pedina vale sempre per la partita. */
+function foglioSchema(sc, rm, livello){
+  const s = S.sheet, luogo = luogoPartita(s), tutto = livello === 'tutto', partita = livello === 'partita';
+  const destra = [s.opponent ? (s.home ? `${teamLabel()} – ${s.opponent}` : `${s.opponent} – ${teamLabel()}`) : teamLabel(),
+    [fmtDate(s.date), s.time].filter(Boolean).join(' · ore '), [luogo.venue, conCategoria(s.category)].filter(Boolean).join(' · ')].filter(Boolean);
+  const nota = effNote(sc), pag = s.selected.indexOf(sc.id);
+  const righe = t => Math.max(2, Math.min(6, Math.ceil((t || '').length / 55)));   // il riquadro si allunga col testo
+  const campoNota = tutto ? `<textarea class="fgnota" data-edsc="note" rows="${righe(sc.note)}" placeholder="Indicazioni sotto lo schema (es. marcatura a uomo sui saltatori)" aria-label="Indicazioni sotto lo schema">${esc(sc.note||'')}</textarea>`
+    : partita ? `<textarea class="fgnota" data-pznota="${sc.id}" rows="${righe(nota)}" placeholder="Indicazioni per questa partita" aria-label="Indicazioni per questa partita">${esc(nota)}</textarea>`
+    : nota ? `<p class="fgnota">${esc(nota)}</p>` : '';
+  return `<article class="foglio" aria-label="Foglio dello schema ${esc(sc.name)}">
+    <header class="fgtesta">
+      <img src="casatese-logo.png" alt="" class="fglogo">
+      <div class="fgtitoli">
+        ${tutto ? `<input class="fgtitolo" data-edsc="name" value="${esc(sc.name)}" aria-label="Nome dello schema">
+          <input class="fgsotto" data-edsc="subtitle" value="${esc(sc.subtitle||'')}" placeholder="Comando: la chiamata, es. Braccia alzate" aria-label="Comando">`
+        : `<h2 class="fgtitolo">${esc(sc.name)}</h2>${sc.subtitle ? `<p class="fgsotto">${esc(sc.subtitle)}</p>` : ''}`}
+      </div>
+      <div class="fgpartita">${destra.map((r, i) => `<span${i ? '' : ' class="fgvs"'}>${esc(r)}</span>`).join('')}</div>
+    </header>
+    <div class="fgstriscia" aria-hidden="true"></div>
+    <div class="fgcorpo">
+      <div class="fgcampo">${campoSVG(sc, rm, tutto)}${campoNota}</div>
+      ${pannelloCompiti(sc, rm, tutto, tutto || partita)}
+    </div>
+    <footer class="fgpiede"><span>Academy Casatese Merate · Foglio gara</span><span>${pag >= 0 ? `${pag + 2} / ${s.selected.length + 1}` : 'Non scelto per la partita'}</span></footer>
+  </article>`;
 }
 
 /* ---------- Editor (i miei schemi; per l'admin anche i modelli della società) ---------- */
@@ -146,50 +178,34 @@ function viewSchemaEditor(sc){
   const barra = segno
     ? `<div class="pzbarra sel"><b>${selectedDraw.kind==='mark' ? 'Scritta' : 'Freccia o linea'} selezionata</b>${selectedDraw.kind==='mark' ? '<button class="btn small" data-pz="testo">Cambia testo</button>' : ''}<button class="btn small ghost danger" data-pz="delsegno">Cancella</button><button class="btn small ghost" data-pz="deseleziona">Fatto</button></div>`
     : `<div class="pzbarra"><div class="seg pzstrumenti" role="group" aria-label="Strumento">${STRUMENTI.map(([k,l]) => `<button data-pztool="${k}" aria-pressed="${(drawTool||'')===k}">${l}</button>`).join('')}</div>
-        <span class="note">${drawTool==='text' ? 'Tocca il campo dove scrivere' : drawTool ? 'Trascina sul campo' : 'Trascina pedine e pallone · tocca una pedina per modificarla'}</span></div>`;
-  return `<section class="panel pzeditor">
+        <span class="note">${drawTool==='text' ? 'Tocca il campo dove scrivere' : drawTool ? 'Trascina sul campo' : 'Trascina pedine e pallone · tocca una pedina per modificarla · tocca un testo per cambiarlo'}</span></div>`;
+  return `<section class="pzeditor">
     <div class="pztesta">
-      <button class="btn small ghost" data-act="back" aria-label="Tutti gli schemi">←</button>
-      <div class="pztitoli">
-        <input class="pztitolo" data-edsc="name" value="${esc(sc.name)}" aria-label="Nome dello schema">
-        <label class="pzcomando">Comando <input data-edsc="subtitle" value="${esc(sc.subtitle||'')}" placeholder="la chiamata, es. Braccia alzate"></label>
-      </div>
+      <button class="btn small ghost" data-act="back">← Tutti gli schemi</button>
+      <span class="note" style="flex:1">${mio ? `I miei schemi${sc.da && schemaDa(sc.da) ? ' · dal modello "' + esc(schemaDa(sc.da).name) + '"' : ''} · si salva da solo` : 'Modello della società: lo vedono tutte le squadre'}</span>
       ${mio ? `<button class="iconbtn pzstella${sc.preferito ? ' on' : ''}" data-pzpref="${sc.id}" aria-pressed="${!!sc.preferito}" aria-label="${sc.preferito ? 'Togli dai preferiti' : 'Metti tra i preferiti'}" title="Preferito">★</button>` : ''}
     </div>
-    <p class="note" style="margin:-4px 0 10px">${mio ? `I miei schemi${sc.da && schemaDa(sc.da) ? ' · dal modello "' + esc(schemaDa(sc.da).name) + '"' : ''} · si salva da solo` : 'Modello della società: lo vedono tutte le squadre'}</p>
-    <div class="pzgrid">
-      <div class="pzcampo">
-        ${barra}
-        ${campoSVG(sc, rm, true)}
-        <textarea class="pznota" data-edsc="note" rows="2" placeholder="Nota sotto lo schema (es. marcatura a uomo sui saltatori)" aria-label="Nota sotto lo schema">${esc(sc.note||'')}</textarea>
-        <div class="row" style="gap:8px;margin-top:10px;justify-content:space-between">
-          <button class="btn small" data-pz="duplica">Duplica</button>
-          <button class="btn small danger ghost" data-pz="elimina">Elimina schema</button>
-        </div>
-      </div>
-      ${pannelloCompiti(sc, rm, true)}
+    ${barra}
+    ${foglioSchema(sc, rm, 'tutto')}
+    <div class="row" style="gap:8px;margin-top:10px;justify-content:space-between">
+      <button class="btn small" data-pz="duplica">Duplica</button>
+      <button class="btn small danger ghost" data-pz="elimina">Elimina schema</button>
     </div>
   </section>`;
 }
 
-/* ---------- Modello della società aperto da un mister (o da un direttore): si guarda, si scelgono i giocatori,
-   e con "Usa come modello" se ne fa una copia propria da cambiare ---------- */
+/* ---------- Modello della società aperto da un mister (o da un direttore): indicazioni e compiti per questa partita,
+   giocatori delle pedine; con "Usa come modello" se ne fa una copia propria per cambiare pedine e frecce ---------- */
 function viewSchemaModello(sc){
   const rm = roleMap(sc), puo = curTeam && !readOnly();
-  return `<section class="panel pzeditor">
+  return `<section class="pzeditor">
     <div class="pztesta">
-      <button class="btn small ghost" data-act="back" aria-label="Tutti gli schemi">←</button>
-      <div class="pztitoli"><h2 style="margin:0">${esc(sc.name)}</h2>${sc.subtitle ? `<span class="note">Comando: <b>${esc(sc.subtitle)}</b></span>` : ''}</div>
+      <button class="btn small ghost" data-act="back">← Tutti gli schemi</button>
+      <span class="note" style="flex:1">Modello della società${puo ? ' · indicazioni e nomi dei compiti che scrivi qui valgono per questa partita' : ''}</span>
     </div>
-    ${puo ? `<div class="pzcopia"><p>Per cambiare compiti, comando, pedine o frecce fanne una copia tua: resta nei tuoi schemi, anche per le prossime partite.</p>
+    ${puo ? `<div class="pzcopia"><p>Per spostare pedine o frecce, o tenere le modifiche anche per le prossime partite, fanne una copia tua.</p>
       <button class="btn primary" data-pzcopia="${sc.id}">Usa come modello</button></div>` : ''}
-    <div class="pzgrid">
-      <div class="pzcampo">
-        ${campoSVG(sc, rm, false)}
-        ${sc.note ? `<p class="pznotatesto">${esc(sc.note)}</p>` : ''}
-      </div>
-      ${pannelloCompiti(sc, rm, false)}
-    </div>
+    ${foglioSchema(sc, rm, puo ? 'partita' : '')}
   </section>`;
 }
 function viewScheme(){
@@ -228,6 +244,14 @@ function nuovoSchema(chiave, dellaSocieta){
 }
 const apri = q => { openSchemeId = q.id; boardMode = 'unico'; selectedToken = null; selectedDraw = null; drawTool = null; render(); window.scrollTo(0,0); };
 
+/* Indicazioni scritte dal mister su un modello: valgono solo per questa partita (schemeEdits[id].note) */
+document.addEventListener('input', e => {
+  const id = e.target.dataset?.pznota; if(!id || readOnly()) return;
+  const sc = schemaDa(id); if(!sc) return;
+  const ed = schemeEdit(sc), v = e.target.value;
+  if(v.trim() === (sc.note || '').trim()) delete ed.note; else ed.note = v;
+  save('sheet');
+});
 /* Riga del riquadro compiti: toccandola (fuori da menu e caselle) si sceglie la pedina */
 document.addEventListener('click', e => {
   const r = e.target.closest('[data-pzsel]'); if(!r || e.target.closest('select,input,button,label')) return;

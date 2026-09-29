@@ -390,9 +390,13 @@ Se la posizione è occupata puoi anche <span class="k">Togli dal campo</span>.</
 <p>Due gruppi: <b>I miei schemi</b> (della tua squadra, i preferiti ★ in cima) e i <b>Modelli della società</b> (li cura la società,
 li vedono tutte le squadre). In alto il filtro: Tutti, A favore, A sfavore, Scelti.</p><ul>
 <li>Tocca uno schema per <b>sceglierlo per la partita</b>: va nel foglio gara.</li>
-<li>Su un modello tocca <span class="k">Usa come modello</span>: ne fai una copia tua, già scelta per la partita, che resta nei tuoi
-schemi anche per le prossime. Oppure <span class="k">+ Nuovo schema vuoto</span>.</li>
-<li><b>Come nel foglio gara</b>: a sinistra il campo, a destra il riquadro <b>Compiti</b>. In alto nome e <b>comando</b> (la
+<li>Aprendo uno schema vedi <b>la sua pagina del foglio gara</b>, uguale al PDF: intestazione con la partita, campo, indicazioni
+sotto il campo, riquadro Compiti. Si scrive direttamente sul foglio.</li>
+<li>Su un <b>modello della società</b> puoi cambiare le <b>indicazioni</b> sotto il campo e i <b>nomi dei compiti</b>: valgono solo per
+questa partita e finiscono nel PDF, il modello resta com'è. Per spostare pedine e frecce, o tenere le modifiche anche per le
+prossime partite, tocca <span class="k">Usa come modello</span>: ne fai una copia tua, già scelta per la partita. Oppure
+<span class="k">+ Nuovo schema vuoto</span>.</li>
+<li><b>Nei tuoi schemi</b>: a sinistra il campo, a destra il riquadro <b>Compiti</b>. In alto nome e <b>comando</b> (la
 chiamata, es. "Braccia alzate"); nel riquadro <b>A favore / A sfavore</b>. Con <b>✋ Sposta</b> trascini pedine e pallone;
 Freccia, Tratteggiata, Linea e Testo per disegnare (freccia piena = palla, tratteggiata = movimento); tocca un segno per
 cancellarlo. Sotto il campo la nota.</li>

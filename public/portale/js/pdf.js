@@ -184,7 +184,8 @@ function schemePage(sc, page, total){
   // Campo: grande quanto possibile, lasciando sotto lo spazio per la nota (fino a 3 righe)
   const larghSx = 720, oy = 140;
   font(x, 22, 700, true);
-  const righeNota = sc.note ? Math.min(3, righeTesto(x, sc.note, larghSx).length) : 0, notaH = righeNota ? righeNota * 26 + 14 : 0;
+  const nota = effNote(sc);
+  const righeNota = nota ? Math.min(3, righeTesto(x, nota, larghSx).length) : 0, notaH = righeNota ? righeNota * 26 + 14 : 0;
   const sx = Math.min(12, larghSx / (VX1-VX0), (H - 44 - oy - notaH) / ((VY1-VY0)*YS)), sy = sx*YS;
   const fw = (VX1-VX0)*sx, fh = (VY1-VY0)*sy, ox = 36 + (larghSx - fw) / 2;
   const X = v => ox + (v-VX0)*sx, Y = v => oy + (v-VY0)*sy;
@@ -219,7 +220,7 @@ function schemePage(sc, page, total){
     // sul campo solo il numero: numero e cognome sono nell'elenco dei compiti a destra
   });
   // nota sotto il campo (al massimo 3 righe, poi "…")
-  if(sc.note) testoInRiquadro(x, sc.note, 36, oy + fh + 30, larghSx, H - 40 - (oy + fh + 22), {size:22, min:16, weight:700, cond:true});
+  if(nota) testoInRiquadro(x, nota, 36, oy + fh + 30, larghSx, H - 40 - (oy + fh + 22), {size:22, min:16, weight:700, cond:true});
   // Pannello compiti, in un riquadro
   const rx = 790, rw = W-36-rx;
   x.strokeStyle = LINE_C; x.lineWidth = 1.5; rrect(x, rx-16, 128, rw+16, H-128-48, 12); x.stroke();

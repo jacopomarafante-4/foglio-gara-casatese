@@ -53,6 +53,8 @@ function effRole(sc, t){
   return r ? {role: r.role ?? t.role, tag: r.tag ?? t.tag} : {};
 }
 function effTokens(sc){ return sc.tokens.map(t => ({...t, ...effPos(sc,t), ...effRole(sc,t)})); }
+/* Indicazione sotto lo schema: quella scritta dal mister per questa partita (schemeEdits[id].note), se no quella dello schema */
+function effNote(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return ed && typeof ed.note === 'string' ? ed.note : (sc.note || ''); }
 function effBall(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.ball) || sc.ball; }
 function effDraw(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.draw) || []; }
 function effMarks(sc){ const ed = (S.sheet.schemeEdits||{})[sc.id]; return (ed && ed.marks) || []; }

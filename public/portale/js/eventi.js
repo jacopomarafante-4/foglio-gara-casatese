@@ -145,7 +145,7 @@ document.addEventListener('change', e => {
         if(nuovo === (base.role||'')){ if(ed.roles?.[base.id]){ delete ed.roles[base.id].role; if(!Object.keys(ed.roles[base.id]).length) delete ed.roles[base.id]; } }
         else ((ed.roles ||= {})[base.id] ||= {}).role = nuovo; });
       save('sheet'); }
-    render(); return;
+    setTimeout(render, 0); return;   // dopo l'uscita dal campo: ridisegnare durante il blur fa perdere il nodo
   }
   if(t.dataset.arole){
     const sc = schemaDa(openSchemeId); if(!sc) return;
