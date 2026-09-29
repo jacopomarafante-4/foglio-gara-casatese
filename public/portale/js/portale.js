@@ -656,18 +656,28 @@ let segValuta = null;
 /* Segnalazione: tutte le domande nello stesso stile e facoltative; piede forte/debole sostituiti da "Piede preferito" */
 const DETTAGLI_SEGNALA = [['piede','Piede preferito',[['destro','Destro'],['sinistro','Sinistro'],['ambidestro','Entrambi']]],
   ['impressione','Prima impressione',[['positiva','Positiva'],['da_rivedere','Da rivedere'],['negativa','Negativa']]],['statura','Statura'],['forza','Forza']];
-const DETTAGLI_VALUTA = [['spunti','Spunti, estro e coraggio','Uno contro uno, fantasia, non si nasconde','Con la palla'],
-  ['guida_palla','Guida della palla','Conduzione a testa alta, con entrambi i piedi','Con la palla'],
-  ['ricezione','Ricezione','Primo controllo, orientato','Con la palla'],
-  ['trasmissione','Trasmissione','Passaggio corto e lungo, tempi e precisione','Con la palla'],
-  ['calciata','Calciata','Tiro e lancio, forza e precisione','Con la palla'],
-  ['colpo_di_testa','Colpo di testa','Tempo di stacco e precisione, in attacco e in difesa','Con la palla'],
-  ['marcamento','Marcamento','Presa dell\'uomo, posizione tra avversario e porta','Senza palla'],
-  ['smarcamento','Smarcamento','Movimenti per ricevere, attacco dello spazio','Senza palla'],
-  ['contrasto','Contrasto','Tempo e decisione nel recupero palla','Senza palla'],
+const DETTAGLI_VALUTA = [   /* come DETTAGLI_VALUTAZIONE in lib/tipi.ts (0041, 0044, 0045): chiave, nome, aiuto, area */
+  ['guida_palla','Guida della palla','Conduzione a testa alta, con entrambi i piedi','Tecnica'],
+  ['ricezione','Ricezione','Primo controllo, orientato','Tecnica'],
+  ['trasmissione','Trasmissione','Passaggio corto e lungo, tempi e precisione','Tecnica'],
+  ['calciata','Calciata','Tiro e lancio, forza e precisione','Tecnica'],
+  ['colpo_di_testa','Colpo di testa','Tempo di stacco e precisione, in attacco e in difesa','Tecnica'],
+  ['marcamento','Marcamento','Presa dell\'uomo, posizione tra avversario e porta','Tattica'],
+  ['smarcamento','Smarcamento','Movimenti per ricevere, attacco dello spazio','Tattica'],
+  ['contrasto','Contrasto','Tempo e decisione nel recupero palla','Tattica'],
+  ['dribbling','Dribbling','Quando e dove saltare l\'uomo','Tattica'],
   ['velocita','Velocità','Allungo, con e senza palla','Fisico'],
+  ['accelerazione','Accelerazione','Scatto nei primi metri','Fisico'],
+  ['agilita','Agilità','Cambi di direzione, equilibrio, coordinazione','Fisico'],
   ['reattivita','Reattività','Prontezza nei primi passi e sulle seconde palle','Fisico'],
-  ['concentrazione','Concentrazione','Attento per tutta la partita, pochi errori di distrazione','Mentale']];   /* come DETTAGLI_VALUTAZIONE in lib/tipi.ts (0041, 0044) */
+  ['spunti','Spunti, estro e coraggio','Osa l\'uno contro uno, fantasia, non si nasconde','Mentale'],
+  ['concentrazione','Concentrazione','Attento per tutta la partita, pochi errori di distrazione','Mentale'],
+  ['motivazione','Motivazione','Voglia di migliorare, impegno, ascolto','Mentale'],
+  ['famiglia','Famiglia','Disponibilità e collaborazione della famiglia','Extra'],
+  ['potenziale','Potenziale','Dove può arrivare','Extra'],
+  ['livello_attuale','Livello attuale','Quanto vale oggi rispetto alla sua annata','Extra']];
+const GRUPPI_VALUTA = [['Tecnica','Cosa sa fare con la palla'],['Tattica','Come sta in campo, con e senza palla'],
+  ['Fisico','Velocità, scatto, coordinazione'],['Mentale','Carattere e atteggiamento'],['Extra','Contesto e prospettive']];
 /* Moduli di segnalazione e valutazione come nello Scouting (components/Sezione.tsx): blocchi numerati nell'ordine in cui si
    compilano, una riga compatta per ogni voto 1–5 (nota solo se la si apre), pulsanti che si tolgono toccandoli di nuovo */
 const notaAperta = new Set();
@@ -689,16 +699,16 @@ function viewValutaMister(){
     Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento.</p>
   ${segEsito && !segEsito.ok ? `<p class="esito ko" role="alert">${esc(segEsito.msg)}</p>` : ''}
   <div class="segform">
-  ${sezioneForm(1, 'Giudizio *', 'La tua conclusione su questo ragazzo.', false,
-    `<div class="rapida giudizio" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" data-tono="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
-    <label class="f" for="val_comm">Perché</label><textarea id="val_comm" data-valf="commento" rows="4" placeholder="Punti di forza, cosa migliorare, cosa rivedere la prossima volta…">${esc(v.commento||'')}</textarea>`)}
-  ${sezioneForm(2, 'Nel dettaglio', 'Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere.', true,
-    ['Con la palla','Senza palla','Fisico','Mentale'].map(gr => `<h4 class="gruppovoti">${gr}</h4>`
-      + DETTAGLI_VALUTA.filter(x => x[3] === gr).map(([k, l, aiuto]) => rigaVoto('data-vald', k, l, aiuto, v, false)).join('')).join(''))}
-  ${sezioneForm(3, 'Dove e quando', '', false, `<div class="grid">
+  ${sezioneForm(1, 'Dove e quando', '', false, `<div class="grid">
       <div><label class="f" for="val_cont">Partita o occasione</label><input id="val_cont" data-valf="contesto" value="${esc(v.contesto||'')}"></div>
       <div><label class="f" for="val_data">Data</label><input id="val_data" type="date" data-valf="data" value="${esc(v.data||'')}"></div>
     </div>`)}
+  <p class="note" style="margin:0 4px 12px">Voti da 1 (debole) a 5 (ottimo), tutti facoltativi: vota solo quello che hai visto. Una scelta si toglie toccandola di nuovo.</p>
+  ${GRUPPI_VALUTA.map(([gr, aiuto], i) => sezioneForm(i + 2, gr, aiuto, true,
+    DETTAGLI_VALUTA.filter(x => x[3] === gr).map(([k, l, a]) => rigaVoto('data-vald', k, l, a, v, false)).join(''))).join('')}
+  ${sezioneForm(GRUPPI_VALUTA.length + 2, 'Giudizio *', 'La tua conclusione su questo ragazzo.', false,
+    `<div class="rapida giudizio" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" data-tono="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
+    <label class="f" for="val_comm">Il tuo giudizio</label><textarea id="val_comm" data-valf="commento" rows="5" placeholder="Scrivi con parole tue: punti di forza, cosa deve migliorare, perché lo prenderesti o no…">${esc(v.commento||'')}</textarea>`)}
   <div class="barrasalva"><button class="btn primary" data-act="valuta" ${segInvio?'disabled':''}>${segInvio ? 'Salvataggio…' : 'Salva valutazione'}</button>
     <button class="btn ghost" data-act="valutaannulla">Annulla</button></div>
   </div>`;

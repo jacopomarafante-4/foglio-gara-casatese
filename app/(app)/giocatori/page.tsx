@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import {
-  annateDisponibili, GIUDIZI, IMPRESSIONI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type RuoloCampo, type StatoGiocatore,
+  annateDisponibili, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type Piede, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
@@ -25,13 +25,14 @@ type Riga = {
   descrizione: string | null;
   annata: number;
   ruolo: RuoloCampo | null;
+  piede: Piede | null;
   stato: StatoGiocatore;
   osservato: boolean;
   categoria: string | null;
   societa_id: string | null;
   updated_at: string;
   societa: { nome: string } | null;
-  segnalazioni: { data: string; impressione: Impressione | null; tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null }[];
+  segnalazioni: { data: string; impressione: Impressione | null; piede: Piede | null; tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null }[];
   valutazioni: {
     tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; giudizio: Giudizio; data: string;
     autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
@@ -44,9 +45,10 @@ type GaraBreve = {
 };
 
 const PER_PAGINA = 30;
-const RUOLI_BREVI: Record<RuoloCampo, string> = { portiere: 'Por', difensore: 'Dif', centrocampista: 'Cen', attaccante: 'Att' };
 const ORDINE_RUOLI = Object.keys(RUOLI_CAMPO);
 const ORDINE_STATI = Object.keys(STATI);
+const ORDINE_PIEDI = Object.keys(PIEDI);
+const PIEDI_BREVI: Record<Piede, string> = { destro: 'Destro', sinistro: 'Sinistro', ambidestro: 'Entrambi' };
 
 /* Prima impressione dell'ultima segnalazione che ne ha una (0042) */
 const ORDINE_IMPRESSIONI: Impressione[] = ['positiva', 'da_rivedere', 'negativa'];
@@ -68,13 +70,19 @@ const COLONNE = {
   anno: 'Anno',
   giocatore: 'Giocatore',
   ruolo: 'Ruolo',
+  piede: 'Piede',
   stato: 'Stato',
-  impressione: 'Impressione',
+  impressione: 'Segnalazione',
+  valutazione: 'Valutazioni',
   squadra: 'Squadra',
-  valutazione: 'Valutazione',
   gara: 'Prossima gara',
 } as const;
 type Colonna = keyof typeof COLONNE;
+/* Da computer: l'annata sta accanto al nome, squadra e prossima gara in una colonna su due righe (la tabella è larga 1000 px) */
+const COLONNE_TABELLA: [Colonna, string][] = [
+  ['giocatore', 'Giocatore'], ['ruolo', 'Ruolo'], ['piede', 'Piede'], ['stato', 'Stato'],
+  ['impressione', 'Segnalazione'], ['valutazione', 'Valutazioni'], ['squadra', 'Squadra e gara'],
+];
 
 /** Istante della gara → "dom 27/09 10:30" (ora italiana) */
 function dataGara(iso: string, senzaOra: boolean) {
@@ -84,13 +92,16 @@ function dataGara(iso: string, senzaOra: boolean) {
   return `${p.weekday} ${p.day}/${p.month}${senzaOra ? '' : ` ${p.hour}:${p.minute}`}`;
 }
 
-/** Media delle 4 aree su tutte le valutazioni, e giudizio dell'ultima */
-/* Media dei voti per area (segnalazioni dalla 0043 e valutazioni già fatte) e giudizio dell'ultima valutazione */
+/* Voto globale delle segnalazioni (media dei voti per area, 0043) e giudizio dell'ultima valutazione */
+const ORDINE_GIUDIZI: Giudizio[] = ['da_prendere', 'da_rivedere', 'non_a_livello'];
 function sintesiValutazioni(g: Pick<Riga, 'valutazioni' | 'segnalazioni'>) {
-  const m = medieAree([...(g.segnalazioni ?? []), ...g.valutazioni]);
+  const m = medieAree(g.segnalazioni ?? []);
   const ultima = [...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data))[0];
-  if (m.media === null && !ultima) return null;
-  return { media: m.media, giudizio: ultima?.giudizio ?? null, quante: m.quanti };
+  return { media: m.media, quante: m.quanti, giudizio: ultima?.giudizio ?? null };
+}
+/* Piede: quello della scheda, se no dell'ultima segnalazione che lo indica */
+function piedeDi(g: Pick<Riga, 'piede' | 'segnalazioni'>): Piede | null {
+  return g.piede ?? [...(g.segnalazioni ?? [])].filter((x) => x.piede).sort((a, b) => b.data.localeCompare(a.data))[0]?.piede ?? null;
 }
 
 /** Prossime gare (60 giorni) delle società indicate: a blocchi, per non superare i limiti delle richieste */
@@ -136,8 +147,8 @@ export default async function Giocatori({
     let q = supabase
       .from('giocatori')
       .select(
-        'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
-          'segnalazioni(data, impressione, tecnica, motoria, tattica, mentale), ' +
+        'id, cognome, nome, descrizione, annata, ruolo, piede, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
+          'segnalazioni(data, impressione, piede, tecnica, motoria, tattica, mentale), ' +
           'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
       .order('updated_at', { ascending: false });
@@ -194,9 +205,12 @@ export default async function Giocatori({
           case 'giocatore': return nomeDi(g);
           case 'ruolo': return g.ruolo ? ORDINE_RUOLI.indexOf(g.ruolo) : null;
           case 'stato': return g.osservato ? ORDINE_STATI.indexOf(g.stato) : null;
-          case 'impressione': { const i = impressioneDi(g); return i ? ORDINE_IMPRESSIONI.indexOf(i) : null; }
+          case 'piede': { const p = piedeDi(g); return p ? ORDINE_PIEDI.indexOf(p) : null; }
+          // impressione, poi voto globale (più alto prima)
+          case 'impressione': { const i = impressioneDi(g); const m = sintesi.get(g.id)?.media; return i || m != null ? (i ? ORDINE_IMPRESSIONI.indexOf(i) : 3) * 10 - (m ?? 0) : null; }
           case 'squadra': return g.societa ? `${g.societa.nome} ${categoriaDi(g)}` : null;
-          case 'valutazione': return sintesi.get(g.id)?.media ?? null;
+          // quante persone l'hanno valutato, poi il giudizio dell'ultima
+          case 'valutazione': { const n = valutatori(g.valutazioni).length; const gi = sintesi.get(g.id)?.giudizio; return n ? n * 10 - (gi ? ORDINE_GIUDIZI.indexOf(gi) : 3) : null; }
           case 'gara': return chiaveGara.get(g.id) ?? null;
         }
       };
@@ -225,13 +239,13 @@ export default async function Giocatori({
     return `?${sp.toString()}`;
   };
   // Primo clic: A→Z (o dal più alto per la valutazione); secondo clic: al contrario
-  const primoVerso = (c: Colonna) => (c === 'valutazione' ? 'giu' : 'su');
+  const primoVerso = (c: Colonna) => (c === 'valutazione' ? 'giu' : 'su');   // segnalazione: su = positiva e voto alto prima
   const linkOrdina = (c: Colonna) =>
     link({ ordina: c, verso: ordina === c ? (discendente ? 'su' : 'giu') : primoVerso(c), pagina: null });
   const freccia = (c: Colonna) => (ordina === c ? (discendente ? ' ▼' : ' ▲') : '');
 
   const righe = giocatori.map((g) => {
-    const v = sintesi.get(g.id) ?? null;
+    const v = sintesi.get(g.id)!;
     const firme = valutatori(g.valutazioni);   // persone diverse che l'hanno valutato (3 caselle, 0040)
     const gara = prossimaGara(g);
     const inCasa = gara && gara.casa_id === g.societa_id;
@@ -250,27 +264,28 @@ export default async function Giocatori({
     };
   });
 
-  const impressione = (g: Riga) => {
-    const i = impressioneDi(g);
-    return i ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORI_IMPRESSIONE[i]}`}>{IMPRESSIONI[i]}</span> : <span className="text-grigio">–</span>;
+  /* Segnalazione: prima impressione e voto globale (media dei voti per area delle segnalazioni) */
+  const segnalazione = (r: (typeof righe)[number]) => {
+    const i = impressioneDi(r.g), m = r.v.media;
+    if (!i && m === null) return <span className="text-grigio">–</span>;
+    return (
+      <span className="flex items-center gap-1.5">
+        {i && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORI_IMPRESSIONE[i]}`}>{IMPRESSIONI[i]}</span>}
+        {m !== null && (
+          <span className="font-display text-base font-bold text-blu" title={`Voto globale: media dei voti per area di ${r.v.quante} ${r.v.quante === 1 ? 'segnalazione' : 'segnalazioni'} (1–5)`}>
+            {m.toFixed(1).replace('.', ',')}
+          </span>
+        )}
+      </span>
+    );
   };
+  const piede = (g: Riga) => { const p = piedeDi(g); return p ? PIEDI_BREVI[p] : <span className="text-grigio">–</span>; };
   const stato = (g: Riga) =>
     g.osservato ? (
       <StatoBadge stato={g.stato} />
     ) : (
       <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da distinta</span>
     );
-  const valutazione = (r: (typeof righe)[number]) =>
-    r.v ? (
-      <span className="flex items-center gap-1.5" title={`Media dei voti per area da ${r.v.quante} ${r.v.quante === 1 ? 'segnalazione o valutazione' : 'segnalazioni e valutazioni'} (1–5)`}>
-        {r.v.media !== null && <span className="font-semibold text-blu">{r.v.media.toFixed(1).replace('.', ',')}</span>}
-        {r.v.giudizio && (
-          <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>
-            {GIUDIZI[r.v.giudizio]}
-          </span>
-        )}
-      </span>
-    ) : null;
   /* Titolo di gruppo quando cambia l'annata (elenco di base, per annata) */
   const nuovaAnnata = (i: number) => perAnnata && (i === 0 || righe[i - 1].g.annata !== righe[i].g.annata);
   const quantiAnnata = (a: number) => tutti.filter((g) => g.annata === a).length;
@@ -281,12 +296,13 @@ export default async function Giocatori({
       <span className="text-xs text-grigio">{quantiAnnata(a)} {quantiAnnata(a) === 1 ? 'giocatore' : 'giocatori'}</span>
     </span>
   );
-  /* Caselle delle 3 valutazioni, poi media e giudizio (o il pulsante Valuta) */
+  /* Le 3 caselle delle valutazioni, poi il giudizio dell'ultima (o il pulsante Valuta) */
   const colonnaValutazione = (r: (typeof righe)[number]) => (
     <span className="flex items-center gap-2">
       <SlotValutazioni firme={r.firme} piccolo />
-      {r.v && valutazione(r)}
-      {!r.v?.giudizio && pulsanteValuta(r.href)}
+      {r.v.giudizio ? (
+        <span className={`truncate rounded-full px-2 py-0.5 text-xs font-semibold ${COLORI_GIUDIZIO[r.v.giudizio]}`}>{GIUDIZI[r.v.giudizio]}</span>
+      ) : pulsanteValuta(r.href)}
     </span>
   );
   const pulsanteValuta = (href: string) =>
@@ -391,18 +407,17 @@ export default async function Giocatori({
           <div className="hidden overflow-hidden rounded-xl border border-linea bg-white lg:block">
             <table className="w-full table-fixed text-left text-sm">
               <colgroup>
-                <col className="w-16" />
                 <col />
-                <col className="w-16" />
-                <col className="w-28" />
-                <col className="w-28" />
-                <col />
-                <col className="w-64" />
-                <col />
+                <col className="w-32" />
+                <col className="w-20" />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-48" />
+                <col className="w-40" />
               </colgroup>
               <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">
                 <tr>
-                  {(Object.keys(COLONNE) as Colonna[]).map((c) => (
+                  {COLONNE_TABELLA.map(([c, titolo]) => (
                     <th
                       key={c}
                       scope="col"
@@ -414,7 +429,7 @@ export default async function Giocatori({
                         className={`block truncate px-2 py-2 hover:text-inchiostro ${ordina === c ? 'text-inchiostro' : ''}`}
                         title={`Ordina per ${COLONNE[c].toLowerCase()}`}
                       >
-                        {COLONNE[c]}{freccia(c)}
+                        {titolo}{freccia(c)}
                       </Link>
                     </th>
                   ))}
@@ -435,19 +450,24 @@ export default async function Giocatori({
                       </tr>
                     )}
                     <tr className={r.completo ? 'bg-verde/[0.07] hover:bg-verde/10' : 'hover:bg-carta'}>
-                      {cella(<Annata annata={r.g.annata} />)}
-                      <td className="p-0">
+                      <td className="p-0 pl-2">
                         <Link href={r.href} title={r.nome} className={`flex items-center gap-1.5 px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
+                          <Annata annata={r.g.annata} />
                           <span className="truncate">{r.nome}</span>
                           {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                         </Link>
                       </td>
-                      {cella(r.g.ruolo ? RUOLI_BREVI[r.g.ruolo] : <span className="text-grigio">–</span>, r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : undefined)}
+                      {cella(r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : <span className="text-grigio">–</span>)}
+                      {cella(piede(r.g))}
                       {cella(stato(r.g))}
-                      {cella(impressione(r.g))}
-                      {cella(r.squadra, r.squadra)}
+                      {cella(segnalazione(r))}
                       <td className="px-2 py-1.5">{colonnaValutazione(r)}</td>
-                      {cella(r.gara ? r.testoGara : <span className="text-grigio">{r.testoGara}</span>, r.testoGara)}
+                      <td className="p-0">
+                        <Link href={r.href} tabIndex={-1} title={`${r.squadra}\nProssima gara: ${r.testoGara}`} className="block px-2 py-1.5 leading-tight">
+                          <span className="block truncate">{r.squadra}</span>
+                          <span className={`block truncate text-xs ${r.gara ? 'text-inchiostro/80' : 'text-grigio'}`}>{r.testoGara}</span>
+                        </Link>
+                      </td>
                     </tr>
                     </Fragment>
                   );
@@ -475,15 +495,18 @@ export default async function Giocatori({
                     <p className="text-sm text-grigio">
                       <Annata annata={r.g.annata} />
                       {r.g.ruolo && ` · ${RUOLI_CAMPO[r.g.ruolo]}`}
+                      {piedeDi(r.g) && ` · piede ${PIEDI_BREVI[piedeDi(r.g)!].toLowerCase()}`}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">{stato(r.g)}{impressioneDi(r.g) && impressione(r.g)}</div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">{stato(r.g)}</div>
                 </div>
                 <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+                  <dt className="self-center text-grigio">Segnalazione</dt>
+                  <dd>{segnalazione(r)}</dd>
+                  <dt className="self-center text-grigio">Valutazioni</dt>
+                  <dd>{colonnaValutazione(r)}</dd>
                   <dt className="text-grigio">Squadra</dt>
                   <dd className="truncate">{r.squadra}</dd>
-                  <dt className="self-center text-grigio">Valutazione</dt>
-                  <dd>{colonnaValutazione(r)}</dd>
                   <dt className="text-grigio">Prossima gara</dt>
                   <dd className={r.gara ? '' : 'text-grigio'}>{r.testoGara}</dd>
                 </dl>

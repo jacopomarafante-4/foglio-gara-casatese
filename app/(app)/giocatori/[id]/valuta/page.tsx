@@ -55,7 +55,28 @@ export default async function Valuta({
         )}
         <input type="hidden" name="id" value={g.id} />
 
-        <Sezione n={1} titolo="Giudizio *" sotto="La tua conclusione su questo ragazzo.">
+        <Sezione n={1} titolo="Dove e quando">
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <Etichetta testo="Partita o occasione">
+              <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
+            </Etichetta>
+            <Etichetta testo="Data">
+              <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
+            </Etichetta>
+          </div>
+        </Sezione>
+
+        <p className="px-1 text-sm text-grigio">
+          Voti da 1 (debole) a 5 (ottimo), tutti facoltativi: vota solo quello che hai visto. Una scelta si toglie toccandola di nuovo.
+        </p>
+        {/* le 5 aree del dettaglio, ognuna col suo blocco */}
+        {GRUPPI_VALUTAZIONE.map((gr, i) => (
+          <Sezione key={gr.nome} n={i + 2} titolo={gr.nome} sotto={gr.aiuto} facoltativo>
+            {DETTAGLI_VALUTAZIONE.filter((d) => d.gruppo === gr.nome).map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} aiuto={d.aiuto} />)}
+          </Sezione>
+        ))}
+
+        <Sezione n={GRUPPI_VALUTAZIONE.length + 2} titolo="Giudizio *" sotto="La tua conclusione su questo ragazzo.">
           <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Giudizio">
             {Object.entries(GIUDIZI).map(([v, e]) => (
               <label key={v}>
@@ -66,31 +87,9 @@ export default async function Valuta({
               </label>
             ))}
           </div>
-          <Etichetta testo="Perché">
-            <textarea name="commento" rows={4} className="campo" defaultValue={nota ?? ''} placeholder="Punti di forza, cosa migliorare, cosa rivedere la prossima volta…" />
+          <Etichetta testo="Il tuo giudizio">
+            <textarea name="commento" rows={5} className="campo" defaultValue={nota ?? ''} placeholder="Scrivi con parole tue: punti di forza, cosa deve migliorare, perché lo prenderesti o no…" />
           </Etichetta>
-        </Sezione>
-
-        <Sezione n={2} titolo="Nel dettaglio" sotto="Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere." facoltativo>
-          {GRUPPI_VALUTAZIONE.map((gr) => (
-            <div key={gr}>
-              <h3 className="mb-1 border-b-2 border-blu/15 pb-1 font-display text-sm font-bold uppercase tracking-wide text-blu">{gr}</h3>
-              <div className="space-y-3">
-                {DETTAGLI_VALUTAZIONE.filter((d) => d.gruppo === gr).map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} aiuto={d.aiuto} />)}
-              </div>
-            </div>
-          ))}
-        </Sezione>
-
-        <Sezione n={3} titolo="Dove e quando">
-          <div className="grid grid-cols-[1fr_auto] gap-3">
-            <Etichetta testo="Partita o occasione">
-              <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
-            </Etichetta>
-            <Etichetta testo="Data">
-              <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
-            </Etichetta>
-          </div>
         </Sezione>
 
         <BarraSalva testo="Salva valutazione" nota="* obbligatorio: il giudizio" />

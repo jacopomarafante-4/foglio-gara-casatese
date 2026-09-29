@@ -180,6 +180,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0045: valutazione in 5 aree (`GRUPPI_VALUTAZIONE`: Tecnica, Tattica, Fisico, Mentale, Extra; "Spunti, estro e coraggio" in Mentale),
+  nuovi voti `dribbling`, `accelerazione`, `agilita`, `motivazione`, `famiglia`, `potenziale`, `livello_attuale`. `coach_valuta` accetta da
+  sola ogni colonna smallint di `valutazioni`: per una voce nuova bastano colonna + riga in `DETTAGLI_VALUTAZIONE` e `DETTAGLI_VALUTA`.
+  Modulo: Dove e quando · le 5 aree · Giudizio in fondo con "Il tuo giudizio" (`commento`). Elenco Giocatori: Ruolo, Piede (`piedeDi`),
+  Segnalazione (impressione + voto globale = media dei voti per area delle sole segnalazioni), Valutazioni (3 caselle + ultimo giudizio);
+  da computer annata accanto al nome e "Squadra e gara" su due righe (`COLONNE_TABELLA`)
 - 0044: valutazione con 5 voti facoltativi in più (`marcamento`, `smarcamento`, `trasmissione`, `colpo_di_testa`, `concentrazione`);
   `spunti` = "Spunti, estro e coraggio"; `DETTAGLI_VALUTAZIONE` con `gruppo` (`GRUPPI_VALUTAZIONE`: Con la palla, Senza palla, Fisico, Mentale; nel Portale 4° elemento di
   `DETTAGLI_VALUTA`); `coach_valuta` riscritta

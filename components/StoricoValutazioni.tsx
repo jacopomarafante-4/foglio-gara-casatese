@@ -1,7 +1,7 @@
 // Scheda del giocatore: storico delle valutazioni sotto le medie. Una riga per valutazione (dalla più recente):
 // data, chi, i 4 voti (solo nelle valutazioni fino alla 0043; dopo, il dettaglio), media e giudizio, con la freccia rispetto alla precedente.
 // Toccando la riga: note delle aree e commento.
-import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, type Giudizio } from '@/lib/tipi';
+import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, type ChiaveDettaglio, type Giudizio } from '@/lib/tipi';
 import { dataBreve } from '@/lib/utili';
 import { Autore, type FirmaValutazione } from '@/components/Autore';
 import { mediaVoti } from '@/lib/valutazioni';
@@ -12,11 +12,7 @@ export type ValutazioneStorico = {
   f: FirmaValutazione; puoEliminare: boolean;
   tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
-  spunti?: number | null; guida_palla?: number | null; ricezione?: number | null; calciata?: number | null;
-  contrasto?: number | null; velocita?: number | null; reattivita?: number | null;   // 0041, facoltativi
-  marcamento?: number | null; smarcamento?: number | null; trasmissione?: number | null;
-  colpo_di_testa?: number | null; concentrazione?: number | null;   // 0044
-};
+} & Partial<Record<ChiaveDettaglio, number | null>>;   // voti del dettaglio (0041, 0044, 0045), facoltativi
 
 /* media: delle 4 aree se ci sono (valutazioni vecchie), se no del dettaglio */
 const media = (v: ValutazioneStorico) => mediaVoti(v) ?? (() => {
