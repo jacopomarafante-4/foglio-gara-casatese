@@ -13,7 +13,7 @@ const INK = '#15202B';
 
 /** I caratteri del PDF (Helvetica) non hanno emoji né simboli fuori dall'alfabeto latino: si tolgono */
 export const perPdf = (t: unknown) => String(t ?? '').replace(/[^\x00-\xFF€–—‘’“”…•]/g, '').replace(/[ \t]+$/gm, '');
-const carattere = (doc: jsPDF, size: number, bold?: boolean) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); };
+export const carattere = (doc: jsPDF, size: number, bold?: boolean) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); };
 
 type OpzRiga = { size?: number; min?: number; bold?: boolean; align?: 'left' | 'right' | 'center' };
 /** Una riga in larghezza w: carattere da `size` fino a `min`, poi "…". Restituisce la grandezza usata */
@@ -45,6 +45,37 @@ export function blocco(doc: jsPDF, testo: unknown, x: number, y: number, w: numb
   b.righe.forEach((r, i) => doc.text(r, opz.align === 'right' ? x + w : x, y + i * b.alt, { align: opz.align || 'left' }));
   return b.righe.length * b.alt;
 }
+
+/** Riga giustificata a mano (jsPDF non giustifica una riga sola): spazi distribuiti tra le parole */
+export function rigaGiustificata(doc: jsPDF, r: string, x: number, y: number, w: number) {
+  const parole = r.trim().split(/\s+/);
+  if (parole.length < 2) { doc.text(r, x, y); return; }
+  const pieno = parole.reduce((n, p) => n + doc.getTextWidth(p), 0), spazio = (w - pieno) / (parole.length - 1);
+  if (spazio > doc.getTextWidth(' ') * 3) { doc.text(r, x, y); return; }   // troppo vuoto: meglio a bandiera
+  let cx = x; parole.forEach((p) => { doc.text(p, cx, y); cx += doc.getTextWidth(p) + spazio; });
+}
+
+export type Paragrafo = { righe: { t: string; rientro: number; punto: string; ultima: boolean }[]; alt: number };
+/** Testo lungo diviso in paragrafi (riga vuota) e righe; "- ", "• ", "* " o "1." = voce di elenco rientrata */
+export function paragrafi(doc: jsPDF, testo: string, w: number, size: number): Paragrafo[] {
+  carattere(doc, size, false);
+  const alt = size * 0.3528 * 1.45, out: Paragrafo[] = [];
+  /* rientro dei numeri uguale per tutto l'elenco, largo quanto il numero più lungo ("10." più di "1.") */
+  const numeri = [...perPdf(testo).matchAll(/^\s*(\d+[.)])\s+/gm)].map((m) => doc.getTextWidth(m[1]));
+  const rientroNum = Math.max(5, ...numeri.map((n) => n + 2.2));
+  perPdf(testo).split(/\n\s*\n/).forEach((par) => {
+    const righe: Paragrafo['righe'] = [];
+    par.split('\n').filter((r) => r.trim()).forEach((r) => {
+      const el = r.match(/^\s*([-•*]|\d+[.)])\s+(.*)$/);
+      const rientro = !el ? 0 : /\d/.test(el[1]) ? rientroNum : 5, testoR = el ? el[2] : r.trim();
+      (doc.splitTextToSize(testoR, w - rientro) as string[]).forEach((t, k, tutte) =>
+        righe.push({ t, rientro, punto: el && k === 0 ? (/\d/.test(el[1]) ? el[1] : '•') : '', ultima: k === tutte.length - 1 }));
+    });
+    if (righe.length) out.push({ righe, alt });
+  });
+  return out;
+}
+export const altezzaParagrafi = (pp: Paragrafo[], dopo: number) => pp.reduce((h, p) => h + p.righe.length * p.alt + dopo, 0);
 
 /** Pagina seguente: fondo bianco, riga con società e titolo del modulo e un filo blu sotto */
 export function nuovaPagina(doc: jsPDF, titolo: string) {

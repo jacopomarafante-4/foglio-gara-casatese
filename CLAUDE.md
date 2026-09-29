@@ -55,9 +55,14 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   direttori e segreteria; ogni pagina controlla il suo ruolo; intestazione comune `components/Intestazione.tsx`). Fatte: Società →
   Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
   (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`; Segreteria → Tesserati (`/segreteria`, admin,
-  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area); Modulistica →
-  Programma gare (`/modulistica/programma`, admin, direttori e mister; regole in `lib/programma.ts`, PDF con `lib/pdf-moduli.ts` =
-  impaginazione di modulistica.js, copia nell'archivio con l'azione `archiviaPdf`). Elenco delle schede portate: `NELL_APP` in
+  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area); tutta la
+  Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`, copia nell'archivio con `archiviaPdf`):
+  Distinta (`/modulistica/distinta`, `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; salva solo
+  `distinta` e `senzaCategoria` nel foglio della squadra con `salvaDistinta`, sulla versione più recente; regole `lib/distinta.ts`,
+  PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`), Comunicazione
+  (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO` in `lib/condivisi.ts`, PDF `lib/pdf-comunicazione.ts`). Impaginazione
+  comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`); nel Portale resta solo `pdfComunicazione()` per
+  Calendario → Avvisi. Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

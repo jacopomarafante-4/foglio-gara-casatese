@@ -1,5 +1,5 @@
 /* FILE GENERATO da lib/condivisi.ts con "npm run condivisi": non modificarlo qui.
-   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, NELL_APP, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore. */
+   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, NELL_APP, MODELLI_AVVISO, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore. */
 // Regole comuni a Scouting (Next) e Portale (public/portale): scritte una volta sola, qui.
 // Il Portale non ha un passaggio di build: `npm run condivisi` (scripts/genera-condivisi.mjs) toglie i tipi e crea
 // public/portale/js/condivisi.js (file generato, da non modificare). Le prove rapide falliscono se non è aggiornato.
@@ -39,6 +39,15 @@ const ICONE_AREE                         = {
  *  una di queste pagine senza essere entrato passa dal PIN e ci torna (`accedi` in app/auth/actions.ts) */
 const NELL_APP                         = {
   archivio: '/societa/archivio', modifiche: '/societa/modifiche', tesserati: '/segreteria', programma: '/modulistica/programma',
+  distinta: '/modulistica/distinta', comunicazione: '/modulistica/comunicazione',
+};
+
+/** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */
+const MODELLI_AVVISO                                                                   = {
+  libero: {label:'Avviso libero', titolo:'', testo:''},
+  campo: {label:'Cambio campo', titolo:'Cambio campo', testo:'⚠️ CAMBIO CAMPO\nLa partita di [giorno] contro [avversario] si gioca a [campo, indirizzo].\nOrario invariato: ritrovo alle [ora].'},
+  orario: {label:'Cambio orario', titolo:'Cambio orario', testo:'⚠️ CAMBIO ORARIO\nLa partita di [giorno] contro [avversario] inizia alle [ora] (ritrovo alle [ora ritrovo]).'},
+  evento: {label:'Evento', titolo:'', testo:''}
 };
 
 /* ---------- Squadre e categorie ---------- */

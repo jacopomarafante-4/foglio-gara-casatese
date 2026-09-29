@@ -38,6 +38,15 @@ export const ICONE_AREE: Record<string, string> = {
  *  una di queste pagine senza essere entrato passa dal PIN e ci torna (`accedi` in app/auth/actions.ts) */
 export const NELL_APP: Record<string, string> = {
   archivio: '/societa/archivio', modifiche: '/societa/modifiche', tesserati: '/segreteria', programma: '/modulistica/programma',
+  distinta: '/modulistica/distinta', comunicazione: '/modulistica/comunicazione',
+};
+
+/** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */
+export const MODELLI_AVVISO: Record<string, { label: string; titolo: string; testo: string }> = {
+  libero: {label:'Avviso libero', titolo:'', testo:''},
+  campo: {label:'Cambio campo', titolo:'Cambio campo', testo:'⚠️ CAMBIO CAMPO\nLa partita di [giorno] contro [avversario] si gioca a [campo, indirizzo].\nOrario invariato: ritrovo alle [ora].'},
+  orario: {label:'Cambio orario', titolo:'Cambio orario', testo:'⚠️ CAMBIO ORARIO\nLa partita di [giorno] contro [avversario] inizia alle [ora] (ritrovo alle [ora ritrovo]).'},
+  evento: {label:'Evento', titolo:'', testo:''}
 };
 
 /* ---------- Squadre e categorie ---------- */

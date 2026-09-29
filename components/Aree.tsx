@@ -9,7 +9,7 @@ const AREE = [
   { k: 'home', etichetta: 'Home', href: '/portale/#/home' },
   { k: 'calendario', etichetta: 'Calendario', href: '/portale/#/calendario' },
   { k: 'squadra', etichetta: 'Squadra', href: '/portale/#/rosa' },
-  { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/programma' },
+  { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/distinta' },   // l'organizzativo (senza distinta) va al Programma
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
   { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre' },
