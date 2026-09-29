@@ -50,6 +50,8 @@ const ORDINE_RUOLI = Object.keys(RUOLI_CAMPO);
 const ORDINE_STATI = Object.keys(STATI);
 const ORDINE_PIEDI = Object.keys(PIEDI);
 const PIEDI_BREVI: Record<Piede, string> = { destro: 'Destro', sinistro: 'Sinistro', ambidestro: 'Entrambi' };
+/* Nella tabella da computer il piede in sigla: la colonna stretta lascia spazio al nome */
+const PIEDI_SIGLA: Record<Piede, string> = { destro: 'Dx', sinistro: 'Sx', ambidestro: 'Dx-Sx' };
 
 /* Prima impressione dell'ultima segnalazione che ne ha una (0042) */
 const ORDINE_IMPRESSIONI: Impressione[] = ['positiva', 'da_rivedere', 'negativa'];
@@ -280,7 +282,6 @@ export default async function Giocatori({
       </span>
     );
   };
-  const piede = (g: Riga) => { const p = piedeDi(g); return p ? PIEDI_BREVI[p] : <span className="text-grigio">–</span>; };
   const stato = (g: Riga) =>
     g.osservato ? (
       <StatoBadge stato={g.stato} />
@@ -409,8 +410,8 @@ export default async function Giocatori({
             <table className="w-full table-fixed text-left text-sm">
               <colgroup>
                 <col />
-                <col className="w-32" />
-                <col className="w-20" />
+                <col className="w-28" />
+                <col className="w-16" />
                 <col className="w-32" />
                 <col className="w-32" />
                 <col className="w-48" />
@@ -454,12 +455,13 @@ export default async function Giocatori({
                       <td className="p-0 pl-2">
                         <Link href={r.href} title={r.nome} className={`flex items-center gap-1.5 px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
                           <Annata annata={r.g.annata} />
-                          <span className="truncate">{r.nome}</span>
+                          {/* nome intero: se è lungo va a capo (al massimo due righe) invece di finire con "…" */}
+                          <span className="line-clamp-2 min-w-0 break-words leading-tight">{r.nome}</span>
                           {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                         </Link>
                       </td>
                       {cella(etichettaRuolo(r.g) ?? <span className="text-grigio">–</span>, etichettaRuolo(r.g) ?? undefined)}
-                      {cella(piede(r.g))}
+                      {cella(piedeDi(r.g) ? PIEDI_SIGLA[piedeDi(r.g)!] : <span className="text-grigio">–</span>, piedeDi(r.g) ? PIEDI_BREVI[piedeDi(r.g)!] : undefined)}
                       {cella(stato(r.g))}
                       {cella(segnalazione(r))}
                       <td className="px-2 py-1.5">{colonnaValutazione(r)}</td>
