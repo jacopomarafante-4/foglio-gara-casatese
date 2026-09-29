@@ -3,6 +3,7 @@
 // dell'annata (gcal = id dell'evento, gcalCal = calendario); il campionato ufficiale non si tocca mai;
 // nelle note niente contatti né telefoni. Verso Google: amichevoli, tornei ed eventi creati nell'app.
 import { CALENDARI, type Calendario, type EventoGoogle, leggiEventi } from './google-calendar';
+import { calendarioDi, etaCategoria } from './condivisi';
 
 export type Partita = {
   id: string; date?: string; time?: string; opponent?: string; home?: boolean; venue?: string; address?: string; ll?: string;
@@ -22,7 +23,8 @@ const dataOra = (iso: string) => {
 export const oggi = () => dataOra(new Date().toISOString()).date;
 /** Fine della stagione: 30 giugno (da luglio in poi, dell'anno dopo) */
 export const fineStagione = () => { const [a, m] = oggi().split('-').map(Number); return `${m >= 7 ? a + 1 : a}-06-30`; };
-export const etaSquadra = (t?: Squadra) => Number(String(t?.category ?? '').match(/under\s*(\d+)/i)?.[1]) || 0;
+/** Età della categoria (regola comune col Portale); 0 = squadra senza età (organizzazione, preparatori): non va su Google */
+export const etaSquadra = (t?: Squadra) => etaCategoria(t) ?? 0;
 const norm = (s?: string) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
   .replace(/\b(A\.?S\.?D\.?|S\.?S\.?D\.?|G\.?S\.?O?\.?|POL\.?|C\.?S\.?C\.?|A\.?C\.?|U\.?S\.?D?\.?|CALCIO|\(.*\))/g, ' ').replace(/[^A-Z0-9]/g, '');
 const stessoAvversario = (a?: string, b?: string) => { const x = norm(a), y = norm(b); return !!x && !!y && (x === y || x.includes(y) || y.includes(x)); };
@@ -95,4 +97,4 @@ export function titoloPartita(team: Squadra, p: Partita) {
   return `${eta && eta <= 13 ? 'AdB' : `U${eta}`} - ${fine - eta} - ${p.opponent || 'Da trovare'}`;
 }
 /** In quale calendario va: in casa Merate o Cernusco (dal campo), fuori Trasferta */
-export const calendarioPartita = (p: Partita): Calendario => (!p.home ? 'TRASFERTA' : /MERATE/i.test(p.venue ?? '') ? 'MERATE' : 'CERNUSCO');
+export const calendarioPartita = (p: Partita): Calendario => calendarioDi(p).toUpperCase() as Calendario;

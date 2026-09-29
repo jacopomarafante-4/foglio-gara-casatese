@@ -179,10 +179,9 @@ function chipsPortieri(m){
   return `<div class="gkchips">${gk.map(p => { const st = statoPortiere(m, p.id);
     return `<span class="gkchip st-${st || 'da'}">🧤 ${esc(p.name)} · ${st ? CALLUP_LABELS[st].toLowerCase() : 'da convocare'}</span>`; }).join('')}</div>`;
 }
-/* I tre calendari della società, ognuno col suo colore: campo di Merate, campo di Cernusco, trasferta */
-const CAL_NOMI = {merate:'Merate', cernusco:'Cernusco', trasferta:'Trasferta'};
-const calDi = m => m.evento ? ({merate:'merate', cernusco:'cernusco'}[m.luogo] || 'trasferta')
-  : !m.home ? 'trasferta' : /MERATE/i.test(m.venue || '') ? 'merate' : 'cernusco';
+/* I tre calendari della società, ognuno col suo colore (regole comuni con lo Scouting: CALENDARI, calendarioDi in condivisi.js) */
+const CAL_NOMI = Object.fromEntries(Object.entries(CALENDARI).map(([k, c]) => [k, c.nome]));
+const calDi = calendarioDi;
 const legendaCal = () => `<div class="calleg">${Object.entries(CAL_NOMI).map(([k,n]) => `<span class="cal-${k}">${n}</span>`).join('')}</div>`;
 const siglaSquadra = t => { const e = etaSquadra(t); return e < 99 ? 'U' + e : (t?.name || ''); };
 /* Nelle liste di tutte le squadre: "U11 · Fc Milanese" (casa o trasferta la dice il colore) */
@@ -555,7 +554,6 @@ const mediaVal = v => { const x = v ? ['tecnica','motoria','tattica','mentale'].
 /* l'ultima segnalazione o valutazione con voti per area */
 const ultimiVoti = g => [...(g.segnalazioni||[]), ...(g.valutazioni||[])].filter(x => mediaVal(x) !== null).sort((a, b) => (b.data||'').localeCompare(a.data||''))[0];
 /* Chi ha valutato: iniziali in un cerchio colorato, stesso colore per la stessa persona (come nello Scouting, components/Autore.tsx) */
-const COLORI_AUTORE = ['#003DA5','#C41E3A','#B8860B','#6B3FA0','#0F7C7C','#A34A1E','#B8336A','#35506B','#4A5563','#1F5FA8'];
 /* Le 3 caselle delle valutazioni (persone diverse, come nello Scouting): verdi a 3 su 3 */
 function slotValutazioni(valutazioni){
   const chi = [...new Set((valutazioni||[]).map(v => v.autore || '?'))], ok = chi.length >= 3;
@@ -564,10 +562,8 @@ function slotValutazioni(valutazioni){
 }
 function autoreTondo(nome){
   if(!nome) return '';
-  const mister = /^mister\b|·/i.test(nome), pulito = nome.replace(/^Mister\s+/i, '').split('·')[0].trim(), p = pulito.split(/\s+/).filter(Boolean);
-  const ini = ((p[0]?.[0] || '?') + (p.length > 1 ? p[p.length-1][0] : '')).toUpperCase();
-  let h = 0; for(const c of (mister ? 'm:' : '') + nome) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const col = COLORI_AUTORE[h % COLORI_AUTORE.length];
+  /* iniziali e colore come nello Scouting (inizialiAutore, coloreAutore in condivisi.js) */
+  const mister = /^mister\b|·/i.test(nome), ini = inizialiAutore(nome), col = coloreAutore(nome, mister);
   return `<span class="autore${mister ? ' mister' : ''}" style="--ac:${col}" title="${esc(nome)}" aria-label="Valutazione di ${esc(nome)}">${esc(ini)}</span>`;
 }
 function viewGiocatori(){

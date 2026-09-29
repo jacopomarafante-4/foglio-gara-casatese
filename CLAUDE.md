@@ -24,6 +24,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
 ## Portale squadre (`public/portale/`)
 - JavaScript classico senza build, variabili globali condivise, caricato nell'ordine di
   `index.html`; ESLint lo ignora. Dopo ogni modifica a CSS/JS aumenta il `?v=` in `index.html`.
+- Regole comuni con lo Scouting (calendari e colori, età della categoria, colori delle annate, iniziali e colore di chi valuta) in
+  `lib/condivisi.ts`, UNA volta sola: `npm run condivisi` genera `public/portale/js/condivisi.js` (non modificarlo a mano; le prove
+  falliscono se non è aggiornato). Se aggiungi una regola usata da tutte e due le parti, mettila lì.
 - Servito su `/portale/` (la barra finale serve ai percorsi relativi: `next.config.ts` + `proxy.ts`),
   fuori dal controllo login del proxy.
 - Dati: tabella `docs` a chiave/valore (`shared/teams`, `roster/<squadra>`, …), permessi in
@@ -340,7 +343,9 @@ Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come ne
 `npm run prove` = lint, tipi, regole di calcolo (`npm run prove:regole`: `tests/*.test.mjs` con `node --test`, indirizzi `@/` tradotti da
 `tests/registra.mjs`; categorie, testi e date, doppioni, 3 valutazioni in `lib/valutazioni.ts`, calendari Google, impaginazione dei PDF
 del Portale caricata in un ambiente finto), `scripts/prove-portale.mjs` (sintassi di ogni file del Portale, file di `index.html` esistenti e con
-`?v=`, nessun file dimenticato), build. Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
+`?v=`, nessun file dimenticato, nessun nome globale dichiarato in due file o usato senza essere definito, `condivisi.js` aggiornato),
+`scripts/prove-schede.mjs` (giro di tutte le schede del Portale con 7 profili e dati inventati di `scripts/prove-schede/dati.mjs`,
+Chrome da `CHROME_PATH` o quello di sistema), build. Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
 "Prove rapide", senza segreti): se falliscono arriva un'email. Prima di pubblicare su Vercel lanciare `npm run prove`.
 Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` si creano dal sito di GitHub.
 
