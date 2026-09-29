@@ -479,17 +479,6 @@ function etaSquadra(t = TEAM()){ return etaCategoria(t) ?? 99; }   // regola com
 const isAdb = (t = TEAM()) => etaSquadra(t) <= 13;
 function ruoliSquadra(){ return etaSquadra() >= 13 ? RUOLI_PIENI : RUOLI_BASE; }
 const ruoloDi = pid => (S.reg.ruoli||{})[pid] || (isGk(pid) ? 'portiere' : '');
-function ruoloSel(p){
-  const r = ruoloDi(p.id);
-  return `<select class="rsel" data-ruolo="${p.id}" aria-label="Ruolo di ${esc(p.name)}"><option value="">Ruolo</option>${ruoliSquadra().map(([v,e]) => `<option value="${v}" ${v===r?'selected':''}>${e}</option>`).join('')}</select>`;
-}
-function setRuolo(pid, v){
-  const R = S.reg; R.ruoli ||= {};
-  if(v) R.ruoli[pid] = v; else delete R.ruoli[pid];
-  const gk = R.gk || [];
-  R.gk = v === 'portiere' ? [...new Set([...gk, pid])] : gk.filter(x => x !== pid);   // il portiere resta segnato anche per i gol subiti
-  save('registro'); render();
-}
 function toggleGk(pid){ const a = S.reg.gk ||= []; S.reg.gk = a.includes(pid) ? a.filter(x => x!==pid) : [...a, pid]; save('registro'); render(); }
 document.addEventListener('click', e => {
   const t = e.target.closest('button');
@@ -592,7 +581,6 @@ document.addEventListener('input', e => {
 /* aggiorna il risultato mentre si scrive, senza ridisegnare (il campo resta attivo) */
 function refreshScore(g){ const b = document.querySelector('.score b'); if(b){ const sc = gameScore(g); b.textContent = sc ? `${sc.gf} - ${sc.ga}` : '– -'; } }
 document.addEventListener('change', e => {
-  if(e.target.dataset && e.target.dataset.ruolo && curTeam){ setRuolo(e.target.dataset.ruolo, e.target.value); return; }
   if(e.target.dataset.statperiod){ statPeriod = e.target.value; render(); }
 });
 

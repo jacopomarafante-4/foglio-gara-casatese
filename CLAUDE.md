@@ -79,7 +79,12 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   aprono il Portale con `#/<scheda>/<id>` (allenamento o partita da aprire) e `#/s:<squadra>/…` per lo staff (`rotta()`,
   `squadraDaRotta()`, `apriDaRotta()` in portale.js); prima creano quello che serve con le azioni `allenamentoDiOggi`,
   `tabellinoDi`, `preparaGara` (`app/(aree)/docs-actions.ts`, stesso controllo di versione di `modificaDoc`). Il Portale rimanda
-  all'app e riscrive l'indirizzo solo dopo aver caricato le squadre (prima la scheda è ancora "home"). Elenco delle schede portate: `NELL_APP` in
+  all'app e riscrive l'indirizzo solo dopo aver caricato le squadre (prima la scheda è ancora "home").
+  Squadra → Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`roster/<squadra>`
+  con `modificaDoc`, `eliminaGiocatore` toglie anche da formazione e panchina), ruolo anche il mister (`impostaRuolo`: registro.ruoli
+  + registro.gk), direttori in sola lettura. Scelta della squadra per lo staff: `squadraDellaPagina()` + `components/SceltaSquadra.tsx`.
+  Dal Portale alle pagine dell'app lo staff porta la squadra aperta (`indirizzoApp()` in portale.js: `?squadra=`); le schede
+  Allenamento e Partite (ancora nel Portale) la riportano con `#/s:<squadra>/…`. Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

@@ -7,5 +7,5 @@ export function NomeArea({ categoria }: { categoria?: string }) {
   if (categoria) return categoria;
   return percorso.startsWith('/societa') ? 'Società' : percorso.startsWith('/segreteria') ? 'Segreteria'
     : percorso.startsWith('/modulistica') ? 'Modulistica' : percorso.startsWith('/calendari/') ? 'Calendario'
-    : percorso.startsWith('/inizio') ? 'Home' : 'Scouting';
+    : percorso.startsWith('/inizio') ? 'Home' : percorso.startsWith('/squadra/') ? 'Squadra' : 'Scouting';
 }

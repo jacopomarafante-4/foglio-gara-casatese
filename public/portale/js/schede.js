@@ -149,9 +149,8 @@ function render(){
   if(tab==='squadre') v.innerHTML = viewSquadre();
   /* Schede che non dipendono da una squadra aperta */
   /* nell'app solo dopo aver caricato le squadre: prima la scheda non è ancora quella dell'indirizzo (tab parte da 'home') */
-  else if(NELL_APP[tab]){ if(IN_APP_UNICA){ if(teamsLoaded) location.replace(NELL_APP[tab]); else v.innerHTML = '<section class="panel"><p class="note">Carico…</p></section>'; } else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
+  else if(NELL_APP[tab]){ if(IN_APP_UNICA){ if(teamsLoaded) location.replace(indirizzoApp(tab)); else v.innerHTML = '<section class="panel"><p class="note">Carico…</p></section>'; } else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
-  else if(tab==='rosa') v.innerHTML = viewRosa();
   else if(tab==='partita') v.innerHTML = viewPartita();
   else if(tab==='convocazioni') v.innerHTML = viewConvocazioni();
   else if(tab==='formazione') v.innerHTML = viewFormazione();
@@ -311,36 +310,7 @@ function viewStaff(){
 }
 
 const gkBtn = p => `<button class="gkbtn" data-gktoggle="${p.id}" aria-pressed="${isGk(p.id)}" title="${isGk(p.id)?'Portiere (tocca per togliere)':'Segna come portiere'}">🧤</button>`;
-function viewRosa(){
-  if(!isAdmin()){
-    const rows = S.players.map(p => { const n = matchNum(p.id); return `<div class="ro-row"><span class="n ${n?'':'off'}">${n||'–'}</span><span class="nm">${esc(p.name)}</span>${ruoloSel(p)}</div>`; }).join('');
-    return `<section class="panel">
-      <h2>Rosa</h2>
-      ${lockNote('La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all\'amministratore.')}
-      <p class="hint">Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione. Scegli il <b>ruolo</b> di ogni giocatore${ruoliSquadra()===RUOLI_BASE ? ' (in questa categoria: portiere o giocatore di movimento)' : ''}: per i portieri potrai inserire i gol subiti nelle partite.</p>
-      <div class="cols2">${rows || '<p class="empty">La rosa non è ancora stata caricata.</p>'}</div>
-    </section>`;
-  }
-  const rows = S.players.map(p => `
-    <div class="prow">
-      <span class="num ${matchNum(p.id)?'':'missing'}">${matchNum(p.id)||'–'}</span>
-      <input aria-label="Nome" data-pname="${p.id}" value="${esc(p.name)}" placeholder="Cognome">
-      ${ruoloSel(p)}
-      <button class="iconbtn" aria-label="Elimina ${esc(p.name)}" data-pdel="${p.id}">×</button>
-    </div>`).join('');
-  return `<section class="panel">
-    <h2>Rosa · ${esc(TEAM()?.name||'')}</h2>
-    <p class="hint">Nome e ruolo: il numero di maglia lo assegni in Formazione, cambia partita per partita (titolari 1-11, panchina 12+). Il ruolo lo può scegliere anche il mister${ruoliSquadra()===RUOLI_BASE ? ' (in questa categoria: portiere o giocatore di movimento)' : ''}.</p>
-    ${rows || '<p class="empty">Nessun giocatore. Aggiungili uno a uno o incolla un elenco.</p>'}
-    <div class="row"><button class="btn" data-act="padd">Aggiungi giocatore</button></div>
-    <details ${S.players.length?'':'open'}>
-      <summary>Incolla un elenco</summary>
-      <p class="hint" style="margin-top:8px">Un nome per riga, per esempio <b>Brancaccio</b>. Se incolli righe con un numero davanti va bene lo stesso, lo ignoriamo.</p>
-      <textarea id="bulk" placeholder="Alonge&#10;Vascaneau&#10;Brancaccio"></textarea>
-      <div class="row" style="margin-top:8px"><button class="btn primary" data-act="bulk">Aggiungi all'elenco</button></div>
-    </details>
-  </section>`;
-}
+/* Rosa: nell'app dalla tappa 3 (/squadra/rosa, NELL_APP) */
 
 /* Calendario completo: partite ufficiali (le modifica solo l'admin) + amichevoli, salvate nel registro
    della squadra così le può aggiungere anche il mister. */

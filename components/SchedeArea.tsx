@@ -1,14 +1,26 @@
 'use client';
 // Seconda riga dell'intestazione: le schede dell'area aperta. Scouting: le sue pagine; Società: Squadre (nel Portale),
 // Archivio documenti e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati; Modulistica e Calendario: tutte.
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Scheda } from '@/components/Scheda';
 import type { Ruolo } from '@/lib/ruoli';
 
 export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
   const nelPortale = 'whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2.5 pt-2 font-display text-lg font-semibold text-grigio hover:text-inchiostro';
+  const squadraScelta = useSearchParams().get('squadra');
   if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
+  if (percorso.startsWith('/squadra/')) {
+    // Rosa nell'app; Allenamento e Partite ancora nel Portale (per lo staff con la squadra aperta: #/s:<squadra>/…)
+    const portale = (scheda: string) => `/portale/#/${squadraScelta ? 's:' + squadraScelta + '/' : ''}${scheda}`;
+    return (
+      <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della squadra">
+        <Scheda href="/squadra/rosa">Rosa</Scheda>
+        <a href={portale('allenamenti')} className={nelPortale}>Allenamento</a>
+        <a href={portale('convocazioni')} className={nelPortale}>Partite</a>
+      </nav>
+    );
+  }
   if (percorso.startsWith('/calendari/')) {
     // La mia squadra (non per l'organizzativo), Tutte le squadre, Avvisi (admin, direttori, organizzativo)
     return (
