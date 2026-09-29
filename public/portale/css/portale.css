@@ -595,7 +595,8 @@ details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}
 .fgpartita{display:grid;justify-items:end;gap:2px;text-align:right;font-size:13px;color:var(--f-muted);max-width:40%}
 .fgpartita .fgvs{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--f-ink)}
 .fgstriscia{height:3px;margin:12px -24px 16px;background:linear-gradient(90deg,#003DA5 0 66.6%,#D4AF37 66.6% 77.7%,#C41E3A 77.7%)}
-.fgcorpo{display:grid;grid-template-columns:minmax(0,2.35fr) minmax(250px,1fr);gap:22px;align-items:start}
+.fgcorpo{display:grid;grid-template-columns:minmax(0,2.35fr) minmax(250px,1fr);gap:22px;align-items:stretch}
+.fgcampo{display:flex;flex-direction:column}
 .fgcampo .board{border-radius:8px;display:block;width:100%;height:auto}
 .pzeditor .foglio .fgnota{display:block;width:100%;margin:12px 0 0;font-family:var(--cond);font-weight:700;font-size:20px;line-height:1.3;color:var(--f-ink);white-space:pre-line}
 .fgpiede{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:6px;border-top:1px solid var(--f-linea);font-size:11.5px;font-weight:600;color:var(--f-muted)}
@@ -607,13 +608,20 @@ details.grow.completo{box-shadow:inset 4px 0 0 #2E7D4F}
 .pzeditor .foglio textarea.fgnota{resize:vertical;min-height:58px;margin-left:0;width:100%;padding:6px 8px}
 .pzeditor .foglio input.fgsotto::placeholder,.pzeditor .foglio textarea.fgnota::placeholder,.pzeditor .foglio input.pzgnome::placeholder{color:#8A96A3;font-weight:500}
 /* riquadro Compiti come nel PDF: bordo sottile, pastiglia A favore / A sfavore, gruppi con la barretta del colore */
-.pzeditor .foglio .pzcompiti{background:#fff;border:1.5px solid var(--f-linea);border-radius:12px;padding:12px 14px;color:var(--f-ink)}
+.pzeditor .foglio .pzcompiti{background:#fff;border:1.5px solid var(--f-linea);border-radius:12px;padding:12px 14px;color:var(--f-ink);display:flex;flex-direction:column}
+/* righe compatte come nel PDF, così il riquadro Compiti finisce all'altezza del campo; la legenda va in fondo */
+.pzeditor .foglio .pzgruppo{margin-top:6px}
+.pzeditor .foglio .pzriga{padding:0 4px 0 10px;gap:6px}
+.pzeditor .foglio select.pzgioc{min-height:28px;padding:1px 4px}
+.pzeditor .foglio .pzdisco{width:22px;height:22px;font-size:12.5px}
+.pzeditor .foglio .pzh{margin:6px 0 0}
+.pzeditor .foglio .pzleg{margin-top:auto;padding-top:10px}
 .pzeditor .foglio .pzh{color:var(--f-blu);font-size:26px;margin:8px 0 2px}
 .pzeditor .foglio .side{border-radius:999px;padding:4px 16px;font-family:var(--cond);font-weight:700;font-size:16px}
-.pzeditor .foglio .pzgnome{font-size:20px;color:var(--f-ink)}
+.pzeditor .foglio .pzgnome{font-size:19px;color:var(--f-ink)}
 .pzeditor .foglio .pzriga:hover{background:#F5F8FD}
 .pzeditor .foglio select.pzgioc{color:var(--f-ink);font-size:15.5px}
-.pzeditor .foglio .pzleg{margin:14px 0 0;font-size:12.5px;color:var(--f-muted)}
+.pzeditor .foglio .pzleg{font-size:12.5px;color:var(--f-muted);margin-bottom:0}
 .pzeditor .foglio .pzleg2{margin:4px 0 0;font-size:11.5px}
 .pzeditor .foglio .pzcompiti .note{color:var(--f-muted)}
 @media (max-width:900px){
