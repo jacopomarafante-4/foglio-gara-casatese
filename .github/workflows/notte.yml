@@ -1,0 +1,31 @@
+# Prova notturna dei profili: permessi del database e giro del sito vero con ogni profilo (scripts/test-profili.mjs).
+# Parte ogni notte alle 4:30 (ora italiana) e a mano da "Run workflow". Se qualcosa non va, GitHub manda un'email.
+# Nei registri (pubblici) solo nomi delle prove e conteggi; i dettagli restano nel file di esito, che non si salva.
+name: Prova notturna dei profili
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profili:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Profili e permessi
+        run: node scripts/test-profili.mjs "$RUNNER_TEMP/esito.json"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CHROME_PATH: /usr/bin/google-chrome
