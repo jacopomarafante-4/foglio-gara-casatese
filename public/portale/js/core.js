@@ -267,7 +267,7 @@ function resolveAccess(){
 function subscribeTeam(){
   unsubs.forEach(u => { try{ u(); }catch(e){} }); unsubs = [];
   S.players = []; S.sheet = defaultSheet(); S.calendar = []; S.reg = defaultReg();
-  openTrainingId = openGameId = openTestId = null;
+  impostaOpenTrainingId(impostaOpenGameId(impostaOpenTestId(null)));
   if(curTeam){
     if(db){
       ['roster','sheet','calendar','registro'].forEach(n => {
@@ -480,3 +480,18 @@ async function initStore(){
     subscribeTeam();
   }
 }
+
+/* Variabili di questo file cambiate anche da altri file: si cambiano solo da qui (passo verso i moduli) */
+function impostaTab(v){ return (tab = v); }
+function impostaSelectedPlayer(v){ return (selectedPlayer = v); }
+function impostaOpenSchemeId(v){ return (openSchemeId = v); }
+function impostaROLE(v){ return (ROLE = v); }
+function impostaHashLocked(v){ return (hashLocked = v); }
+function impostaTeamsLoaded(v){ return (teamsLoaded = v); }
+function impostaCurTeam(v){ return (curTeam = v); }
+function impostaBoardMode(v){ return (boardMode = v); }
+function impostaSelectedToken(v){ return (selectedToken = v); }
+function impostaSelectedDraw(v){ return (selectedDraw = v); }
+function impostaDrawTool(v){ return (drawTool = v); }
+function impostaGateError(v){ return (gateError = v); }
+function impostaAdminUnlocked(v){ return (adminUnlocked = v); }

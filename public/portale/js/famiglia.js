@@ -7,8 +7,8 @@ async function famigliaLogin(pin){
   if(!supabaseClient) return false;
   const { data, error } = await supabaseClient.rpc('famiglia_get', { p_pin: pin });
   if(error || !data) return false;
-  famPin = pin; F = data; famAt = Date.now(); ROLE = 'famiglia'; hashLocked = true; teamsLoaded = true;
-  if(F.squadra){ S.teams = [F.squadra]; curTeam = F.squadra.id; }   // per i nomi delle partite nel calendario
+  famPin = pin; F = data; famAt = Date.now(); impostaROLE('famiglia'); impostaHashLocked(true); impostaTeamsLoaded(true);
+  if(F.squadra){ S.teams = [F.squadra]; impostaCurTeam(F.squadra.id); }   // per i nomi delle partite nel calendario
   setInterval(aggiornaFamiglia, 60000);
   render();
   return true;

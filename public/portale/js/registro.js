@@ -544,7 +544,7 @@ document.addEventListener('click', e => {
       const f = newFriendly();
       const g = {id:uid('gm'), calId:f.id, date:f.date, opponent:'', home:true, comp:'Amichevole', dur:DEFAULT_DUR, og:'', pl:{}};
       R.games.push(g); openGameId = g.id; save('registro'); render(); window.scrollTo(0,0); break; }
-    case 'fradd': frAperta = newFriendly().id; save('registro'); render(); break;
+    case 'fradd': impostaFrAperta(newFriendly().id); save('registro'); render(); break;
     case 'gmdel': {
       const g = curGame(); if(!g) break;
       const fr = (R.friendlies||[]).find(f => f.id===g.calId);
@@ -732,3 +732,8 @@ async function downloadStatsPdf(){
     setStatus('Report pronto');
   }catch(e){ setStatus(e && e.code==='declined' ? 'Download annullato' : 'Download non riuscito'); }
 }
+
+/* Variabili di questo file cambiate anche da altri file: si cambiano solo da qui (passo verso i moduli) */
+function impostaOpenTrainingId(v){ return (openTrainingId = v); }
+function impostaOpenGameId(v){ return (openGameId = v); }
+function impostaOpenTestId(v){ return (openTestId = v); }

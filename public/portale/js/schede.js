@@ -138,7 +138,7 @@ function render(){
     return;
   }
   document.body.classList.toggle('ro', readOnly());
-  if(!allowedTabs().includes(tab)) tab = 'home';
+  if(!allowedTabs().includes(tab)) impostaTab('home');
   areaLast[areaOf(tab).k] = tab;
   writeRoute(false);
   renderChrome();
@@ -882,3 +882,8 @@ function viewPdf(){
     <div class="pages" id="pages"><p class="empty">Preparo l'anteprima…</p></div>
   </section>`;
 }
+
+/* Variabili di questo file cambiate anche da altri file: si cambiano solo da qui (passo verso i moduli) */
+function impostaSlotPick(v){ return (slotPick = v); }
+function impostaPinEditing(v){ return (pinEditing = v); }
+function impostaSlotPickAt(v){ return (slotPickAt = v); }

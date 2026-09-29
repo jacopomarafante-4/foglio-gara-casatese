@@ -10,14 +10,14 @@ document.addEventListener('click', e => {
   /* Scelta del giocatore per una posizione toccata sul campo. Il telefono manda un "clic" subito dopo il tocco
      che ha aperto l'elenco: se arriva nel primo mezzo secondo lo ignoriamo (chiuderebbe o sceglierebbe per sbaglio) */
   if((t.dataset.pickplayer || t.dataset.pickclear !== undefined || t.dataset.pickclose !== undefined) && Date.now() - slotPickAt < 450) return;
-  if(t.dataset.pickplayer){ if(slotPick != null) assignSlot(slotPick, t.dataset.pickplayer); slotPick = null; render(); return; }
-  if(t.dataset.pickclear !== undefined){ if(slotPick != null){ delete S.sheet.lineup[slotPick]; save('sheet'); } slotPick = null; render(); return; }
-  if(t.dataset.pickclose !== undefined){ slotPick = null; render(); return; }
+  if(t.dataset.pickplayer){ if(slotPick != null) assignSlot(slotPick, t.dataset.pickplayer); impostaSlotPick(null); render(); return; }
+  if(t.dataset.pickclear !== undefined){ if(slotPick != null){ delete S.sheet.lineup[slotPick]; save('sheet'); } impostaSlotPick(null); render(); return; }
+  if(t.dataset.pickclose !== undefined){ impostaSlotPick(null); render(); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
   const ADMIN_ONLY = ['padd','bulk','teamadd','exportbackup','caladd'];
   if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel || t.dataset.coachpin || t.dataset.coachdel || t.dataset.coachadd || t.dataset.teamcodeoff)) return;
-  if(t.dataset.teamgo){ curTeam = t.dataset.teamgo; tab = 'rosa'; writeRoute(true); subscribeTeam(); return; }
+  if(t.dataset.teamgo){ impostaCurTeam(t.dataset.teamgo); impostaTab('rosa'); writeRoute(true); subscribeTeam(); return; }
   if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
   /* Scout e direttori: account e PIN passano da /api/staff (admin e direttori) */
   if(t.dataset.staffpin && isAdmin() && !readOnly()){ const x = staff.find(p => p.id===t.dataset.staffpin); if(x && (!x.pin || confirm(`Rigenerare il codice di ${x.nome||''} ${x.cognome||''}? Quello vecchio smette di funzionare.`))) staffAction({azione:'pin', id:x.id}); return; }
@@ -34,7 +34,7 @@ document.addEventListener('click', e => {
   if(t.dataset.coachadd){ const tm = S.teams.find(x => x.id===t.dataset.coachadd); if(tm){ const c = {id:uid('m_'), name:'', code:''}; (tm.coaches ||= []).push(c); save('teams'); render(); $(`[data-coach="${tm.id}:${c.id}"]`)?.focus(); } return; }
   if(t.dataset.teamcodeoff){ const tm = S.teams.find(x => x.id===t.dataset.teamcodeoff); if(tm && confirm('Disattivare il PIN di squadra? Chi lo usa ancora non potrà più entrare: servirà il PIN personale.')){ delete tm.code; save('teams'); render(); } return; }
   if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genPin(); save('teams'); render(); } return; }
-  if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ curTeam = S.teams[0]?.id||null; subscribeTeam(); } else render(); } return; }
+  if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ impostaCurTeam(S.teams[0]?.id||null); subscribeTeam(); } else render(); } return; }
   if(t.dataset.pdel){ const id=t.dataset.pdel; S.players = S.players.filter(p=>p.id!==id); const l=S.sheet.lineup; Object.keys(l).forEach(k=>{if(l[k]===id) delete l[k]}); S.sheet.bench=S.sheet.bench.filter(b=>b!==id); save('roster'); save('sheet'); render(); return; }
   if(t.dataset.caldel){ S.calendar = S.calendar.filter(m=>m.id!==t.dataset.caldel); save('calendar'); render(); return; }
   /* Convocazioni dell'attività di base */
@@ -42,19 +42,19 @@ document.addEventListener('click', e => {
   if(t.dataset.adbdel){ const pp = partiteAdb(); if(confirm(`Togliere la partita ${+t.dataset.adbdel+1} e i suoi convocati?`)){ pp.splice(+t.dataset.adbdel, 1); save('sheet'); render(); } return; }
   if(t.dataset.callupid){ const id=t.dataset.callupid, st=t.dataset.callupstatus; S.sheet.callup ||= {}; S.sheet.callup[id] = S.sheet.callup[id]===st ? '' : st; save('sheet'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
-  if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); selectedPlayer=null; render(); } return; }
+  if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); impostaSelectedPlayer(null); render(); } return; }
   if(t.dataset.dropToken){
-    if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; selectedPlayer=null; save('sheet'); render(); }
+    if(selectedPlayer){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[t.dataset.dropToken]=selectedPlayer; impostaSelectedPlayer(null); save('sheet'); render(); }
     else { const sel = document.querySelector(`[data-atok="${t.dataset.dropToken}"]`); if(sel){ sel.scrollIntoView({block:'nearest', behavior:'smooth'}); sel.focus(); sel.showPicker?.(); } }
     return;
   }
   if(t.dataset.bench){ const id=t.dataset.bench; const b=S.sheet.bench; S.sheet.bench = b.includes(id) ? b.filter(x=>x!==id) : [...b,id]; save('sheet'); render(); return; }
   if(t.dataset.schemecard){ const id=t.dataset.schemecard; const order=[...mieiSchemi(), ...S.schemes].map(q=>q.id); let s=S.sheet.selected.filter(i=>i!==id); if(!S.sheet.selected.includes(id)) s.push(id); S.sheet.selected = s.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('sheet'); render(); return; }
-  if(t.dataset.open){ openSchemeId=t.dataset.open; boardMode = modificaBase(schemaDa(openSchemeId)) ? 'unico' : 'assign'; selectedToken=null; drawTool=null; selectedDraw=null; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.open){ impostaOpenSchemeId(t.dataset.open); impostaBoardMode(modificaBase(schemaDa(openSchemeId)) ? 'unico' : 'assign'); impostaSelectedToken(null); impostaDrawTool(null); impostaSelectedDraw(null); render(); window.scrollTo(0,0); return; }
   if(t.dataset.up || t.dataset.down){ const i=+(t.dataset.up??t.dataset.down), j=t.dataset.up!==undefined?i-1:i+1; if(j<0||j>=S.schemes.length) return; [S.schemes[i],S.schemes[j]]=[S.schemes[j],S.schemes[i]]; const order=S.schemes.map(q=>q.id); S.sheet.selected.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('schemes'); save('sheet'); render(); return; }
   const sc = schemaDa(openSchemeId);
   switch(act){
-    case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:'', coaches:[]}; S.teams.push(tm); save('teams'); if(!curTeam){ curTeam = tm.id; subscribeTeam(); } else render(); break; }
+    case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:'', coaches:[]}; S.teams.push(tm); save('teams'); if(!curTeam){ impostaCurTeam(tm.id); subscribeTeam(); } else render(); break; }
     case 'padd': S.players.push({id:uid('p'), name:''}); save('roster'); render(); const ins=document.querySelectorAll('[data-pname]'); ins[ins.length-1]?.focus(); break;
     case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
     case 'usenext': { const nm = t.dataset.usacal ? allCalendar().find(m => m.id===t.dataset.usacal) : nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.address=nm.address||''; S.sheet.venueLL=nm.ll||''; S.sheet.home=!!nm.home; S.sheet.convType=nm.friendly?'Amichevole':'Campionato'; save('sheet'); render(); } break; }
@@ -63,7 +63,7 @@ document.addEventListener('click', e => {
       lines.forEach(l => { const m = l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/); S.players.push({id:uid('p'), name:(m?m[1]:l).trim()}); });
       save('roster'); render(); break; }
     case 'newmatch': if(confirm('Svuotare formazione, panchina, convocazioni e dati partita? Rosa e schemi restano.')){ const keep = S.sheet.selected; S.sheet = defaultSheet(); S.sheet.selected = keep; save('sheet'); render(); } break;
-    case 'back': openSchemeId=null; selectedToken=null; boardMode='assign'; drawTool=null; selectedDraw=null; render(); break;
+    case 'back': impostaOpenSchemeId(null); impostaSelectedToken(null); impostaBoardMode('assign'); impostaDrawTool(null); impostaSelectedDraw(null); render(); break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
     case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
     case 'refresh': buildPreview(); break;
@@ -75,26 +75,26 @@ document.addEventListener('click', e => {
     case 'exportbackup': exportBackup(); break;
     case 'segnala': inviaSegnalazione(); break;
     case 'valuta': inviaValutazione(); break;
-    case 'valutaannulla': segValuta = null; segEsito = null; render(); break;
+    case 'valutaannulla': impostaSegValuta(null); impostaSegEsito(null); render(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(secureMode){
         setStatus('Accesso…');
-        coachLogin(val).then(ok => { gateError = !ok; setStatus(ok ? 'Sincronizzato' : ''); if(!ok) render(); });
+        coachLogin(val).then(ok => { impostaGateError(!ok); setStatus(ok ? 'Sincronizzato' : ''); if(!ok) render(); });
         break;
       }
       const tm = S.teams.find(x => (x.code||'') === val);
-      if(tm){ gateError = false; location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); break; }
-      gateError = true; render();
+      if(tm){ impostaGateError(false); location.hash = 'squadra=' + tm.code; resolveAccess(); subscribeTeam(); break; }
+      impostaGateError(true); render();
       break; }
     case 'adminlogin': adminLogin($('#gatepass')?.value || ''); break;
-    case 'gateadmin': adminUnlocked = true; gateError = false; try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break;
-    case 'gateback': adminUnlocked = false; gateError = false; try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
+    case 'gateadmin': impostaAdminUnlocked(true); impostaGateError(false); try{ localStorage.setItem('fg:adminpin','ok'); }catch(e){} render(); break;
+    case 'gateback': impostaAdminUnlocked(false); impostaGateError(false); try{ localStorage.removeItem('fg:adminpin'); }catch(e){} render(); break;
     case 'logout': logout(); break;
   }
 });
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && slotPick != null){ slotPick = null; render(); return; }
+  if(e.key === 'Escape' && slotPick != null){ impostaSlotPick(null); render(); return; }
   if(e.key !== 'Enter' || !e.target) return;
   if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
   else if(e.target.id?.startsWith('staffnew_')){ e.preventDefault(); $(`[data-staffadd="${e.target.id.slice(9)}"]`)?.click(); }
@@ -122,7 +122,7 @@ document.addEventListener('change', e => {
   if(e.target.dataset.staffname && isAdmin() && !readOnly()){ const x = staff.find(p => p.id===e.target.dataset.staffname); const v = e.target.value.trim(); if(x && v && v !== [x.nome, x.cognome].filter(Boolean).join(' ')) staffAction({azione:'nome', id:x.id, nome:v}); return; }
   const t = e.target;
   if(t.dataset.asview){ const v = t.value; if(v==='admin') switchView('admin'); else switchView('coach', v.split(':')[1]); return; }
-  if(t.dataset.curteam){ curTeam = t.value; openSchemeId = null; subscribeTeam(); return; }
+  if(t.dataset.curteam){ impostaCurTeam(t.value); impostaOpenSchemeId(null); subscribeTeam(); return; }
   /* Società: squadre speciali (preparatori dei portieri, responsabile organizzativo) */
   if(t.dataset.teamflag){ if(!isAdmin()) return; const [tid, flag] = t.dataset.teamflag.split(':'); const tm = S.teams.find(x => x.id===tid);
     if(tm && ['vedeTutte','organizza'].includes(flag)){ if(t.checked) tm[flag] = true; else delete tm[flag]; save('teams'); render(); } return; }
@@ -189,7 +189,7 @@ document.addEventListener('pointerdown', e => {
       const up = () => {
         slotEl.removeEventListener('pointermove', mv); slotEl.removeEventListener('pointerup', up); slotEl.removeEventListener('pointercancel', up);
         if(moved){ S.sheet.slotPos = S.sheet.slotPos || {}; S.sheet.slotPos[n] = {x:finalX, y:finalY}; save('sheet'); }
-        else { slotPick = n; slotPickAt = Date.now(); }   // solo un tocco: si sceglie il giocatore per questa posizione
+        else { impostaSlotPick(n); impostaSlotPickAt(Date.now()); }   // solo un tocco: si sceglie il giocatore per questa posizione
         render();
       };
       slotEl.addEventListener('pointermove', mv); slotEl.addEventListener('pointerup', up); slotEl.addEventListener('pointercancel', up);
@@ -228,7 +228,7 @@ document.addEventListener('pointerup', e => {
     const slot = under?.closest('[data-drop-slot]'), tok = under?.closest('[data-drop-token]');
     if(slot) assignSlot(slot.dataset.dropSlot, d.pid);
     else if(tok){ const ov = S.sheet.overrides[openSchemeId] ||= {}; ov[tok.dataset.dropToken] = d.pid; save('sheet'); }
-    selectedPlayer = null; render();
+    impostaSelectedPlayer(null); render();
   } else if(tab==='formazione'){
     const pid = d.pid;
     const curSlot = slotOf(pid);
@@ -241,7 +241,7 @@ document.addEventListener('pointerup', e => {
     }
     render();
   } else {
-    selectedPlayer = selectedPlayer===d.pid ? null : d.pid; render();
+    impostaSelectedPlayer(selectedPlayer===d.pid ? null : d.pid); render();
   }
 });
 document.addEventListener('pointercancel', () => { if(dnd){ clearInterval(dnd.scroller); dnd.ghost?.remove(); } dnd = null; });
