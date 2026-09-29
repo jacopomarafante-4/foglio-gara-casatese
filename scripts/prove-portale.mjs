@@ -19,7 +19,7 @@ const DIR = 'public/portale', errori = [];
 const html = readFileSync(`${DIR}/index.html`, 'utf8');
 const caricati = [...html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+)(\?v=[^"]+)?"/g)].map((m) => ({ file: m[1], versione: m[2] }));
 
-for (const { file, versione } of caricati) {
+for (const { file } of caricati) {   // la versione la controlla versioni-portale.mjs
   if (!existsSync(`${DIR}/${file}`)) errori.push(`index.html carica ${file}, che non esiste`);
 
 }
