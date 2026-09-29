@@ -1,8 +1,10 @@
 // Calendari Google ↔ Portale, dal pulsante del Calendario (Tutte le squadre) e dal salvataggio di amichevoli ed eventi.
-// Chi può: admin e direttori (sessione) e il responsabile organizzativo (PIN, squadra con "organizza", 0029).
+// Chi può: admin e direttori (sessione) e il responsabile organizzativo (PIN nella richiesta dal Portale, o la tessera
+// dalle pagine dell'app: lib/mister.ts; squadra con "organizza", 0029).
 // Legge e scrive il calendario del Portale con i permessi di chi chiama (RLS / funzioni coach_*): niente chiave di servizio.
 import { createClient as clientAnonimo } from '@supabase/supabase-js';
 import { getProfilo } from '@/lib/auth';
+import { getMister } from '@/lib/mister';
 import { createClient } from '@/lib/supabase/server';
 import { configurato, creaEvento, aggiornaEvento, cancellaEvento, type Calendario, CALENDARI } from '@/lib/google-calendar';
 import { applica, calendarioPartita, etaSquadra, partiteDaGoogle, titoloPartita, type Partita, type Squadra } from '@/lib/calendario-google';
@@ -29,7 +31,8 @@ async function accesso(pin?: string): Promise<Accesso | null> {
     };
   }
   const profilo = await getProfilo();
-  if (!profilo?.attivo || (profilo.ruolo !== 'admin' && profilo.ruolo !== 'direttore')) return null;
+  if (!profilo) { const mister = await getMister(); return mister ? accesso(mister.pin) : null; }
+  if (!profilo.attivo || (profilo.ruolo !== 'admin' && profilo.ruolo !== 'direttore')) return null;
   const db = await createClient();
   return {
     leggi: async (path) => { const { data, error } = await db.from('docs').select('data').eq('path', path).maybeSingle(); if (error) throw error; return data?.data ?? null; },

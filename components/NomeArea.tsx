@@ -6,5 +6,5 @@ export function NomeArea({ categoria }: { categoria?: string }) {
   const percorso = usePathname();
   if (categoria) return categoria;
   return percorso.startsWith('/societa') ? 'Società' : percorso.startsWith('/segreteria') ? 'Segreteria'
-    : percorso.startsWith('/modulistica') ? 'Modulistica' : 'Scouting';
+    : percorso.startsWith('/modulistica') ? 'Modulistica' : percorso.startsWith('/calendari/') ? 'Calendario' : 'Scouting';
 }

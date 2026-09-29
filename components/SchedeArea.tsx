@@ -1,6 +1,6 @@
 'use client';
 // Seconda riga dell'intestazione: le schede dell'area aperta. Scouting: le sue pagine; Società: Squadre (nel Portale),
-// Archivio documenti e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati; Modulistica: tutte e tre.
+// Archivio documenti e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati; Modulistica e Calendario: tutte.
 import { usePathname } from 'next/navigation';
 import { Scheda } from '@/components/Scheda';
 import type { Ruolo } from '@/lib/ruoli';
@@ -8,6 +8,16 @@ import type { Ruolo } from '@/lib/ruoli';
 export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
   const nelPortale = 'whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2.5 pt-2 font-display text-lg font-semibold text-grigio hover:text-inchiostro';
+  if (percorso.startsWith('/calendari/')) {
+    // La mia squadra (non per l'organizzativo), Tutte le squadre, Avvisi (admin, direttori, organizzativo)
+    return (
+      <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede del calendario">
+        {!organizza && <Scheda href="/calendari/squadra">La mia squadra</Scheda>}
+        <Scheda href="/calendari/tutte">Tutte le squadre</Scheda>
+        {(organizza || ruolo === 'admin' || ruolo === 'direttore') && <Scheda href="/calendari/avvisi">Avvisi</Scheda>}
+      </nav>
+    );
+  }
   if (percorso.startsWith('/modulistica')) {
     // Tutta nell'app (tappa 3); la Distinta non serve all'organizzativo
     return (

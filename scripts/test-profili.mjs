@@ -58,16 +58,18 @@ async function creaTemporanei() {
   temp.tess = t.id;
   await admin.from('tesserati_dati').insert({ tesserato_id: t.id, certificato_scadenza: '2026-10-10', quote: [{ rata: 'Rata di prova', importo: '1', pagata: false }] });
 }
+/* La pulizia riprova fino a 3 volte (rete che cade un attimo): il mister di prova ha un PIN valido e non deve restare */
+async function riprova(fn) { for (let i = 0; ; i++) { try { return await fn(); } catch (e) { if (i >= 2) throw e; await new Promise((ok) => setTimeout(ok, 3000)); } } }
 async function pulisci() {
-  try { const { data: d } = await admin.from('docs').select('data').eq('path', 'shared/teams').single();
+  try { await riprova(async () => { const { data: d, error } = await admin.from('docs').select('data').eq('path', 'shared/teams').single(); if (error) throw error;
     const org = d.data.items.find((t) => t.organizza); const prima = (org.coaches ?? []).length;
     org.coaches = (org.coaches ?? []).filter((c) => c.id !== 'm_test_auto');
-    if (org.coaches.length !== prima) await admin.from('docs').update({ data: d.data, updated_at: new Date().toISOString() }).eq('path', 'shared/teams');
+    if (org.coaches.length !== prima) { const r = await admin.from('docs').update({ data: d.data, updated_at: new Date().toISOString() }).eq('path', 'shared/teams'); if (r.error) throw r.error; } });
     R.pulizia.push('responsabile organizzativo di prova tolto'); } catch (e) { R.pulizia.push('ERRORE organizzativo: ' + e.message); }
-  try { if (temp.segUser) { await admin.from('codici_accesso').delete().eq('profilo_id', temp.segUser); await admin.auth.admin.deleteUser(temp.segUser); }
+  try { if (temp.segUser) await riprova(async () => { await admin.from('codici_accesso').delete().eq('profilo_id', temp.segUser); const r = await admin.auth.admin.deleteUser(temp.segUser); if (r.error && !/not found/i.test(r.error.message)) throw r.error; });
     R.pulizia.push('account segreteria di prova cancellato'); } catch (e) { R.pulizia.push('ERRORE segreteria: ' + e.message); }
-  try { if (temp.tess) await admin.from('tesserati').delete().eq('id', temp.tess);
-    const { count } = await admin.from('tesserati').select('id', { count: 'exact', head: true }).eq('giocatore_id', 'test_automatico');
+  try { const count = await riprova(async () => { const r = await admin.from('tesserati').delete({ count: 'exact' }).eq('giocatore_id', 'test_automatico'); if (r.error) throw r.error;
+      const c = await admin.from('tesserati').select('id', { count: 'exact', head: true }).eq('giocatore_id', 'test_automatico'); if (c.error) throw c.error; return c.count; });
     R.pulizia.push(`famiglia di prova cancellata (rimasti: ${count})`); } catch (e) { R.pulizia.push('ERRORE famiglia: ' + e.message); }
 }
 
@@ -304,5 +306,6 @@ const permessiKo = R.permessi.filter((x) => !x.ok);
 const uiKo = R.ui.map((x) => ({ profilo: x.profilo, n: (x.problemi?.length ?? 0) + (x.errori?.length ?? 0) })).filter((x) => x.n);
 permessiKo.forEach((x) => console.log(`✗ permesso: ${x.profilo} – ${x.prova}`));
 uiKo.forEach((x) => console.log(`✗ sito: ${x.profilo} – ${x.n} problemi (dettagli nel file di esito)`));
-if (R.errore || permessiKo.length || uiKo.length) process.exitCode = 1;
+R.pulizia.filter((x) => x.startsWith('ERRORE')).forEach((x) => console.log('✗ pulizia: ' + x.split(':')[0]));
+if (R.errore || permessiKo.length || uiKo.length || R.pulizia.some((x) => x.startsWith('ERRORE'))) process.exitCode = 1;
 else console.log('✓ tutto a posto');

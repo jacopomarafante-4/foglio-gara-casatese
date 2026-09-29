@@ -51,3 +51,36 @@ test('tessera: si legge solo con la stessa chiave e non è in chiaro', async () 
   assert.equal(await creaTessera('123456'), null);   // senza chiave: niente tessera
   process.env.SEGRETO_SESSIONE = prima;
 });
+
+import { applicaModifiche } from '@/lib/modifiche';
+test('modifiche voce per voce: le altre voci e il resto del documento restano', () => {
+  const base = { matches: [{ id: 'a', opponent: 'Lecco' }, { id: 'b', opponent: 'Como' }], altro: 1 };
+  const r = applicaModifiche(base, [
+    { lista: 'matches', id: 'b', voce: { id: 'b', opponent: 'Monza' } },
+    { lista: 'matches', id: 'c', voce: { id: 'c', opponent: 'Erba' } },
+    { lista: 'matches', id: 'a', voce: null },
+  ]);
+  assert.deepEqual(r.matches.map((m) => m.opponent), ['Monza', 'Erba']);
+  assert.equal(r.altro, 1);
+  assert.equal(base.matches.length, 2, 'il documento di partenza non cambia');
+  assert.deepEqual(applicaModifiche(null, [{ lista: 'items', id: 'x', voce: { id: 'x' } }]), { items: [{ id: 'x' }] });
+});
+
+import { corsie, durataPartita, statoPortiere, daGiocare } from '@/lib/calendario-portale';
+test('vista Giorno: partite accavallate affiancate, durata indicativa per età', () => {
+  const r = corsie([{ m: {}, inizio: 600, fine: 690 }, { m: {}, inizio: 630, fine: 720 }, { m: {}, inizio: 800, fine: 860 }]);
+  assert.deepEqual(r.map((e) => [e.corsia, e.corsie]), [[0, 2], [1, 2], [0, 1]]);
+  assert.equal(durataPartita({ team: { category: 'Under 10' } }), 60);
+  assert.equal(durataPartita({ team: { category: 'Under 12' } }), 75);
+  assert.equal(durataPartita({ team: { category: 'Under 17' } }), 90);
+  assert.equal(durataPartita({ evento: {}, time: '15:00', fine: '18:30' }), 210);
+  assert.equal(daGiocare({ date: '2026-01-01' }, '2026-02-01'), false);
+  assert.equal(daGiocare({}, '2026-02-01'), true);
+});
+test('preparatori: stato del portiere dalla convocazione giusta', () => {
+  const m = { id: 'c1', date: '2026-10-04', opponent: 'Lecco' };
+  assert.equal(statoPortiere({ date: '2026-10-04', opponent: 'lecco ', callup: { p1: 'CON', p2: 'INF' } }, m, 'p2'), 'INF');
+  assert.equal(statoPortiere({ adb: { partite: [{ calId: 'c1', conv: ['p1'] }] } }, m, 'p1'), 'CON');
+  assert.equal(statoPortiere({ adb: { partite: [{ calId: 'c1', conv: ['p1'] }] } }, m, 'p3'), 'NC');
+  assert.equal(statoPortiere({ date: '2026-10-11', callup: { p1: 'CON' } }, m, 'p1'), '');
+});

@@ -12,7 +12,7 @@ import { COOKIE_MISTER, leggiTessera } from '@/lib/tessera';
 export { COOKIE_MISTER } from '@/lib/tessera';
 export type SquadraMister = {
   id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean;
-  coaches?: { id: string; name?: string; eta?: string[] }[];
+  coaches?: { id: string; name?: string; eta?: number[] }[];
 };
 export type Mister = { pin: string; nome: string; squadra: SquadraMister };
 

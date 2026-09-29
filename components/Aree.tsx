@@ -7,7 +7,7 @@ import { ICONE_AREE } from '@/lib/condivisi';
 
 const AREE = [
   { k: 'home', etichetta: 'Home', href: '/portale/#/home' },
-  { k: 'calendario', etichetta: 'Calendario', href: '/portale/#/calendario' },
+  { k: 'calendario', etichetta: 'Calendario', href: '/calendari/squadra' },   // l'organizzativo va a Tutte le squadre
   { k: 'squadra', etichetta: 'Squadra', href: '/portale/#/rosa' },
   { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/distinta' },   // l'organizzativo (senza distinta) va al Programma
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
@@ -26,7 +26,7 @@ export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: b
       .map((a) => (a.k === 'scouting' ? { ...a, href: '/portale/#/segnala' } : a))
     : AREE;
   const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
-    : percorso.startsWith('/modulistica') ? 'modulistica' : 'scouting';
+    : percorso.startsWith('/modulistica') ? 'modulistica' : percorso.startsWith('/calendari/') ? 'calendario' : 'scouting';
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
       {aree.map((a) => {
