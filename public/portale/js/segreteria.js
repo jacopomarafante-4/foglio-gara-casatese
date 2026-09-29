@@ -49,16 +49,21 @@ async function fogliPin(elenco){
   const sqNome = id => (segRose||[]).find(s => s.id === id)?.category || '';
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   const W = 95, H = 66, X = [10, 105], Y = [12, 80, 148, 216];
+  /* in cima a ogni biglietto l'intestazione di tutti i documenti (FIGC-SGS, ACADEMY / CASATESE MERATE, stemma), in piccolo */
+  let intest = null;
+  try{ const [logo, figc] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]); await ensureFonts();
+    intest = immagineIntestazione(logo, figc, '').toDataURL('image/png'); }catch(e){}
   con.forEach((t, i) => {
     if(i && i % 8 === 0) doc.addPage();
     const x = X[i % 2], y = Y[Math.floor((i % 8) / 2)];
     doc.setDrawColor(180); doc.setLineDashPattern([1.5, 1.5], 0); doc.rect(x, y, W, H); doc.setLineDashPattern([], 0);
-    doc.setFillColor(0, 61, 165); doc.rect(x, y, W, 11, 'F');
-    doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('ACADEMY CASATESE MERATE · PORTALE', x + 4, y + 7);
-    doc.setTextColor(14, 26, 43); doc.setFontSize(13); doc.text(doc.splitTextToSize(t.nome_completo, W - 8)[0], x + 4, y + 19);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(sqNome(t.squadra_id), x + 4, y + 24);
-    doc.setFontSize(9); doc.text('1. Aprite ' + SITO.replace('https://', ''), x + 4, y + 32);
-    doc.text('2. Inserite il PIN:', x + 4, y + 37);
+    if(intest) doc.addImage(intest, 'PNG', x + 1, y + 1, W - 2, (W - 2) * 126 / 800);
+    else { doc.setTextColor(14, 26, 43); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('ACADEMY CASATESE MERATE', x + W / 2, y + 9, {align: 'center'}); }
+    doc.setDrawColor(0, 61, 165); doc.setLineWidth(0.4); doc.line(x + 4, y + 16.5, x + W - 4, y + 16.5);
+    doc.setTextColor(14, 26, 43); doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.text(doc.splitTextToSize(t.nome_completo, W - 8)[0], x + 4, y + 22.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(sqNome(t.squadra_id), x + 4, y + 27);
+    doc.text('1. Aprite ' + SITO.replace('https://', ''), x + 4, y + 33.5);
+    doc.text('2. Inserite il PIN:', x + 4, y + 38);
     doc.setFont('courier', 'bold'); doc.setFontSize(22); doc.text(t.pin.replace(/(\d{4})(\d{4})/, '$1 $2'), x + 4, y + 48);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(91, 107, 128);
     doc.text(doc.splitTextToSize('Convocazioni (con "ci sarà / non ci sarà"), calendario, avvisi, iscrizione, quote e documenti. Il PIN è personale: non datelo ad altri.', W - 8), x + 4, y + 56);

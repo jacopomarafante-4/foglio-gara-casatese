@@ -63,30 +63,38 @@ function paragrafi(doc, testo, w, size){
   return out;
 }
 const altezzaParagrafi = (pp, dopo) => pp.reduce((h, p) => h + p.righe.length * p.alt + dopo, 0);
-/* Pagina seguente: fascia sottile con società e titolo del modulo */
+/* Pagina seguente: fondo bianco, riga con società e titolo del modulo e un filo blu sotto */
 function nuovaPagina(doc, titolo){
   doc.addPage();
-  doc.setFillColor(...BLU_RGB); doc.rect(0, 0, 210, 9, 'F'); doc.setFillColor(212, 175, 55); doc.rect(0, 9, 150, 0.8, 'F'); doc.setFillColor(196, 30, 58); doc.rect(150, 9, 60, 0.8, 'F');
-  doc.setTextColor(255); riga1(doc, `ACADEMY CASATESE MERATE · ${titolo} (segue)`, PAG.sx, 6, LARGH, {size: 8.5, bold: true});
+  doc.setTextColor(...GRIGIO_RGB); riga1(doc, `ACADEMY CASATESE MERATE · ${titolo} (segue)`, PAG.sx, 10, LARGH, {size: 8.5, bold: true});
+  doc.setDrawColor(...BLU_RGB); doc.setLineWidth(0.4); doc.line(PAG.sx, 12.5, PAG.dx, 12.5);
   doc.setTextColor(...INK_RGB);
   return PAG.alto + 2;
 }
 
-/* Intestazione comune: stemma, società, titolo e sottotitolo che si adattano; restituisce la y da cui continuare */
-async function intestazionePdf(doc, titolo, sotto){
-  const logo = await loadLogo();
-  doc.setFillColor(...BLU_RGB); doc.rect(0, 0, 210, 32, 'F');
-  doc.setFillColor(212, 175, 55); doc.rect(0, 32, 150, 1.6, 'F'); doc.setFillColor(196, 30, 58); doc.rect(150, 32, 60, 1.6, 'F');
-  doc.setFillColor(255, 255, 255); doc.roundedRect(PAG.sx, 5, 22, 22, 2, 2, 'F');
-  /* stemma: se il browser non lo lascia copiare (es. pagina aperta come file) il PDF esce lo stesso, senza stemma */
-  if(logo) try{ const c = document.createElement('canvas'); c.width = logo.naturalWidth; c.height = logo.naturalHeight; c.getContext('2d').drawImage(logo, 0, 0);
-    doc.addImage(c.toDataURL('image/png'), 'PNG', PAG.sx + 1.5, 6.5, 19, 19); }catch(e){}
-  const x = PAG.sx + 28, w = PAG.dx - x;
-  doc.setTextColor(255); riga1(doc, 'ACADEMY CASATESE MERATE', x, 10.5, w, {size: 9, bold: true});
-  riga1(doc, titolo, x, 18.5, w, {size: 17, min: 11, bold: true});
-  if(sotto) blocco(doc, sotto, x, 24, w, {size: 9.5, min: 7.5, maxRighe: 2});
+/* Intestazione di tutti i documenti: la stessa della convocazione (fondo bianco: FIGC-SGS, ACADEMY / CASATESE MERATE /
+   categoria, stemma), poi un filo blu e la riga con il tipo di documento a sinistra e i dati a destra.
+   Restituisce la y da cui continuare. */
+async function intestazionePdf(doc, titolo, destra, categoria = ''){
+  let y;
+  try{
+    const [logo, figc] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]); await ensureFonts();
+    const img = immagineIntestazione(logo, figc, categoria), hMm = 210 * img.height / img.width;
+    doc.addImage(img.toDataURL('image/png'), 'PNG', 0, 0, 210, hMm); y = hMm + 2;
+  }catch(e){
+    /* pagina aperta come file (stemmi non copiabili): la stessa intestazione, solo testo */
+    doc.setTextColor(...INK_RGB);
+    riga1(doc, 'ACADEMY', PAG.sx, 14, LARGH, {size: 16, bold: true, align: 'center'});
+    riga1(doc, 'CASATESE MERATE', PAG.sx, 21, LARGH, {size: 18, bold: true, align: 'center'});
+    if(categoria) riga1(doc, categoria.toUpperCase(), PAG.sx, 27.5, LARGH, {size: 12, bold: true, align: 'center'});
+    y = 33;
+  }
+  doc.setDrawColor(...BLU_RGB); doc.setLineWidth(0.6); doc.line(PAG.sx, y, PAG.dx, y); y += 7;
+  doc.setTextColor(...BLU_RGB); const s = riga1(doc, titolo, PAG.sx, y, 95, {size: 13, min: 9, bold: true});
+  const occupato = doc.getTextWidth(perPdf(titolo)) * s / doc.getFontSize() + 6;
+  if(destra){ doc.setTextColor(...GRIGIO_RGB); riga1(doc, destra, PAG.sx + Math.min(occupato, 100), y, LARGH - Math.min(occupato, 100), {size: 10, min: 7, align: 'right'}); }
   doc.setTextColor(...INK_RGB);
-  return 44;
+  return y + 9;
 }
 function piePdf(doc){
   const n = doc.getNumberOfPages();
@@ -140,7 +148,7 @@ async function pdfDistinta(){
   const d = distinta(), T0 = TEAM(), cat = S.sheet.senzaCategoria ? '' : String(T0?.category || '').replace(/\s*-\s*attività di base/i, '');
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   const TITOLO = `DISTINTA · ${d.tipo.toUpperCase()}`;
-  let y = await intestazionePdf(doc, TITOLO, [cat, d.manifestazione].filter(Boolean).join(' · '));
+  let y = await intestazionePdf(doc, TITOLO, d.manifestazione, cat);
   /* Campi in alto: etichetta piccola, valore che si adatta alla sua riga */
   const campo = (l, v, x, w) => { doc.setTextColor(...GRIGIO_RGB); riga1(doc, l.toUpperCase(), x, y, w, {size: 7.5, bold: true});
     doc.setTextColor(...INK_RGB); riga1(doc, v || '', x, y + 5.5, w, {size: 11, min: 7.5}); doc.setDrawColor(200); doc.line(x, y + 7, x + w, y + 7); };
@@ -219,17 +227,8 @@ async function pdfComunicazione(a){
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   /* categoria nell'intestazione: quella scelta (Modulistica) o, dagli Avvisi, la squadra se è una sola */
   const categoria = a.mostraCat === false ? '' : (a.categoria ?? ((a.squadre||[]).length === 1 ? (S.teams.find(t => t.id === a.squadre[0])?.category || '') : ''));
-  /* stessa intestazione della convocazione (FIGC-SGS, ACADEMY / CASATESE MERATE / categoria, stemma) */
-  let y;
-  try{
-    const [logo, figc] = await Promise.all([loadLogo(), loadImg('figc-sgs-logo.png')]); await ensureFonts();
-    const img = immagineIntestazione(logo, figc, categoria), hMm = 210 * img.height / img.width;
-    doc.addImage(img.toDataURL('image/png'), 'PNG', 0, 0, 210, hMm); y = hMm + 2;
-  }catch(e){ y = await intestazionePdf(doc, 'COMUNICAZIONE', categoria); }   // (pagina aperta come file: niente stemmi)
-  doc.setDrawColor(...BLU_RGB); doc.setLineWidth(0.6); doc.line(PAG.sx, y, PAG.dx, y); y += 7;
-  doc.setTextColor(...BLU_RGB); riga1(doc, 'COMUNICAZIONE', PAG.sx, y, 100, {size: 13, bold: true});
-  doc.setTextColor(...GRIGIO_RGB);
-  riga1(doc, `Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, PAG.sx, y, LARGH, {size: 10, align: 'right'}); y += 11;
+  let y = await intestazionePdf(doc, 'COMUNICAZIONE', `Merate, ${a.data ? fmtDate(a.data) : fmtDate(todayISO())}`, categoria);
+  y += 2;
   const titolo = perPdf(a.titolo).trim();
   /* Grandezza del testo: la più grande (da 12,5 a 9) con cui titolo, testo e firma stanno in una pagina. Se non ci stanno
      nemmeno a 9 il testo è davvero lungo: carattere comodo (11) e più pagine */
@@ -297,7 +296,8 @@ async function pdfProgramma(){
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
   const quali = progSquadre.length ? progSquadre.map(id => siglaSquadra((tuttiCal||S.teams).find(t => t.id===id))).join(', ') : 'Tutte le squadre';
   const TITOLO = 'PROGRAMMA GARE';
-  let y = await intestazionePdf(doc, TITOLO, `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`);
+  const categoria = progSquadre.length === 1 ? ((tuttiCal||S.teams).find(t => t.id===progSquadre[0])?.category || '') : '';
+  let y = await intestazionePdf(doc, TITOLO, `Dal ${fmtDate(progDal)} al ${fmtDate(progAl)} · ${quali}`, categoria);
   const cols = [[PAG.sx, 24, 'Ora'], [PAG.sx + 24, 18, 'Squadra'], [PAG.sx + 42, 82, 'Partita / evento'], [PAG.sx + 124, LARGH - 124, 'Campo']];
   const testata = () => { doc.setFillColor(...BLU_RGB); doc.rect(PAG.sx, y, LARGH, 7, 'F'); doc.setTextColor(255);
     cols.forEach(([x, w, l]) => riga1(doc, l, x + 2, y + 4.8, w - 4, {size: 9, bold: true})); y += 8.5; doc.setTextColor(...INK_RGB); };

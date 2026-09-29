@@ -175,6 +175,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- Intestazione unica dei documenti (fondo bianco: FIGC-SGS, ACADEMY / CASATESE MERATE / categoria, stemma): `intestazioneSocieta()` e
+  `immagineIntestazione()` in `pdf.js`, usate da convocazioni (anche attività di base), report statistiche (`reportHeader` in
+  `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
+  seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
+  bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
 - 0042: `segnalazioni.impressione` (positiva / da_rivedere / negativa, `IMPRESSIONI` in `lib/tipi.ts`) al posto del voto 1–5 della
   prima impressione (vecchi voti convertiti: 4–5 positiva, 3 da rivedere, 1–2 negativa); `coach_segnala` riscritta. Nella segnalazione
   tutte le domande facoltative nello stesso stile (`Voto facoltativo` con `voci`): piede preferito (`SCELTE_PIEDE`, al posto di piede

@@ -565,17 +565,14 @@ document.addEventListener('change', e => {
 });
 
 /* ---------- Report PDF statistiche (solo admin) ---------- */
+/* Intestazione del report: la stessa di tutti i documenti (intestazioneSocieta in pdf.js), poi titolo e periodo */
 function reportHeader(x, imgs, title, sub){
-  const mx = 36, hh = 70, lw = 160, rw = 70;
-  if(imgs.figc){ const fh = lw*imgs.figc.height/imgs.figc.width; x.drawImage(imgs.figc, mx, 24+(hh-fh)/2, lw, fh); }
-  if(imgs.logo) x.drawImage(imgs.logo, W-mx-rw, 24, rw, rw);
-  const cx = W/2;
-  T(x, 'ACADEMY CASATESE MERATE', cx, 50, {size:26, weight:700, align:'center', max:700});
-  T(x, (TEAM()?.category || teamLabel()).toUpperCase(), cx, 78, {size:18, weight:700, align:'center', color:MUTED, max:700});
-  T(x, title, mx, 128, {size:24, weight:700, cond:true});
-  if(sub) T(x, sub, W-mx, 128, {size:13, color:MUTED, align:'right', max:600});
-  x.fillStyle = INK; x.fillRect(mx, 138, W-2*mx, 2);
-  return 154;
+  const mx = 36;
+  intestazioneSocieta(x, W, mx, 16, imgs.logo, imgs.figc, TEAM()?.category || teamLabel());
+  T(x, title, mx, 136, {size:24, weight:700, cond:true});
+  if(sub) T(x, sub, W-mx, 136, {size:13, color:MUTED, align:'right', max:600});
+  x.fillStyle = BLU; x.fillRect(mx, 146, W-2*mx, 2);
+  return 162;
 }
 /* Tabella generica: cols [{t, w, al}], rows [[...]], fill(ri, ci, val) → colore cella o null */
 function drawTable(x, x0, y0, cols, rows, o={}){

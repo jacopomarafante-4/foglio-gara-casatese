@@ -62,21 +62,16 @@ function testoInRiquadro(x, s, px, py, maxW, maxH, o = {}){
 const conCategoria = t => S.sheet.senzaCategoria ? '' : t;
 function header(x, title, sub, page, total){
   const s = S.sheet;
-  // Fascia blu con logo, titolo e dati della partita; sotto la striscia blu-oro-rosso
-  x.fillStyle = BLU_SCURO; x.fillRect(0, 0, W, 104);
-  striscia(x, 0, 104, W, 7);
+  // Intestazione su fondo bianco: stemma, titolo e dati della partita; sotto la sottile striscia blu-oro-rosso del club
   let tx = 36;
-  if(pdfLogo){
-    x.fillStyle = '#fff'; rrect(x, 30, 14, 76, 76, 14); x.fill();
-    x.drawImage(pdfLogo, 36, 20, 64, 64);
-    tx = 124;
-  }
-  T(x, title, tx, 58, {size:38, weight:700, cond:true, color:'#fff', max:560});
-  if(sub) T(x, sub, tx, 86, {size:16, weight:500, color:'#C9D6EE', max:560});
+  if(pdfLogo){ x.drawImage(pdfLogo, 32, 16, 72, 72); tx = 120; }
+  T(x, title, tx, 58, {size:38, weight:700, cond:true, color:BLU_SCURO, max:560});
+  if(sub) T(x, sub, tx, 86, {size:16, weight:500, color:MUTED, max:560});
+  striscia(x, 0, 102, W, 3);
   const luogo = luogoPartita(s);
   const right = [s.opponent ? (s.home ? `${teamLabel()} – ${s.opponent}` : `${s.opponent} – ${teamLabel()}`) : teamLabel(),
     [fmtDate(s.date), s.time].filter(Boolean).join(' · ore '), [luogo.venue, conCategoria(s.category)].filter(Boolean).join(' · ')].filter(Boolean);
-  right.forEach((r,i) => T(x, r, W-36, 40+i*24, {size:i?15:21, weight:i?500:700, align:'right', color:i?'#C9D6EE':'#fff', cond:!i, max:470}));
+  right.forEach((r,i) => T(x, r, W-36, 40+i*24, {size:i?15:21, weight:i?500:700, align:'right', color:i?MUTED:INK, cond:!i, max:470}));
   // Piè di pagina
   x.fillStyle = LINE_C; x.fillRect(36, H-26, W-72, 1);
   T(x, 'Academy Casatese Merate · Foglio gara', 36, H-9, {size:12, weight:600, color:MUTED});
@@ -148,7 +143,7 @@ function coverPage(total){
   });
   // Colonna destra, in un riquadro
   const rx = 890;
-  x.fillStyle = CARTA; rrect(x, rx-18, 128, W-36-(rx-18), H-128-48, 12); x.fill();
+  x.strokeStyle = LINE_C; x.lineWidth = 1.5; rrect(x, rx-18, 128, W-36-(rx-18), H-128-48, 12); x.stroke();
   x.fillStyle = BLU; x.fillRect(rx-18, 128+12, 4, 56);
   T(x, 'Modulo', rx, 150, {size:15, weight:600, color:MUTED});
   T(x, s.formation, rx, 196, {size:50, weight:700, cond:true, color:BLU_SCURO});
@@ -227,7 +222,7 @@ function schemePage(sc, page, total){
   if(sc.note) testoInRiquadro(x, sc.note, 36, oy + fh + 30, larghSx, H - 40 - (oy + fh + 22), {size:22, min:16, weight:700, cond:true});
   // Pannello compiti, in un riquadro
   const rx = 790, rw = W-36-rx;
-  x.fillStyle = CARTA; rrect(x, rx-16, 128, rw+16, H-128-48, 12); x.fill();
+  x.strokeStyle = LINE_C; x.lineWidth = 1.5; rrect(x, rx-16, 128, rw+16, H-128-48, 12); x.stroke();
   x.fillStyle = fav ? '#DDF0E2' : '#F8DDE1';
   x.beginPath(); x.roundRect ? x.roundRect(rx, 140, 110, 30, 15) : x.rect(rx,140,110,30); x.fill();
   T(x, fav ? 'A favore' : 'A sfavore', rx+55, 156, {size:17, weight:700, cond:true, align:'center', base:'middle', color:fav?'#1E5A36':'#8E0C22'});
@@ -337,14 +332,8 @@ function convocazioneAdbSheet(logoImg, figcImg, pp){
   c.mapsLinks = [];
   const mx = 32, tw = PW - mx*2;
   let y = 22;
-  // Intestazione: FIGC a sinistra, titolo al centro, stemma a destra
-  const hh = 84, lw = 180, rw = 80;
-  if(figcImg){ const fh = lw*figcImg.height/figcImg.width; x.drawImage(figcImg, mx, y+(hh-fh)/2, lw, fh); }
-  if(logoImg) x.drawImage(logoImg, PW-mx-rw, y+(hh-rw)/2, rw, rw);
-  const cx = PW/2, cmax = PW - 2*mx - lw - rw - 40;
-  T(x, 'CONVOCAZIONE', cx, y+30, {size:30, weight:700, align:'center', max:cmax});
-  T(x, 'ACADEMY CASATESE MERATE', cx, y+56, {size:16, weight:700, align:'center', max:cmax, color:BLU_SCURO});
-  T(x, conCategoria(String(TEAM()?.category || '').replace(/\s*-\s*attività di base/i, '').toUpperCase()), cx, y+80, {size:19, weight:700, align:'center', max:cmax});
+  // Intestazione: la stessa della convocazione e di tutti i documenti (FIGC-SGS, ACADEMY / CASATESE MERATE / categoria, stemma)
+  const hh = intestazioneSocieta(x, PW, mx, y, logoImg, figcImg, conCategoria(String(TEAM()?.category || '').replace(/\s*-\s*attività di base/i, '')));
   y += hh + 8;
   striscia(x, mx, y, tw, 4); y += 12;
 
