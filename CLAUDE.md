@@ -183,6 +183,13 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0048: `docs.versione` (sale a ogni modifica, trigger `docs_versione`) e `modificato_da` (`chi_salva()`: mister da `app.chi`, se no
+  l'account). Salvataggio con controllo: `salva_doc(path, data, versione)` (admin/direttori, RLS) e `coach_salva(pin, path, data, versione)`,
+  lettura `coach_leggi`; se la scheda è cambiata restituisce quella nuova e il Portale unisce (`unisci(base, mio, loro)` in
+  `public/portale/js/unisci.js`, elenchi con id voce per voce, prove in `tests/portale-unisci.test.mjs`) e riprova. Negli adattatori di
+  `core.js` (`basiDocs` = versione di partenza, aggiornata solo se il Portale mostra la scheda arrivata); senza la 0048 salvano come prima.
+  `docs_storico` (una versione ogni 10 minuti per scheda, 30 giorni, lettura solo admin) e `ripristina_doc(id)`: Società → Storico
+  modifiche (`modifiche.js`)
 - 0047: `coach_segnala` cerca prima se il giocatore è già in lista (qualsiasi annata) e risponde "esistente"; "cosa hai visto" e
   "portiere o movimento" obbligatori solo per un giocatore nuovo (anche in `segnala/actions.ts`). Il Portale controlla da sé solo
   annata e nome

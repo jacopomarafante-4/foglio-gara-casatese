@@ -31,13 +31,13 @@ const AREAS = [
   {k:'modulistica', label:'Modulistica', tabs:['distinta','programma','comunicazione']},
   {k:'scouting', label:'Scouting', tabs:['segnala','giocatori'], coach:true},
   {k:'segreteria', label:'Segreteria', tabs:['tesserati'], admin:true},
-  {k:'societa', label:'Società', tabs:['squadre','archivio'], admin:true}
+  {k:'societa', label:'Società', tabs:['squadre','archivio','modifiche'], admin:true}
 ];
 const TAB_NAMES = {home:'Home', rosa:'Rosa', calendario:'La mia squadra', calendariotutte:'Tutte le squadre', partita:'Dati partita',
   convocazioni:'Convocazioni', formazione:'Formazione', piazzati:'Piazzati', pdf:'Foglio gara', tabellini:'Tabellini',
   statallen:'Statistiche', statpartite:'Statistiche', campi:'Campi', allenamenti:'Presenze', test:'Test atletici', squadre:'Squadre',
   segnala:'Segnala un giocatore', giocatori:'Giocatori', avvisi:'Avvisi', tesserati:'Tesserati',
-  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma gare', distinta:'Distinta', comunicazione:'Comunicazione', archivio:'Archivio documenti'};
+  mieiallenamenti:'I miei allenamenti 🚧', programma:'Programma gare', distinta:'Distinta', comunicazione:'Comunicazione', archivio:'Archivio documenti', modifiche:'Storico modifiche'};
 /* nomi delle schede di versioni precedenti (link salvati) */
 const TAB_ALIASES = {statistiche:'statallen', registro:'allenamenti', eventi:'calendariotutte'};
 const gruppoDi = t => GRUPPI_SQUADRA.find(g => g.tabs.includes(t));
@@ -55,7 +55,9 @@ const SOLO_U15 = ['test'];
 const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t)) && !(SOLO_U15.includes(t) && etaSquadra() !== 15)
   && !(isOrg() && (t==='calendario' || t==='distinta'))
   /* Avvisi: li scrivono admin, direttori (in lettura) e organizzativo; i mister li vedono in Home */
-  && !(t==='avvisi' && !isAdmin() && !isOrg()));
+  && !(t==='avvisi' && !isAdmin() && !isOrg())
+  /* Storico delle schede (0048): solo l'admin, che può ripristinare */
+  && !(t==='modifiche' && (!isAdmin() || isDirettore())));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
 function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }

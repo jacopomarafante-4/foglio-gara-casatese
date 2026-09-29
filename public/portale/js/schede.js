@@ -152,6 +152,7 @@ function render(){
   else if(tab==='programma') v.innerHTML = viewProgramma();
   else if(tab==='comunicazione') v.innerHTML = viewComunicazione();
   else if(tab==='archivio') v.innerHTML = viewArchivio();
+  else if(tab==='modifiche') v.innerHTML = viewModifiche();
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();

@@ -170,7 +170,8 @@ gare da andare a vedere, storico delle squadre in cui hanno giocato.</li>
 <table>
 <tr><th style="width:18%">Ruolo</th><th style="width:25%">Dove entra</th><th>Cosa vede e cosa può fare</th></tr>
 <tr><td><b>Amministratore</b></td><td>Portale, Società e Scouting</td><td>Gestisce tutto: squadre, rose, calendari, schemi, PIN di tutti,
-stati dei giocatori osservati, gare da vedere, importazione delle distinte.</td></tr>
+stati dei giocatori osservati, gare da vedere, importazione delle distinte. In <b>Società → Storico modifiche</b> vede le versioni
+precedenti di ogni scheda del Portale (30 giorni) e le <b>ripristina</b>.</td></tr>
 <tr><td><b>Direttore</b></td><td>Portale (tutte le squadre), Società, Scouting</td><td><b>Squadre: vede tutto, non modifica.</b>
 <b>Società e Scouting: modifica come l'amministratore</b> (squadre, mister, scout, direttori e PIN; segnala, valuta,
 cambia gli stati, gestisce gare e doppioni).
@@ -445,6 +446,9 @@ direttori la scelgono dall'elenco. Non si
 pubblica: per farla arrivare nell'app usa Calendario → Avvisi.</li></ul>
 <p><b>Archivio</b>: ogni PDF che scarichi dal Portale (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia
 una copia in <b>Società → Archivio documenti</b>, con chi l'ha scaricato e quando. Lo vedono admin e direttori.</p>
+<p><b>Nessuna modifica persa.</b> Se due persone cambiano la stessa scheda nello stesso momento (per esempio il mister segna le
+presenze mentre un direttore aggiorna il calendario), il Portale unisce le due modifiche: restano tutte e due. Solo se cambiano
+proprio la stessa cosa vale l'ultima. In basso compare "Salvato, insieme alle modifiche di un altro".</p>
 <p>In Convocazioni, Distinta e Foglio gara la casella <b>Mostra la categoria nell'intestazione del PDF</b> decide se stampare la
 categoria (es. "Under 14 - Provinciale").</p>
 <h3>Tabellini</h3><ol class="passi">

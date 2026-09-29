@@ -205,6 +205,8 @@ function surname(n){
 function setStatus(t){ $('#status').textContent = t; }
 
 /* ---------- Salvataggio ---------- */
+/* Versione di ogni scheda da cui è partito questo Portale (0048): serve per non sovrascrivere le modifiche degli altri */
+const basiDocs = {};
 /* Condivisi: shared/teams, shared/schemes. Per squadra: roster/<id>, sheet/<id>, calendar/<id>, registro/<id> (presenze, partite, test) */
 function docPath(name, team=curTeam){ return (name==='teams'||name==='schemes') ? 'shared/'+name : name+'/'+team; }
 function payload(name){
@@ -229,9 +231,17 @@ function save(name){
   clearTimeout(timers[path]);
   timers[path] = setTimeout(async () => {
     try{
-      if(db) await db.doc(path).set(data);
-      else { try{ localStorage.setItem('fg:'+path, JSON.stringify(data)); }catch(e){} }
-      setStatus('Salvato');
+      if(db){
+        const salvato = await db.doc(path).set(data);
+        /* qualcun altro aveva cambiato la scheda nel frattempo: il database ha la versione unita (0048).
+           Si mostra quella, tenendo anche quello che ho cambiato io mentre salvava. */
+        if(salvato && !unisciUguali(salvato, data) && docPath(name) === path){
+          const adesso = clone(payload(name));
+          applyDoc(name, unisciUguali(adesso, data) ? salvato : unisci(data, adesso, salvato));
+          render(); setStatus('Salvato, insieme alle modifiche di un altro');
+        } else setStatus('Salvato');
+      }
+      else { try{ localStorage.setItem('fg:'+path, JSON.stringify(data)); }catch(e){} setStatus('Salvato'); }
     }catch(e){ setStatus('Non salvato: riprova'); }
     setTimeout(()=>{ pending[path] = false; }, 400);
   }, 600);
@@ -297,28 +307,44 @@ async function logout(){
 /* Fuori da Claude (es. GitHub Pages) il salvataggio condiviso passa da Supabase:
    stessa interfaccia doc().set()/onSnapshot() usata sopra, tabella "docs" a chiave/valore. */
 function makeSupabaseDb(client){
+  const vecchio = e => e && (e.code === 'PGRST202' || e.code === '42883' || /versione|salva_doc/.test(e.message || ''));
   return {
     doc(path){
       return {
+        /* Salva solo se la scheda è ancora alla versione da cui sono partito; se no unisce e riprova (0048).
+           Restituisce la scheda salvata. Senza la migrazione 0048: come prima (sovrascrive). */
         async set(data){
-          const { error } = await client.from('docs').upsert({ path, data, updated_at: new Date().toISOString() });
-          if(error) throw error;
+          let b = basiDocs[path], mio = data;
+          for(let prova = 0; prova < 4; prova++){
+            const { data: r, error } = await client.rpc('salva_doc', { p_path: path, p_data: mio, p_versione: b ? b.versione : null });
+            if(error && vecchio(error)){
+              const { error: e2 } = await client.from('docs').upsert({ path, data: mio, updated_at: new Date().toISOString() });
+              if(e2) throw e2; return mio;
+            }
+            if(error) throw error;
+            if(r.ok){ basiDocs[path] = { data: clone(mio), versione: r.versione }; return mio; }
+            mio = unisci(b ? b.data : r.data, mio, r.data); b = { data: r.data, versione: r.versione };
+          }
+          throw new Error('Troppe modifiche insieme: riprova');
         },
         async get(){
-          const { data, error } = await client.from('docs').select('data').eq('path', path).maybeSingle();
+          let { data, error } = await client.from('docs').select('data, versione').eq('path', path).maybeSingle();
+          if(error && /versione/.test(error.message || '')) ({ data, error } = await client.from('docs').select('data').eq('path', path).maybeSingle());
           if(error) throw error;
+          if(data) basiDocs[path] = { data: clone(data.data), versione: data.versione ?? null };
           return { exists: !!data, data: () => data && data.data };
         },
         onSnapshot(onNext, onError){
           let stopped = false;
-          client.from('docs').select('data').eq('path', path).maybeSingle()
-            .then(({data, error}) => { if(stopped) return; if(error){ onError && onError(error); return; } onNext({ exists: !!data, data: () => data && data.data }); })
+          /* la versione di partenza si aggiorna solo se il Portale mostra davvero la scheda arrivata (non mentre salva) */
+          const arriva = (d, v) => { if(!pending[path]) basiDocs[path] = { data: clone(d), versione: v ?? null }; onNext({ exists: d != null, data: () => d }); };
+          this.get().then(snap => { if(!stopped) arriva(snap.data(), basiDocs[path]?.versione); })
             .catch(e => { if(!stopped) onError && onError(e); });
           const channel = client.channel('docs:'+path)
             .on('postgres_changes', { event:'*', schema:'public', table:'docs', filter:`path=eq.${path}` }, payload => {
               if(stopped) return;
               if(payload.eventType === 'DELETE'){ onNext({ exists:false, data:()=>undefined }); return; }
-              onNext({ exists:true, data: () => payload.new.data });
+              arriva(payload.new.data, payload.new.versione);
             })
             .subscribe(status => { if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') onError && onError(new Error(status)); });
           return () => { stopped = true; client.removeChannel(channel); };
@@ -335,24 +361,46 @@ let coachPin = null, misterName = ''; /* PIN e nome del mister entrato (servono 
 const stableStr = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 function makeCoachDb(client, pin){
   const known = {};
-  const get = async path => { const { data, error } = await client.rpc('coach_get', { p_pin: pin, p_path: path }); if(error) throw error; return data; };
+  let versioni = true;   // false finché la migrazione 0048 non c'è: si usano coach_get / coach_set come prima
+  const vecchio = e => e && (e.code === 'PGRST202' || e.code === '42883');
+  /* lettura con la versione (coach_leggi, 0048) */
+  const leggi = async path => {
+    if(versioni){
+      const { data, error } = await client.rpc('coach_leggi', { p_pin: pin, p_path: path });
+      if(!error) return data || { data: null, versione: null };
+      if(!vecchio(error)) throw error;
+      versioni = false;
+    }
+    const { data, error } = await client.rpc('coach_get', { p_pin: pin, p_path: path }); if(error) throw error; return { data, versione: null };
+  };
   return {
     doc(path){
       return {
         async set(data){
-          const { error } = await client.rpc('coach_set', { p_pin: pin, p_path: path, p_data: data });
-          if(error) throw error;
-          known[path] = stableStr(data);
+          let b = basiDocs[path], mio = data;
+          for(let prova = 0; prova < 4; prova++){
+            if(versioni){
+              const { data: r, error } = await client.rpc('coach_salva', { p_pin: pin, p_path: path, p_data: mio, p_versione: b ? b.versione : null });
+              if(error && vecchio(error)) versioni = false;
+              else if(error) throw error;
+              else if(r.ok){ basiDocs[path] = { data: clone(mio), versione: r.versione }; known[path] = stableStr(mio); return mio; }
+              else { mio = unisci(b ? b.data : r.data, mio, r.data); b = { data: r.data, versione: r.versione }; continue; }
+            }
+            const { error } = await client.rpc('coach_set', { p_pin: pin, p_path: path, p_data: mio });
+            if(error) throw error;
+            known[path] = stableStr(mio); return mio;
+          }
+          throw new Error('Troppe modifiche insieme: riprova');
         },
-        async get(){ const d = await get(path); return { exists: d != null, data: () => d }; },
+        async get(){ const r = await leggi(path); basiDocs[path] = { data: clone(r.data), versione: r.versione }; return { exists: r.data != null, data: () => r.data }; },
         onSnapshot(onNext, onError){
           let stopped = false;
           const tick = async () => {
             try{
-              const d = await get(path);
+              const r = await leggi(path), d = r.data;
               if(stopped) return;
               const k = stableStr(d);
-              if(k !== known[path]){ known[path] = k; onNext({ exists: d != null, data: () => d }); }
+              if(k !== known[path]){ known[path] = k; if(!pending[path]) basiDocs[path] = { data: clone(d), versione: r.versione }; onNext({ exists: d != null, data: () => d }); }
             }catch(e){ if(!stopped) onError && onError(e); }
           };
           tick(); const iv = setInterval(tick, 15000);
