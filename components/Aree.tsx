@@ -9,19 +9,24 @@ const AREE = [
   { k: 'home', etichetta: 'Home', href: '/portale/#/home' },
   { k: 'calendario', etichetta: 'Calendario', href: '/portale/#/calendario' },
   { k: 'squadra', etichetta: 'Squadra', href: '/portale/#/rosa' },
-  { k: 'modulistica', etichetta: 'Modulistica', href: '/portale/#/distinta' },
+  { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/programma' },
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
   { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre' },
 ];
 
-/** Admin e direttori vedono tutte le aree, la segreteria solo la sua (come nel Portale); gli scout hanno solo lo Scouting,
- *  quindi niente barra */
-export function Aree({ ruolo }: { ruolo: Ruolo }) {
+/** Come allowedAreas() del Portale: admin e direttori vedono tutte le aree, la segreteria solo la sua; i mister niente
+ *  Segreteria né Società, e il loro Scouting è quello del Portale (Segnala, Giocatori); l'organizzativo niente Squadra né
+ *  Scouting. Gli scout hanno solo lo Scouting, quindi niente barra */
+export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: boolean }) {
   const percorso = usePathname();
-  if (ruolo !== 'admin' && ruolo !== 'direttore' && ruolo !== 'segreteria') return null;
-  const aree = ruolo === 'segreteria' ? AREE.filter((a) => a.k === 'segreteria') : AREE;
-  const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria' : 'scouting';
+  if (ruolo === 'scout') return null;
+  const aree = ruolo === 'segreteria' ? AREE.filter((a) => a.k === 'segreteria')
+    : ruolo === 'mister' ? AREE.filter((a) => a.k !== 'segreteria' && a.k !== 'societa' && !(organizza && (a.k === 'squadra' || a.k === 'scouting')))
+      .map((a) => (a.k === 'scouting' ? { ...a, href: '/portale/#/segnala' } : a))
+    : AREE;
+  const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
+    : percorso.startsWith('/modulistica') ? 'modulistica' : 'scouting';
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
       {aree.map((a) => {

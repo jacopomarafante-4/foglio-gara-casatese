@@ -55,8 +55,17 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   direttori e segreteria; ogni pagina controlla il suo ruolo; intestazione comune `components/Intestazione.tsx`). Fatte: Società →
   Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
   (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`; Segreteria → Tesserati (`/segreteria`, admin,
-  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area). Le aree dei mister
-  (Modulistica, Calendario, Squadra) aspettano un accesso dei mister alle pagine dell'app (oggi entrano solo col PIN nel Portale). Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
+  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area); Modulistica →
+  Programma gare (`/modulistica/programma`, admin, direttori e mister; regole in `lib/programma.ts`, PDF con `lib/pdf-moduli.ts` =
+  impaginazione di modulistica.js, copia nell'archivio con l'azione `archiviaPdf`). Elenco delle schede portate: `NELL_APP` in
+  `lib/condivisi.ts` (lo usa anche il Portale).
+- Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
+  d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).
+  La crea `accedi` col PIN di un mister (e la toglie a ogni altro PIN), la toglie `esci` e `/esci` (uscita dal Portale). Il proxy
+  lascia passare chi ha la tessera; `getMister()` (`lib/mister.ts`) la verifica con `coach_team` e le pagine leggono con le
+  funzioni `coach_*` (niente account né migrazioni: i permessi restano quelli del database). Un mister che apre una pagina
+  dell'app senza accesso passa dal PIN e ci torna (dal Portale, che tiene il PIN in `sessionStorage`). Senza `SEGRETO_SESSIONE` i
+  mister restano nel solo Portale. Uscendo dall'app `/?uscito=1` toglie anche il PIN del Portale. Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
   (archivio.js, modifiche.js, segreteria.js) è tolto. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
   Società `squadre`: `save()` non scrive e ricarica il dato vero, campi `readonly`, pulsanti nascosti con `.ro`); nel database
@@ -77,7 +86,8 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
   Prima di usare API Next.js controlla la documentazione in `node_modules/next/dist/docs/`.
 - Supabase: database Postgres, login, storage. Client in `lib/supabase/` (`server.ts` per server, `client.ts` per browser).
 - Tailwind CSS v4: colori e font del club definiti in `app/globals.css` (`bg-blu`, `text-oro`, `font-display`…).
-- Pubblicazione: Vercel, variabili `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN`.
+- Pubblicazione: Vercel, variabili `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN`, `SEGRETO_SESSIONE`
+  (tessera dei mister, almeno 32 caratteri casuali).
 - Server Actions per i form (vedi `app/auth/actions.ts`), `useActionState` nei componenti client.
 
 ## Regole
@@ -267,7 +277,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   cambia più da "Modifica dati"
 - 0034: i direttori scrivono `calendar/*`, `shared/eventi`, `shared/avvisi` (come l'organizzativo; `puoOrganizzare()` = admin,
   direttori, organizzativo). Modulistica in `public/portale/js/modulistica.js`, area **Modulistica** del Portale: Distinta (`sheet.distinta`),
-  Programma gare dal–al (PDF in ordine di categoria, dalla più grande, poi giorno e ora: `ordineProgramma`), Comunicazione (`viewComunicazione`, modelli degli avvisi; PDF con la stessa intestazione della convocazione,
+  Programma gare dal–al (ora nell'app, `/modulistica/programma`; PDF in ordine di categoria, dalla più grande, poi giorno e ora: `ordineProgramma` in `lib/programma.ts`), Comunicazione (`viewComunicazione`, modelli degli avvisi; PDF con la stessa intestazione della convocazione,
   `intestazioneSocieta`/`immagineIntestazione` in `pdf.js`; spunta "Mostra la categoria": mister = la sua, staff la sceglie; anche Avvisi → Scarica PDF). Impaginazione automatica
   in testa a `modulistica.js` (`riga1` una riga che rimpicciolisce e poi taglia con "…", `blocco`/`misuraBlocco` su più righe,
   `paragrafi` con elenchi rientrati e righe giustificate, `nuovaPagina` con fascia "segue"): la comunicazione sceglie la grandezza

@@ -14,7 +14,8 @@ const kb = (n: number) => (n > 1048576 ? `${(n / 1048576).toFixed(1).replace('.'
 const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', ...o }).format(new Date(d));
 
 export default async function Archivio({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const profilo = (await getProfilo())!;
+  const profilo = await getProfilo();
+  if (!profilo) redirect('/portale/');   // mister con la tessera: qui non entra
   if (!vedeTutto(profilo.ruolo)) redirect(profilo.ruolo === 'segreteria' ? '/segreteria' : '/home');
   const { tipo = '', squadra = '', q = '', ok, errore, mostra } = await searchParams;
   const supabase = await createClient();

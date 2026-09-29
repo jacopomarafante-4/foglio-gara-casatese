@@ -1,5 +1,5 @@
 /* FILE GENERATO da lib/condivisi.ts con "npm run condivisi": non modificarlo qui.
-   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore. */
+   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, NELL_APP, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore. */
 // Regole comuni a Scouting (Next) e Portale (public/portale): scritte una volta sola, qui.
 // Il Portale non ha un passaggio di build: `npm run condivisi` (scripts/genera-condivisi.mjs) toglie i tipi e crea
 // public/portale/js/condivisi.js (file generato, da non modificare). Le prove rapide falliscono se non è aggiornato.
@@ -33,6 +33,12 @@ const ICONE_AREE                         = {
   modulistica:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
   scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
+};
+
+/** Schede del Portale già portate nell'app (tappa 3): nel Portale si aprono lì (`goTab` in portale.js); un mister che apre
+ *  una di queste pagine senza essere entrato passa dal PIN e ci torna (`accedi` in app/auth/actions.ts) */
+const NELL_APP                         = {
+  archivio: '/societa/archivio', modifiche: '/societa/modifiche', tesserati: '/segreteria', programma: '/modulistica/programma',
 };
 
 /* ---------- Squadre e categorie ---------- */

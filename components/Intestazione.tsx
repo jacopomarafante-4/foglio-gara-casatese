@@ -1,16 +1,21 @@
 import Image from 'next/image';
 import { esci } from '@/app/auth/actions';
 import { ETICHETTA_RUOLO, nomeCompleto, puoSegnalare, type Profilo } from '@/lib/ruoli';
+import type { Mister } from '@/lib/mister';
 import { Striscia } from '@/components/Striscia';
 import { Aree } from '@/components/Aree';
 import { SchedeArea } from '@/components/SchedeArea';
 import { NomeArea } from '@/components/NomeArea';
 
 /** Intestazione di tutte le pagine dell'app: la stessa del Portale squadre (public/portale), con la barra delle aree
- *  e le schede dell'area aperta. La usano i layout dello Scouting, app/(app), e delle aree portate dal Portale, app/(aree). */
-export function Intestazione({ profilo }: { profilo: Profilo }) {
-  const casa = profilo.ruolo === 'admin' || profilo.ruolo === 'direttore' ? '/portale/#/home'
-    : profilo.ruolo === 'segreteria' ? '/segreteria' : '/home';
+ *  e le schede dell'area aperta. La usano i layout dello Scouting, app/(app), e delle aree portate dal Portale, app/(aree).
+ *  Chi è entrato: un account (profilo) o un mister col PIN (tessera, lib/mister.ts). */
+export function Intestazione({ profilo, mister }: { profilo?: Profilo; mister?: Mister }) {
+  const ruolo = profilo?.ruolo ?? 'mister';
+  const nome = profilo ? nomeCompleto(profilo) : mister?.nome ?? 'Mister';
+  const organizza = !!mister?.squadra.organizza;
+  const casa = ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'mister' ? '/portale/#/home'
+    : ruolo === 'segreteria' ? '/segreteria' : '/home';
   return (
     <div className="sticky top-0 z-20 bg-carta">
       <header className="bg-blu text-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -21,27 +26,27 @@ export function Intestazione({ profilo }: { profilo: Profilo }) {
           <div className="min-w-0">
             <div className="font-display text-2xl font-bold leading-none max-sm:text-xl">
               Portale Academy Casatese Merate
-              <small className="mt-1 block font-sans text-[13px] font-medium text-white/80"><NomeArea /></small>
+              <small className="mt-1 block font-sans text-[13px] font-medium text-white/80"><NomeArea categoria={mister?.squadra.category} /></small>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-wider ${
-                  profilo.ruolo === 'admin' ? 'bg-oro text-inchiostro' : 'bg-white text-blu'
+                  ruolo === 'admin' ? 'bg-oro text-inchiostro' : 'bg-white text-blu'
                 }`}
               >
-                {ETICHETTA_RUOLO[profilo.ruolo]}
+                {organizza ? 'Organizzazione' : ETICHETTA_RUOLO[ruolo]}
               </span>
-              <span className="font-display text-lg font-semibold">{nomeCompleto(profilo)}</span>
+              <span className="font-display text-lg font-semibold">{nome}</span>
               <form action={esci}>
                 <button className="rounded-md px-2 py-1 text-[13px] font-medium text-white/85 hover:bg-white/10">Esci</button>
               </form>
             </div>
           </div>
         </div>
-        <Aree ruolo={profilo.ruolo} />
+        <Aree ruolo={ruolo} organizza={organizza} />
       </header>
       <Striscia />
-      <SchedeArea ruolo={profilo.ruolo} segnala={puoSegnalare(profilo.ruolo)} />
+      <SchedeArea ruolo={ruolo} segnala={puoSegnalare(ruolo)} organizza={organizza} />
     </div>
   );
 }

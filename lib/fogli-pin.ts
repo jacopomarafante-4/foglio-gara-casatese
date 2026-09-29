@@ -1,42 +1,12 @@
 // Foglio PIN delle famiglie (PDF, solo nel browser): biglietti da ritagliare, 8 per pagina, da consegnare a mano
 // (niente WhatsApp). In cima a ogni biglietto l'intestazione di tutti i documenti, in piccolo: la stessa di
-// intestazioneSocieta() in public/portale/js/pdf.js (FIGC-SGS a sinistra, ACADEMY / CASATESE MERATE, stemma a destra).
+// intestazioneSocieta() in public/portale/js/pdf.js (FIGC-SGS a sinistra, ACADEMY / CASATESE MERATE, stemma a destra),
+// da lib/pdf-moduli.ts.
 // Non si archivia (contiene credenziali).
 
+import { immagineIntestazione, scarica } from '@/lib/pdf-moduli';
+
 const SITO = 'academy-casatese.vercel.app';
-const INK = '#15202B';
-
-function carica(src: string) {
-  return new Promise<HTMLImageElement | null>((ok) => {
-    const img = new Image();
-    img.onload = () => ok(img);
-    img.onerror = () => ok(null);
-    img.src = src;
-  });
-}
-
-/** Intestazione della società come immagine larga 800 e alta 126 (come immagineIntestazione del Portale, senza categoria) */
-async function immagineIntestazione() {
-  const [logo, figc] = await Promise.all([carica('/portale/casatese-logo.png'), carica('/portale/figc-sgs-logo.png')]);
-  await Promise.all(['700 26px Barlow', '700 30px Barlow'].map((f) => document.fonts.load(f).catch(() => null)));
-  const PW = 800, PH = 126, PK = 3, mx = 40, y = 30, hh = 96, lw = 200, rw = 88;
-  const c = document.createElement('canvas');
-  c.width = PW * PK; c.height = PH * PK;
-  const x = c.getContext('2d')!;
-  x.scale(PK, PK); x.fillStyle = '#fff'; x.fillRect(0, 0, PW, PH);
-  if (figc) { const fh = (lw * figc.height) / figc.width; x.drawImage(figc, mx, y + (hh - fh) / 2, lw, fh); }
-  if (logo) x.drawImage(logo, PW - mx - rw, y + (hh - rw) / 2, rw, rw);
-  const cx = (mx + lw + PW - mx - rw) / 2, cmax = PW - 2 * mx - lw - rw - 16;
-  const testo = (s: string, py: number, size: number) => {
-    let sz = size;
-    x.font = `700 ${sz}px "Barlow",Arial,sans-serif`;
-    while (x.measureText(s).width > cmax && sz > 8) { sz -= 0.5; x.font = `700 ${sz}px "Barlow",Arial,sans-serif`; }
-    x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(s, cx, py);
-  };
-  testo('ACADEMY', y + 38, 26);
-  testo('CASATESE MERATE', y + 72, 30);
-  return c.toDataURL('image/png');
-}
 
 export type BigliettoPin = { nome: string; categoria: string; pin: string };
 
@@ -48,7 +18,7 @@ export async function scaricaFogliPin(elenco: BigliettoPin[]) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
   const W = 95, H = 66, X = [10, 105], Y = [12, 80, 148, 216];
   let intest: string | null = null;
-  try { intest = await immagineIntestazione(); } catch { /* senza intestazione: solo il nome della società */ }
+  try { intest = (await immagineIntestazione()).dataUrl; } catch { /* senza intestazione: solo il nome della società */ }
   con.forEach((t, i) => {
     if (i && i % 8 === 0) doc.addPage();
     const x = X[i % 2], y = Y[Math.floor((i % 8) / 2)];
@@ -65,9 +35,6 @@ export async function scaricaFogliPin(elenco: BigliettoPin[]) {
     doc.text(doc.splitTextToSize('Convocazioni (con "ci sarà / non ci sarà"), calendario, avvisi, iscrizione, quote e documenti. Il PIN è personale: non datelo ad altri.', W - 8), x + 4, y + 56);
   });
   const nome = `PIN_FAMIGLIE_${(con[0].categoria || 'squadra').replace(/[^\w]+/g, '_').toUpperCase()}.pdf`;
-  const url = URL.createObjectURL(doc.output('blob'));
-  const a = document.createElement('a');
-  a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  scarica(nome, doc.output('blob'));
   return true;
 }
