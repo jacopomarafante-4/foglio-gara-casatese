@@ -30,11 +30,14 @@ export async function salvaSegnalazione(formData: FormData) {
     const cognome = maiuscoleIniziali(testo(formData, 'cognome'));
     const nome = maiuscoleIniziali(testo(formData, 'nome'));
     const descrizione = testo(formData, 'descrizione');
-    const ruolo = valoreValido(RUOLI_CAMPO, formData.get('ruolo'));
+    // ruolo in due passi (0046): portiere, oppure la linea del giocatore di movimento ("movimento" se non indicata)
+    const tipo = formData.get('tipo');
+    const ruolo = tipo === 'portiere' ? 'portiere' : tipo === 'movimento' ? valoreValido(RUOLI_CAMPO, formData.get('linea')) ?? 'movimento' : null;
     const piede = valoreValido(PIEDI, formData.get('piede'));
     const nomeSocieta = testo(formData, 'societa');
 
     if (!annata) errore('Indica l’annata.');
+    if (!ruolo) errore('Indica se è un portiere o un giocatore di movimento.');
     if (!cognome && !descrizione)
       errore('Serve il cognome oppure una descrizione per riconoscerlo (es. "N.8, biondo").');
 

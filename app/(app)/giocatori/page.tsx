@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import {
-  annateDisponibili, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type Piede, type RuoloCampo, type StatoGiocatore,
+  annateDisponibili, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type Piede, type RuoloCampo, type RuoloPreciso, etichettaRuolo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
@@ -25,6 +25,7 @@ type Riga = {
   descrizione: string | null;
   annata: number;
   ruolo: RuoloCampo | null;
+  ruolo_preciso: RuoloPreciso | null;
   piede: Piede | null;
   stato: StatoGiocatore;
   osservato: boolean;
@@ -147,7 +148,7 @@ export default async function Giocatori({
     let q = supabase
       .from('giocatori')
       .select(
-        'id, cognome, nome, descrizione, annata, ruolo, piede, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
+        'id, cognome, nome, descrizione, annata, ruolo, ruolo_preciso, piede, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
           'segnalazioni(data, impressione, piede, tecnica, motoria, tattica, mentale), ' +
           'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
@@ -457,7 +458,7 @@ export default async function Giocatori({
                           {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                         </Link>
                       </td>
-                      {cella(r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : <span className="text-grigio">–</span>)}
+                      {cella(etichettaRuolo(r.g) ?? <span className="text-grigio">–</span>, etichettaRuolo(r.g) ?? undefined)}
                       {cella(piede(r.g))}
                       {cella(stato(r.g))}
                       {cella(segnalazione(r))}
@@ -494,7 +495,7 @@ export default async function Giocatori({
                     </p>
                     <p className="text-sm text-grigio">
                       <Annata annata={r.g.annata} />
-                      {r.g.ruolo && ` · ${RUOLI_CAMPO[r.g.ruolo]}`}
+                      {etichettaRuolo(r.g) && ` · ${etichettaRuolo(r.g)}`}
                       {piedeDi(r.g) && ` · piede ${PIEDI_BREVI[piedeDi(r.g)!].toLowerCase()}`}
                     </p>
                   </div>

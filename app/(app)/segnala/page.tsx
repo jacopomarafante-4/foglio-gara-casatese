@@ -4,7 +4,7 @@ import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta } from '@/lib/societa';
-import { annateDisponibili, AREE, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, RUOLI_CAMPO, SCELTE_PIEDE } from '@/lib/tipi';
+import { annateDisponibili, AREE, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, LINEE, SCELTE_PIEDE, TIPI_GIOCATORE } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -63,23 +63,31 @@ export default async function Segnala({
           <input type="hidden" name="giocatore_id" value={giocatore.id} />
         ) : (
           <Sezione n={1} titolo="Chi è" sotto="Se non sai il nome, descrivilo: si completa dopo.">
-            <div className="grid grid-cols-2 gap-3">
-              <Etichetta testo="Annata *">
-                <select name="annata" required className="campo" defaultValue="">
-                  <option value="" disabled>Scegli</option>
-                  {annateDisponibili().map((a) => (
-                    <option key={a} value={a}>{a}</option>
+            <Etichetta testo="Annata *">
+              <select name="annata" required className="campo" defaultValue="">
+                <option value="" disabled>Scegli</option>
+                {annateDisponibili().map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </Etichetta>
+            {/* ruolo in due passi (0046): portiere o movimento, poi la linea solo per chi è di movimento */}
+            <div className="group space-y-3">
+              <fieldset>
+                <legend className="mb-1 block text-sm font-medium">Portiere o giocatore di movimento? *</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {TIPI_GIOCATORE.map(([v, e]) => (
+                    <label key={v}>
+                      <input type="radio" name="tipo" value={v} required className="peer sr-only" />
+                      <span className="block min-h-11 cursor-pointer rounded-lg border border-linea bg-white px-3 py-2.5 text-center font-display text-base font-bold hover:border-blu peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-oro">{e}</span>
+                    </label>
                   ))}
-                </select>
-              </Etichetta>
-              <Etichetta testo="Ruolo">
-                <select name="ruolo" className="campo" defaultValue="">
-                  <option value="">Non so</option>
-                  {Object.entries(RUOLI_CAMPO).map(([v, e]) => (
-                    <option key={v} value={v}>{e}</option>
-                  ))}
-                </select>
-              </Etichetta>
+                </div>
+              </fieldset>
+              <div className="hidden group-has-[[value=movimento]:checked]:block">
+                <span className="mb-1 block text-sm font-medium">In che linea gioca? <span className="font-normal text-grigio">(facoltativo)</span></span>
+                <SceltaRapida nome="linea" etichetta="Linea" voci={LINEE.map(([v, e, d]) => [v, `${e} · ${d}`])} />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Etichetta testo="Cognome">
@@ -139,7 +147,7 @@ export default async function Segnala({
           </div>
         </Sezione>
 
-        <BarraSalva testo="Salva segnalazione" nota="* obbligatori: annata, cosa hai visto e cognome (o come riconoscerlo)" />
+        <BarraSalva testo="Salva segnalazione" nota="* obbligatori: annata, portiere o movimento, cosa hai visto e cognome (o come riconoscerlo)" />
       </form>
     </div>
   );

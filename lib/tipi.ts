@@ -1,6 +1,7 @@
 // Valori e etichette usati in tutta l'app (devono corrispondere ai tipi SQL)
 
-export type RuoloCampo = 'portiere' | 'difensore' | 'centrocampista' | 'attaccante';
+/** Linea di campo; 'movimento' = giocatore di movimento con la linea non ancora indicata (0046) */
+export type RuoloCampo = 'portiere' | 'difensore' | 'centrocampista' | 'attaccante' | 'movimento';
 export type Piede = 'destro' | 'sinistro' | 'ambidestro';
 export type StatoGiocatore =
   | 'in_lista' | 'in_osservazione' | 'da_rivedere' | 'inserito' | 'da_non_inserire';
@@ -11,7 +12,23 @@ export const RUOLI_CAMPO: Record<RuoloCampo, string> = {
   difensore: 'Difensore',
   centrocampista: 'Centrocampista',
   attaccante: 'Attaccante',
+  movimento: 'Movimento',
 };
+/** Segnalazione (0046): prima portiere o movimento (obbligatorio), poi la linea (facoltativa) */
+export const TIPI_GIOCATORE: [RuoloCampo, string][] = [['portiere', 'Portiere'], ['movimento', 'Di movimento']];
+export const LINEE: [RuoloCampo, string, string][] = [
+  ['difensore', 'Prima linea', 'difesa'], ['centrocampista', 'Seconda linea', 'centrocampo'], ['attaccante', 'Terza linea', 'attacco'],
+];
+/** Valutazione (0046): ruolo preciso, elenco a discesa; la linea si ricava (stesso elenco di ruoli_precisi() in SQL) */
+export type RuoloPreciso = 'portiere' | 'difensore_centrale' | 'terzino' | 'esterno_centrocampo' | 'mediano' | 'mezzala' | 'trequartista' | 'ala' | 'punta';
+export const RUOLI_PRECISI: Record<RuoloPreciso, string> = {
+  portiere: 'Portiere', difensore_centrale: 'Difensore centrale', terzino: 'Terzino', esterno_centrocampo: 'Esterno di centrocampo',
+  mediano: 'Mediano', mezzala: 'Mezzala', trequartista: 'Trequartista', ala: 'Ala', punta: 'Punta',
+};
+/** Ruolo da mostrare: quello preciso se c'è, se no la linea */
+export function etichettaRuolo(g: { ruolo: RuoloCampo | null; ruolo_preciso?: RuoloPreciso | null }): string | null {
+  return g.ruolo_preciso ? RUOLI_PRECISI[g.ruolo_preciso] : g.ruolo ? RUOLI_CAMPO[g.ruolo] : null;
+}
 
 export const PIEDI: Record<Piede, string> = {
   destro: 'Destro',

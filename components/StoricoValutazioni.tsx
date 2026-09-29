@@ -1,7 +1,7 @@
 // Scheda del giocatore: storico delle valutazioni sotto le medie. Una riga per valutazione (dalla più recente):
 // data, chi, i 4 voti (solo nelle valutazioni fino alla 0043; dopo, il dettaglio), media e giudizio, con la freccia rispetto alla precedente.
 // Toccando la riga: note delle aree e commento.
-import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, type ChiaveDettaglio, type Giudizio } from '@/lib/tipi';
+import { AREE, DETTAGLI_VALUTAZIONE, GIUDIZI, RUOLI_PRECISI, type ChiaveDettaglio, type Giudizio, type RuoloPreciso } from '@/lib/tipi';
 import { dataBreve } from '@/lib/utili';
 import { Autore, type FirmaValutazione } from '@/components/Autore';
 import { mediaVoti } from '@/lib/valutazioni';
@@ -9,7 +9,7 @@ import { eliminaValutazione } from '@/app/(app)/giocatori/actions';
 
 export type ValutazioneStorico = {
   id: string; data: string; contesto: string | null; giudizio: Giudizio; commento: string | null; firma: string;
-  f: FirmaValutazione; puoEliminare: boolean;
+  f: FirmaValutazione; puoEliminare: boolean; ruolo_preciso?: RuoloPreciso | null;
   tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null;
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
 } & Partial<Record<ChiaveDettaglio, number | null>>;   // voti del dettaglio (0041, 0044, 0045), facoltativi
@@ -54,7 +54,7 @@ export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: 
                   <Autore f={v.f} />
                   <span className="min-w-32 flex-1">
                     <span className="block font-semibold">{dataBreve(v.data)}</span>
-                    <span className="block text-xs text-grigio">{[v.firma, v.contesto].filter(Boolean).join(' · ')}</span>
+                    <span className="block text-xs text-grigio">{[v.firma, v.contesto, v.ruolo_preciso && RUOLI_PRECISI[v.ruolo_preciso]].filter(Boolean).join(' · ')}</span>
                   </span>
                   <span className="grid grid-cols-5 gap-3 text-center">
                     {mediaVoti(v) === null ? (

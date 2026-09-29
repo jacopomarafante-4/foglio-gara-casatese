@@ -6,7 +6,7 @@ import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
   AREE, DETTAGLI_SEGNALAZIONE, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
-  type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore,
+  etichettaRuolo, type Giudizio, type Piede, type RuoloCampo, type RuoloPreciso, type StatoGiocatore,
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
 import { categoriaDaAnnata } from '@/lib/categorie';
@@ -38,6 +38,7 @@ type Giocatore = {
   annata: number;
   data_nascita: string | null;
   ruolo: RuoloCampo | null;
+  ruolo_preciso?: RuoloPreciso | null;   // 0046
   piede: Piede | null;
   stato: StatoGiocatore;
   categoria: string | null; // solo se diversa da quella dell'annata (0013)
@@ -177,7 +178,7 @@ export default async function SchedaGiocatore({
           <p className="mt-1 text-grigio">
             <Annata annata={g.annata} />{' '}
             {[
-              g.ruolo && RUOLI_CAMPO[g.ruolo],
+              etichettaRuolo(g),
               g.piede && `piede ${PIEDI[g.piede].toLowerCase()}`,
               g.societa?.nome,
             ].filter(Boolean).join(' – ')}

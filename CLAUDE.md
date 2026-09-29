@@ -180,6 +180,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0046: ruolo in due passi. `ruolo_campo` + 'movimento' (linea non indicata). Segnalazione: portiere o movimento obbligatorio, poi la linea
+  facoltativa (`TIPI_GIOCATORE`, `LINEE` in `lib/tipi.ts`; prima = difensore, seconda = centrocampista, terza = attaccante). Valutazione:
+  `ruolo_preciso` da elenco a discesa (`RUOLI_PRECISI`, SQL `ruoli_precisi()`), in `valutazioni` e, col trigger `ruolo_da_valutazione`,
+  in `giocatori.ruolo_preciso` + linea in `giocatori.ruolo`. Mostrato con `etichettaRuolo()`. Necessità: "movimento" = da verificare
+  (mai per le richieste di portieri). `coach_segnala` e `coach_valuta` riscritte
 - 0045: valutazione in 5 aree (`GRUPPI_VALUTAZIONE`: Tecnica, Tattica, Fisico, Mentale, Extra; "Spunti, estro e coraggio" in Mentale),
   nuovi voti `dribbling`, `accelerazione`, `agilita`, `motivazione`, `famiglia`, `potenziale`, `livello_attuale`. `coach_valuta` accetta da
   sola ogni colonna smallint di `valutazioni`: per una voce nuova bastano colonna + riga in `DETTAGLI_VALUTAZIONE` e `DETTAGLI_VALUTA`.

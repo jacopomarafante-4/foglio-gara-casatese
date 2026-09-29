@@ -546,7 +546,7 @@ document.addEventListener('click', e => {
 });
 let giocatoriStato = '', giocatoriRuolo = '';
 const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_non_inserire'];
-const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT'};
+const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT', movimento:'MOV'};
 const AREE_VAL = [['tecnica','Tecnica'],['motoria','Motoria'],['tattica','Tattica'],['mentale','Mentale']];
 /* media dei voti per area presenti (dalla 0043 si danno nella segnalazione; le valutazioni vecchie li hanno ancora) */
 const mediaVal = v => { const x = v ? ['tecnica','motoria','tattica','mentale'].map(k => v[k]).filter(n => typeof n === 'number') : []; return x.length ? x.reduce((a, b) => a + b, 0) / x.length : null; };
@@ -647,7 +647,12 @@ document.addEventListener('input', e => {
   const c = $('#gc_cerca'); if(c){ c.focus(); c.setSelectionRange(pos, pos); }
 });
 let segDraft = {data: todayISO()}, segEsito = null, segInvio = false, societaNomi = null;
-const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampista:'Centrocampista', attaccante:'Attaccante'};
+const RUOLI_SCOUTING = {portiere:'Portiere', difensore:'Difensore', centrocampista:'Centrocampista', attaccante:'Attaccante', movimento:'Movimento'};
+/* Ruolo in due passi (0046, come lib/tipi.ts): nella segnalazione portiere o movimento e poi la linea; nella valutazione il ruolo preciso */
+const TIPI_GIOCATORE = [['portiere','Portiere'],['movimento','Di movimento']];
+const LINEE = [['difensore','Prima linea · difesa'],['centrocampista','Seconda linea · centrocampo'],['attaccante','Terza linea · attacco']];
+const RUOLI_PRECISI = {portiere:'Portiere', difensore_centrale:'Difensore centrale', terzino:'Terzino', esterno_centrocampo:'Esterno di centrocampo',
+  mediano:'Mediano', mezzala:'Mezzala', trequartista:'Trequartista', ala:'Ala', punta:'Punta'};
 /* stesso elenco di annateDisponibili() in lib/tipi.ts */
 function annateScouting(){ const a = new Date().getFullYear(); return Array.from({length:16}, (_, i) => String(a - 5 - i)); }
 /* Giocatore già in lista (coach_segnala risponde esistente, 0032): al posto della segnalazione la valutazione (coach_valuta) */
@@ -699,10 +704,13 @@ function viewValutaMister(){
     Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento.</p>
   ${segEsito && !segEsito.ok ? `<p class="esito ko" role="alert">${esc(segEsito.msg)}</p>` : ''}
   <div class="segform">
-  ${sezioneForm(1, 'Dove e quando', '', false, `<div class="grid">
+  ${sezioneForm(1, 'Partita e ruolo', '', false, `<div class="grid">
       <div><label class="f" for="val_cont">Partita o occasione</label><input id="val_cont" data-valf="contesto" value="${esc(v.contesto||'')}"></div>
       <div><label class="f" for="val_data">Data</label><input id="val_data" type="date" data-valf="data" value="${esc(v.data||'')}"></div>
-    </div>`)}
+    </div>
+    <label class="f" for="val_ruolo">Ruolo preciso</label><select id="val_ruolo" data-valf="ruolo_preciso"><option value="">Non so / non l'ho capito</option>
+      ${Object.entries(RUOLI_PRECISI).map(([k, l]) => `<option value="${k}" ${v.ruolo_preciso===k?'selected':''}>${l}</option>`).join('')}</select>
+    <p class="note">Aggiorna anche il ruolo nella scheda del giocatore.</p>`)}
   <p class="note" style="margin:0 4px 12px">Voti da 1 (debole) a 5 (ottimo), tutti facoltativi: vota solo quello che hai visto. Una scelta si toglie toccandola di nuovo.</p>
   ${GRUPPI_VALUTA.map(([gr, aiuto], i) => sezioneForm(i + 2, gr, aiuto, true,
     DETTAGLI_VALUTA.filter(x => x[3] === gr).map(([k, l, a]) => rigaVoto('data-vald', k, l, a, v, false)).join(''))).join('')}
@@ -746,10 +754,9 @@ function viewSegnala(){
   ${segEsito ? `<p class="esito ${segEsito.ok?'ok':'ko'}" role="${segEsito.ok?'status':'alert'}">${esc(segEsito.msg)}</p>` : ''}
   <div class="segform">
   ${sezioneForm(1, 'Chi è', 'Se non sai il nome, descrivilo: lo completeranno loro.', false, `
-    <div class="grid">
-      <div><label class="f" for="sg_annata">Annata *</label><select id="sg_annata" data-seg="annata"><option value="">Scegli</option>${annateScouting().map(a => `<option ${a===d.annata?'selected':''}>${a}</option>`).join('')}</select></div>
-      <div><label class="f" for="sg_ruolo">Ruolo</label><select id="sg_ruolo" data-seg="ruolo"><option value="">Non so</option>${Object.entries(RUOLI_SCOUTING).map(([v,l]) => `<option value="${v}" ${v===d.ruolo?'selected':''}>${l}</option>`).join('')}</select></div>
-    </div>
+    <label class="f" for="sg_annata">Annata *</label><select id="sg_annata" data-seg="annata"><option value="">Scegli</option>${annateScouting().map(a => `<option ${a===d.annata?'selected':''}>${a}</option>`).join('')}</select>
+    <span class="f">Portiere o giocatore di movimento? *</span>${sceltaRapida('data-segd', 'tipo', 'Portiere o giocatore di movimento', TIPI_GIOCATORE, d)}
+    ${d.tipo === 'movimento' ? `<span class="f">In che linea gioca? <small class="chipfac">facoltativo</small></span>${sceltaRapida('data-segd', 'linea', 'Linea', LINEE, d)}` : ''}
     <div class="grid">
       <div><label class="f" for="sg_cognome">Cognome</label>${inp('cognome', 'autocomplete="off" autocapitalize="words"')}</div>
       <div><label class="f" for="sg_nome">Nome</label>${inp('nome', 'autocomplete="off" autocapitalize="words"')}</div>
@@ -773,7 +780,7 @@ function viewSegnala(){
       <div><label class="f" for="sg_data">Data</label>${inp('data', 'type="date"')}</div>
     </div>`)}
   <div class="barrasalva"><button class="btn primary segsend" data-act="segnala" ${segInvio?'disabled':''}>${segInvio ? 'Invio…' : 'Invia allo scouting'}</button>
-    <p class="note">* obbligatori: annata, cosa hai visto e cognome (o come riconoscerlo)</p></div>
+    <p class="note">* obbligatori: annata, portiere o movimento, cosa hai visto e cognome (o come riconoscerlo)</p></div>
   </div>`;
 }
 /* Già in lista mentre si scrive: gli osservati della tua annata (coach_giocatori) con quel cognome, anche scritto
@@ -827,13 +834,14 @@ async function inviaSegnalazione(){
   if(segInvio) return;
   const d = segDraft;
   const manca = !d.annata ? 'Indica l’annata.'
+    : !d.tipo ? 'Indica se è un portiere o un giocatore di movimento.'
     : !(d.cognome||'').trim() && !(d.descrizione||'').trim() ? 'Serve il cognome oppure una descrizione per riconoscerlo.'
     : !(d.testo||'').trim() ? 'Scrivi cosa hai visto: è la parte più importante.' : '';
   if(manca){ segEsito = {ok:false, msg:manca}; render(); window.scrollTo(0,0); return; }
   segInvio = true; render();
   let error = null;
   let risposta = null;
-  try{ ({ data: risposta, error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d}})); }catch(e){ error = e; }
+  try{ ({ data: risposta, error } = await supabaseClient.rpc('coach_segnala', {p_pin: coachPin, p_dati: {...d, ruolo: d.tipo === 'portiere' ? 'portiere' : (d.linea || 'movimento')}})); }catch(e){ error = e; }
   segInvio = false;
   if(!error && risposta?.esistente){
     /* già in lista: si apre la valutazione, con quello che si era scritto nel commento */

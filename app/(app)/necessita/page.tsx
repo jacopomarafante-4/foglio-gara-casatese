@@ -52,9 +52,11 @@ function candidati(n: Necessita, tutti: Giocatore[]) {
   const sicuri: Giocatore[] = [], daVerificare: Giocatore[] = [];
   for (const g of tutti) {
     if (g.annata < n.annata_da || g.annata > n.annata_a) continue;
-    if (n.ruolo && g.ruolo && g.ruolo !== n.ruolo) continue;
+    // "movimento" (0046) = linea non indicata: va bene per ogni ruolo tranne il portiere, da verificare
+    const linea = g.ruolo === 'movimento' ? (n.ruolo === 'portiere' ? 'no' : null) : g.ruolo;
+    if (linea === 'no' || (n.ruolo && linea && linea !== n.ruolo)) continue;
     if (n.piede && g.piede && g.piede !== n.piede && g.piede !== 'ambidestro') continue;
-    ((n.ruolo && !g.ruolo) || (n.piede && !g.piede) ? daVerificare : sicuri).push(g);
+    ((n.ruolo && !linea) || (n.piede && !g.piede) ? daVerificare : sicuri).push(g);
   }
   const ordina = (l: Giocatore[]) => l.sort((a, b) => {
     const va = ultima(a), vb = ultima(b);
@@ -109,7 +111,7 @@ function ModuloNecessita({ n }: { n?: Necessita }) {
         <Etichetta testo="Ruolo">
           <select name="ruolo" defaultValue={n?.ruolo ?? ''} className="campo">
             <option value="">Qualsiasi</option>
-            {Object.entries(RUOLI_CAMPO).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            {Object.entries(RUOLI_CAMPO).filter(([k]) => k !== 'movimento').map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>
         </Etichetta>
         <Etichetta testo="Piede">

@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
-import { DETTAGLI_VALUTAZIONE, ESITI_EVENTO, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, TIPI_EVENTO, valoreValido } from '@/lib/tipi';
+import { DETTAGLI_VALUTAZIONE, ESITI_EVENTO, GIUDIZI, PIEDI, RUOLI_CAMPO, RUOLI_PRECISI, STATI, TIPI_EVENTO, valoreValido } from '@/lib/tipi';
 import { intero, maiuscoleIniziali, testo, testoLungo } from '@/lib/utili';
 
 function torna(id: string, esito: { ok?: string; errore?: string }): never {
@@ -106,6 +106,7 @@ export async function salvaValutazione(formData: FormData) {
     giocatore_id: id,
     ...voti,
     giudizio,
+    ruolo_preciso: valoreValido(RUOLI_PRECISI, formData.get('ruolo_preciso')),   // 0046: un trigger aggiorna anche la scheda
     contesto: testo(formData, 'contesto'),
     commento: testoLungo(formData, 'commento'),
     ...(data ? { data } : {}),

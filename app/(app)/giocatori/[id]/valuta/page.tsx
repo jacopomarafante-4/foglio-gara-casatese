@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
-import { DETTAGLI_VALUTAZIONE, GIUDIZI, GRUPPI_VALUTAZIONE } from '@/lib/tipi';
+import { DETTAGLI_VALUTAZIONE, GIUDIZI, GRUPPI_VALUTAZIONE, RUOLI_PRECISI } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -32,7 +32,7 @@ export default async function Valuta({
   const supabase = await createClient();
   const { data: g } = await supabase
     .from('giocatori')
-    .select('id, cognome, nome, descrizione, annata')
+    .select('id, cognome, nome, descrizione, annata, ruolo_preciso')
     .eq('id', id)
     .maybeSingle();
   if (!g) notFound();
@@ -55,7 +55,7 @@ export default async function Valuta({
         )}
         <input type="hidden" name="id" value={g.id} />
 
-        <Sezione n={1} titolo="Dove e quando">
+        <Sezione n={1} titolo="Partita e ruolo">
           <div className="grid grid-cols-[1fr_auto] gap-3">
             <Etichetta testo="Partita o occasione">
               <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
@@ -64,6 +64,12 @@ export default async function Valuta({
               <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
             </Etichetta>
           </div>
+          <Etichetta testo="Ruolo preciso" aiuto="Aggiorna anche il ruolo nella scheda del giocatore.">
+            <select name="ruolo_preciso" className="campo" defaultValue={g.ruolo_preciso ?? ''}>
+              <option value="">Non so / non l’ho capito</option>
+              {Object.entries(RUOLI_PRECISI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}
+            </select>
+          </Etichetta>
         </Sezione>
 
         <p className="px-1 text-sm text-grigio">

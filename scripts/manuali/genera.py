@@ -469,7 +469,7 @@ da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai ins
 {fig('p-segnala', '''<p>Hai visto un ragazzo interessante (in una partita contro di voi, a un torneo…)? Mandalo allo scouting del club
 dall'area <b>Scouting</b>.</p><p>Il modulo è diviso in 5 blocchi numerati, da compilare dall'alto in basso. Servono solo le voci con *; ogni scelta si
 toglie toccandola di nuovo. Il pulsante <span class="k">Invia allo scouting</span> resta sempre in fondo allo schermo.</p><ol class="passi">
-<li><b>Chi è</b>: annata (obbligatoria), ruolo, cognome e nome oppure <b>come riconoscerlo</b> ("N.8, biondo, mancino"), società.</li>
+<li><b>Chi è</b>: annata (obbligatoria), <b>portiere o giocatore di movimento</b> (obbligatorio; se è di movimento, la linea: prima = difesa, seconda = centrocampo, terza = attacco), cognome e nome oppure <b>come riconoscerlo</b> ("N.8, biondo, mancino"), società.</li>
 <li><b>Prima impressione</b>: positiva, da rivedere o negativa, e il piede preferito.</li>
 <li><b>Cosa hai visto</b> (obbligatorio): la parte più importante, solo aspetti tecnici e sportivi.</li>
 <li><b>Voti</b> da 1 a 5, solo su quello che hai visto: Tecnica, Motoria, Tattica, Mentale (con <b>+ Aggiungi una nota</b>), statura, forza.</li>
@@ -537,7 +537,7 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <section>
 <h2>3. Segnalare un giocatore</h2>
 {fig('s-segnala', '''<p>Dalla scheda <b>Segnala</b> (o dal riquadro blu in Home):</p><ol class="passi">
-<li><b>Chi è</b>: annata (obbligatoria), ruolo, cognome e nome; se non li sai, <b>Come riconoscerlo</b> ("N.8, biondo, mancino");
+<li><b>Chi è</b>: annata (obbligatoria), <b>portiere o giocatore di movimento</b> (obbligatorio; se è di movimento, la linea: prima = difesa, seconda = centrocampo, terza = attacco), cognome e nome; se non li sai, <b>Come riconoscerlo</b> ("N.8, biondo, mancino");
 società (scegli dall'elenco mentre scrivi; se è nuova, la aggiungo io).</li>
 <li><b>Prima impressione</b> (positiva, da rivedere, negativa) e <b>piede preferito</b>: due tocchi.</li>
 <li><b>Cosa hai visto</b>: il cuore della segnalazione.</li>
@@ -576,7 +576,8 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 <h2>5. Valutare ed eventi</h2>
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
-<li><b>1 · Dove e quando</b>: partita o occasione, data.</li>
+<li><b>1 · Partita e ruolo</b>: partita o occasione, data e <b>ruolo preciso</b> dall'elenco (portiere, difensore centrale, terzino,
+esterno di centrocampo, mediano, mezzala, trequartista, ala, punta): aggiorna anche il ruolo nella scheda del giocatore.</li>
 <li><b>2–6 · Le 5 aree</b>, voti da 1 a 5 tutti facoltativi (vota solo quello che hai visto): <b>Tecnica</b> (guida della palla, ricezione, trasmissione, calciata, colpo di testa), <b>Tattica</b> (marcamento, smarcamento,
 contrasto, dribbling), <b>Fisico</b> (velocità, accelerazione, agilità, reattività), <b>Mentale</b> (spunti, estro e coraggio; concentrazione,
 motivazione), <b>Extra</b> (famiglia, potenziale, livello attuale).</li>
