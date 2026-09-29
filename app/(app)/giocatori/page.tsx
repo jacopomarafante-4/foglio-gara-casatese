@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import {
-  annateDisponibili, GIUDIZI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type RuoloCampo, type StatoGiocatore,
+  annateDisponibili, GIUDIZI, IMPRESSIONI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
@@ -30,6 +30,7 @@ type Riga = {
   societa_id: string | null;
   updated_at: string;
   societa: { nome: string } | null;
+  segnalazioni: { data: string; impressione: Impressione | null }[];
   valutazioni: {
     tecnica: number; motoria: number; tattica: number; mentale: number; giudizio: Giudizio; data: string;
     autore_id: string | null; autore_squadra: string | null; autore: { nome: string | null; cognome: string | null; email: string } | null;
@@ -46,6 +47,15 @@ const RUOLI_BREVI: Record<RuoloCampo, string> = { portiere: 'Por', difensore: 'D
 const ORDINE_RUOLI = Object.keys(RUOLI_CAMPO);
 const ORDINE_STATI = Object.keys(STATI);
 
+/* Prima impressione dell'ultima segnalazione che ne ha una (0042) */
+const ORDINE_IMPRESSIONI: Impressione[] = ['positiva', 'da_rivedere', 'negativa'];
+const COLORI_IMPRESSIONE: Record<Impressione, string> = {
+  positiva: 'bg-blu/10 text-blu', da_rivedere: 'bg-oro/25 text-inchiostro', negativa: 'bg-rosso/10 text-rosso',
+};
+function impressioneDi(g: { segnalazioni?: { data: string; impressione: Impressione | null }[] }): Impressione | null {
+  return [...(g.segnalazioni ?? [])].filter((x) => x.impressione).sort((a, b) => b.data.localeCompare(a.data))[0]?.impressione ?? null;
+}
+
 const COLORI_GIUDIZIO: Record<Giudizio, string> = {
   da_prendere: 'bg-blu text-white',
   da_rivedere: 'bg-oro/25 text-inchiostro',
@@ -58,6 +68,7 @@ const COLONNE = {
   giocatore: 'Giocatore',
   ruolo: 'Ruolo',
   stato: 'Stato',
+  impressione: 'Impressione',
   squadra: 'Squadra',
   valutazione: 'Valutazione',
   gara: 'Prossima gara',
@@ -124,6 +135,7 @@ export default async function Giocatori({
       .from('giocatori')
       .select(
         'id, cognome, nome, descrizione, annata, ruolo, stato, osservato, categoria, societa_id, updated_at, societa(nome), ' +
+          'segnalazioni(data, impressione), ' +
           'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
       .order('updated_at', { ascending: false });
@@ -153,6 +165,12 @@ export default async function Giocatori({
     if ((r.data?.length ?? 0) < 1000) break;
   }
 
+  // filtro per prima impressione (dell'ultima segnalazione che ne ha una): si calcola qui, come l'ordinamento
+  if (filtri.impressione) {
+    const tenuti = tutti.filter((g) => (filtri.impressione === 'nessuna' ? !impressioneDi(g) : impressioneDi(g) === filtri.impressione));
+    tutti.splice(0, tutti.length, ...tenuti);
+  }
+
   const nomeDi = (g: Riga) => [g.cognome, g.nome].filter(Boolean).join(' ') || g.descrizione || 'Senza nome';
   const categoriaDi = (g: Riga) => (g.categoria ?? categoriaDaAnnata(g.annata).split(' - ')[0]).replace(/^Under\s*/i, 'U');
   const sintesi = new Map(tutti.map((g) => [g.id, sintesiValutazioni(g.valutazioni)]));
@@ -174,6 +192,7 @@ export default async function Giocatori({
           case 'giocatore': return nomeDi(g);
           case 'ruolo': return g.ruolo ? ORDINE_RUOLI.indexOf(g.ruolo) : null;
           case 'stato': return g.osservato ? ORDINE_STATI.indexOf(g.stato) : null;
+          case 'impressione': { const i = impressioneDi(g); return i ? ORDINE_IMPRESSIONI.indexOf(i) : null; }
           case 'squadra': return g.societa ? `${g.societa.nome} ${categoriaDi(g)}` : null;
           case 'valutazione': return sintesi.get(g.id)?.media ?? null;
           case 'gara': return chiaveGara.get(g.id) ?? null;
@@ -229,6 +248,10 @@ export default async function Giocatori({
     };
   });
 
+  const impressione = (g: Riga) => {
+    const i = impressioneDi(g);
+    return i ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORI_IMPRESSIONE[i]}`}>{IMPRESSIONI[i]}</span> : <span className="text-grigio">–</span>;
+  };
   const stato = (g: Riga) =>
     g.osservato ? (
       <StatoBadge stato={g.stato} />
@@ -288,7 +311,7 @@ export default async function Giocatori({
         </div>
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4 lg:grid-cols-7">
+      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4 lg:grid-cols-8">
         <input name="q" defaultValue={filtri.q} placeholder="Cerca per nome o descrizione" className="campo col-span-2" />
         <select name="annata" defaultValue={filtri.annata ?? ''} className="campo">
           <option value="">Tutte le annate</option>
@@ -307,6 +330,13 @@ export default async function Giocatori({
           {Object.entries(STATI).map(([v, e]) => (
             <option key={v} value={v}>{e}</option>
           ))}
+        </select>
+        <select name="impressione" defaultValue={filtri.impressione ?? ''} className="campo" aria-label="Prima impressione">
+          <option value="">Ogni impressione</option>
+          {Object.entries(IMPRESSIONI).map(([v, e]) => (
+            <option key={v} value={v}>Impressione {e.toLowerCase()}</option>
+          ))}
+          <option value="nessuna">Senza impressione</option>
         </select>
         <select name="chi" defaultValue={filtri.chi ?? ''} className="campo">
           <option value="">Osservati (senza Academy)</option>
@@ -330,7 +360,7 @@ export default async function Giocatori({
           <option value="">Crescente (A→Z)</option>
           <option value="giu">Decrescente (Z→A)</option>
         </select>
-        <div className="col-span-2 flex gap-2 sm:col-span-4 lg:col-span-7 lg:justify-end">
+        <div className="col-span-2 flex gap-2 sm:col-span-4 lg:col-span-8 lg:justify-end">
           <Link href="/giocatori" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">
             Azzera
           </Link>
@@ -360,8 +390,9 @@ export default async function Giocatori({
                 <col />
                 <col className="w-16" />
                 <col className="w-28" />
+                <col className="w-28" />
                 <col />
-                <col className="w-72" />
+                <col className="w-64" />
                 <col />
               </colgroup>
               <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">
@@ -408,6 +439,7 @@ export default async function Giocatori({
                       </td>
                       {cella(r.g.ruolo ? RUOLI_BREVI[r.g.ruolo] : <span className="text-grigio">–</span>, r.g.ruolo ? RUOLI_CAMPO[r.g.ruolo] : undefined)}
                       {cella(stato(r.g))}
+                      {cella(impressione(r.g))}
                       {cella(r.squadra, r.squadra)}
                       <td className="px-2 py-1.5">{colonnaValutazione(r)}</td>
                       {cella(r.gara ? r.testoGara : <span className="text-grigio">{r.testoGara}</span>, r.testoGara)}
@@ -440,7 +472,7 @@ export default async function Giocatori({
                       {r.g.ruolo && ` · ${RUOLI_CAMPO[r.g.ruolo]}`}
                     </p>
                   </div>
-                  <div className="shrink-0">{stato(r.g)}</div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">{stato(r.g)}{impressioneDi(r.g) && impressione(r.g)}</div>
                 </div>
                 <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
                   <dt className="text-grigio">Squadra</dt>

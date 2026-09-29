@@ -1,33 +1,38 @@
-/** Scelta di un voto da 1 a 5 con pulsanti grandi (comodi da telefono).
- *  facoltativo: versione compatta con "–" per non rispondere (domande non obbligatorie) */
+/** Scelta con pulsanti grandi (comodi da telefono): di base un voto da 1 a 5.
+ *  facoltativo: con "–" per non rispondere; voci: altre scelte (es. piede: Destro, Sinistro, Entrambi) nello stesso stile */
 export function Voto({
   nome,
   obbligatorio = false,
   predefinito,
   facoltativo = false,
+  voci,
 }: {
   nome: string;
   obbligatorio?: boolean;
-  predefinito?: number;
+  predefinito?: number | string;
   facoltativo?: boolean;
+  voci?: [string, string][];
 }) {
-  const voci: (number | '')[] = facoltativo ? ['', 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5];
+  const scelte: [string, string][] = [
+    ...(facoltativo ? [['', '–'] as [string, string]] : []),
+    ...(voci ?? [1, 2, 3, 4, 5].map((n) => [String(n), String(n)] as [string, string])),
+  ];
   return (
     <div className={`flex ${facoltativo ? 'gap-1.5' : 'gap-2'}`} role="radiogroup">
-      {voci.map((n) => (
-        <label key={n === '' ? 'nessuno' : n} className="flex-1">
+      {scelte.map(([valore, etichetta]) => (
+        <label key={valore || 'nessuno'} className="min-w-0 flex-1">
           <input
             type="radio"
             name={nome}
-            value={n}
+            value={valore}
             required={obbligatorio}
-            defaultChecked={n === '' ? facoltativo && !predefinito : predefinito === n}
+            defaultChecked={valore === '' ? facoltativo && !predefinito : String(predefinito) === valore}
             className="peer sr-only"
-            aria-label={n === '' ? 'Nessun voto' : String(n)}
+            aria-label={valore === '' ? 'Nessuna risposta' : etichetta}
           />
-          <span className={`block cursor-pointer rounded-lg border border-linea bg-white text-center font-display font-bold peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-oro ${
-            facoltativo ? 'py-2 text-base' : 'py-3 text-xl'} ${n === '' ? 'text-grigio' : ''}`}>
-            {n === '' ? '–' : n}
+          <span className={`block cursor-pointer truncate rounded-lg border border-linea bg-white px-1 text-center font-display font-bold peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-oro ${
+            facoltativo ? 'py-2 text-base' : 'py-3 text-xl'} ${valore === '' ? 'text-grigio' : ''}`}>
+            {etichetta}
           </span>
         </label>
       ))}

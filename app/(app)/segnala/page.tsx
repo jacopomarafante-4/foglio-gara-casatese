@@ -4,7 +4,7 @@ import { getProfilo } from '@/lib/auth';
 import { puoSegnalare } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta } from '@/lib/societa';
-import { annateDisponibili, DETTAGLI_SEGNALAZIONE, PIEDI, RUOLI_CAMPO } from '@/lib/tipi';
+import { annateDisponibili, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, RUOLI_CAMPO, SCELTE_PIEDE } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -78,15 +78,6 @@ export default async function Segnala({
                 </select>
               </Etichetta>
             </div>
-            <Etichetta testo="Piede">
-              <select name="piede" className="campo" defaultValue="">
-                <option value="">Non so</option>
-                {Object.entries(PIEDI).map(([v, e]) => (
-                  <option key={v} value={v}>{e}</option>
-                ))}
-              </select>
-            </Etichetta>
-
             <Etichetta testo="Società" aiuto="Scegli dall’elenco o scrivi il nome: se è nuova la aggiungo.">
               <input name="societa" list="elenco-societa" className="campo" autoComplete="off" />
               <datalist id="elenco-societa">
@@ -117,15 +108,18 @@ export default async function Segnala({
           <textarea name="testo" required rows={5} className="campo" />
         </Etichetta>
 
-        <div>
-          <span className="mb-1 block text-sm font-medium">Prima impressione (facoltativa)</span>
-          <Voto nome="voto" />
-          <span className="mt-1 block text-xs text-grigio">1 = non a livello · 5 = da prendere subito</span>
-        </div>
-
+        {/* tutte le domande nello stesso stile, tutte facoltative ("–" = non rispondo) */}
         <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">
-          <legend className="px-1 font-display text-lg font-bold">Qualche voto in più <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
-          <p className="-mt-2 text-xs text-grigio">Da 1 a 5; lascia &quot;–&quot; se non l&apos;hai visto.</p>
+          <legend className="px-1 font-display text-lg font-bold">Qualche dettaglio <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
+          <p className="-mt-2 text-xs text-grigio">Lascia &quot;–&quot; su quello che non hai visto.</p>
+          <div>
+            <span className="mb-1 block text-sm font-medium">Piede preferito</span>
+            <Voto nome="piede" facoltativo voci={SCELTE_PIEDE} />
+          </div>
+          <div>
+            <span className="mb-1 block text-sm font-medium">Prima impressione</span>
+            <Voto nome="impressione" facoltativo voci={Object.entries(IMPRESSIONI)} />
+          </div>
           {DETTAGLI_SEGNALAZIONE.map((d) => (
             <div key={d.chiave}>
               <span className="mb-1 block text-sm font-medium">{d.nome}</span>

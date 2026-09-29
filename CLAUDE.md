@@ -175,6 +175,11 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
 - 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
   area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0042: `segnalazioni.impressione` (positiva / da_rivedere / negativa, `IMPRESSIONI` in `lib/tipi.ts`) al posto del voto 1–5 della
+  prima impressione (vecchi voti convertiti: 4–5 positiva, 3 da rivedere, 1–2 negativa); `coach_segnala` riscritta. Nella segnalazione
+  tutte le domande facoltative nello stesso stile (`Voto facoltativo` con `voci`): piede preferito (`SCELTE_PIEDE`, al posto di piede
+  forte/debole, che restano nel database), prima impressione, statura, forza. Elenco Giocatori: colonna e filtro "Impressione"
+  (`impressioneDi()` = ultima segnalazione che ne ha una)
 - 0041: segnalazione con `piede` e 4 voti facoltativi 1–5 (`piede_forte`, `piede_debole`, `statura`, `forza`); valutazione con 7 voti
   tecnici facoltativi (`spunti`, `guida_palla`, `ricezione`, `calciata`, `contrasto`, `velocita`, `reattivita`) oltre alle 4 aree.
   Elenchi in `lib/tipi.ts` (`DETTAGLI_SEGNALAZIONE`, `DETTAGLI_VALUTAZIONE`), `Voto facoltativo` con "–"; nel Portale

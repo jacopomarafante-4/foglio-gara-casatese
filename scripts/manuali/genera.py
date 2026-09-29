@@ -724,8 +724,10 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
-<li><b>Segnalazione</b>: oltre a cosa hai visto, il <b>piede</b> e quattro voti facoltativi da 1 a 5 (piede forte, piede debole,
-statura, forza; "–" se non li hai visti). <b>Valutazione</b>: le 4 aree obbligatorie e, <b>nel dettaglio</b> (facoltativo), spunti,
+<li><b>Segnalazione</b>: oltre a cosa hai visto, alcune domande facoltative tutte nello stesso stile ("–" se non l'hai visto):
+<b>piede preferito</b> (destro, sinistro, entrambi), <b>prima impressione</b> (positiva, da rivedere, negativa), statura e forza da 1 a 5.
+Nell'elenco Giocatori la colonna <b>Impressione</b> mostra quella dell'ultima segnalazione: si ordina toccando l'intestazione e si
+filtra con "Ogni impressione". <b>Valutazione</b>: le 4 aree obbligatorie e, <b>nel dettaglio</b> (facoltativo), spunti,
 guida della palla, ricezione, calciata, contrasto, velocità e reattività. Si vedono nella storia e nello storico valutazioni della scheda.</li>
 <li><b>Tre valutazioni</b>: ogni giocatore ha <b>3 caselle</b> con le iniziali delle persone che l'hanno valutato. Servono 3 persone
 diverse per passarlo a <b>Inserito</b>: a 3 su 3 caselle e riga diventano <b>verdi</b> ✓. Ogni <b>annata</b> ha il suo colore e

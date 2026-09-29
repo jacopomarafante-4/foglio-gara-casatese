@@ -39,13 +39,17 @@ export const GIUDIZI: Record<Giudizio, string> = {
   non_a_livello: 'Non a livello',
 };
 
-/** Segnalazione: 4 voti da 1 a 5 facoltativi (0041) */
+/** Segnalazione: voti da 1 a 5 facoltativi (0041). Piede forte/debole non si chiedono più: c'è "Piede preferito";
+ *  le colonne piede_forte e piede_debole restano per le segnalazioni già fatte */
 export const DETTAGLI_SEGNALAZIONE = [
-  { chiave: 'piede_forte', nome: 'Piede forte' },
-  { chiave: 'piede_debole', nome: 'Piede debole' },
   { chiave: 'statura', nome: 'Statura' },
   { chiave: 'forza', nome: 'Forza' },
 ] as const;
+/** Prima impressione della segnalazione (0042): si filtra e si ordina l'elenco giocatori per quella dell'ultima segnalazione */
+export type Impressione = 'positiva' | 'da_rivedere' | 'negativa';
+export const IMPRESSIONI: Record<Impressione, string> = { positiva: 'Positiva', da_rivedere: 'Da rivedere', negativa: 'Negativa' };
+/** Piede preferito nella segnalazione (stesse scelte del tipo piede, "Entrambi" = ambidestro) */
+export const SCELTE_PIEDE: [Piede, string][] = [['destro', 'Destro'], ['sinistro', 'Sinistro'], ['ambidestro', 'Entrambi']];
 /** Valutazione: 7 voti tecnici da 1 a 5 facoltativi, oltre alle 4 aree (0041) */
 export const DETTAGLI_VALUTAZIONE = [
   { chiave: 'spunti', nome: 'Spunti', aiuto: 'Uno contro uno, cambi di passo' },

@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { elencoSocieta, trovaOCreaSocieta } from '@/lib/societa';
-import { DETTAGLI_SEGNALAZIONE, PIEDI, RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
+import { DETTAGLI_SEGNALAZIONE, IMPRESSIONI, PIEDI, RUOLI_CAMPO, valoreValido } from '@/lib/tipi';
 import { intero, maiuscoleIniziali, normalizza, testo, testoLungo } from '@/lib/utili';
 
 function errore(msg: string, giocatoreId?: string | null): never {
@@ -82,6 +82,7 @@ export async function salvaSegnalazione(formData: FormData) {
     testo: osservazione,
     voto,
     piede: valoreValido(PIEDI, formData.get('piede')),
+    impressione: valoreValido(IMPRESSIONI, formData.get('impressione')),
     ...dettagli,
     contesto,
     ...(data ? { data } : {}),

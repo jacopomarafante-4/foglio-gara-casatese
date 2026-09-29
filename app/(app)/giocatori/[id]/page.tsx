@@ -5,7 +5,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
-  AREE, DETTAGLI_SEGNALAZIONE, GIUDIZI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
+  AREE, DETTAGLI_SEGNALAZIONE, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
   type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore,
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
@@ -51,6 +51,7 @@ type Giocatore = {
 type Segnalazione = {
   id: string; data: string; contesto: string | null; testo: string; voto: number | null; autore: Autore;
   squadra: string | null; // segnalazione di un mister dal Portale squadre
+  impressione: keyof typeof IMPRESSIONI | null; // 0042
   piede: Piede | null; piede_forte: number | null; piede_debole: number | null; statura: number | null; forza: number | null; // 0041
 };
 
@@ -307,7 +308,9 @@ export default async function SchedaGiocatore({
                       <p className="text-sm text-grigio">
                         Segnalazione di {s.autore || !s.squadra ? chi(s.autore) : `Mister ${s.squadra}`} – {dataBreve(s.data)}
                         {s.contesto && ` – ${s.contesto}`}
-                        {s.voto && <span className="ml-2 font-semibold text-inchiostro">voto {s.voto}/5</span>}
+                        {s.impressione
+                          ? <span className="ml-2 font-semibold text-inchiostro">prima impressione: {IMPRESSIONI[s.impressione].toLowerCase()}</span>
+                          : s.voto && <span className="ml-2 font-semibold text-inchiostro">voto {s.voto}/5</span>}
                       </p>
                       <p className="mt-2 whitespace-pre-line">{s.testo}</p>
                       {(s.piede || DETTAGLI_SEGNALAZIONE.some((d) => s[d.chiave])) && (
