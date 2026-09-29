@@ -467,13 +467,13 @@ da Under 12 in giù portiere o giocatore di movimento. Per i portieri potrai ins
 <section>
 <h2>10. Scouting: segnalare un giocatore</h2>
 {fig('p-segnala', '''<p>Hai visto un ragazzo interessante (in una partita contro di voi, a un torneo…)? Mandalo allo scouting del club
-dall'area <b>Scouting</b>.</p><ol class="passi">
-<li><b>Annata</b> (obbligatoria) e, se lo sai, il ruolo.</li>
-<li><b>Società</b>: scegli dall'elenco o scrivila.</li>
-<li><b>Cognome e nome</b>, oppure, se non li sai, <b>come riconoscerlo</b> ("N.8, biondo, mancino").</li>
-<li><b>Cosa hai visto</b>: la parte più importante, solo aspetti tecnici e sportivi.</li>
-<li>Se vuoi, i <b>voti per area</b> da 1 a 5 con una nota: Tecnica, Motoria, Tattica, Mentale ("–" se non l'hai visto).</li>
-<li>Qualche dettaglio facoltativo (piede preferito, prima impressione, statura, forza), partita o occasione, data. Poi <span class="k">Invia allo scouting</span>.</li></ol>
+dall'area <b>Scouting</b>.</p><p>Il modulo è diviso in 5 blocchi numerati, da compilare dall'alto in basso. Servono solo le voci con *; ogni scelta si
+toglie toccandola di nuovo. Il pulsante <span class="k">Invia allo scouting</span> resta sempre in fondo allo schermo.</p><ol class="passi">
+<li><b>Chi è</b>: annata (obbligatoria), ruolo, cognome e nome oppure <b>come riconoscerlo</b> ("N.8, biondo, mancino"), società.</li>
+<li><b>Prima impressione</b>: positiva, da rivedere o negativa, e il piede preferito.</li>
+<li><b>Cosa hai visto</b> (obbligatorio): la parte più importante, solo aspetti tecnici e sportivi.</li>
+<li><b>Voti</b> da 1 a 5, solo su quello che hai visto: Tecnica, Motoria, Tattica, Mentale (con <b>+ Aggiungi una nota</b>), statura, forza.</li>
+<li><b>Dove e quando</b>: partita o occasione, data.</li></ol>
 <p>La segnalazione arriva firmata con il tuo nome e la tua squadra.</p>
 <div class="box"><b class="t">È già in lista? Lo valuti</b>Mentre scrivi annata e cognome, se il ragazzo è già nell'archivio dello scouting si apre la finestra
 <b>"Già in lista. Vuoi valutare?"</b>: tocca <span class="k">Sì, valuta</span> (o "No, è un altro giocatore"). Anche inviando, se è
@@ -537,13 +537,14 @@ tesserato. Per contattare società, famiglie o ragazzi segui le indicazioni del 
 <section>
 <h2>3. Segnalare un giocatore</h2>
 {fig('s-segnala', '''<p>Dalla scheda <b>Segnala</b> (o dal riquadro blu in Home):</p><ol class="passi">
-<li><b>Annata</b> (obbligatoria) e ruolo, se lo sai.</li>
-<li><b>Società</b>: scegli dall'elenco mentre scrivi; se è nuova, la aggiungo io.</li>
-<li><b>Cognome e nome</b>. Se non li sai, compila <b>Come riconoscerlo</b> ("N.8, biondo, mancino"): si completa dopo.</li>
+<li><b>Chi è</b>: annata (obbligatoria), ruolo, cognome e nome; se non li sai, <b>Come riconoscerlo</b> ("N.8, biondo, mancino");
+società (scegli dall'elenco mentre scrivi; se è nuova, la aggiungo io).</li>
+<li><b>Prima impressione</b> (positiva, da rivedere, negativa) e <b>piede preferito</b>: due tocchi.</li>
 <li><b>Cosa hai visto</b>: il cuore della segnalazione.</li>
-<li><b>Voti per area</b> (facoltativi): Tecnica, Motoria, Tattica, Mentale da 1 a 5, ognuna con la sua nota; "–" se non l'hai visto.</li>
-<li><b>Qualche dettaglio</b> (facoltativo): piede preferito, prima impressione (positiva, da rivedere, negativa), statura, forza; partita o occasione, data.</li>
-<li><span class="k">Salva segnalazione</span>: si apre la scheda del giocatore.</li></ol>
+<li><b>Voti</b> (facoltativi) da 1 a 5: Tecnica, Motoria, Tattica, Mentale (ognuna con <b>+ Aggiungi una nota</b>), statura, forza.
+Vota solo quello che hai visto; una scelta si toglie toccandola di nuovo.</li>
+<li><b>Dove e quando</b>: partita o occasione, data.</li>
+<li><span class="k">Salva segnalazione</span> (sempre in fondo allo schermo): si apre la scheda del giocatore.</li></ol>
 <div class="box"><b class="t">È già in lista? Si valuta</b>Mentre scrivi annata e cognome si apre la finestra <b>"Già in lista. Vuoi
 valutare?"</b> con i ragazzi già in archivio (anche con il cognome scritto un po' diverso): <span class="k">Sì, valuta</span> apre subito la
 <b>Valutazione</b> (il dettaglio facoltativo su spunti, guida della palla, ricezione, calciata, contrasto,
@@ -576,9 +577,10 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 <h2>5. Valutare ed eventi</h2>
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
-<li><b>Nel dettaglio</b> (facoltativo): spunti, guida della palla, ricezione, calciata, contrasto, velocità, reattività da 1 a 5.
-I voti per area (Tecnica, Motoria, Tattica, Mentale) ora si danno nella <b>segnalazione</b>.</li>
-<li><b>Giudizio finale</b>: da prendere, da rivedere, non a livello; un commento, la partita, la data.</li>
+<li><b>1 · Giudizio</b> (obbligatorio): da prendere (blu), da rivedere (oro), non a livello (rosso), e sotto il <b>perché</b>.</li>
+<li><b>2 · Nel dettaglio</b> (facoltativo): spunti, guida della palla, ricezione, calciata, contrasto, velocità, reattività da 1 a 5.
+I voti per area (Tecnica, Motoria, Tattica, Mentale) si danno nella <b>segnalazione</b>.</li>
+<li><b>3 · Dove e quando</b>: partita o occasione, data.</li>
 <li><span class="k">Salva valutazione</span>.</li></ol>
 <h3>Eventi</h3>
 <p>Nella scheda, sezione <b>Eventi</b> → <span class="k">Aggiungi evento</span>: tipo (open day, provino, allenamento di prova,
@@ -724,7 +726,7 @@ si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da t
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
-<li><b>Segnalazione</b>: oltre a cosa hai visto, alcune domande facoltative tutte nello stesso stile ("–" se non l'hai visto):
+<li><b>Segnalazione</b>: oltre a cosa hai visto, alcune domande facoltative tutte nello stesso stile (una scelta si toglie toccandola di nuovo):
 <b>piede preferito</b> (destro, sinistro, entrambi), <b>prima impressione</b> (positiva, da rivedere, negativa), statura e forza da 1 a 5, e i <b>voti per area</b> (Tecnica, Motoria, Tattica, Mentale, con note).
 Nell'elenco Giocatori la colonna <b>Impressione</b> mostra quella dell'ultima segnalazione: si ordina toccando l'intestazione e si
 filtra con "Ogni impressione". <b>Valutazione</b>: giudizio, commento e, <b>nel dettaglio</b> (facoltativo), spunti,

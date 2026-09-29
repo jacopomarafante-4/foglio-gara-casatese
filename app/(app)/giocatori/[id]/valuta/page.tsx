@@ -7,8 +7,14 @@ import { DETTAGLI_VALUTAZIONE, GIUDIZI } from '@/lib/tipi';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
-import { Voto } from '@/components/Voto';
+import { BarraSalva, RigaVoto, Sezione } from '@/components/Sezione';
 import { salvaValutazione } from '../../actions';
+
+const TONI_GIUDIZIO: Record<string, string> = {
+  da_prendere: 'peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white',
+  da_rivedere: 'peer-checked:border-oro peer-checked:bg-oro peer-checked:text-inchiostro',
+  non_a_livello: 'peer-checked:border-rosso peer-checked:bg-rosso peer-checked:text-white',
+};
 
 export default async function Valuta({
   params,
@@ -39,56 +45,48 @@ export default async function Valuta({
       <h1 className="mt-2 font-display text-4xl font-bold">Valutazione</h1>
       <p className="text-grigio">{titolo} – {g.annata}</p>
 
-      <form action={salvaValutazione} className="mt-6 space-y-6">
+      <form action={salvaValutazione} className="mt-6 space-y-4">
         <Avviso errore={errore} />
         {gia && (
           <p className="rounded-xl border-l-4 border-oro bg-carta p-4 text-sm">
             <b>{titolo} è già in lista.</b> Invece di una nuova segnalazione, compila la valutazione: quello che avevi scritto è già
-            nel commento finale.
+            nel commento.
           </p>
         )}
         <input type="hidden" name="id" value={g.id} />
 
-
-        <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">
-          <legend className="px-1 font-display text-2xl font-bold">Nel dettaglio <span className="text-base font-normal text-grigio">(facoltativo)</span></legend>
-          <p className="-mt-2 text-sm text-grigio">Da 1 a 5; lascia &quot;–&quot; su quello che non hai visto.</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {DETTAGLI_VALUTAZIONE.map((d) => (
-              <div key={d.chiave}>
-                <span className="block text-sm font-semibold">{d.nome}</span>
-                <span className="mb-1 block text-xs text-grigio">{d.aiuto}</span>
-                <Voto nome={d.chiave} facoltativo />
-              </div>
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">
-          <legend className="px-1 font-display text-2xl font-bold">Giudizio finale</legend>
-          <div className="grid gap-2 sm:grid-cols-3">
+        <Sezione n={1} titolo="Giudizio *" sotto="La tua conclusione su questo ragazzo.">
+          <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Giudizio">
             {Object.entries(GIUDIZI).map(([v, e]) => (
               <label key={v}>
                 <input type="radio" name="giudizio" value={v} required className="peer sr-only" />
-                <span className="block cursor-pointer rounded-lg border border-linea px-3 py-3 text-center font-semibold peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-oro">
+                <span className={`block min-h-11 cursor-pointer rounded-lg border border-linea bg-white px-3 py-3 text-center font-semibold hover:border-blu peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-oro ${TONI_GIUDIZIO[v]}`}>
                   {e}
                 </span>
               </label>
             ))}
           </div>
-          <textarea name="commento" rows={4} placeholder="Commento finale" className="campo" defaultValue={nota ?? ''} />
-        </fieldset>
-
-        <div className="grid grid-cols-[1fr_auto] gap-3">
-          <Etichetta testo="Partita o occasione">
-            <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
+          <Etichetta testo="Perché">
+            <textarea name="commento" rows={4} className="campo" defaultValue={nota ?? ''} placeholder="Punti di forza, cosa migliorare, cosa rivedere la prossima volta…" />
           </Etichetta>
-          <Etichetta testo="Data">
-            <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
-          </Etichetta>
-        </div>
+        </Sezione>
 
-        <button className="bottone w-full">Salva valutazione</button>
+        <Sezione n={2} titolo="Nel dettaglio" sotto="Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere." facoltativo>
+          {DETTAGLI_VALUTAZIONE.map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} aiuto={d.aiuto} />)}
+        </Sezione>
+
+        <Sezione n={3} titolo="Dove e quando">
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <Etichetta testo="Partita o occasione">
+              <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
+            </Etichetta>
+            <Etichetta testo="Data">
+              <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
+            </Etichetta>
+          </div>
+        </Sezione>
+
+        <BarraSalva testo="Salva valutazione" nota="* obbligatorio: il giudizio" />
       </form>
     </div>
   );

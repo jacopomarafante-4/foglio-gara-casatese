@@ -656,34 +656,43 @@ let segValuta = null;
 /* Segnalazione: tutte le domande nello stesso stile e facoltative; piede forte/debole sostituiti da "Piede preferito" */
 const DETTAGLI_SEGNALA = [['piede','Piede preferito',[['destro','Destro'],['sinistro','Sinistro'],['ambidestro','Entrambi']]],
   ['impressione','Prima impressione',[['positiva','Positiva'],['da_rivedere','Da rivedere'],['negativa','Negativa']]],['statura','Statura'],['forza','Forza']];
-const DETTAGLI_VALUTA = [['spunti','Spunti'],['guida_palla','Guida della palla'],['ricezione','Ricezione'],['calciata','Calciata'],
-  ['contrasto','Contrasto'],['velocita','Velocità'],['reattivita','Reattività']];
-/* domande facoltative, tutte nello stesso stile: "–" = nessuna risposta, poi 1–5 (o le scelte indicate); di nuovo = si toglie */
-const votiFacoltativi = (attr, voci, dati) => `<div class="votifac">${voci.map(([k, l, scelte]) => {
-  const opz = [['', '–'], ...(scelte || [1,2,3,4,5].map(n => [String(n), String(n)]))];
-  return `<div class="votofac"><span>${l}</span><div class="seg" role="group" aria-label="${esc(l)}">${opz.map(([v, e]) =>
-    `<button type="button" ${attr}="${k}:${v}" aria-pressed="${String(dati[k] ?? '') === v}">${e}</button>`).join('')}</div></div>`; }).join('')}</div>`;
+const DETTAGLI_VALUTA = [['spunti','Spunti','Uno contro uno, cambi di passo'],['guida_palla','Guida della palla','Conduzione a testa alta, con entrambi i piedi'],
+  ['ricezione','Ricezione','Primo controllo, orientato'],['calciata','Calciata','Tiro e lancio, forza e precisione'],
+  ['contrasto','Contrasto','Tempo e decisione nel recupero palla'],['velocita','Velocità','Allungo, con e senza palla'],
+  ['reattivita','Reattività','Prontezza nei primi passi e sulle seconde palle']];
+/* Moduli di segnalazione e valutazione come nello Scouting (components/Sezione.tsx): blocchi numerati nell'ordine in cui si
+   compilano, una riga compatta per ogni voto 1–5 (nota solo se la si apre), pulsanti che si tolgono toccandoli di nuovo */
+const notaAperta = new Set();
+const sezioneForm = (n, titolo, sotto, facolt, corpo) => `<section class="sez"><header><span class="sezn" aria-hidden="true">${n}</span><div>
+  <h3>${titolo}${facolt ? ' <small class="chipfac">facoltativo</small>' : ''}</h3>${sotto ? `<p class="note">${sotto}</p>` : ''}</div></header>${corpo}</section>`;
+const sceltaRapida = (attr, k, l, scelte, dati) => `<div class="rapida" role="group" aria-label="${esc(l)}">${scelte.map(([v, e]) =>
+  `<button type="button" ${attr}="${k}:${v}" data-tono="${v}" aria-pressed="${String(dati[k] ?? '') === String(v)}">${e}</button>`).join('')}</div>`;
+const rigaVoto = (attr, k, l, aiuto, dati, nota) => `<div class="rigavoto"><div class="rvtesto"><b>${l}</b>${aiuto ? `<small>${aiuto}</small>` : ''}</div>
+  ${sceltaRapida(attr, k, l, [1,2,3,4,5].map(n => [String(n), String(n)]), dati).replace('class="rapida"', 'class="rapida scala"')}
+  ${nota ? `<details class="rvnota" data-nota="${k}" ${dati[k+'_note'] || notaAperta.has(k) ? 'open' : ''}><summary>+ Aggiungi una nota</summary>
+    <textarea data-seg="${k}_note" rows="2" aria-label="Nota su ${esc(l)}">${esc(dati[k+'_note'] || '')}</textarea></details>` : ''}</div>`;
+document.addEventListener('toggle', e => { const k = e.target.dataset?.nota; if(k){ e.target.open ? notaAperta.add(k) : notaAperta.delete(k); } }, true);
 const AREE_VALUTA = [['tecnica','Tecnica','Controllo, passaggio, tiro, uso dei due piedi'],['motoria','Motoria','Velocità, coordinazione, resistenza, forza'],
   ['tattica','Tattica','Posizione, letture di gioco, scelte'],['mentale','Mentale','Carattere, concentrazione, reazione all\'errore']];
 function viewValutaMister(){
   const v = segValuta;
   return `<h2>Valutazione</h2>
   <p class="esito" role="status" style="border-left:4px solid var(--amber)"><b>${esc(v.nome || 'Il giocatore')} (${esc(v.annata||'')}${v.societa ? ', '+esc(v.societa) : ''}) è già in lista.</b>
-    Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento finale.</p>
+    Invece di una nuova segnalazione, valutalo: quello che avevi scritto è nel commento.</p>
   ${segEsito && !segEsito.ok ? `<p class="esito ko" role="alert">${esc(segEsito.msg)}</p>` : ''}
-  <section class="panel segform">
-    <span class="f">Nel dettaglio (facoltativo)</span>
-    ${votiFacoltativi('data-vald', DETTAGLI_VALUTA, v)}
-    <span class="f">Giudizio finale *</span>
-    <div class="seg" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
-    <label class="f" for="val_comm">Commento finale</label><textarea id="val_comm" data-valf="commento" rows="4">${esc(v.commento||'')}</textarea>
-    <div class="grid">
-      <div><label class="f">Partita o occasione</label><input data-valf="contesto" value="${esc(v.contesto||'')}"></div>
-      <div><label class="f">Data</label><input type="date" data-valf="data" value="${esc(v.data||'')}"></div>
-    </div>
-    <div class="row" style="gap:8px;margin-top:10px"><button class="btn primary" data-act="valuta" ${segInvio?'disabled':''}>${segInvio ? 'Salvataggio…' : 'Salva valutazione'}</button>
-      <button class="btn ghost" data-act="valutaannulla">Annulla</button></div>
-  </section>`;
+  <div class="segform">
+  ${sezioneForm(1, 'Giudizio *', 'La tua conclusione su questo ragazzo.', false,
+    `<div class="rapida giudizio" role="group" aria-label="Giudizio">${Object.entries(GIUDIZI).map(([k,l]) => `<button type="button" data-valg="${k}" data-tono="${k}" aria-pressed="${v.giudizio===k}">${l}</button>`).join('')}</div>
+    <label class="f" for="val_comm">Perché</label><textarea id="val_comm" data-valf="commento" rows="4" placeholder="Punti di forza, cosa migliorare, cosa rivedere la prossima volta…">${esc(v.commento||'')}</textarea>`)}
+  ${sezioneForm(2, 'Nel dettaglio', 'Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto; tocca di nuovo per togliere.', true,
+    DETTAGLI_VALUTA.map(([k, l, aiuto]) => rigaVoto('data-vald', k, l, aiuto, v, false)).join(''))}
+  ${sezioneForm(3, 'Dove e quando', '', false, `<div class="grid">
+      <div><label class="f" for="val_cont">Partita o occasione</label><input id="val_cont" data-valf="contesto" value="${esc(v.contesto||'')}"></div>
+      <div><label class="f" for="val_data">Data</label><input id="val_data" type="date" data-valf="data" value="${esc(v.data||'')}"></div>
+    </div>`)}
+  <div class="barrasalva"><button class="btn primary" data-act="valuta" ${segInvio?'disabled':''}>${segInvio ? 'Salvataggio…' : 'Salva valutazione'}</button>
+    <button class="btn ghost" data-act="valutaannulla">Annulla</button></div>
+  </div>`;
 }
 async function inviaValutazione(){
   if(segInvio) return;
@@ -714,15 +723,14 @@ function viewSegnala(){
   const d = segDraft;
   const inp = (k, attrs='') => `<input id="sg_${k}" data-seg="${k}" value="${esc(d[k]||'')}" ${attrs}>`;
   return `<h2>Segnala un giocatore</h2>
-  <p class="hint">Hai visto un ragazzo interessante? Mandalo allo scouting del club. Se non sai il nome, descrivilo: lo completeranno loro.</p>
+  <p class="hint">Dall'alto in basso: servono solo le voci con *, il resto se l'hai visto. Arriva allo scouting del club firmata da te.</p>
   ${segEsito ? `<p class="esito ${segEsito.ok?'ok':'ko'}" role="${segEsito.ok?'status':'alert'}">${esc(segEsito.msg)}</p>` : ''}
-  <section class="panel segform">
+  <div class="segform">
+  ${sezioneForm(1, 'Chi è', 'Se non sai il nome, descrivilo: lo completeranno loro.', false, `
     <div class="grid">
       <div><label class="f" for="sg_annata">Annata *</label><select id="sg_annata" data-seg="annata"><option value="">Scegli</option>${annateScouting().map(a => `<option ${a===d.annata?'selected':''}>${a}</option>`).join('')}</select></div>
       <div><label class="f" for="sg_ruolo">Ruolo</label><select id="sg_ruolo" data-seg="ruolo"><option value="">Non so</option>${Object.entries(RUOLI_SCOUTING).map(([v,l]) => `<option value="${v}" ${v===d.ruolo?'selected':''}>${l}</option>`).join('')}</select></div>
     </div>
-    <label class="f" for="sg_societa">Società</label>
-    ${inp('societa', 'list="sg_elenco" autocomplete="off"')}<datalist id="sg_elenco">${societaNomi.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
     <div class="grid">
       <div><label class="f" for="sg_cognome">Cognome</label>${inp('cognome', 'autocomplete="off" autocapitalize="words"')}</div>
       <div><label class="f" for="sg_nome">Nome</label>${inp('nome', 'autocomplete="off" autocapitalize="words"')}</div>
@@ -730,23 +738,24 @@ function viewSegnala(){
     <div id="sg_gia">${giaInListaHtml()}</div>
     <label class="f" for="sg_descrizione">Come riconoscerlo</label>
     ${inp('descrizione', 'autocomplete="off" placeholder="Es. N.8, biondo, mancino"')}
-    <p class="note">Obbligatorio se manca il cognome.</p>
-    <label class="f" for="sg_testo">Cosa hai visto *</label>
-    <textarea id="sg_testo" data-seg="testo" rows="5">${esc(d.testo||'')}</textarea>
-    <span class="f">Voti per area (facoltativi)</span>
-    <p class="note" style="margin:0">Da 1 a 5; "–" se non l'hai visto.</p>
-    ${AREE_VALUTA.map(([k,l,aiuto]) => `<div class="valarea"><div class="row" style="justify-content:space-between;align-items:baseline"><b>${l}</b><span class="note">${aiuto}</span></div>
-      ${votiFacoltativi('data-segd', [[k, '']], d)}
-      <textarea data-seg="${k}_note" rows="2" placeholder="Note (facoltative)">${esc(d[k+'_note']||'')}</textarea></div>`).join('')}
-    <span class="f">Qualche dettaglio (facoltativo)</span>
-    <p class="note" style="margin:0">Lascia "–" su quello che non hai visto.</p>
-    ${votiFacoltativi('data-segd', DETTAGLI_SEGNALA, d)}
-    <div class="grid">
+    <p class="note">Serve se manca il cognome.</p>
+    <label class="f" for="sg_societa">Società</label>
+    ${inp('societa', 'list="sg_elenco" autocomplete="off"')}<datalist id="sg_elenco">${societaNomi.map(n => `<option value="${esc(n)}">`).join('')}</datalist>`)}
+  ${sezioneForm(2, 'Prima impressione', 'Due tocchi. Tocca di nuovo per togliere.', true, `
+    <span class="f">Come ti è sembrato?</span>${sceltaRapida('data-segd', 'impressione', 'Prima impressione', DETTAGLI_SEGNALA[1][2], d).replace('class="rapida"', 'class="rapida impressione"')}
+    <span class="f">Piede preferito</span>${sceltaRapida('data-segd', 'piede', 'Piede preferito', DETTAGLI_SEGNALA[0][2], d)}`)}
+  ${sezioneForm(3, 'Cosa hai visto *', 'La parte più importante: solo aspetti tecnici e sportivi.', false,
+    `<textarea id="sg_testo" data-seg="testo" rows="5" aria-label="Cosa hai visto" placeholder="Es. Ala sinistra, salta l'uomo con facilità, cerca sempre la profondità…">${esc(d.testo||'')}</textarea>`)}
+  ${sezioneForm(4, 'Voti', 'Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto.', true,
+    AREE_VALUTA.map(([k, l, aiuto]) => rigaVoto('data-segd', k, l, aiuto, d, true)).join('')
+    + DETTAGLI_SEGNALA.slice(2).map(([k, l]) => rigaVoto('data-segd', k, l, '', d, false)).join(''))}
+  ${sezioneForm(5, 'Dove e quando', '', false, `<div class="grid">
       <div><label class="f" for="sg_contesto">Partita o occasione</label>${inp('contesto', 'placeholder="Es. Cambiaghese–Vibe, U12"')}</div>
       <div><label class="f" for="sg_data">Data</label>${inp('data', 'type="date"')}</div>
-    </div>
-    <button class="btn primary segsend" data-act="segnala" ${segInvio?'disabled':''}>${segInvio ? 'Invio…' : 'Invia allo scouting'}</button>
-  </section>`;
+    </div>`)}
+  <div class="barrasalva"><button class="btn primary segsend" data-act="segnala" ${segInvio?'disabled':''}>${segInvio ? 'Invio…' : 'Invia allo scouting'}</button>
+    <p class="note">* obbligatori: annata, cosa hai visto e cognome (o come riconoscerlo)</p></div>
+  </div>`;
 }
 /* Già in lista mentre si scrive: gli osservati della tua annata (coach_giocatori) con quel cognome, anche scritto
    un po' diverso. "Valuta questo" apre subito la valutazione; "No, è un altro" nasconde l'avviso. */

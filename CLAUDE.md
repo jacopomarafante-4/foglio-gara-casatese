@@ -184,14 +184,18 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   segnalazione (`segnalazioni.tecnica…mentale_note`); in `valutazioni` restano per le vecchie righe (ora nullabili). Medie per area
   da segnalazioni e valutazioni insieme (`medieAree`, `mediaVoti`, `conVoti` in `lib/valutazioni.ts`); `coach_segnala`, `coach_valuta`,
   `coach_giocatori` riscritte. Portale: blocco "Voti per area" in `viewSegnala`, niente aree in `viewValutaMister`
+  Moduli di segnalazione e valutazione a blocchi numerati (Chi è · Prima impressione · Cosa hai visto · Voti · Dove e quando;
+  valutazione: Giudizio · Nel dettaglio · Dove e quando) con pulsante di salvataggio fisso in fondo: `components/Sezione.tsx`
+  (`Sezione`, `RigaVoto` con nota apribile, `BarraSalva`) e `components/SceltaRapida.tsx` (si tocca di nuovo per togliere, campo nascosto);
+  nel Portale `sezioneForm`, `rigaVoto`, `sceltaRapida` in `portale.js`
 - 0042: `segnalazioni.impressione` (positiva / da_rivedere / negativa, `IMPRESSIONI` in `lib/tipi.ts`) al posto del voto 1–5 della
   prima impressione (vecchi voti convertiti: 4–5 positiva, 3 da rivedere, 1–2 negativa); `coach_segnala` riscritta. Nella segnalazione
-  tutte le domande facoltative nello stesso stile (`Voto facoltativo` con `voci`): piede preferito (`SCELTE_PIEDE`, al posto di piede
+  tutte le domande facoltative nello stesso stile (oggi `SceltaRapida`): piede preferito (`SCELTE_PIEDE`, al posto di piede
   forte/debole, che restano nel database), prima impressione, statura, forza. Elenco Giocatori: colonna e filtro "Impressione"
   (`impressioneDi()` = ultima segnalazione che ne ha una)
 - 0041: segnalazione con `piede` e 4 voti facoltativi 1–5 (`piede_forte`, `piede_debole`, `statura`, `forza`); valutazione con 7 voti
   tecnici facoltativi (`spunti`, `guida_palla`, `ricezione`, `calciata`, `contrasto`, `velocita`, `reattivita`) oltre alle 4 aree.
-  Elenchi in `lib/tipi.ts` (`DETTAGLI_SEGNALAZIONE`, `DETTAGLI_VALUTAZIONE`), `Voto facoltativo` con "–"; nel Portale
+  Elenchi in `lib/tipi.ts` (`DETTAGLI_SEGNALAZIONE`, `DETTAGLI_VALUTAZIONE`), `SceltaRapida`; nel Portale
   `DETTAGLI_SEGNALA`/`DETTAGLI_VALUTA`; `coach_segnala`/`coach_valuta` riscritte. Giocatori già nelle nostre rose:
   `scripts/inserisci-da-rose.mjs [--conferma]` (abbina per nome e annata ±1, li mette "Inseriti" e dell'Academy, nota nello storico e
   nella carriera; elenco con i nomi in `private/inseriti-da-rose.json`)

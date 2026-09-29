@@ -8,9 +8,12 @@ import { annateDisponibili, AREE, DETTAGLI_SEGNALAZIONE, IMPRESSIONI, RUOLI_CAMP
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
-import { Voto } from '@/components/Voto';
+import { SceltaRapida } from '@/components/SceltaRapida';
+import { BarraSalva, RigaVoto, Sezione } from '@/components/Sezione';
 import { GiaInLista } from '@/components/GiaInLista';
 import { salvaSegnalazione } from './actions';
+
+const TONI_IMPRESSIONE = { positiva: 'border-blu bg-blu text-white', da_rivedere: 'border-oro bg-oro text-inchiostro', negativa: 'border-rosso bg-rosso text-white' };
 
 export default async function Segnala({
   searchParams,
@@ -50,16 +53,16 @@ export default async function Segnala({
           ({giocatore.annata})
         </p>
       ) : (
-        <p className="mt-1 text-grigio">Se non sai ancora il nome, descrivilo: lo completerete dopo.</p>
+        <p className="mt-1 text-grigio">Dall’alto in basso: servono solo le voci con *, il resto se l’hai visto.</p>
       )}
 
-      <form id="segnala" action={salvaSegnalazione} className="mt-6 space-y-5">
+      <form id="segnala" action={salvaSegnalazione} className="mt-6 space-y-4">
         <Avviso errore={errore} />
 
         {giocatore ? (
           <input type="hidden" name="giocatore_id" value={giocatore.id} />
         ) : (
-          <>
+          <Sezione n={1} titolo="Chi è" sotto="Se non sai il nome, descrivilo: si completa dopo.">
             <div className="grid grid-cols-2 gap-3">
               <Etichetta testo="Annata *">
                 <select name="annata" required className="campo" defaultValue="">
@@ -78,15 +81,6 @@ export default async function Segnala({
                 </select>
               </Etichetta>
             </div>
-            <Etichetta testo="Società" aiuto="Scegli dall’elenco o scrivi il nome: se è nuova la aggiungo.">
-              <input name="societa" list="elenco-societa" className="campo" autoComplete="off" />
-              <datalist id="elenco-societa">
-                {societa.map((s) => (
-                  <option key={s.id} value={s.nome} />
-                ))}
-              </datalist>
-            </Etichetta>
-
             <div className="grid grid-cols-2 gap-3">
               <Etichetta testo="Cognome">
                 <input name="cognome" className="campo" autoComplete="off" autoCapitalize="words" />
@@ -98,56 +92,54 @@ export default async function Segnala({
 
             <GiaInLista formId="segnala" />
 
-            <Etichetta testo="Come riconoscerlo" aiuto="Obbligatorio se manca il cognome. Es. “N.8, biondo, mancino”.">
-              <input name="descrizione" className="campo" autoComplete="off" />
+            <Etichetta testo="Come riconoscerlo" aiuto="Serve se manca il cognome.">
+              <input name="descrizione" className="campo" autoComplete="off" placeholder="Es. N.8, biondo, mancino" />
             </Etichetta>
-          </>
+            <Etichetta testo="Società" aiuto="Scegli dall’elenco o scrivi il nome: se è nuova la aggiungo.">
+              <input name="societa" list="elenco-societa" className="campo" autoComplete="off" />
+              <datalist id="elenco-societa">
+                {societa.map((s) => (
+                  <option key={s.id} value={s.nome} />
+                ))}
+              </datalist>
+            </Etichetta>
+          </Sezione>
         )}
 
-        <Etichetta testo="Cosa hai visto *">
-          <textarea name="testo" required rows={5} className="campo" />
-        </Etichetta>
-
-        {/* le 4 aree (dalla 0043 qui e non più nella valutazione): voto 1–5 e note, facoltative */}
-        {AREE.map((a) => (
-          <fieldset key={a.chiave} className="space-y-3 rounded-xl border border-linea bg-white p-4">
-            <legend className="px-1 font-display text-2xl font-bold">{a.nome} <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
-            <p className="-mt-2 text-sm text-grigio">{a.aiuto}</p>
-            <Voto nome={a.chiave} facoltativo />
-            <textarea name={`${a.chiave}_note`} rows={2} placeholder="Note (facoltative)" className="campo" />
-          </fieldset>
-        ))}
-
-        {/* tutte le domande nello stesso stile, tutte facoltative ("–" = non rispondo) */}
-        <fieldset className="space-y-3 rounded-xl border border-linea bg-white p-4">
-          <legend className="px-1 font-display text-lg font-bold">Qualche dettaglio <span className="text-sm font-normal text-grigio">(facoltativo)</span></legend>
-          <p className="-mt-2 text-xs text-grigio">Lascia &quot;–&quot; su quello che non hai visto.</p>
+        <Sezione n={giocatore ? 1 : 2} titolo="Prima impressione" sotto="Due tocchi. Tocca di nuovo per togliere." facoltativo>
+          <div>
+            <span className="mb-1 block text-sm font-medium">Come ti è sembrato?</span>
+            <SceltaRapida nome="impressione" etichetta="Prima impressione" voci={Object.entries(IMPRESSIONI)} toni={TONI_IMPRESSIONE} />
+          </div>
           <div>
             <span className="mb-1 block text-sm font-medium">Piede preferito</span>
-            <Voto nome="piede" facoltativo voci={SCELTE_PIEDE} />
+            <SceltaRapida nome="piede" etichetta="Piede preferito" voci={SCELTE_PIEDE} />
           </div>
-          <div>
-            <span className="mb-1 block text-sm font-medium">Prima impressione</span>
-            <Voto nome="impressione" facoltativo voci={Object.entries(IMPRESSIONI)} />
+        </Sezione>
+
+        <Sezione n={giocatore ? 2 : 3} titolo="Cosa hai visto *" sotto="La parte più importante: solo aspetti tecnici e sportivi.">
+          <textarea name="testo" required rows={5} className="campo" aria-label="Cosa hai visto"
+            placeholder="Es. Ala sinistra, salta l'uomo con facilità, cerca sempre la profondità…" />
+        </Sezione>
+
+        {/* le 4 aree (0043) e il fisico: una riga per voce, nota solo se serve */}
+        <Sezione n={giocatore ? 3 : 4} titolo="Voti" sotto="Da 1 (debole) a 5 (ottimo). Vota solo quello che hai visto." facoltativo>
+          {AREE.map((a) => <RigaVoto key={a.chiave} nome={a.chiave} titolo={a.nome} aiuto={a.aiuto} nota />)}
+          {DETTAGLI_SEGNALAZIONE.map((d) => <RigaVoto key={d.chiave} nome={d.chiave} titolo={d.nome} />)}
+        </Sezione>
+
+        <Sezione n={giocatore ? 4 : 5} titolo="Dove e quando">
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <Etichetta testo="Partita o occasione">
+              <input name="contesto" className="campo" placeholder="Es. Cambiaghese–Vibe, U12" />
+            </Etichetta>
+            <Etichetta testo="Data">
+              <input type="date" name="data" defaultValue={oggiIso()} className="campo" />
+            </Etichetta>
           </div>
-          {DETTAGLI_SEGNALAZIONE.map((d) => (
-            <div key={d.chiave}>
-              <span className="mb-1 block text-sm font-medium">{d.nome}</span>
-              <Voto nome={d.chiave} facoltativo />
-            </div>
-          ))}
-        </fieldset>
+        </Sezione>
 
-        <div className="grid grid-cols-[1fr_auto] gap-3">
-          <Etichetta testo="Partita o occasione">
-            <input name="contesto" className="campo" placeholder="Es. Cambiaghese–Vibe, U12" />
-          </Etichetta>
-          <Etichetta testo="Data">
-            <input type="date" name="data" defaultValue={oggiIso()} className="campo" />
-          </Etichetta>
-        </div>
-
-        <button type="submit" className="bottone w-full">Salva segnalazione</button>
+        <BarraSalva testo="Salva segnalazione" nota="* obbligatori: annata, cosa hai visto e cognome (o come riconoscerlo)" />
       </form>
     </div>
   );
