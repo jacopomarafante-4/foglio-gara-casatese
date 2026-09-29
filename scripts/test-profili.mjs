@@ -246,7 +246,7 @@ async function ui(browser, profilo, pin, opzioni = {}) {
 try {
   await creaTemporanei();
   await permessi();
-  const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
   const giri = [
     ['Mister U14', cred.misterU14], ['Mister U15', cred.misterU15], ['Mister U11 (ADB)', cred.misterU11], ['Mister U8 (ADB)', cred.misterU8],
     ['Preparatore portieri', cred.preparatore, { altraSquadra: 't_u14' }], ['Organizzativo', temp.orgPin], ['Segreteria', temp.segPin],
@@ -259,3 +259,11 @@ try {
   await browser.close();
 } catch (e) { R.errore = e.message; }
 finally { await pulisci(); writeFileSync(OUT, JSON.stringify(R, null, 1)); console.log('fatto', R.permessi.length, 'prove permessi,', R.ui.length, 'profili provati', R.errore ? '· ERRORE ' + R.errore : ''); console.log(R.pulizia.join(' | ')); }
+/* Esito per la prova notturna su GitHub (registri pubblici): solo nomi delle prove e conteggi, mai testi delle pagine.
+   Se qualcosa non va il processo esce con errore e GitHub manda l'email. */
+const permessiKo = R.permessi.filter((x) => !x.ok);
+const uiKo = R.ui.map((x) => ({ profilo: x.profilo, n: (x.problemi?.length ?? 0) + (x.errori?.length ?? 0) })).filter((x) => x.n);
+permessiKo.forEach((x) => console.log(`✗ permesso: ${x.profilo} – ${x.prova}`));
+uiKo.forEach((x) => console.log(`✗ sito: ${x.profilo} – ${x.n} problemi (dettagli nel file di esito)`));
+if (R.errore || permessiKo.length || uiKo.length) process.exitCode = 1;
+else console.log('✓ tutto a posto');

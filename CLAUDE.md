@@ -341,6 +341,9 @@ Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` s
 `node --env-file=.env.local scripts/test-profili.mjs private/test-profili.json`: permessi di tutti i profili sul database e
 giro completo del sito vero con ogni profilo (identità di prova temporanee, cancellate alla fine). Rifarlo dopo modifiche a
 permessi, migrazioni o navigazione del Portale.
+Parte anche ogni notte su GitHub (`.github/workflows/notte.yml`, "Prova notturna dei profili", segreti del repository
+NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY; `CHROME_PATH`): a video solo nomi delle prove fallite e
+conteggi (registri pubblici), esce con errore se qualcosa non va.
 
 ## Backup
 `npm run backup` (scripts/backup.mjs) → `private/backup/` (`_riepilogo.json` con `problemi`). Attività di macOS (LaunchAgent
