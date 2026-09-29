@@ -48,8 +48,13 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara/Campi/Statistiche partite (`SOLO_AGONISTICA`):
   Tabellini con la sola presenza (`x.pres`, `viewGamesAdb`/`gameEditorAdb` in `registro.js`) e le statistiche in cima;
   convocazioni con le partite del weekend proposte (`data-adbsug`, `data-adbweekend`).
-- Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx`,
-  `components/Scheda.tsx`); nel Portale l'area "Scouting" di admin e dirigenti porta a `/home`.
+- Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx` con le aree e le
+  icone del Portale da `ICONE_AREE` in `lib/condivisi.ts`, `components/SchedeArea.tsx` = schede dell'area aperta); nel Portale l'area
+  "Scouting" di admin e dirigenti porta a `/home`.
+- App unica (tappa 3): le aree si portano nell'app Next una alla volta. Fatte: Società → Archivio documenti (`/societa/archivio`,
+  admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche (`/societa/modifiche`, solo admin), azioni in
+  `app/(app)/societa/actions.ts`. Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
+  (archivio.js, modifiche.js) è tolto. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
   Società `squadre`: `save()` non scrive e ricarica il dato vero, campi `readonly`, pulsanti nascosti con `.ro`); nel database
   `docs` solo in lettura (0011) tranne `shared/teams`, che scrivono (0020).
@@ -195,7 +200,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   `public/portale/js/unisci.js`, elenchi con id voce per voce, prove in `tests/portale-unisci.test.mjs`) e riprova. Negli adattatori di
   `core.js` (`basiDocs` = versione di partenza, aggiornata solo se il Portale mostra la scheda arrivata); senza la 0048 salvano come prima.
   `docs_storico` (una versione ogni 10 minuti per scheda, 30 giorni, lettura solo admin) e `ripristina_doc(id)`: Società → Storico
-  modifiche (`modifiche.js`)
+  modifiche (`/societa/modifiche`)
 - 0047: `coach_segnala` cerca prima se il giocatore è già in lista (qualsiasi annata) e risponde "esistente"; "cosa hai visto" e
   "portiere o movimento" obbligatori solo per un giocatore nuovo (anche in `segnala/actions.ts`). Il Portale controlla da sé solo
   annata e nome
@@ -238,7 +243,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   colore ciascuna (`components/Annata.tsx`); elenco Giocatori di base raggruppato per annata (dalla più giovane)
 - 0039: `archivio_documenti` (PDF in bytea, max 15 MB): ogni PDF scaricato dal Portale passa da `consegnaPdf(nome, blob, tipo)` in
   `pdf.js` (scarica + `archivia_documento(pin, nome, tipo, squadra, base64)`, col PIN per mister/organizzativo, account per lo staff).
-  Li vedono e scaricano admin e direttori (`archivio_scarica(id)`), li elimina l'admin: Società → Archivio documenti (`archivio.js`).
+  Li vedono e scaricano admin e direttori (`archivio_scarica(id)`), li elimina l'admin: Società → Archivio documenti (`/societa/archivio`).
   Esclusi i fogli PIN delle famiglie (credenziali) e il backup JSON. Valutazioni nominali: iniziali colorate `components/Autore.tsx`
   (`firma()`, `Autori`) nell'elenco Giocatori, nelle Necessità e nella scheda (medie e storico, con "Elimina" per admin, direttori e
   autore); nel Portale `autoreTondo()`

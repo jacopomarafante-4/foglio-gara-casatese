@@ -151,8 +151,7 @@ function render(){
   else if(tab==='tesserati') v.innerHTML = viewTesserati();
   else if(tab==='programma') v.innerHTML = viewProgramma();
   else if(tab==='comunicazione') v.innerHTML = viewComunicazione();
-  else if(tab==='archivio') v.innerHTML = viewArchivio();
-  else if(tab==='modifiche') v.innerHTML = viewModifiche();
+  else if(NELL_APP[tab]){ if(IN_APP_UNICA) location.replace(NELL_APP[tab]); else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
   else if(tab==='avvisi') v.innerHTML = viewAvvisi();
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='rosa') v.innerHTML = viewRosa();
