@@ -5,7 +5,7 @@ import { esci } from '@/app/auth/actions';
 import { nomeCompleto, puoAccedere, puoSegnalare } from '@/lib/ruoli';
 import { Striscia } from '@/components/Striscia';
 import { Aree } from '@/components/Aree';
-import { Scheda } from '@/components/Scheda';
+import { SchedeArea } from '@/components/SchedeArea';
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const profilo = await getProfilo();
@@ -75,15 +75,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <Aree ruolo={profilo.ruolo} />
         </header>
         <Striscia />
-        <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede dello scouting">
-          <Scheda href="/home">Home</Scheda>
-          <Scheda href="/giocatori">Giocatori</Scheda>
-          <Scheda href="/gare">Gare</Scheda>
-          {puoSegnalare(profilo.ruolo) && <Scheda href="/calendario">Calendario</Scheda>}
-          {puoSegnalare(profilo.ruolo) && <Scheda href="/necessita">Necessità</Scheda>}
-          {puoSegnalare(profilo.ruolo) && <Scheda href="/segnala">Segnala</Scheda>}
-          <Scheda href="/profilo">Attività</Scheda>
-        </nav>
+        <SchedeArea ruolo={profilo.ruolo} segnala={puoSegnalare(profilo.ruolo)} />
       </div>
 
       <main className="mx-auto w-full max-w-[1000px] flex-1 px-4 pb-20 pt-6">{children}</main>

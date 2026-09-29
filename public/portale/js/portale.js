@@ -3,19 +3,7 @@
 /* ---------- Portale: aree, sotto-schede, indirizzo della pagina ---------- */
 /* L'indirizzo tiene la scheda aperta (#/formazione, oppure #squadra=PIN/formazione per i mister):
    il tasto indietro del telefono torna alla scheda precedente e si può mandare il link a una sezione. */
-const AREA_ICONS = {
-  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
-  calendario:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/>',
-  eventi:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6"/><path d="M7 14.5 8 20h3l-1-4.5"/>',
-  segreteria:'<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
-  squadra:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.6.3 4.5 2.4 4.5 5.8"/>',
-  gara:'<circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.8h-5L8 10.4z"/><path d="M12 3v4.5M21 10.4l-5 0M17.3 19.3l-2.8-4.1M6.7 19.3l2.8-4.1M3 10.4l5 0"/>',
-  allenamento:'<circle cx="13.5" cy="4.5" r="2"/><path d="m9 21 2.5-6 2.5 2.5V21"/><path d="M6 12.5 9 9l4 1.5 2.5 3.5H19"/><path d="m11.5 15-2-3"/>',
-  statistiche:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  modulistica:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
-  scouting:'<circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5h4M4 13l2.5-8h3l1 5.5M20 13l-2.5-8h-3l-1 5.5"/>',
-  societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
-};
+const AREA_ICONS = ICONE_AREE;   // icone comuni con lo Scouting (condivisi.js)
 /* Aree: Home, Calendario, Squadra, Scouting, Società. Squadra ha tre sottopannelli (gruppi): Rosa, Allenamento e Partite,
    ognuno con le sue schede (seconda riga, #subtabs) e le sue statistiche */
 const GRUPPI_SQUADRA = [
@@ -67,8 +55,11 @@ function writeRoute(push){
   const h = '#' + (pin ? 'squadra=' + pin : '') + '/' + tab;
   if(location.hash !== h) history[push ? 'pushState' : 'replaceState'](null, '', h);
 }
+/* Schede già portate nell'app (tappa 3 dell'app unica): nel sito si aprono lì, stessa intestazione e stessa barra */
+const NELL_APP = {archivio:'/societa/archivio', modifiche:'/societa/modifiche'};
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
+  if(NELL_APP[t] && IN_APP_UNICA){ location.assign(NELL_APP[t]); return; }
   impostaTab(t); areaLast[areaOf(t).k] = t; if(gruppoDi(t)) gruppoLast[gruppoDi(t).k] = t;
   impostaSelectedPlayer(null); impostaSlotPick(null); if(t!=='piazzati') impostaOpenSchemeId(null);
   impostaOpenTrainingId(impostaOpenGameId(impostaOpenTestId(null)));
