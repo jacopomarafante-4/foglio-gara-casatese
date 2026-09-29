@@ -51,10 +51,13 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
 - Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx` con le aree e le
   icone del Portale da `ICONE_AREE` in `lib/condivisi.ts`, `components/SchedeArea.tsx` = schede dell'area aperta); nel Portale l'area
   "Scouting" di admin e dirigenti porta a `/home`.
-- App unica (tappa 3): le aree si portano nell'app Next una alla volta. Fatte: Società → Archivio documenti (`/societa/archivio`,
-  admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche (`/societa/modifiche`, solo admin), azioni in
-  `app/(app)/societa/actions.ts`. Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
-  (archivio.js, modifiche.js) è tolto. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
+- App unica (tappa 3): le aree si portano nell'app Next una alla volta, nel gruppo `app/(aree)/` (layout che fa entrare admin,
+  direttori e segreteria; ogni pagina controlla il suo ruolo; intestazione comune `components/Intestazione.tsx`). Fatte: Società →
+  Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
+  (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`; Segreteria → Tesserati (`/segreteria`, admin,
+  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area). Le aree dei mister
+  (Modulistica, Calendario, Squadra) aspettano un accesso dei mister alle pagine dell'app (oggi entrano solo col PIN nel Portale). Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
+  (archivio.js, modifiche.js, segreteria.js) è tolto. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
 - Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
   Società `squadre`: `save()` non scrive e ricarica il dato vero, campi `readonly`, pulsanti nascosti con `.ro`); nel database
   `docs` solo in lettura (0011) tranne `shared/teams`, che scrivono (0020).
@@ -187,12 +190,12 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   nome del compito si rinomina per tutte le sue pedine (`data-arolegrp`: admin nello schema, mister solo nella partita, `schemeEdits`)
 - Portale, ruolo dei giocatori: lo sceglie anche il mister, in `registro.ruoli` (`ruoloSel()` in `registro.js`); da Under 13 in su
   ruoli completi, sotto portiere/movimento; "portiere" tiene allineato `registro.gk` (gol subiti)
-- 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nel Portale,
-  area Segreteria (`isSegreteria()` in `core.js`), non nello Scouting
+- 0030: ruolo `segreteria` (account personale col PIN, creato in Società → Segreteria via `/api/staff`); entra solo nell'area
+  Segreteria (`/segreteria`; nel Portale `isSegreteria()` in `core.js` rimanda lì), non nello Scouting
 - Intestazione unica dei documenti (fondo bianco: FIGC-SGS, ACADEMY / CASATESE MERATE / categoria, stemma): `intestazioneSocieta()` e
   `immagineIntestazione()` in `pdf.js`, usate da convocazioni (anche attività di base), report statistiche (`reportHeader` in
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
-  seguenti bianche con filo blu), fogli PIN (`segreteria.js`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
+  seguenti bianche con filo blu), fogli PIN (`lib/fogli-pin.ts`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
 - 0048: `docs.versione` (sale a ogni modifica, trigger `docs_versione`) e `modificato_da` (`chi_salva()`: mister da `app.chi`, se no
   l'account). Salvataggio con controllo: `salva_doc(path, data, versione)` (admin/direttori, RLS) e `coach_salva(pin, path, data, versione)`,
@@ -288,7 +291,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
   blocco 0015 non deve scattare) → `/portale/#famiglia=PIN` → `famiglia.js`: `famiglia_get` (solo il suo ragazzo, le sue
   convocazioni, avvisi ed eventi della squadra), `famiglia_contatti` (genitori e taglie), `famiglia_rispondi` (ci sarà / non ci
   sarà, chiave = calId o "data|avversario"). Il mister vede le risposte in Convocazioni (`coach_risposte`, `rispostaFamiglia()`).
-  Segreteria: `segreteria.js` (area Segreteria → Tesserati), PIN alla famiglia col foglio PIN in PDF (`fogliPin()`, 8 per pagina).
+  Segreteria: pagina dell'app `/segreteria` (tappa 3, `components/Tesserati.tsx`), PIN alla famiglia col foglio PIN in PDF (`lib/fogli-pin.ts`, 8 per pagina).
   Anagrafica iniziale da importare dal file della segreteria (in `private/`, mai su git)
 - 0029: squadra con `organizza: true` (responsabile organizzativo, casella in Società → Nome e categoria): `coach_get` gli dà
   tutte le squadre senza PIN e `calendar/*`; `coach_set` scrive `calendar/*`, `shared/eventi`, `shared/avvisi`. Tutti i mister

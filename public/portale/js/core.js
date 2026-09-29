@@ -461,7 +461,7 @@ async function initStore(){
     /* Famiglia: pagina del solo ragazzo (famiglia.js) */
     const pinFam = famigliaPinFromUrl();
     if(pinFam && !(sessionOk(session) && !isSegreteria())){ if(await famigliaLogin(pinFam)) return; }
-    /* Segreteria: niente documenti del Portale, solo l'area Segreteria (segreteria.js) */
+    /* Segreteria: niente documenti del Portale, solo l'area Segreteria (pagina /segreteria dell'app, NELL_APP) */
     if(isSegreteria() && sessionOk(session)){ teamsLoaded = true; tab = 'tesserati'; render(); return; }
     if(sessionOk(session) || !secureMode){
       try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }

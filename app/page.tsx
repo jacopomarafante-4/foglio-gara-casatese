@@ -45,7 +45,8 @@ export default async function Ingresso({
 }) {
   const [{ next, pin }, profilo] = await Promise.all([searchParams, getProfilo()]);
   // ?pin=1: il Portale ha rimandato qui (sessione non valida per lui) → PIN, niente giro di rimandi
-  if (!pin && (profilo?.ruolo === 'admin' || ((profilo?.ruolo === 'direttore' || profilo?.ruolo === 'segreteria') && profilo.attivo))) redirect('/portale/');
+  if (!pin && (profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo))) redirect('/portale/');
+  if (!pin && profilo?.ruolo === 'segreteria' && profilo.attivo) redirect('/segreteria');
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-blu-scuro px-4 py-10">

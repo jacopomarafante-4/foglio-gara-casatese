@@ -1,12 +1,19 @@
 'use client';
 // Seconda riga dell'intestazione: le schede dell'area aperta. Scouting: le sue pagine; Società: Squadre (nel Portale),
-// Archivio documenti e Storico modifiche (pagine dell'app, tappa 3).
+// Archivio documenti e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati.
 import { usePathname } from 'next/navigation';
 import { Scheda } from '@/components/Scheda';
 import type { Ruolo } from '@/lib/ruoli';
 
 export function SchedeArea({ ruolo, segnala }: { ruolo: Ruolo; segnala: boolean }) {
   const percorso = usePathname();
+  if (percorso.startsWith('/segreteria')) {
+    return (
+      <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della segreteria">
+        <Scheda href="/segreteria">Tesserati</Scheda>
+      </nav>
+    );
+  }
   if (percorso.startsWith('/societa')) {
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della società">

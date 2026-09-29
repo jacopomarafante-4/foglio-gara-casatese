@@ -1,6 +1,6 @@
 'use client';
 // Barra delle aree: la stessa del Portale (AREAS in public/portale/js/portale.js), stesse icone (ICONE_AREE in lib/condivisi.ts).
-// Le aree già portate nell'app (Scouting, Società → archivio e storico) si aprono qui; le altre aprono il Portale.
+// Le aree già portate nell'app (Scouting, Società → archivio e storico, Segreteria) si aprono qui; le altre aprono il Portale.
 import { usePathname } from 'next/navigation';
 import type { Ruolo } from '@/lib/ruoli';
 import { ICONE_AREE } from '@/lib/condivisi';
@@ -10,19 +10,21 @@ const AREE = [
   { k: 'calendario', etichetta: 'Calendario', href: '/portale/#/calendario' },
   { k: 'squadra', etichetta: 'Squadra', href: '/portale/#/rosa' },
   { k: 'modulistica', etichetta: 'Modulistica', href: '/portale/#/distinta' },
-  { k: 'segreteria', etichetta: 'Segreteria', href: '/portale/#/tesserati' },
+  { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
   { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre' },
 ];
 
-/** Admin e direttori vedono tutte le aree; gli scout hanno solo lo Scouting, quindi niente barra */
+/** Admin e direttori vedono tutte le aree, la segreteria solo la sua (come nel Portale); gli scout hanno solo lo Scouting,
+ *  quindi niente barra */
 export function Aree({ ruolo }: { ruolo: Ruolo }) {
   const percorso = usePathname();
-  if (ruolo !== 'admin' && ruolo !== 'direttore') return null;
-  const corrente = percorso.startsWith('/societa') ? 'societa' : 'scouting';
+  if (ruolo !== 'admin' && ruolo !== 'direttore' && ruolo !== 'segreteria') return null;
+  const aree = ruolo === 'segreteria' ? AREE.filter((a) => a.k === 'segreteria') : AREE;
+  const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria' : 'scouting';
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
-      {AREE.map((a) => {
+      {aree.map((a) => {
         const attiva = a.k === corrente;
         return (
           <a

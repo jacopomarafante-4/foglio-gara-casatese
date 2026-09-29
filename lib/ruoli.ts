@@ -24,9 +24,9 @@ export function puoAccedere(ruolo: Ruolo) {
 }
 
 /** Pannello che si apre dopo l'accesso: admin e direttori il Portale (lì c'è tutto, Scouting compreso),
- *  gli scout lo Scouting */
+ *  la segreteria la sua area, gli scout lo Scouting */
 export function pannelloIniziale(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'segreteria' ? '/portale/' : '/home';
+  return ruolo === 'admin' || ruolo === 'direttore' ? '/portale/' : ruolo === 'segreteria' ? '/segreteria' : '/home';
 }
 
 /** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi */
@@ -48,4 +48,9 @@ export function puoSegnalare(ruolo: Ruolo) {
  *  (SQL: public.vede_tutto(), 0018). Nel Portale squadre i direttori restano in sola lettura. */
 export function gestisce(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore';
+}
+
+/** Stessa regola della funzione SQL public.gestisce_segreteria() (0031): tesserati, famiglie, quote */
+export function gestisceSegreteria(ruolo: Ruolo) {
+  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'segreteria';
 }
