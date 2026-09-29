@@ -547,8 +547,8 @@ Vota solo quello che hai visto; una scelta si toglie toccandola di nuovo.</li>
 <li><span class="k">Salva segnalazione</span> (sempre in fondo allo schermo): si apre la scheda del giocatore.</li></ol>
 <div class="box"><b class="t">È già in lista? Si valuta</b>Mentre scrivi annata e cognome si apre la finestra <b>"Già in lista. Vuoi
 valutare?"</b> con i ragazzi già in archivio (anche con il cognome scritto un po' diverso): <span class="k">Sì, valuta</span> apre subito la
-<b>Valutazione</b> (il dettaglio facoltativo su spunti, guida della palla, ricezione, calciata, contrasto,
-velocità e reattività, e il giudizio), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
+<b>Valutazione</b> (il giudizio e il dettaglio facoltativo: con la palla, senza palla, fisico,
+mentale), con quello che avevi scritto già nel commento. Anche inviando, se è lo stesso
 (cognome, nome e annata) la segnalazione <b>non</b> si salva e si apre la valutazione. Nella scheda di un giocatore già in lista c'è
 solo <span class="k">Valuta</span>.</div>''', 'Segnala un giocatore')}
 </section>
@@ -578,9 +578,9 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
 <li><b>1 · Giudizio</b> (obbligatorio): da prendere (blu), da rivedere (oro), non a livello (rosso), e sotto il <b>perché</b>.</li>
-<li><b>2 · Nel dettaglio</b> (facoltativo), voti da 1 a 5 in quattro gruppi: <b>con la palla</b> (spunti, guida della palla, ricezione,
-trasmissione, calciata), <b>senza palla</b> (marcamento, smarcamento, contrasto), <b>fisico</b> (velocità, reattività), <b>testa</b>
-(concentrazione, coraggio, estro).
+<li><b>2 · Nel dettaglio</b> (facoltativo), voti da 1 a 5 in quattro gruppi: <b>con la palla</b> (spunti, estro e coraggio; guida della palla,
+ricezione, trasmissione, calciata, colpo di testa), <b>senza palla</b> (marcamento, smarcamento, contrasto), <b>fisico</b> (velocità,
+reattività), <b>mentale</b> (concentrazione).
 I voti per area (Tecnica, Motoria, Tattica, Mentale) si danno nella <b>segnalazione</b>.</li>
 <li><b>3 · Dove e quando</b>: partita o occasione, data.</li>
 <li><span class="k">Salva valutazione</span>.</li></ol>
@@ -731,8 +731,9 @@ le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Segnalazione</b>: oltre a cosa hai visto, alcune domande facoltative tutte nello stesso stile (una scelta si toglie toccandola di nuovo):
 <b>piede preferito</b> (destro, sinistro, entrambi), <b>prima impressione</b> (positiva, da rivedere, negativa), statura e forza da 1 a 5, e i <b>voti per area</b> (Tecnica, Motoria, Tattica, Mentale, con note).
 Nell'elenco Giocatori la colonna <b>Impressione</b> mostra quella dell'ultima segnalazione: si ordina toccando l'intestazione e si
-filtra con "Ogni impressione". <b>Valutazione</b>: giudizio, commento e, <b>nel dettaglio</b> (facoltativo), spunti,
-guida della palla, ricezione, calciata, contrasto, velocità e reattività. Si vedono nella storia e nello storico valutazioni della scheda.</li>
+filtra con "Ogni impressione". <b>Valutazione</b>: giudizio, commento e, <b>nel dettaglio</b> (facoltativo), spunti
+(con estro e coraggio), guida della palla, ricezione, trasmissione, calciata, colpo di testa, marcamento, smarcamento, contrasto,
+velocità, reattività e concentrazione. Si vedono nella storia e nello storico valutazioni della scheda.</li>
 <li><b>Tre valutazioni</b>: ogni giocatore ha <b>3 caselle</b> con le iniziali delle persone che l'hanno valutato. Servono 3 persone
 diverse per passarlo a <b>Inserito</b>: a 3 su 3 caselle e riga diventano <b>verdi</b> ✓. Ogni <b>annata</b> ha il suo colore e
 l'elenco è diviso per annata (dalla più giovane), finché non scegli un altro ordine.</li>

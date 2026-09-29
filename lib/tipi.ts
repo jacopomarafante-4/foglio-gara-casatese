@@ -51,21 +51,20 @@ export const IMPRESSIONI: Record<Impressione, string> = { positiva: 'Positiva', 
 /** Piede preferito nella segnalazione (stesse scelte del tipo piede, "Entrambi" = ambidestro) */
 export const SCELTE_PIEDE: [Piede, string][] = [['destro', 'Destro'], ['sinistro', 'Sinistro'], ['ambidestro', 'Entrambi']];
 /** Valutazione: voti da 1 a 5 facoltativi (0041, 0044), divisi in gruppi nel modulo */
-export const GRUPPI_VALUTAZIONE = ['Con la palla', 'Senza palla', 'Fisico', 'Testa'] as const;
+export const GRUPPI_VALUTAZIONE = ['Con la palla', 'Senza palla', 'Fisico', 'Mentale'] as const;
 export const DETTAGLI_VALUTAZIONE = [
-  { chiave: 'spunti', nome: 'Spunti', gruppo: 'Con la palla', aiuto: 'Uno contro uno, cambi di passo' },
+  { chiave: 'spunti', nome: 'Spunti, estro e coraggio', gruppo: 'Con la palla', aiuto: 'Uno contro uno, fantasia, non si nasconde' },
   { chiave: 'guida_palla', nome: 'Guida della palla', gruppo: 'Con la palla', aiuto: 'Conduzione a testa alta, con entrambi i piedi' },
   { chiave: 'ricezione', nome: 'Ricezione', gruppo: 'Con la palla', aiuto: 'Primo controllo, orientato' },
   { chiave: 'trasmissione', nome: 'Trasmissione', gruppo: 'Con la palla', aiuto: 'Passaggio corto e lungo, tempi e precisione' },
   { chiave: 'calciata', nome: 'Calciata', gruppo: 'Con la palla', aiuto: 'Tiro e lancio, forza e precisione' },
+  { chiave: 'colpo_di_testa', nome: 'Colpo di testa', gruppo: 'Con la palla', aiuto: 'Tempo di stacco e precisione, in attacco e in difesa' },
   { chiave: 'marcamento', nome: 'Marcamento', gruppo: 'Senza palla', aiuto: 'Presa dell’uomo, posizione tra avversario e porta' },
   { chiave: 'smarcamento', nome: 'Smarcamento', gruppo: 'Senza palla', aiuto: 'Movimenti per ricevere, attacco dello spazio' },
   { chiave: 'contrasto', nome: 'Contrasto', gruppo: 'Senza palla', aiuto: 'Tempo e decisione nel recupero palla' },
   { chiave: 'velocita', nome: 'Velocità', gruppo: 'Fisico', aiuto: 'Allungo, con e senza palla' },
   { chiave: 'reattivita', nome: 'Reattività', gruppo: 'Fisico', aiuto: 'Prontezza nei primi passi e sulle seconde palle' },
-  { chiave: 'concentrazione', nome: 'Concentrazione', gruppo: 'Testa', aiuto: 'Attento per tutta la partita, pochi errori di distrazione' },
-  { chiave: 'coraggio', nome: 'Coraggio', gruppo: 'Testa', aiuto: 'Chiede palla, entra nei contrasti, non si nasconde' },
-  { chiave: 'estro', nome: 'Estro', gruppo: 'Testa', aiuto: 'Fantasia, giocate inattese, creatività' },
+  { chiave: 'concentrazione', nome: 'Concentrazione', gruppo: 'Mentale', aiuto: 'Attento per tutta la partita, pochi errori di distrazione' },
 ] as const;
 
 export const AREE = [

@@ -15,7 +15,7 @@ export type ValutazioneStorico = {
   spunti?: number | null; guida_palla?: number | null; ricezione?: number | null; calciata?: number | null;
   contrasto?: number | null; velocita?: number | null; reattivita?: number | null;   // 0041, facoltativi
   marcamento?: number | null; smarcamento?: number | null; trasmissione?: number | null;
-  concentrazione?: number | null; coraggio?: number | null; estro?: number | null;   // 0044
+  colpo_di_testa?: number | null; concentrazione?: number | null;   // 0044
 };
 
 /* media: delle 4 aree se ci sono (valutazioni vecchie), se no del dettaglio */
