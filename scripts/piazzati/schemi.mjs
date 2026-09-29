@@ -99,7 +99,7 @@ export const SCHEMI = [
   {
     id: 's_ang_sfavore_misto', name: 'Angolo a sfavore 2', subtitle: 'Difesa mista: 6 a zona, 4 a uomo', side: 'sfavore', ball: ANGOLO,
     note: 'Zone A–F: 2 primo palo, 5 area piccola, 3 lato vicino, 6 dischetto, 8 limite, 10 lato lontano. 4-7-9-11 a uomo sui più pericolosi. Su ribattuta: palla in aria = palla coperta, si sale (ultima linea 2 e 5); in pressione 3, 8 o 10.',
-    tokens: [[1, 0, 0.9, 'Portiere'], [2, 5.7, 1.8, 'Zona', 'A'], [5, 0.4, 3.2, 'Zona', 'B'], [3, 8.7, 6.5, 'Zona', 'C'],
+    tokens: [[1, 0, 0.9, 'Portiere'], [2, 5.7, 1.8, 'Zona', 'A'], [5, 1, 4.6, 'Zona', 'B'], [3, 8.7, 6.5, 'Zona', 'C'],
       [6, 0, 8.5, 'Zona', 'D'], [8, 0.3, 14.6, 'Zona', 'E'], [10, -7.9, 5.2, 'Zona', 'F'], [4, 4.3, 5.8, 'A uomo', 'M'],
       [7, 3.3, 11.5, 'A uomo', 'M'], [9, -3.3, 6.2, 'A uomo', 'M'], [11, -5.6, 9.5, 'A uomo', 'M']],
     draw: [],

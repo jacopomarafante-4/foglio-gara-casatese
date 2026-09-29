@@ -159,7 +159,7 @@ codice che confronta stringhe di ruolo, usa i nomi nuovi.
 - Portale, attività di base (da Under 13 in giù, `isAdb()` in `registro.js`): squadre t_u13…t_u8 create con
   `scripts/import-adb/importa.mjs` dai fogli presenze (CSV in `private/adb/`, NON su git); niente Formazione/Piazzati/Foglio gara
   (`SOLO_AGONISTICA` in `portale.js`, anche Dati partita); convocazioni da 1 a 4 partite con i loro convocati (`sheet.adb.partite`, `viewConvocazioniAdb()`), PDF orizzontale sul
-  modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Da fare: risultato a tempi (3–5) nelle partite
+  modello della società, una colonna per partita (`convocazioneAdbSheet()` in `pdf.js`). Risultato a tempi (3–5) nel tabellino: `g.tempi = [{noi, loro}]`, `g.nTempi`, `riquadroTempi()`/`tempiAdb()` in `registro.js`
 - Portale, piazzati (`public/portale/js/piazzati.js`): modelli della società (`shared/schemes`, li modifica l'admin) e "I miei schemi"
   della squadra in `registro/<squadra>.schemi` (li salva il mister col PIN; `preferito`, `da` = modello, `aggiornato`). "Usa come
   modello" (`usaModello`) copia posizioni, compiti e frecce e sceglie la copia per la partita. Editor unico (`boardMode = 'unico'`,
@@ -343,8 +343,14 @@ giro completo del sito vero con ogni profilo (identità di prova temporanee, can
 permessi, migrazioni o navigazione del Portale.
 
 ## Backup
-`npm run backup` (scripts/backup.mjs) → `private/backup/`; attività settimanale di macOS (LaunchAgent
-`it.academycasatese.backup`, lunedì 9:00). Se aggiungi una tabella, aggiungila anche all'elenco `TABELLE` dello script.
+`npm run backup` (scripts/backup.mjs) → `private/backup/` (`_riepilogo.json` con `problemi`). Attività di macOS (LaunchAgent
+`it.academycasatese.backup`, ogni giorno alle 9:00 e all'accensione) → `scripts/avvia-controllo-backup.sh` (trova Node da solo) →
+`scripts/controlla-backup.mjs`: se l'ultimo backup riuscito ha 7 giorni o più lo rifà; se fallisce o supera gli 8 giorni apre un
+avviso sul Mac (`--prova-avviso` per provarlo). Registro in `private/backup/backup.log`. Se aggiungi una tabella, aggiungila anche all'elenco `TABELLE` dello script.
+
+## Contatti nelle note
+`scripts/sposta-contatti-dalle-note.mjs [--conferma]`: telefoni ed email scritti nei testi (note, segnalazioni, valutazioni, eventi,
+carriera) → `contatti` (solo admin e direttori), nel testo "(contatto nei Contatti)". Stampa solo conteggi.
 
 ## Manuali
 PDF in `public/manuali/` (link "Istruzioni" nella pagina del PIN), sorgenti in `scripts/manuali/genera.py`.

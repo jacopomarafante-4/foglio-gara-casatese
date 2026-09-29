@@ -233,7 +233,7 @@ function viewGamesAdb(){
     const i = game ? gameInfo(game) : {date:cal.date, opponent:cal.opponent||'', home:!!cal.home};
     const future = i.date > today, attr = game ? `data-opengm="${game.id}"` : `data-opencal="${cal.id}"`;
     const n = game ? Object.values(game.pl||{}).filter(played).length : 0;
-    return `<th class="${future?'future':''}" ${ci===focusIdx?'data-focus':''}><button class="colbtn" ${attr} title="${esc(gameTitle(game || {calId:cal.id}))}"><small>${fmtDate(i.date).slice(0,5)}</small>${esc(i.opponent || 'Amichevole')}<em>${future ? 'prossima' : n ? `${n} presenti` : 'da segnare'}</em></button></th>`;
+    return `<th class="${future?'future':''}" ${ci===focusIdx?'data-focus':''}><button class="colbtn" ${attr} title="${esc(gameTitle(game || {calId:cal.id}))}"><small>${fmtDate(i.date).slice(0,5)}</small>${esc(i.opponent || 'Amichevole')}<em>${future ? 'prossima' : n ? `${n} presenti` : 'da segnare'}${game && tempiAdb(game) ? `<br>tempi ${tempiAdb(game).v}-${tempiAdb(game).pa}-${tempiAdb(game).pe}` : ''}</em></button></th>`;
   }).join('');
   const body = byName().map(p => {
     let pres = 0;
@@ -251,6 +251,24 @@ function viewGamesAdb(){
       <p class="note legend2">Tocca una partita per segnare chi era presente. ✓ presente · – assente.</p>`
     : '<p class="empty">Nessuna partita: le partite arrivano dal Calendario, oppure aggiungi un\'amichevole.</p>'}`;
 }
+/* Attività di base: risultato tempo per tempo (3–5 tempi). g.tempi = [{noi, loro}, …]; riepilogo per la colonna e l'editor */
+function tempiAdb(g){
+  const t = (g.tempi || []).filter(x => x && x.noi !== '' && x.noi != null && x.loro !== '' && x.loro != null);
+  if(!t.length) return null;
+  const v = t.filter(x => +x.noi > +x.loro).length, pa = t.filter(x => +x.noi === +x.loro).length, pe = t.length - v - pa;
+  return {v, pa, pe, noi: t.reduce((a, x) => a + +x.noi, 0), loro: t.reduce((a, x) => a + +x.loro, 0)};
+}
+const testoTempi = r => `${r.v} ${r.v === 1 ? 'vinto' : 'vinti'} · ${r.pa} pari · ${r.pe} ${r.pe === 1 ? 'perso' : 'persi'}, gol ${r.noi}–${r.loro}`;
+function riquadroTempi(g){
+  const nt = g.nTempi || Math.max(3, (g.tempi || []).length), t = g.tempi || [], r = tempiAdb(g);
+  const casella = (i, k) => `<input type="number" inputmode="numeric" min="0" max="30" data-gmtempo="${i}:${k}" value="${esc(t[i]?.[k] ?? '')}" aria-label="Tempo ${i+1}, gol ${k === 'noi' ? 'nostri' : 'loro'}" placeholder="–">`;
+  return `<section class="tempiadb">
+    <div class="row" style="justify-content:space-between;gap:8px"><b>Risultato a tempi</b>
+      <div class="seg" role="group" aria-label="Quanti tempi">${[3,4,5].map(k => `<button data-gmnt="${k}" aria-pressed="${nt === k}">${k} tempi</button>`).join('')}</div></div>
+    <div class="tempigriglia">${Array.from({length: nt}, (_, i) => `<div class="tempo"><small>${i+1}° tempo</small><div>${casella(i, 'noi')}<span>–</span>${casella(i, 'loro')}</div></div>`).join('')}</div>
+    <p class="note" style="margin:6px 0 0">${r ? 'Tempi: ' + testoTempi(r) : 'A sinistra i nostri gol, a destra i loro. Facoltativo.'}</p>
+  </section>`;
+}
 function gameEditorAdb(g){
   const pl = g.pl ||= {}, i = gameInfo(g), cal = calOf(g);
   const n = byName().filter(p => played(pl[p.id] || {})).length;
@@ -259,12 +277,30 @@ function gameEditorAdb(g){
       <button data-gmpres="${p.id}" data-v="1" data-pres="P" aria-pressed="${on}">Presente</button><button data-gmpres="${p.id}" data-v="0" data-pres="A" aria-pressed="${!on}">Assente</button></div></div></div>`; }).join('');
   return `<div class="row regbar"><button class="btn small ghost" data-act="regback">← Tabellini</button></div>
     <div class="matchcard"><small>${esc(i.comp)} · ${weekday(i.date)} ${fmtDate(i.date)}${cal?.time ? ' · '+esc(cal.time) : ''}</small><b>${esc(gameTitle(g))}</b>${i.venue ? `<span class="note">${esc(i.venue)}</span>` : ''}</div>
+    ${riquadroTempi(g)}
     <div class="row" style="margin-top:12px;justify-content:space-between"><span class="countchip" data-status="CON"><b>${n}</b>presenti</span>
       <button class="btn small" data-gmtutti="1">Tutti presenti</button></div>
     <div class="attlist" style="margin-top:10px">${rows}</div>
     <div class="row" style="margin-top:14px;justify-content:space-between"><div class="row"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo.</span></div>
       <button class="btn small ghost danger" data-act="gmdel">${cal && !cal.friendly ? 'Svuota presenze' : 'Elimina partita'}</button></div>`;
 }
+/* Risultato a tempi: numero di tempi e gol per tempo (si salva mentre si scrive, si ridisegna uscendo dal campo) */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-gmnt]'); if(!b) return;
+  const g = curGame(); if(!g) return;
+  g.nTempi = +b.dataset.gmnt; if(g.tempi) g.tempi = g.tempi.slice(0, g.nTempi);
+  save('registro'); render();
+});
+document.addEventListener('input', e => {
+  const v = e.target.dataset?.gmtempo; if(!v) return;
+  const g = curGame(); if(!g) return;
+  const [i, k] = v.split(':'), t = (g.tempi ||= []);
+  t[+i] = {...(t[+i] || {}), [k]: e.target.value === '' ? '' : Math.max(0, Math.min(30, +e.target.value))};
+  save('registro');
+  /* solo il riepilogo si aggiorna: ridisegnare la pagina toglierebbe il cursore dalla casella successiva */
+  const r = tempiAdb(g), nota = document.querySelector('.tempiadb .note');
+  if(nota && r) nota.textContent = 'Tempi: ' + testoTempi(r);
+});
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-gmpres],[data-gmtutti]'); if(!b) return;
   const g = curGame(); if(!g) return;

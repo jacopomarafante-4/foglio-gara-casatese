@@ -6,7 +6,7 @@ import { gestisce, nomeCompleto, puoSegnalare, vedeTutto } from '@/lib/ruoli';
 import { elencoSocieta } from '@/lib/societa';
 import {
   AREE, DETTAGLI_SEGNALAZIONE, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, annateDisponibili, etichettaStato,
-  etichettaRuolo, type Giudizio, type Piede, type RuoloCampo, type RuoloPreciso, type StatoGiocatore,
+  etichettaRuolo, DETTAGLI_VALUTAZIONE, GRUPPI_VALUTAZIONE, RUOLI_PRECISI, type ChiaveDettaglio, type Giudizio, type Piede, type RuoloCampo, type RuoloPreciso, type StatoGiocatore,
 } from '@/lib/tipi';
 import { dataBreve, istanteTraOre } from '@/lib/utili';
 import { categoriaDaAnnata } from '@/lib/categorie';
@@ -65,7 +65,8 @@ type Valutazione = {
   autore_id: string | null;
   tecnica: number | null; motoria: number | null; tattica: number | null; mentale: number | null; // dalla 0043 si danno nella segnalazione
   tecnica_note: string | null; motoria_note: string | null; tattica_note: string | null; mentale_note: string | null;
-};
+  ruolo_preciso?: RuoloPreciso | null;   // 0046
+} & Partial<Record<ChiaveDettaglio, number | null>>;   // voti del dettaglio (0041, 0044, 0045)
 
 type CambioStato = {
   id: number; da_stato: string | null; a_stato: string; motivo: string | null; // anche il vecchio "chiuso"
@@ -344,15 +345,29 @@ export default async function SchedaGiocatore({
                         {v.contesto && ` – ${v.contesto}`}
                       </p>
                       <p className="mt-1 font-display text-xl font-bold">{GIUDIZI[v.giudizio]}</p>
-                      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-                        {AREE.map((a) => (
-                          <div key={a.chiave}>
-                            <dt className="text-grigio">{a.nome}</dt>
-                            <dd className="font-semibold">{v[a.chiave]}/5</dd>
-                            {v[`${a.chiave}_note`] && <dd className="text-grigio">{v[`${a.chiave}_note`]}</dd>}
-                          </div>
-                        ))}
-                      </dl>
+                      {v.ruolo_preciso && <p className="mt-1 text-sm">Ruolo: <b>{RUOLI_PRECISI[v.ruolo_preciso]}</b></p>}
+                      {/* le 4 aree solo nelle valutazioni fino alla 0043 (poi si danno nella segnalazione) */}
+                      {AREE.some((a) => v[a.chiave] != null) && (
+                        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+                          {AREE.filter((a) => v[a.chiave] != null).map((a) => (
+                            <div key={a.chiave}>
+                              <dt className="text-grigio">{a.nome}</dt>
+                              <dd className="font-semibold">{v[a.chiave]}/5</dd>
+                              {v[`${a.chiave}_note`] && <dd className="text-grigio">{v[`${a.chiave}_note`]}</dd>}
+                            </div>
+                          ))}
+                        </dl>
+                      )}
+                      {/* voti del dettaglio, per area (Tecnica, Tattica, Fisico, Mentale, Extra) */}
+                      {GRUPPI_VALUTAZIONE.map((gr) => {
+                        const voci = DETTAGLI_VALUTAZIONE.filter((d) => d.gruppo === gr.nome && v[d.chiave] != null);
+                        return voci.length ? (
+                          <p key={gr.nome} className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="w-16 font-semibold text-grigio">{gr.nome}</span>
+                            {voci.map((d) => <span key={d.chiave} className="rounded-full bg-carta px-2 py-0.5 font-semibold">{d.nome} {v[d.chiave]}/5</span>)}
+                          </p>
+                        ) : null;
+                      })}
                       {v.commento && <p className="mt-3 whitespace-pre-line">{v.commento}</p>}
                     </li>
                   );

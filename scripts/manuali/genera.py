@@ -344,8 +344,9 @@ cambiare giorno; tocca una partita per i dettagli. <b>Elenco</b> le mostra tutte
 <h2>4. Squadra → Partite: prepararla</h2>
 <p><b>Attività di base</b> (da Under 13 in giù): in Partite ci sono solo <b>Convocazioni</b> e <b>Tabellini</b>, senza
 foglio gara. Nelle convocazioni in alto trovi le <b>partite del weekend già proposte</b>: tocca <span class="k">Aggiungi alla
-convocazione</span> (o aggiungile tutte). Nei tabellini segni solo chi era <b>presente</b> o <b>assente</b> a ogni partita
-(c'è anche "Tutti presenti"); in alto, nella stessa scheda, le statistiche: partite giocate, presenti a partita, chi non è
+convocazione</span> (o aggiungile tutte). Nei tabellini segni chi era <b>presente</b> o <b>assente</b> a ogni partita
+(c'è anche "Tutti presenti") e, se vuoi, il <b>risultato a tempi</b>: scegli 3, 4 o 5 tempi e scrivi per ognuno i gol nostri e
+loro; sotto compare il riepilogo (tempi vinti, pari, persi e gol), che si vede anche nella colonna della partita; in alto, nella stessa scheda, le statistiche: partite giocate, presenti a partita, chi non è
 mai stato presente.</p>
 <h3>Dati partita</h3>
 <p>I dati della gara per il foglio gara: avversario, data, ora, campo, categoria, capitano e vicecapitano, note. In alto ci sono

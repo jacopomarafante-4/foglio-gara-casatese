@@ -64,7 +64,7 @@ for (const a of (await db.from('gare_allegati').select('percorso')).data ?? []) 
   file++;
 }
 riepilogo['file distinte'] = file;
-await writeFile(join(cartella, '_riepilogo.json'), JSON.stringify({ quando: ora.toISOString(), righe: riepilogo }, null, 1));
+await writeFile(join(cartella, '_riepilogo.json'), JSON.stringify({ quando: ora.toISOString(), problemi, righe: riepilogo }, null, 1));
 
 // Tiene solo gli ultimi TENERE backup
 const tutti = (await readdir(BASE, { withFileTypes: true })).filter((d) => d.isDirectory()).map((d) => d.name).sort();
