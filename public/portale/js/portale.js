@@ -48,7 +48,13 @@ const tabsDi = a => a.tabs.filter(t => !(isAdb() && SOLO_AGONISTICA.includes(t))
   && !(t==='modifiche' && (!isAdmin() || isDirettore())));
 function allowedTabs(){ return allowedAreas().flatMap(tabsDi); }
 const areaOf = t => AREAS.find(a => a.tabs.includes(t)) || AREAS[0];
-function routeTab(){ const m = (location.hash||'').match(/\/(\w+)$/); const t = m && (TAB_ALIASES[m[1]] || m[1]); return t && TAB_NAMES[t] ? t : null; }
+/* Indirizzi, anche aperti dalle pagine dell'app (tappa 3): #/<scheda>, #/<scheda>/<id> = allenamento o partita da aprire,
+   #/s:<squadra>/<scheda>… = squadra da aprire (admin, direttori, preparatori) */
+const rotta = () => { const m = (location.hash||'').match(/\/(?:s:([\w-]+)\/)?(\w+)(?:\/([\w-]+))?$/); return m ? {squadra:m[1]||null, scheda:m[2], id:m[3]||null} : {}; };
+function routeTab(){ const r = rotta(); const t = r.scheda && (TAB_ALIASES[r.scheda] || r.scheda); return t && TAB_NAMES[t] ? t : null; }
+/* prima di subscribeTeam: la squadra scelta nell'app; dopo: l'allenamento o la partita da aprire */
+function squadraDaRotta(){ const s = rotta().squadra; if(s && S.teams.some(t => t.id===s) && (!hashLocked || squadraPropria)) impostaCurTeam(s); }
+function apriDaRotta(){ const {id} = rotta(); if(!id) return; if(tab==='allenamenti') impostaOpenTrainingId(id); else if(tab==='tabellini') impostaOpenGameId(id); }
 const startTab = () => routeTab() || 'home';
 function writeRoute(push){
   const pin = ((location.hash||'').match(/squadra=([\w-]+)/)||[])[1];
@@ -196,95 +202,10 @@ function weekendISO(){
 /* Amichevoli e tornei (dai calendari Google: scripts/import-calendari/google.mjs, o aggiunte dal mister) */
 const tipoPartita = m => m.friendly ? (m.tipo || 'Amichevole') : '';
 const whenTxt = d => { const n = daysUntil(d); return n===0 ? 'oggi' : n===1 ? 'domani' : n>1 ? `tra ${n} giorni` : `${-n} giorni fa`; };
-function homeTodo(){
-  const today = todayISO(), items = [];
-  const noReason = S.reg.trainings.reduce((a,t) => a + Object.values(t.att||{}).filter(v => v==='A').length, 0);
-  if(noReason) items.push({txt:`${noReason} assenz${noReason===1?'a':'e'} senza motivo negli allenamenti`, go:'allenamenti'});
-  const cal = allCalendar().filter(m => m.date && m.date < today).sort((a,b) => b.date.localeCompare(a.date));
-  cal.forEach(m => {
-    const g = S.reg.games.find(x => x.calId===m.id);
-    if(!g || !gamePlayed(g)) items.push({txt:`${isAdb() ? 'Presenze da segnare' : 'Tabellino da compilare'}: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opencal:'+m.id});
-    else if(!isAdb() && !gameScore(g)) items.push({txt:`Gol da inserire: ${m.opponent||'partita'} (${fmtDate(m.date).slice(0,5)})`, go:'opengm:'+g.id});
-  });
-  /* Attività di base: niente gol né portieri nei tabellini */
-  if(!isAdb() && S.players.length && !(S.reg.gk||[]).length) items.push({txt:'Segna i portieri con 🧤 nella Rosa', go:'rosa'});
-  return items;
-}
-function viewHome(){
-  if(isOrg()) return viewHomeOrg();
-  if(!curTeam) return `<section class="panel"><h2>Benvenuto</h2><p class="empty">Nessuna squadra. Creane una in Società → Squadre.</p></section>`;
-  const T0 = TEAM(), nm = nextMatch(), today = todayISO();
-  const trToday = S.reg.trainings.find(t => t.date===today);
-  const {team, gm} = computeStats();
-  const todo = homeTodo(), maxTodo = 6;
-  const s = S.sheet, sheetIsNext = nm && s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase();
-  /* Anteprima: gli impegni della squadra di sabato e domenica di questa settimana (campionato, amichevoli e tornei),
-     colorati per calendario. Le altre partite e le altre squadre sono nell'area Calendario */
-  const [sab, dom] = weekendISO(), wk = impegni().filter(m => m.date===sab || m.date===dom)
-    .sort((a,b) => (a.date+(a.time||'').padStart(5,'0')).localeCompare(b.date+(b.time||'').padStart(5,'0')));
-  const matchCard = `<div class="hcard hmatch hwide">
-      <div class="hlabel">Weekend · sab ${fmtDate(sab).slice(0,5)} e dom ${fmtDate(dom).slice(0,5)}</div>
-      ${wk.length ? `${legendaCal()}<ul class="wklist">${wk.map(m => rigaPartita(m, perPortieri())).join('')}</ul>`
-        : `<p class="note">Nessun impegno questo weekend.${nm ? ` Prossima partita: ${weekday(nm.date)} ${fmtDate(nm.date)} · ${esc(nm.opponent||'')} (${whenTxt(nm.date)}).` : ''}</p>`}
-      ${nm ? `<div class="row" style="margin-top:12px">${isAdb() ? '' : `<button class="btn primary small" data-hgo="prep">${sheetIsNext ? 'Apri la gara' : 'Prepara la gara'}</button>`}<button class="btn ${isAdb() ? 'primary ' : ''}small" data-hgo="conv">Convocazioni</button><button class="btn small" data-hgo="calendario">Calendario</button></div>`
-        : '<div class="row" style="margin-top:12px"><button class="btn small" data-hgo="calendario">Apri il calendario</button></div>'}
-    </div>`;
-  /* Da fare: prima le presenze di oggi, poi tabellini e gol mancanti, portieri */
-  const presenzeOggi = trToday
-    ? (() => { const v = S.players.map(p => attOf(trToday, p.id)); return `<li><button data-hgo="tr:${trToday.id}"><span class="tdtxt">Presenze di oggi: <b>${v.filter(x=>x==='P').length} presenti</b>, ${v.filter(isAbs).length} assenti</span><span aria-hidden="true">›</span></button></li>`; })()
-    : `<li><button data-hgo="trnew" class="tdprimo"><span class="tdtxt">Segna le presenze dell'allenamento di oggi</span><span aria-hidden="true">›</span></button></li>`;
-  const todoCard = `<div class="hcard"><div class="hlabel">Da fare</div>
-    <ul class="todo">${presenzeOggi}${todo.slice(0,maxTodo).map(i => `<li><button data-hgo="${i.go}"><span class="tdtxt">${esc(i.txt)}</span><span aria-hidden="true">›</span></button></li>`).join('')}</ul>
-    ${todo.length>maxTodo?`<p class="note">…e altre ${todo.length-maxTodo}</p>`:''}${!todo.length ? '<p class="note" style="margin-top:6px">Tabellini e gol in ordine ✓</p>' : ''}</div>`;
-  /* Riepilogo della stagione: allenamento e partite, con i link alle statistiche */
-  const numCard = `<div class="hcard"><div class="hlabel">Riepilogo stagione</div>
-    <div class="hriep">
-      <button class="hriepbox" data-hgo="stat:allenamento"><span class="hriepttl">Allenamento</span>
-        <span><b>${team.nT}</b> allenamenti</span><span><b>${pctTxt(team.avgPct)}</b> presenza media</span>
-        <span><b>${team.low}</b> sotto il ${LOW_ATT*100}%</span><span class="hrieplink">Statistiche ›</span></button>
-      ${isAdb() ? `<button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
-        <span><b>${team.nG}</b> giocate</span>
-        <span><b>${team.nG ? (gm.reduce((a,g) => a + Object.values(g.pl||{}).filter(played).length, 0) / team.nG).toFixed(1) : '—'}</b> presenti a partita</span>
-        <span class="hrieplink">Tabellini ›</span></button>`
-      : `<button class="hriepbox" data-hgo="stat:partite"><span class="hriepttl">Partite</span>
-        <span><b>${team.nG}</b> giocate${team.nScored ? ` · ${team.w}V ${team.d}N ${team.l}P` : ''}</span>
-        <span><b>${team.nScored ? `${team.gf}-${team.ga}` : '—'}</b> gol fatti-subiti</span>
-        <span><b>${team.nScored ? gm.map(gameScore).filter(x => x && x.ga===0).length : '—'}</b> porta inviolata</span><span class="hrieplink">Statistiche ›</span></button>`}
-    </div></div>`;
-  /* Avvisi della società per questa squadra (ultimi 14 giorni) */
-  const avvisi = avvisiSquadra(curTeam);
-  const avvisiCard = avvisi.length ? `<div class="hcard hwide havvisi"><div class="hlabel">Avvisi della società</div>
-    ${avvisi.slice(0,3).map(a => `<div class="gval gseg avviso"><div class="note">${fmtDate(a.data)}${a.autore ? ' · '+esc(a.autore) : ''}</div>${a.titolo ? `<b>${esc(a.titolo)}</b>` : ''}<p class="gtxt" style="white-space:pre-line">${esc(a.testo)}</p></div>`).join('')}</div>` : '';
-  return `<section class="hhead"><h2>${esc(T0?.name||'')}</h2><p class="note">${esc(T0?.category||'')}${coachNames(T0)?' · Mister '+esc(coachNames(T0)):''}</p></section>
-    <div class="hgrid">${avvisiCard}${matchCard}${todoCard}${numCard}</div>`;
-}
+/* Home: nell'app dalla tappa 3 (/inizio, NELL_APP). Qui restano i pulsanti "vai a" delle schede (data-hgo) */
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hgo]'); if(!b || !curTeam) return;
-  const [k, id] = b.dataset.hgo.split(':');
-  if(k==='prep' || k==='conv'){
-    const nm = nextMatch(), s = S.sheet;
-    if(nm && !(s.date===nm.date && (s.opponent||'').trim().toLowerCase()===(nm.opponent||'').trim().toLowerCase())){
-      s.opponent = nm.opponent||''; s.date = nm.date||''; s.time = nm.time||''; s.venue = nm.venue||''; s.address = nm.address||''; s.venueLL = nm.ll||''; s.home = !!nm.home; s.convType = nm.friendly ? 'Amichevole' : 'Campionato'; save('sheet');
-    }
-    goTab(k==='prep' ? 'partita' : 'convocazioni'); return;
-  }
-  if(k==='trnew'){
-    goTab('allenamenti');
-    let tr = S.reg.trainings.find(t => t.date===todayISO());
-    if(!tr){ tr = {id:uid('tr'), date:todayISO(), note:'', att:Object.fromEntries(S.players.map(p => [p.id,'P']))}; S.reg.trainings.push(tr); save('registro'); }
-    impostaOpenTrainingId(tr.id); render(); return;
-  }
-  if(k==='tr'){ goTab('allenamenti'); impostaOpenTrainingId(id); render(); return; }
-  if(k==='opencal'){
-    goTab('tabellini');
-    const m = allCalendar().find(x => x.id===id); if(!m) return;
-    let g = S.reg.games.find(x => x.calId===m.id);
-    if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; S.reg.games.push(g); save('registro'); }
-    impostaOpenGameId(g.id); render(); return;
-  }
-  if(k==='opengm'){ goTab('tabellini'); impostaOpenGameId(id); render(); return; }
-  if(k==='stat'){ goTab(id==='partite' ? (isAdb() ? 'tabellini' : 'statpartite') : 'statallen'); return; }
-  goTab(k);
+  goTab(b.dataset.hgo);
 });
 
 /* ---------- Posizione esatta dei campi (salvata nel registro: la può impostare anche il mister) ---------- */

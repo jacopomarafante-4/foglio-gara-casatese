@@ -6,18 +6,14 @@
 // Preparatori dei portieri: le partite delle categorie dei loro portieri, con sotto i portieri e la convocazione.
 import { useState } from 'react';
 import { eventoCome, siglaSquadra, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
-import { ETICHETTE_CONVOCAZIONE, daGiocare, inOrdine, nuovoId, statoPortiere, type FoglioConvocazioni } from '@/lib/calendario-portale';
+import { daGiocare, inOrdine, nuovoId } from '@/lib/calendario-portale';
+import { ChipsPortieri } from './Portieri';
 import { ElencoMesi, Legenda, RigaPartita } from './Righe';
 import { ModificaPartita } from './Modifiche';
 import { Messaggio, useSalva } from './salvataggio';
 
 type Id = Partita & { id: string };
-export type Portieri = Record<string, { team: SquadraCal; gk: { id: string; name: string }[]; foglio: FoglioConvocazioni }>;
-
-const COLORE_STATO: Record<string, string> = {
-  CON: 'border-verde bg-verde text-white', NC: 'border-linea bg-white text-inchiostro', INF: 'border-rosso bg-rosso text-white',
-  SQL: 'border-rosso bg-rosso text-white', ND: 'border-oro bg-oro text-inchiostro', '': 'border-linea bg-carta text-grigio',
-};
+import type { Portieri } from '@/lib/portale-dati';
 
 export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amichevoli: am0, giochiDi, eventi, oggi, puoAmichevoli, puoUfficiali, preparatore }: {
   squadra: SquadraCal; nomeSquadra: string; ufficiali: Id[]; amichevoli: Id[]; giochiDi: Record<string, string[]>; eventi: Evento[];
@@ -66,17 +62,7 @@ export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amich
     const tuttiGk = Object.entries(preparatore.portieri).flatMap(([teamId, d]) => d.gk.map((p) => ({ ...p, teamId, sigla: siglaSquadra(d.team) })));
     const squadraGk = tuttiGk.find((p) => p.id === portiere)?.teamId;
     const prossime = inOrdine(preparatore.partite.filter((m) => daGiocare(m, oggi)).filter((m) => !squadraGk || m.team?.id === squadraGk));
-    const chips = (m: Impegno) => {
-      const d = preparatore.portieri[m.team?.id ?? '']; if (!d) return null;
-      const gk = d.gk.filter((p) => !portiere || p.id === portiere);
-      if (!gk.length) return null;
-      return (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {gk.map((p) => { const st = statoPortiere(d.foglio, m, p.id);
-            return <span key={p.id} className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${COLORE_STATO[st] ?? COLORE_STATO['']}`}>🧤 {p.name} · {st ? ETICHETTE_CONVOCAZIONE[st].toLowerCase() : 'da convocare'}</span>; })}
-        </div>
-      );
-    };
+    const chips = (m: Impegno) => <ChipsPortieri m={m} portieri={preparatore.portieri} solo={portiere} />;
     return (
       <div className="space-y-3">
         <Legenda />

@@ -26,7 +26,7 @@ export function puoAccedere(ruolo: Ruolo) {
 /** Pannello che si apre dopo l'accesso: admin e direttori il Portale (lì c'è tutto, Scouting compreso),
  *  la segreteria la sua area, gli scout lo Scouting */
 export function pannelloIniziale(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'direttore' ? '/portale/' : ruolo === 'segreteria' ? '/segreteria' : '/home';
+  return ruolo === 'admin' || ruolo === 'direttore' ? '/inizio' : ruolo === 'segreteria' ? '/segreteria' : '/home';
 }
 
 /** Stessa regola della funzione SQL public.vede_tutto(): vede tutto, contatti compresi */

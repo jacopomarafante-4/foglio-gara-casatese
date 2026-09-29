@@ -191,9 +191,46 @@ async function ui(browser, profilo, pin, opzioni = {}) {
   await pg.goto(BASE + '/?pin=1', { waitUntil: 'domcontentloaded' });
   await pg.fill('input[name=pin]', pin);
   await pg.click('button[type=submit]');
-  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
+  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria|\/inizio/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
+  /* mister e staff passano dal Portale (che tiene il PIN) alla Home dell'app */
+  await pg.waitForURL((u) => /^\/(inizio|home|segreteria)/.test(u.pathname), { timeout: 20000, waitUntil: 'commit' }).catch(() => {});
+  await pg.waitForLoadState('domcontentloaded').catch(() => {});
   riga.arrivo = pg.url().replace(BASE, '');
-  if (riga.arrivo.startsWith('/portale')) {
+  if (riga.arrivo.startsWith('/inizio')) {
+    riga.tempoAccesso = Date.now() - t0;
+    await pg.waitForTimeout(800);
+    const testo = await pg.locator('main').innerText().catch(() => '');
+    const v = { nome: 'home (app /inizio)', caratteri: testo.length };
+    if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+    const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
+    if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
+    riga.viste.push(v);
+    /* poi il giro del Portale, dalla Squadra; chi non ha la Squadra (organizzativo) torna nell'app e basta */
+    await pg.waitForTimeout(2000);
+    await pg.goto(BASE + '/portale/#/rosa');
+    await pg.waitForTimeout(4000);
+    riga.arrivo = '/inizio → ' + pg.url().replace(BASE, '');
+    if (!riga.arrivo.includes('/portale')) {
+      /* tutte le sue aree sono nell'app (organizzativo): giro delle aree e delle loro schede */
+      const pagine = new Set();
+      const aree = await pg.$$eval('nav[aria-label="Aree del portale"] a', (x) => x.map((a) => a.getAttribute('href'))).catch(() => []);
+      for (const a of aree.filter((h) => h && !h.startsWith('/portale'))) {
+        await pg.goto(BASE + a); await pg.waitForTimeout(600);
+        const schede = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((e) => e.getAttribute('href'))).catch(() => []);
+        [new URL(pg.url()).pathname, ...schede].filter((h) => !h.startsWith('/portale')).forEach((h) => pagine.add(h));
+      }
+      for (const h of pagine) {
+        await pg.goto(BASE + h); await pg.waitForTimeout(700);
+        const testo = await pg.locator('main').innerText().catch(() => '');
+        const v = { nome: `app ${new URL(pg.url()).pathname}`, caratteri: testo.length };
+        if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+        if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${h}: rimandato alla pagina del PIN`);
+        if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
+        riga.viste.push(v);
+      }
+    }
+  }
+  if (riga.arrivo.includes('/portale')) {
     await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => riga.problemi.push('Portale: pagina vuota dopo l\'accesso'));
     riga.tempoAccesso = Date.now() - t0;
     await pg.waitForTimeout(2500);   // dati che arrivano dopo (calendari, avvisi)
@@ -231,7 +268,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       const qui = new URL(pg.url()).pathname;
       const altre = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('/portale'))).catch(() => []);
       for (const h of altre.filter((h) => h !== qui)) { await pg.goto(BASE + h); await controlla(); }
-      await pg.goto(BASE + '/portale/#/home'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
+      /* si torna al Portale dalla Squadra (la Home ora è nell'app) */
+      await pg.goto(BASE + '/portale/#/rosa'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
       return true;
     };
     for (const a of aree) {

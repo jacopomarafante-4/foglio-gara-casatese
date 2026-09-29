@@ -432,7 +432,7 @@ async function coachLogin(pin){
   if(!IN_APP_UNICA && !new RegExp('squadra=' + pin + '(/|$)').test(location.hash)) history.replaceState(null, '', '#squadra=' + pin + '/' + tab);
   db.doc('shared/schemes').onSnapshot(snap => { if(snap.exists){ applyDoc('schemes', snap.data()); render(); } }, () => setStatus('Sincronizzazione in pausa'));
   setStatus('Sincronizzato');
-  subscribeTeam();
+  squadraDaRotta(); subscribeTeam(); apriDaRotta();
   return true;
 }
 function startSharedSync(){
@@ -444,7 +444,7 @@ function startSharedSync(){
     if(snap.exists) applyDoc('teams', snap.data());
     teamsLoaded = true;
     const before = curTeam, beforeRole = ROLE; resolveAccess();
-    if(first){ first = false; tab = startTab(); subscribeTeam(); }
+    if(first){ first = false; tab = startTab(); squadraDaRotta(); subscribeTeam(); apriDaRotta(); }
     else if(before !== curTeam || beforeRole !== ROLE) subscribeTeam();
     else render();
   }, () => { teamsLoaded = true; setStatus('Sincronizzazione in pausa'); render(); });

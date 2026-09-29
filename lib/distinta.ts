@@ -29,4 +29,4 @@ export const categoriaDistinta = (categoria: string | undefined, senza: boolean 
   senza ? '' : String(categoria || '').replace(/\s*-\s*attività di base/i, '');
 
 export const nomiMister = (t?: { coaches?: { name?: string }[]; coach?: string }) =>
-  (t?.coaches ?? []).map((c) => c.name).filter(Boolean).join(', ') || t?.coach || '';
+  (t?.coaches ?? []).map((c) => c.name?.trim()).filter(Boolean).join(', ') || t?.coach?.trim() || '';

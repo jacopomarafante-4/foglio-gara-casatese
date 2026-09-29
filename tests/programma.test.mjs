@@ -84,3 +84,22 @@ test('preparatori: stato del portiere dalla convocazione giusta', () => {
   assert.equal(statoPortiere({ adb: { partite: [{ calId: 'c1', conv: ['p1'] }] } }, m, 'p3'), 'NC');
   assert.equal(statoPortiere({ date: '2026-10-11', callup: { p1: 'CON' } }, m, 'p1'), '');
 });
+
+import { riepilogo, daFare, risultato, presenzaDi } from '@/lib/registro';
+test('registro: presenze senza gli infortuni, risultato dai gol, cose da fare', () => {
+  const reg = {
+    trainings: [{ id: 't1', date: '2026-09-01', att: { a: 'P', b: 'INF' } }, { id: 't2', date: '2026-09-03', att: { a: 'A', b: 'P' } }, { id: 't3', date: '2026-09-05', att: { a: 'G' } }],
+    games: [{ id: 'g1', calId: 'c1', pl: { a: { min: 70, g: 2 }, b: { min: 70, gc: 1 } } }, { id: 'g2', calId: 'c2', pl: { a: { min: 30 } } }],
+    gk: ['b'],
+  };
+  const cal = [{ id: 'c1', date: '2026-09-06', opponent: 'Lecco' }, { id: 'c2', date: '2026-09-13', opponent: 'Como' }, { id: 'c3', date: '2026-09-20', opponent: 'Erba' }];
+  assert.equal(presenzaDi(reg.trainings[2], 'a'), 'FAM');
+  assert.deepEqual(risultato(reg.games[0], reg.gk), { gf: 2, ga: 1 });
+  assert.equal(risultato(reg.games[1], reg.gk), null);
+  const r = riepilogo(reg, [{ id: 'a' }, { id: 'b' }], cal);
+  assert.equal(r.nT, 3); assert.equal(r.nG, 2); assert.equal(r.v, 1); assert.equal(r.nNoti, 1);
+  assert.equal(r.mediaPresenze, (1 / 3 + 1) / 2, 'a: 1 su 3; b: 1 su 1 (infortunio escluso)');
+  const f = daFare(reg, cal, '2026-09-25', false, true);
+  assert.deepEqual(f.map((x) => x.tipo), ['assenze', 'tabellino', 'gol']);
+  assert.equal(f[1].calId, 'c3');
+});

@@ -8,6 +8,7 @@ import type { Ruolo } from '@/lib/ruoli';
 export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
   const nelPortale = 'whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2.5 pt-2 font-display text-lg font-semibold text-grigio hover:text-inchiostro';
+  if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
   if (percorso.startsWith('/calendari/')) {
     // La mia squadra (non per l'organizzativo), Tutte le squadre, Avvisi (admin, direttori, organizzativo)
     return (
