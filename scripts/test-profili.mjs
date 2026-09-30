@@ -84,6 +84,7 @@ async function permessi() {
   await vietato('Anonimo', 'legge i documenti del Portale', a.from('docs').select('path').limit(3));
   await vietato('Anonimo', 'legge i giocatori dello scouting', a.from('giocatori').select('id').limit(3));
   await vietato('Anonimo', 'legge i contatti delle famiglie', a.from('contatti').select('id').limit(3));
+  await vietato('Anonimo', 'legge il collegamento con Google Calendar', a.rpc('google_leggi'));
   await vietato('Anonimo', 'legge i tesserati', a.from('tesserati').select('id').limit(3));
   await vietato('Anonimo', 'legge i documenti delle famiglie', a.from('documenti_tesserati').select('id').limit(3));
   await vietato('Anonimo', 'legge i PIN personali', a.from('codici_accesso').select('pin').limit(3));
@@ -163,6 +164,9 @@ async function permessi() {
       await permesso('Direttore', 'legge la segreteria', dir.from('tesserati').select('id').limit(3), (d) => d.length > 0);
       const r = await dir.from('docs').update({ updated_at: new Date().toISOString() }).eq('path', 'registro/t_u14').select('path');
       esito('Direttore', 'modifica un registro del Portale (deve essere vietato)', !!r.error || (r.data ?? []).length === 0, r.error?.message ?? `${(r.data ?? []).length} righe`);
+      // prova innocua: con tutto null, se fosse permesso non cambierebbe nulla
+      const g = await dir.rpc('google_salva', { p_token_cifrato: null, p_account: null, p_calendari: null });
+      esito('Direttore', 'cambia il collegamento con Google Calendar (deve essere vietato)', !!g.error, g.error?.message ?? 'permesso');
     } else esito('Direttore', 'entra col PIN personale', false);
   }
   if (cred.scout) {

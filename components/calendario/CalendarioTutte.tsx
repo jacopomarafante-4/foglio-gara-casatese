@@ -28,6 +28,15 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
   /* stato più recente, per le risposte di Google che arrivano qualche secondo dopo la modifica */
   const ultimo = useRef({ squadre, eventi });
   useEffect(() => { ultimo.current = { squadre, eventi }; }, [squadre, eventi]);
+  /* all'apertura: se sono passati 30 minuti si rilegge Google; se è cambiato qualcosa si ricarica la pagina */
+  useEffect(() => {
+    if (!google) return;
+    g.auto().then((j) => {
+      const cambi = (j.squadre ?? []).reduce((s, x) => s + x.aggiunte + x.aggiornate + x.tolte, 0);
+      if (cambi) { setGoogleEsito(`Da Google: ${cambi} impegni aggiornati. Ricarico…`); window.location.reload(); }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [google]);
 
   const filtrabili = squadre.filter((t) => !t.organizza && (t.id === mia || t.matches.length));
   const perAmichevoli = squadre.filter((t) => !t.organizza && !t.vedeTutte);
