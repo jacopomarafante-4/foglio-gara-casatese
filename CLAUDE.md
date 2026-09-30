@@ -94,8 +94,11 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   attività di base presenti e risultato a tempi, `components/squadra/Tabellini.tsx`), Statistiche (`/squadra/statistiche-partite`,
   non per l'attività di base) e Campi (`/squadra/campi`, posizione del cancello con `impostaCampo`, regole in `lib/campi.ts`).
   Report PDF delle statistiche (admin e direttori, in entrambe le pagine di statistiche): `lib/report-statistiche.ts` su tela
-  (`lib/tela.ts` = aiuti di disegno di pdf.js: T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta). Nel Portale restano
-  Dati partita, Convocazioni, Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
+  (`lib/tela.ts` = aiuti di disegno di pdf.js: T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta). Dati partita (`/squadra/partita`) e
+  Convocazioni (`/squadra/convocazioni`: agonistica con lo stato di ogni giocatore, attività di base da 1 a 4 partite, risposte delle
+  famiglie con `risposteFamiglie()`, PDF `lib/pdf-convocazione.ts` con i link a Google Maps) salvano i campi del foglio con
+  `aggiornaFoglio` (solo i campi cambiati, `useFoglio`), "Nuova partita" con `svuotaFoglio`; regole in `lib/foglio.ts`.
+  Nel Portale restano Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

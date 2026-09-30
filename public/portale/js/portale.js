@@ -217,21 +217,7 @@ document.addEventListener('click', e => {
   goTab(b.dataset.hgo);
 });
 
-/* ---------- Posizione esatta dei campi (salvata nel registro: la può impostare anche il mister) ---------- */
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-pinedit],[data-pinsave],[data-pindel],[data-pincancel]'); if(!b || !curTeam) return;
-  if(b.dataset.pinedit){ impostaPinEditing(venueKey(b.dataset.pinedit)); render(); $('#pin_in')?.focus(); return; }
-  if(b.dataset.pincancel){ impostaPinEditing(null); render(); return; }
-  const R = S.reg; R.venues ||= {};
-  if(b.dataset.pindel){ delete R.venues[venueKey(b.dataset.pindel)]; impostaPinEditing(null); save('registro'); render(); return; }
-  const v = b.dataset.pinsave, raw = ($('#pin_in')?.value || '').trim(), ll = parseLL(raw);
-  if(ll) R.venues[venueKey(v)] = {name:v, ll};
-  else if(/^https?:\/\/\S+$/.test(raw)) R.venues[venueKey(v)] = {name:v, url:raw};
-  else { setStatus('Coordinate non riconosciute'); $('#pin_in')?.focus(); return; }
-  impostaPinEditing(null); save('registro'); render(); setStatus('Posizione del campo salvata');
-});
-document.addEventListener('change', e => { if(e.target.id==='cv_meetaddr') render(); });
-document.addEventListener('keydown', e => { if(e.target.id==='pin_in' && e.key==='Enter'){ e.preventDefault(); document.querySelector('[data-pinsave]')?.click(); } });
+/* Posizione esatta dei campi: nell'app (/squadra/campi) */
 
 /* ---------- Calendario: La mia squadra, Tutte le squadre ---------- */
 /* Partite collegate ai calendari ufficiali (scripts/import-calendari/portale.mjs): "da calendario"
@@ -276,20 +262,6 @@ function registroPage(title, body, hint){
 let giocatoriAnnata = null, giocatoriErrore = '', giocatoriCerca = '';
 const STATI_SCOUTING = {in_lista:'In lista', in_osservazione:'In osservazione', da_rivedere:'Da rivedere', inserito:'Inserito', da_non_inserire:'Da non inserire'};
 const GIUDIZI = {da_prendere:'Da prendere', da_rivedere:'Da rivedere', non_a_livello:'Non a livello'};
-/* Convocazioni dell'attività di base: aggiungi una partita del weekend, o tutte */
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-adbsug],[data-adbweekend]'); if(!b || !curTeam) return;
-  const pp = partiteAdb(), usate = new Set(pp.map(p => p.calId).filter(Boolean)), [sab, dom] = weekendISO();
-  const nuove = b.dataset.adbsug ? allCalendar().filter(m => m.id === b.dataset.adbsug)
-    : inOrdine(allCalendar().filter(m => (m.date===sab || m.date===dom) && !usate.has(m.id)));
-  /* una partita vuota (senza calendario né convocati) si riempie invece di aggiungerne un'altra */
-  for(const m of nuove){
-    if(pp.length >= ADB_MAX) break;
-    const vuota = pp.find(p => !p.calId && !p.opponent && !(p.conv||[]).length);
-    if(vuota) Object.assign(vuota, nuovaPartitaAdb(m), {id: vuota.id}); else pp.push(nuovaPartitaAdb(m));
-  }
-  save('sheet'); render();
-});
 let giocatoriStato = '', giocatoriRuolo = '';
 const ORDINE_STATI = ['in_lista','in_osservazione','da_rivedere','inserito','da_non_inserire'];
 const SIGLE_RUOLO = {portiere:'POR', difensore:'DIF', centrocampista:'CEN', attaccante:'ATT', movimento:'MOV'};

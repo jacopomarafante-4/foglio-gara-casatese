@@ -37,9 +37,6 @@ document.addEventListener('click', e => {
   if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ impostaCurTeam(S.teams[0]?.id||null); subscribeTeam(); } else render(); } return; }
   if(t.dataset.caldel){ S.calendar = S.calendar.filter(m=>m.id!==t.dataset.caldel); save('calendar'); render(); return; }
   /* Convocazioni dell'attività di base */
-  if(t.dataset.adbconv){ const [i, pid] = t.dataset.adbconv.split(':'); const p = partiteAdb()[+i]; if(p){ p.conv ||= []; p.conv = p.conv.includes(pid) ? p.conv.filter(x => x!==pid) : [...p.conv, pid]; save('sheet'); render(); } return; }
-  if(t.dataset.adbdel){ const pp = partiteAdb(); if(confirm(`Togliere la partita ${+t.dataset.adbdel+1} e i suoi convocati?`)){ pp.splice(+t.dataset.adbdel, 1); save('sheet'); render(); } return; }
-  if(t.dataset.callupid){ const id=t.dataset.callupid, st=t.dataset.callupstatus; S.sheet.callup ||= {}; S.sheet.callup[id] = S.sheet.callup[id]===st ? '' : st; save('sheet'); render(); return; }
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
   if(t.dataset.dropSlot){ if(selectedPlayer){ assignSlot(t.dataset.dropSlot, selectedPlayer); impostaSelectedPlayer(null); render(); } return; }
   if(t.dataset.dropToken){
@@ -55,17 +52,11 @@ document.addEventListener('click', e => {
   switch(act){
     case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:'', coaches:[]}; S.teams.push(tm); save('teams'); if(!curTeam){ impostaCurTeam(tm.id); subscribeTeam(); } else render(); break; }
     case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
-    case 'usenext': { const nm = t.dataset.usacal ? allCalendar().find(m => m.id===t.dataset.usacal) : nextMatch(); if(nm){ S.sheet.opponent=nm.opponent||''; S.sheet.date=nm.date||''; S.sheet.time=nm.time||''; S.sheet.venue=nm.venue||''; S.sheet.address=nm.address||''; S.sheet.venueLL=nm.ll||''; S.sheet.home=!!nm.home; S.sheet.convType=nm.friendly?'Amichevole':'Campionato'; save('sheet'); render(); } break; }
-    case 'newmatch': if(confirm('Svuotare formazione, panchina, convocazioni e dati partita? Rosa e schemi restano.')){ const keep = S.sheet.selected; S.sheet = defaultSheet(); S.sheet.selected = keep; save('sheet'); render(); } break;
     case 'back': impostaOpenSchemeId(null); impostaSelectedToken(null); impostaBoardMode('assign'); impostaDrawTool(null); impostaSelectedDraw(null); render(); break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
     case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
-    case 'downloadconv': downloadConvocazione(); break;
-    case 'adbadd': { const pp = partiteAdb(); if(pp.length < ADB_MAX){ const usate = new Set(pp.map(p => p.calId)); const m = allCalendar().filter(x => x.date && x.date >= todayISO() && !usate.has(x.id)).sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0]; pp.push(nuovaPartitaAdb(pp.length ? null : m)); save('sheet'); render(); } break; }
-    case 'adbreset': if(confirm('Svuotare tutte le partite e i convocati?')){ S.sheet.adb = {partite: []}; save('sheet'); render(); } break;
-    case 'resetconv': if(confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')){ S.sheet.callup={}; S.sheet.meetTime=''; S.sheet.meetAddress=''; S.sheet.convNotes=''; S.sheet.convType='Campionato'; save('sheet'); render(); } break;
     case 'exportbackup': exportBackup(); break;
     case 'segnala': inviaSegnalazione(); break;
     case 'valuta': inviaValutazione(); break;
@@ -104,11 +95,9 @@ document.addEventListener('input', e => {
   if(t.dataset.coach){ const [tid, cid] = t.dataset.coach.split(':'); const tm = S.teams.find(x => x.id===tid); const c = tm?.coaches?.find(x => x.id===cid); if(c){ c.name = t.value; syncCoach(tm); save('teams'); } return; }
   if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }
-  else if(t.dataset.adbf && t.tagName!=='SELECT'){ const p = partiteAdb()[+t.dataset.adbi]; if(p){ p[t.dataset.adbf] = t.value; save('sheet'); } }
   else if(t.dataset.sheet && t.tagName!=='SELECT'){
     S.sheet[t.dataset.sheet]=t.value;
     save('sheet');
-    if(t.dataset.sheet==='meetAddress'){ const a = $('#cv_mapslink'); if(a){ const u = mapsLink(S.sheet); a.href = u; a.hidden = !u; } }
   }
 });
 document.addEventListener('change', e => {
@@ -149,13 +138,6 @@ document.addEventListener('change', e => {
       save('sheet'); }
     render(); return;
   }
-  if(t.dataset.adbcal !== undefined && t.tagName==='SELECT'){
-    const p = partiteAdb()[+t.dataset.adbcal], m = allCalendar().find(x => x.id===t.value);
-    if(p && m) Object.assign(p, {calId: m.id, date: m.date||'', time: m.time||'', opponent: m.opponent||'', home: !!m.home, venue: m.venue||'', address: m.address||'', ll: m.ll||''});
-    else if(p) p.calId = '';
-    save('sheet'); render(); return;
-  }
-  if(t.dataset.adbf && t.tagName==='SELECT'){ const p = partiteAdb()[+t.dataset.adbi]; if(p){ p[t.dataset.adbf] = t.dataset.adbf==='home' ? !!t.value : t.value; save('sheet'); render(); } return; }
   if(t.dataset.sheet && t.tagName==='SELECT'){ S.sheet[t.dataset.sheet]=t.value; if(t.dataset.sheet==='formation') S.sheet.slotPos = {}; save('sheet'); render(); }
 });
 

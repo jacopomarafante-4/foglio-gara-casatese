@@ -17,13 +17,13 @@ export function SchedeAllenamento({ attiva, eta, conSquadra }: { attiva: string;
   );
 }
 
-/** Partite: Dati partita, Convocazioni, Formazione, Piazzati e Foglio gara ancora nel Portale (#/s:<squadra>/… per lo staff);
+/** Partite: Formazione, Piazzati e Foglio gara ancora nel Portale (#/s:<squadra>/… per lo staff); Dati partita, Convocazioni,
  *  Tabellini, Statistiche e Campi nell'app. Attività di base: solo Convocazioni e Tabellini (SOLO_AGONISTICA del Portale) */
 export function SchedePartite({ attiva, adb, squadraId, staff, conSquadra }: { attiva: string; adb: boolean; squadraId: string; staff: boolean; conSquadra: (h: string) => string }) {
   const portale = (t: string) => `/portale/#/${staff ? 's:' + squadraId + '/' : ''}${t}`;
   const schede: [string, string, boolean][] = [
-    ...(adb ? [] : [[portale('partita'), 'Dati partita', false] as [string, string, boolean]]),
-    [portale('convocazioni'), 'Convocazioni', false],
+    ...(adb ? [] : [['/squadra/partita', 'Dati partita', true] as [string, string, boolean]]),
+    ['/squadra/convocazioni', 'Convocazioni', true],
     ...(adb ? [] : [[portale('formazione'), 'Formazione', false], [portale('piazzati'), 'Piazzati', false], [portale('pdf'), 'Foglio gara', false]] as [string, string, boolean][]),
     ['/squadra/tabellini', 'Tabellini', true],
     ...(adb ? [] : [['/squadra/statistiche-partite', 'Statistiche', true], ['/squadra/campi', 'Campi', true]] as [string, string, boolean][]),

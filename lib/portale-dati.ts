@@ -94,3 +94,20 @@ export async function squadraDellaPagina(chi: Chi, scelta?: string): Promise<{ s
   const squadre = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] }));
   return { squadre, squadra: squadre.find((t) => t.id === scelta) ?? squadre[0] };
 }
+
+/** Risposte delle famiglie alle convocazioni ("ci sarà / non ci sarà", 0031): chiave "<giocatore>|<partita>" (partita = id nel
+ *  calendario o "data|avversario"). Il mister col PIN (coach_risposte), admin e direttori dal database (RLS) */
+export async function risposteFamiglie(chi: Chi, squadraId: string) {
+  const supabase = await createClient();
+  type Riga = { giocatore_id: string; partita: string; risposta: 'si' | 'no'; nota?: string };
+  let righe: Riga[] = [];
+  if (chi.mister) {
+    const { data } = await supabase.rpc('coach_risposte', { p_pin: chi.mister.pin });
+    righe = (data ?? []) as Riga[];
+  } else if (chi.profilo) {
+    const { data } = await supabase.from('risposte_convocazioni').select('partita, risposta, nota, tesserati!inner(squadra_id, giocatore_id)').eq('tesserati.squadra_id', squadraId);
+    righe = ((data ?? []) as unknown as { partita: string; risposta: 'si' | 'no'; nota?: string; tesserati: { giocatore_id: string } }[])
+      .map((r) => ({ giocatore_id: r.tesserati.giocatore_id, partita: r.partita, risposta: r.risposta, nota: r.nota }));
+  }
+  return Object.fromEntries(righe.map((r) => [`${r.giocatore_id}|${r.partita}`, { risposta: r.risposta, nota: r.nota }]));
+}

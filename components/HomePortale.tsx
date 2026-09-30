@@ -54,7 +54,8 @@ export function HomeSquadra(p: {
   const NELL_APP_SQUADRA: Record<string, (id?: string) => string> = {
     allenamenti: (id) => app('/squadra/presenze', id ? 'allenamento=' + id : ''), rosa: () => app('/squadra/rosa'),
     statallen: () => app('/squadra/statistiche-allenamento'), tabellini: (id) => app('/squadra/tabellini', id ? 'partita=' + id : ''),
-    statpartite: () => app('/squadra/statistiche-partite'),
+    statpartite: () => app('/squadra/statistiche-partite'), partita: () => app('/squadra/partita'),
+    convocazioni: () => app('/squadra/convocazioni'),
   };
   const vai = (scheda: string) => {
     const [k, id] = scheda.split('/');
