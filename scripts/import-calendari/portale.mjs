@@ -38,7 +38,8 @@ const dataOra = (iso) => {
   return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
 };
 const uid = () => 'm' + Math.random().toString(36).slice(2, 9);
-const LIVELLI = { provinciale: 'Provinciali', regionale: 'Regionali', elite: 'Élite', élite: 'Élite' };
+// prima Élite: "Under 16 - Regionale Élite" gioca il campionato "Under 16 Élite", non "Regionali"
+const LIVELLI = { elite: 'Élite', élite: 'Élite', provinciale: 'Provinciali', regionale: 'Regionali' };
 
 const { data: soc } = await db.from('societa').select('id').eq('nome', NOSTRA).single();
 if (!soc) { console.error(`❌ Società "${NOSTRA}" non trovata`); process.exit(1); }
