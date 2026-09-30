@@ -7,13 +7,16 @@ import { createClient } from '@/lib/supabase/server';
 import { etaSquadra, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
 import type { FoglioConvocazioni } from '@/lib/calendario-portale';
 
-export type Chi = { profilo: Profilo | null; mister: Mister | null };
+/** `mister` = mister entrato col PIN (senza account); `misterDi` = staff (non admin) che è anche mister: stesso PIN personale,
+ *  tessera data all'accesso (0050). Nelle sue squadre scrive come un mister, per il resto è staff */
+export type Chi = { profilo: Profilo | null; mister: Mister | null; misterDi?: Mister | null };
 type Dati = Record<string, unknown> & { items?: unknown[]; matches?: unknown[] };
 
 /** Chi è entrato: un account (profilo) o un mister con la tessera */
 export async function chiEntra(): Promise<Chi> {
   const profilo = await getProfilo();
-  return { profilo, mister: profilo ? null : await getMister() };
+  if (!profilo) return { profilo, mister: await getMister() };
+  return { profilo, mister: null, misterDi: profilo.ruolo === 'admin' ? null : await getMister() };
 }
 
 /** Admin, direttori e responsabile organizzativo: calendari di tutte le squadre, eventi, avvisi (puoOrganizzare del Portale) */
@@ -90,9 +93,23 @@ export async function datiPreparatore(chi: Chi): Promise<{ partite: Impegno[]; p
 /** Squadra della pagina: quella del mister, o per admin e direttori quella scelta (?squadra=, se no la prima; mai
  *  l'Organizzazione). `squadre` = l'elenco da scegliere (vuoto per i mister) */
 export async function squadraDellaPagina(chi: Chi, scelta?: string): Promise<{ squadre: SquadraCal[]; squadra: SquadraCal | undefined }> {
-  if (chi.mister) return { squadre: [], squadra: { ...chi.mister.squadra, matches: [] } };
+  if (chi.mister?.squadra.vedeTutte) {
+    // preparatori dei portieri: le rose di tutte le squadre (in lettura, 0028), per segnare i portieri (coach_portiere, 0050)
+    // prima la propria (presenze dei portieri), poi le altre in sola lettura
+    const mia = chi.mister.squadra.id;
+    const tutte = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] as Partita[] }))
+      .sort((a, b) => Number(b.id === mia) - Number(a.id === mia));
+    return { squadre: tutte, squadra: tutte.find((t) => t.id === scelta) ?? tutte[0] };
+  }
+  if (chi.mister) {
+    // mister di più squadre (un PIN, 0050): si sceglie quale aprire (cookie acm_squadra, /api/squadra)
+    const sue = chi.mister.squadre.filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] as Partita[] }));
+    return { squadre: sue.length > 1 ? sue : [], squadra: { ...chi.mister.squadra, matches: [] } };
+  }
   const squadre = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] }));
-  return { squadre, squadra: squadre.find((t) => t.id === scelta) ?? squadre[0] };
+  // staff che è anche mister: di norma si apre la sua squadra
+  const sua = squadre.find((t) => chi.misterDi?.squadre.some((m) => m.id === t.id));
+  return { squadre, squadra: squadre.find((t) => t.id === scelta) ?? sua ?? squadre[0] };
 }
 
 /** Risposte delle famiglie alle convocazioni ("ci sarà / non ci sarà", 0031): chiave "<giocatore>|<partita>" (partita = id nel

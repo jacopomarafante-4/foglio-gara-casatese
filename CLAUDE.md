@@ -106,6 +106,15 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata (`GiaInLista elenco=…`), elenco `components/GiocatoriMister.tsx`.
   Nel Portale restano Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
+- **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice
+  l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`, anche nel
+  Portale; `team_for_pin` sceglie solo tra le squadre del PIN; `coach_squadre(pin)` = tutte); staff che è anche mister = il `code` del
+  mister è il suo PIN personale: `tipo_pin` prima i PIN personali, all'accesso `sono_anche_mister()` → tessera anche allo staff
+  (`chi.misterDi` in `lib/portale-dati.ts`: nelle sue squadre scrive come un mister, `aggiorna` in docs-actions; nel Portale
+  `squadreMister`/`misterQui()` in core.js, salvataggi via `/api/portale/salva`). Società → Squadre, "Genera PIN": PIN personale se è
+  anche staff (stesso nome, `chiaveNome`), se no quello che ha già in un'altra squadra, e va su tutte le sue righe; rigenerare il PIN
+  di uno staff (`/api/staff`) aggiorna anche le sue righe da mister. Preparatori dei portieri: in Squadra → Rosa delle altre squadre
+  segnano solo i portieri (`coach_portiere`, `segnaPortiere`).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).
   La crea `accedi` col PIN di un mister (e la toglie a ogni altro PIN), la toglie `esci` e `/esci` (uscita dal Portale). Il proxy

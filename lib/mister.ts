@@ -14,9 +14,11 @@ export type SquadraMister = {
   id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean;
   coaches?: { id: string; name?: string; eta?: number[] }[];
 };
-export type Mister = { pin: string; nome: string; squadra: SquadraMister };
+/** `squadra` = quella aperta; `squadre` = tutte quelle del suo PIN (0050: un PIN per persona, es. Under 18 e Under 19) */
+export type Mister = { pin: string; nome: string; squadra: SquadraMister; squadre: SquadraMister[] };
 
-/** Mister entrato col PIN (una sola verifica per richiesta): squadra senza PIN e nome, da coach_team. Null se non c'è
+/** Mister entrato col PIN (una sola verifica per richiesta): squadra aperta (cookie acm_squadra) senza PIN e nome, da coach_team,
+ *  e tutte le sue squadre. Vale anche per lo staff che è anche mister (tessera data all'accesso col PIN personale). Null se non c'è
  *  la tessera o se il PIN non vale più (cambiato o disattivato in Società) */
 export const getMister = cache(async (): Promise<Mister | null> => {
   const tessera = await leggiTessera((await cookies()).get(COOKIE_MISTER)?.value);
@@ -25,5 +27,7 @@ export const getMister = cache(async (): Promise<Mister | null> => {
   const { data, error } = await supabase.rpc('coach_team', { p_pin: tessera.pin });
   if (error || !data) return null;
   const squadra = data as SquadraMister & { mister?: string };
-  return { pin: tessera.pin, nome: squadra.mister || 'Mister', squadra };
+  const { data: tutte } = await supabase.rpc('coach_squadre', { p_pin: tessera.pin });   // senza la 0050: solo quella aperta
+  const squadre = Array.isArray(tutte) && tutte.length ? (tutte as SquadraMister[]) : [squadra];
+  return { pin: tessera.pin, nome: squadra.mister || 'Mister', squadra, squadre };
 });

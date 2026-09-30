@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { pannelloIniziale, puoAccedere, type Ruolo } from '@/lib/ruoli';
 import { COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
+import { COOKIE_SQUADRA } from '@/lib/supabase/server';
 import { NELL_APP } from '@/lib/condivisi';
 
 export type StatoForm = { errore?: string; ok?: string };
@@ -43,6 +44,7 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   // Un nuovo PIN toglie la tessera di un mister entrato prima (telefono condiviso); la si ridà sotto se è ancora un mister
   const biscotti = await cookies();
   biscotti.delete(COOKIE_MISTER);
+  biscotti.delete(COOKIE_SQUADRA);   // squadra aperta da un mister di più squadre (0050)
 
   const pinAdmin = process.env.PIN_ADMIN;
   if (pinAdmin && pin === pinAdmin) {
@@ -95,7 +97,12 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pin });
     if (!error) {
       const vai = await pannello(supabase, data.user.id, next);
-      if (vai) return { vai };
+      if (vai) {
+        // staff che è anche mister (stesso PIN, 0050): anche la tessera del mister, per scrivere nelle sue squadre
+        const { data: ancheMister } = await supabase.rpc('sono_anche_mister');
+        if (ancheMister) { const tessera = await creaTessera(pin); if (tessera) biscotti.set(COOKIE_MISTER, tessera, opzioniCookieMister); }
+        return { vai };
+      }
       await supabase.auth.signOut({ scope: 'local' });
       return { errore: 'Il tuo account non ha accesso. Contatta l’admin.' };
     }
@@ -108,6 +115,7 @@ export async function esci() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: 'local' });
   (await cookies()).delete(COOKIE_MISTER);
+  (await cookies()).delete(COOKIE_SQUADRA);
   // ?uscito=1: la pagina d'ingresso toglie anche il PIN che il Portale tiene nella scheda del browser
   redirect('/?uscito=1');
 }
