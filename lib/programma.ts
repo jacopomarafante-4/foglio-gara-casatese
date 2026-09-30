@@ -9,12 +9,15 @@ export type Partita = {
   stato?: 'calendario' | 'confermata' | 'variata'; comunicato?: string; address?: string; gcal?: string; gcalCal?: string; garaId?: string;
   /* amichevole scritta dal mister nel suo registro (registro/<squadra>.friendlies), non nel calendario */
   daRegistro?: boolean;
+  /* importata da un file (Calendario → Importa da file): UID dell'ICS o riga della tabella, per non importarla due volte */
+  fonte?: string;
 };
 export type SquadraCal = { id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean; matches: Partita[];
   coaches?: { name?: string; eta?: number[] }[] };
 export type Evento = {
   id: string; titolo?: string; tipo?: string; data?: string; inizio?: string; fine?: string;
   luogo?: 'merate' | 'cernusco' | 'altro'; indirizzo?: string; squadre?: string[]; note?: string; gcal?: string; gcalCal?: string;
+  fonte?: string;
 };
 export type Impegno = Partita & { team?: SquadraCal; evento?: Evento; luogo?: string };
 

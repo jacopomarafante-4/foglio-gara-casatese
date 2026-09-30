@@ -397,7 +397,12 @@ proposti dal nome e scelti dall'admin (`app/(aree)/calendari/google-actions.ts`)
 `GOOGLE_CLIENT_SECRET` (OAuth "Applicazione web", ritorno `/api/google/ritorno`; app pubblicata, se no il permesso scade in 7 giorni);
 quale collegamento usare in `lib/google-collegato.ts` (prima quello dell'app, se no l'account di servizio: `GOOGLE_SERVICE_ACCOUNT` +
 `GCAL_ID_MERATE/CERNUSCO/TRASFERTA`). Solo variabili d'ambiente, mai nel codice. All'apertura di Tutte le squadre (`azione: 'auto'`)
-si rilegge Google se sono passati 30 minuti. Nel Portale "↻ Aggiorna da Google" (Tutte le squadre)
+si rilegge Google se sono passati 30 minuti.
+Import da file (Calendario → Tutte le squadre → "Importa da file", `components/calendario/ImportaFile.tsx`; admin, direttori,
+organizzativo): ICS, CSV, Excel .xlsx letti nel browser (`lib/import-calendario.ts`, lettore xlsx senza librerie `lib/xlsx.ts`, prove in
+`tests/import-calendario.test.mjs` con `tests/dati/calendario-prova.xlsx`), anteprima con squadra e casa/trasferta, salvataggio con
+`modificaDoc`; `fonte` sulla voce = non si importa due volte. Solo amichevoli, tornei ed eventi (mai il campionato); niente invio a Google
+delle voci importate (spesso vengono da lì). PDF federali: ancora con gli script di `scripts/import-calendari/`. Nel Portale "↻ Aggiorna da Google" (Tutte le squadre)
 e invio automatico di amichevoli, tornei ed eventi modificati (`partitaSuGoogle`, `eventoSuGoogle` in `organizzazione.js`).
 Il percorso è escluso dal controllo login di `lib/supabase/sessione.ts` (controlla da solo chi chiama).
 
