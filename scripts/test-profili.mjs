@@ -199,7 +199,7 @@ async function ui(browser, profilo, pin, opzioni = {}) {
   await pg.goto(BASE + '/?pin=1', { waitUntil: 'domcontentloaded' });
   await pg.fill('input[name=pin]', pin);
   await pg.click('button[type=submit]');
-  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria|\/inizio/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
+  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria|\/inizio|\/famiglia/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
   /* mister e staff passano dal Portale (che tiene il PIN) alla Home dell'app */
   await pg.waitForURL((u) => /^\/(inizio|home|segreteria)/.test(u.pathname), { timeout: 20000, waitUntil: 'commit' }).catch(() => {});
   await pg.waitForLoadState('domcontentloaded').catch(() => {});
@@ -309,9 +309,24 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       await pg.waitForTimeout(1500); await guarda('altra squadra: ' + opzioni.altraSquadra);
       riga.solaLettura = await pg.locator('body.ro, .badge.dir').count() > 0;
     }
+  } else if (riga.arrivo.startsWith('/famiglia')) {
+    // Famiglia: pagine dell'app (tappa 3), si guardano senza scrivere nulla
+    riga.tempoAccesso = Date.now() - t0;
+    for (const pagina of ['/famiglia', '/famiglia/calendario', '/famiglia/anagrafica', '/famiglia/segreteria']) {
+      await pg.goto(BASE + pagina, { waitUntil: 'domcontentloaded' }); await pg.waitForTimeout(700);
+      const testo = await pg.locator('main').innerText().catch(() => '');
+      const v = { nome: pagina, caratteri: testo.length };
+      if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
+      if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${pagina}: rimandato alla pagina del PIN`);
+      const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
+      if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
+      riga.viste.push(v);
+    }
   } else if (riga.arrivo.startsWith('/segreteria')) {
     // Segreteria: la sua area è una pagina dell'app (tappa 3); si apre un ragazzo senza scrivere nulla
     riga.tempoAccesso = Date.now() - t0;
+    // la U14 (tesserati già creati): la prima squadra dell'elenco può essere nuova, e la prova blocca la creazione dei tesserati
+    await pg.locator('main select').first().selectOption('t_u14').catch(() => {});
     // si aspetta che l'elenco dei ragazzi arrivi (di notte il sito può essere lento), non un tempo fisso
     await pg.locator('main details summary').first().waitFor({ timeout: 20000 }).catch(() => {});
     await pg.locator('main details summary').first().click().catch(() => riga.problemi.push('Segreteria: nessun ragazzo da aprire'));

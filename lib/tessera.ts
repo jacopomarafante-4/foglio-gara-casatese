@@ -4,6 +4,8 @@
 import { ORE_ACCESSO } from '@/lib/supabase/durata';
 
 export const COOKIE_MISTER = 'acm_mister';
+/** Tessera della famiglia (stesso formato, col PIN del ragazzo): pagine /famiglia */
+export const COOKIE_FAMIGLIA = 'acm_famiglia';
 
 export type Tessera = { pin: string; t: number };
 
