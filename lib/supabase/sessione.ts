@@ -53,7 +53,8 @@ export async function aggiornaSessione(request: NextRequest) {
   if (!loggato && !pubblica) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
-    url.search = `?next=${encodeURIComponent(percorso)}`;
+    // la pagina da riaprire dopo il PIN, con i suoi parametri (es. ?squadra=)
+    url.search = `?next=${encodeURIComponent(percorso + request.nextUrl.search)}`;
     return conCookie(NextResponse.redirect(url), response);
   }
 

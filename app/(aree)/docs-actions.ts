@@ -109,3 +109,15 @@ export async function eliminaGiocatore(squadraId: string, pid: string): Promise<
     return { nuovo: { ...s, lineup: Object.fromEntries(Object.entries(s.lineup ?? {}).filter(([, v]) => v !== pid)), bench: (s.bench ?? []).filter((b) => b !== pid) } };
   });
 }
+
+/** Campi → posizione esatta del cancello (registro.venues, una per campo): coordinate "lat,lon" o link; null = togli */
+export async function impostaCampo(squadraId: string, campo: string, posizione: { ll?: string; url?: string } | null): Promise<Esito> {
+  if (!squadraOk(squadraId) || !campo.trim()) return { ok: false, errore: 'Dati non validi.' };
+  const chiave = campo.trim().toLowerCase().replace(/\s+/g, ' ');
+  return aggiorna(await chiEntra(), 'registro/' + squadraId, (base) => {
+    const reg = (base ?? {}) as Doc & { venues?: Record<string, unknown> };
+    const venues = { ...(reg.venues ?? {}) };
+    if (posizione) venues[chiave] = { name: campo.trim(), ...posizione }; else delete venues[chiave];
+    return { nuovo: { ...reg, venues } };
+  });
+}

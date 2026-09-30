@@ -9,6 +9,8 @@ import { fmtData } from '@/lib/programma';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SchedeAllenamento } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
+import { ReportStatistiche } from '@/components/squadra/ReportStatistiche';
+import { oggiIso } from '@/lib/utili';
 
 const Numero = ({ v, l, sotto }: { v: React.ReactNode; l: string; sotto?: string }) => (
   <div className="rounded-xl border border-linea bg-white p-3">
@@ -23,7 +25,7 @@ const th = 'px-2 py-1.5 text-left font-semibold text-grigio', nome = 'sticky lef
 
 export default async function StatisticheAllenamento({ searchParams }: { searchParams: Promise<{ squadra?: string; periodo?: string }> }) {
   const q = await searchParams;
-  const { chi, squadre, squadra, eta, admin, conSquadra } = await apriSquadra(q.squadra);
+  const { chi, squadre, squadra, eta, conSquadra } = await apriSquadra(q.squadra);
   if (!squadra) return <p className="text-grigio">Nessuna squadra.</p>;
   const id = squadra.id;
   const docs = await leggiDocs(chi, ['roster/' + id, 'registro/' + id, 'calendar/' + id]);
@@ -54,10 +56,8 @@ export default async function StatisticheAllenamento({ searchParams }: { searchP
             <Numero v={s.sottoSoglia} l={`Sotto il ${SOGLIA_PRESENZE * 100}%`} sotto={s.sottoSoglia ? 'in rosso nella tabella' : undefined} />
             <Numero v={s.assenze} l="Assenze" sotto={s.infortuni ? `di cui ${s.infortuni} per infortunio` : undefined} />
           </div>
-          {admin && (
-            <p className="text-sm text-grigio">Il report PDF (allenamenti e partite) si scarica da{' '}
-              <a className="font-semibold text-blu" href={`/portale/#/s:${id}/statpartite`}>Partite → Statistiche</a>.</p>
-          )}
+          {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}
+            reg={reg} calendario={[...cal, ...(reg.friendlies ?? []).map((f) => ({ ...f, friendly: true }))] as (Partita & { id: string })[]} periodo={periodo} oggi={oggiIso()} />}
 
           <section className="space-y-2">
             <h2 className="font-display text-2xl font-bold">Presenze per giocatore</h2>

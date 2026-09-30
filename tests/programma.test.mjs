@@ -118,3 +118,19 @@ test('allenamento: tempi dei test, statistiche e presenze per mese', () => {
   const m = presenzePerMese(reg, g);
   assert.deepEqual(m.mesi, ['2026-09', '2026-10']); assert.deepEqual(m.per.y['2026-09'], { P: 1, tot: 1 });
 });
+
+import { statistichePartite, colonnePartite, riepilogoTempi } from '@/lib/registro';
+import { leggiCoordinate, campoPerRicerca, linkCampo } from '@/lib/campi';
+test('partite: statistiche, colonne dei tabellini, tempi e campi', () => {
+  const cal = [{ id: 'c1', date: '2026-09-06', opponent: 'Lecco' }, { id: 'c2', date: '2026-09-20', opponent: 'Como' }, { id: 'c3', date: '2026-09-27', opponent: 'Erba' }];
+  const reg = { gk: ['b'], games: [{ id: 'g1', calId: 'c1', dur: 70, pl: { a: { min: 70, g: 1 }, b: { min: 70, gc: 0 } } }, { id: 'g9', date: '2026-08-30', opponent: 'Amica', pl: {} }] };
+  const s = statistichePartite(reg, [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], cal, 'all');
+  assert.equal(s.gm.length, 1); assert.equal(s.v, 1); assert.equal(s.inviolata, 1);
+  assert.equal(s.righe[0].pctMin, 1); assert.equal(s.righe[1].inPorta, 1);
+  const col = colonnePartite(reg, cal, '2026-09-10');
+  assert.deepEqual(col.map((c) => c.cal?.id ?? c.gara.id), ['g9', 'c1', 'c2'], 'giocate + la prossima + fuori calendario');
+  assert.deepEqual(riepilogoTempi([{ noi: 2, loro: 1 }, { noi: 0, loro: 0 }, { noi: 1, loro: 3 }]), { v: 1, pa: 1, pe: 1, noi: 3, loro: 4 });
+  assert.equal(leggiCoordinate('https://maps.google.com/?q=45.69,9.40'), '45.690000,9.400000');
+  assert.equal(campoPerRicerca('C.S. Comunale Campo 2 - Cernusco Lombardone (LC)'), 'Centro Sportivo Comunale, Cernusco Lombardone');
+  assert.match(linkCampo({ 'campo x': { ll: '45.1,9.2' } }, 'Campo X'), /destination=45\.1,9\.2/);
+});

@@ -42,7 +42,8 @@ const NELL_APP                         = {
   distinta: '/modulistica/distinta', comunicazione: '/modulistica/comunicazione',
   calendario: '/calendari/squadra', calendariotutte: '/calendari/tutte', avvisi: '/calendari/avvisi', home: '/inizio',
   rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
-  statallen: '/squadra/statistiche-allenamento',
+  statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
+  campi: '/squadra/campi',
 };
 
 /** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */
