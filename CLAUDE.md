@@ -112,7 +112,10 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   famiglia_carica; foto ridotte nel browser), componenti in `components/famiglia/`; all'accesso col PIN famiglia si va lì.
   Formazione nell'app (`/squadra/formazione`, `components/squadra/Formazione.tsx`: tocca una posizione per scegliere, trascina per
   spostare, `slotPos`; regole in `lib/formazione.ts`, moduli `FORMATIONS` in `lib/condivisi.ts` per app e Portale; salva per campi con useFoglio).
-  Nel Portale restano Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
+  Piazzati (`/squadra/piazzati`, `?schema=<id>`): elenco con filtri, I miei schemi (registro.schemi), modelli della società
+  (shared/schemes, solo admin, ordine con `ordinaModelli`), editor con campo SVG (`components/piazzati/Campo.tsx`: trascina
+  pedine e pallone, frecce, linee, scritte) e Compiti; regole pure in `lib/piazzati.ts` (prove in `tests/piazzati.test.mjs`).
+  Nel Portale resta solo il Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice
   l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`, anche nel

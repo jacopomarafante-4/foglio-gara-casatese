@@ -213,9 +213,9 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
     if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
     riga.viste.push(v);
-    /* poi il giro del Portale, dai Piazzati (ancora nel Portale); chi non ha la Squadra (organizzativo) torna nell'app */
+    /* poi il giro del Portale, dal Foglio gara (ancora nel Portale); chi non ha la Squadra (organizzativo) torna nell'app */
     await pg.waitForTimeout(2000);
-    await pg.goto(BASE + '/portale/#/piazzati');
+    await pg.goto(BASE + '/portale/#/pdf');
     await pg.waitForTimeout(4000);
     riga.arrivo = '/inizio → ' + pg.url().replace(BASE, '');
     if (!riga.arrivo.includes('/portale')) {
@@ -281,8 +281,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       const qui = new URL(pg.url()).pathname;
       const altre = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('/portale'))).catch(() => []);
       for (const h of altre.filter((h) => h !== qui)) { await pg.goto(BASE + h); await controlla(); }
-      /* si torna al Portale dai Piazzati (il resto della Squadra ora è nell'app) */
-      await pg.goto(BASE + '/portale/#/piazzati'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
+      /* si torna al Portale dal Foglio gara (il resto della Squadra ora è nell'app) */
+      await pg.goto(BASE + '/portale/#/pdf'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
       return true;
     };
     for (const a of aree) {

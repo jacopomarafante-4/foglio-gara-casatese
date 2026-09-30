@@ -44,7 +44,7 @@ async function aggiorna<T>(chi: Chi, path: string, cambia: (base: Doc | null) =>
   return { ok: false, errore: 'Il documento cambia di continuo: riprova tra poco.' };
 }
 
-const PERCORSO = /^(calendar|registro|roster)\/[A-Za-z0-9_-]+$|^shared\/(eventi|avvisi)$/;
+const PERCORSO = /^(calendar|registro|roster)\/[A-Za-z0-9_-]+$|^shared\/(eventi|avvisi|schemes)$/;   // shared/schemes: solo l'admin (RLS)
 
 /** Voce per voce (per id) in un elenco del documento: aggiunge, sostituisce o toglie (lib/modifiche.ts) */
 export async function modificaDoc(path: string, modifiche: Modifica[]): Promise<Esito> {
@@ -196,4 +196,15 @@ export async function esportaBackup(): Promise<Esito<string>> {
   if (error) return { ok: false, errore: error.message };
   const docs = Object.fromEntries((data ?? []).map((d) => [d.path, d.data]));
   return { ok: true, valore: JSON.stringify({ exportedAt: new Date().toISOString(), docs }, null, 2) };
+}
+
+/** Piazzati → modelli della società in un altro ordine (↑ ↓, solo admin; il database lo ricontrolla) */
+export async function ordinaModelli(ids: string[]): Promise<Esito> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin') return { ok: false, errore: 'Solo l’admin.' };
+  return aggiorna(chi, 'shared/schemes', (base) => {
+    const items = ((base?.items ?? []) as { id: string }[]).slice();
+    items.sort((a, b) => (ids.indexOf(a.id) + 1 || 1e9) - (ids.indexOf(b.id) + 1 || 1e9));
+    return { nuovo: { ...base, items } };
+  });
 }
