@@ -320,14 +320,14 @@ Scarica il foglio gara in PDF.</li>
 <section>
 <h2>3. Home e Calendario</h2>
 {fig('p-home', '''<h3>Home</h3><ul>
-<li><b>Weekend</b>: gli impegni di sabato e domenica di questa settimana (campionato, amichevoli, tornei) con ora, luogo
-e note, e i pulsanti per preparare la prossima partita, le convocazioni e il calendario.</li>
+<li><b>Prossima partita</b> in grande: giorno, ora, avversario, campo e quanti giorni mancano, con i pulsanti
+<span class="k">Convocazioni</span>, <span class="k">Prepara la gara</span> e <span class="k">Campo</span> (Google Maps).
+Se le famiglie hanno già risposto alla convocazione, vedi quanti ci saranno e quanti no.</li>
 <li><b>Avvisi della società</b> (se ci sono): cambi campo o orario, eventi, comunicazioni per la tua squadra.</li>
 <li><b>Da fare</b>: per prima cosa le presenze dell'allenamento di oggi, poi tabellini da compilare, gol da inserire,
-portieri da segnare. Tocca una riga per andarci.</li>
-<li><b>Riepilogo stagione</b>: allenamento (allenamenti, presenza media, chi è sotto il 75%) e partite (giocate, vinte,
-pareggiate e perse, gol, porta inviolata); tocca un riquadro per le statistiche complete.</li>
-<li>I colori dicono dove si gioca: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta.</li>
+portieri da segnare. Tocca una riga per andarci; se è tutto a posto compare una spunta verde.</li>
+<li><b>Prossimi impegni</b> delle tre settimane dopo, e l'<b>ultimo risultato</b> con i marcatori.</li>
+<li><b>Stagione</b> (vinte, pari, perse e gol) e <b>Presenze</b> (media e andamento mese per mese): tocca per le statistiche complete.</li>
 </ul>''', 'Home')}
 <h3>Calendario → La mia squadra</h3>
 <p>Un solo elenco con le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua
@@ -657,7 +657,10 @@ scout, direttori e PIN; segnalazioni, valutazioni, stati, gare e schede doppie. 
 <div class="col"><h3>Puoi</h3><ul class="ok">
 <li>Aprire il Portale di <b>tutte le squadre</b>: rosa, calendario, convocazioni, formazioni, presenze, statistiche</li>
 <li>In <b>Società</b>: creare e togliere squadre, aggiungere mister, scout e direttori, generare e rigenerare i PIN</li>
-<li>Vedere l'app <b>come la vede un mister</b> (Anteprima)</li>
+<li>Nella <b>Home</b>: il weekend di tutte le squadre, i risultati degli ultimi giorni, cosa c'è da sistemare (tabellini,
+presenze basse), lo scouting della settimana e la stagione squadra per squadra; <span class="k">Apri ›</span> per la Home di una squadra</li>
+<li>Se sei <b>anche mister</b>: entri col tuo PIN da direttore e in alto scegli <span class="k">Direttore</span> o
+<span class="k">Mister …</span>; da mister vedi e modifichi solo la tua squadra, come ogni mister</li>
 <li>Nello <b>Scouting</b>: segnalare, valutare, cambiare gli stati, gestire gare e squadre seguite,
 unire le schede doppie, segnarti su una gara ("Ci vado io")</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
