@@ -5,7 +5,7 @@ import '@fontsource/barlow/700.css';
 import { useState } from 'react';
 import { MODELLI_AVVISO } from '@/lib/condivisi';
 import { impaginaComunicazione } from '@/lib/pdf-comunicazione';
-import { inBase64, scarica } from '@/lib/pdf-moduli';
+import { scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf } from '@/app/(aree)/modulistica/actions';
 
 const etichetta = 'mb-1 block text-sm font-semibold text-grigio';
@@ -27,7 +27,7 @@ export function ComunicazioneForm({ mia, categorie, firma, squadraId, oggi }: {
       const blob = doc.output('blob');
       scarica(nome, blob);
       setMessaggio('PDF pronto');
-      archiviaPdf(nome, 'Comunicazione', await inBase64(blob), squadraId).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Comunicazione', blob, squadraId).catch(() => { /* il PDF c'è comunque */ });
     } catch {
       setMessaggio('PDF non creato: riprova');
     }

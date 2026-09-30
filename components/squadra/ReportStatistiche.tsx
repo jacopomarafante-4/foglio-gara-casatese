@@ -4,7 +4,7 @@
 import '@fontsource/barlow/700.css';
 import { useState } from 'react';
 import { creaReport } from '@/lib/report-statistiche';
-import { inBase64, scarica } from '@/lib/pdf-moduli';
+import { scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf } from '@/app/(aree)/modulistica/actions';
 import type { Partita } from '@/lib/programma';
 import type { Registro, Test } from '@/lib/registro';
@@ -19,7 +19,7 @@ export function ReportStatistiche(p: {
     try {
       const { nome, blob } = await creaReport(p);
       scarica(nome, blob); setStato('Report pronto');
-      archiviaPdf(nome, 'Report statistiche', await inBase64(blob), p.squadraId).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Report statistiche', blob, p.squadraId).catch(() => { /* il PDF c'è comunque */ });
     } catch { setStato('Report non creato: riprova'); }
   }
   return (

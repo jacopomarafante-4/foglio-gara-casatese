@@ -30,13 +30,15 @@ export async function salvaContatti(dati: Record<string, string>): Promise<Esito
 }
 
 /** Documento (visita medica, contabile di una rata, altro): il file arriva già ridotto dal browser, in base64 */
-export async function caricaDocumento(d: { tipo: string; rata: number | null; descrizione: string; nome: string; mime: string; base64: string }): Promise<Esito> {
+export async function caricaDocumento(d: { tipo: string; rata: number | null; descrizione: string; nome: string; mime: string; file: Blob }): Promise<Esito> {
   const fam = await getFamiglia();
   if (!fam) return fuori;
   if (!['visita_medica', 'bonifico', 'altro'].includes(d.tipo)) return { ok: false, errore: 'Tipo di documento non valido.' };
   if (!['image/jpeg', 'application/pdf'].includes(d.mime)) return { ok: false, errore: 'Carica una foto o un PDF.' };
+  if (!(d.file instanceof Blob) || d.file.size > 4 * 1024 * 1024) return { ok: false, errore: 'Il file è troppo grande (massimo 4 MB).' };
+  const base64 = Buffer.from(await d.file.arrayBuffer()).toString('base64');
   const { error } = await (await createClient()).rpc('famiglia_carica', { p_pin: fam.pin, p_tipo: d.tipo, p_rata: d.rata,
-    p_descrizione: d.descrizione, p_nome_file: d.nome, p_mime: d.mime, p_base64: d.base64 });
+    p_descrizione: d.descrizione, p_nome_file: d.nome, p_mime: d.mime, p_base64: base64 });
   if (error) return { ok: false, errore: error.message || 'Documento non caricato: riprova.' };
   revalidatePath('/famiglia/segreteria');
   return { ok: true };

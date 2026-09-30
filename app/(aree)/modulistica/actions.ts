@@ -7,10 +7,12 @@ import { getMister } from '@/lib/mister';
 import { createClient } from '@/lib/supabase/server';
 import type { Distinta, Foglio } from '@/lib/distinta';
 
-export async function archiviaPdf(nome: string, tipo: string, base64: string, squadraId: string | null) {
+export async function archiviaPdf(nome: string, tipo: string, file: string | Blob, squadraId: string | null) {
   const profilo = await getProfilo();
   const mister = profilo ? null : await getMister();
   if (!profilo && !mister) return;
+  // un PDF grande (foglio gara con molte pagine) arriva come file: come testo lungo la server action lo rifiuta
+  const base64 = typeof file === 'string' ? file : Buffer.from(await file.arrayBuffer()).toString('base64');
   const supabase = await createClient();
   await supabase.rpc('archivia_documento', {
     p_pin: mister?.pin ?? null, p_nome: nome, p_tipo: tipo, p_squadra_id: mister ? null : squadraId, p_dati: base64,

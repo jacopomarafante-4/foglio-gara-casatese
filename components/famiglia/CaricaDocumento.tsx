@@ -7,14 +7,12 @@ import { caricaDocumento } from '@/app/famiglia/actions';
 
 const TIPI = { visita_medica: 'Visita medica', bonifico: 'Contabile di bonifico', altro: 'Altro documento' } as const;
 
-function inBase64(file: File): Promise<{ mime: string; base64: string }> {
+/** Il file da inviare (come file, non come testo: un testo lungo la server action lo rifiuta) */
+function daInviare(file: File): Promise<{ mime: string; file: Blob }> {
   return new Promise((ok, ko) => {
     if (file.type === 'application/pdf') {
       if (file.size > 4 * 1024 * 1024) return ko(new Error('Il PDF è troppo grande (massimo 4 MB).'));
-      const r = new FileReader();
-      r.onload = () => ok({ mime: 'application/pdf', base64: String(r.result).split(',')[1] });
-      r.onerror = () => ko(new Error('File non leggibile.'));
-      r.readAsDataURL(file); return;
+      ok({ mime: 'application/pdf', file }); return;
     }
     if (!/^image\//.test(file.type)) return ko(new Error('Carica una foto o un PDF.'));
     const img = new Image(), url = URL.createObjectURL(file);
@@ -22,7 +20,7 @@ function inBase64(file: File): Promise<{ mime: string; base64: string }> {
       const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      ok({ mime: 'image/jpeg', base64: c.toDataURL('image/jpeg', 0.82).split(',')[1] });
+      c.toBlob((b) => (b ? ok({ mime: 'image/jpeg', file: b }) : ko(new Error('Foto non leggibile: prova in JPG.'))), 'image/jpeg', 0.82);
     };
     img.onerror = () => ko(new Error('Foto non leggibile: prova in JPG.'));
     img.src = url;
@@ -43,9 +41,9 @@ export function CaricaDocumento({ rate }: { rate: { i: number; testo: string }[]
     if (tipo === 'bonifico' && rata === '') { setMsg('Scegli la rata pagata.'); return; }
     setOccupato(true); setMsg('Caricamento…');
     try {
-      const { mime, base64 } = await inBase64(f);
+      const { mime, file: dati } = await daInviare(f);
       const nome = f.name.replace(/\.(heic|heif|png|jpe?g)$/i, '') + (mime === 'application/pdf' ? '' : '.jpg');
-      const r = await caricaDocumento({ tipo, rata: rata === '' ? null : +rata, descrizione, nome, mime, base64 });
+      const r = await caricaDocumento({ tipo, rata: rata === '' ? null : +rata, descrizione, nome, mime, file: dati });
       if (!r.ok) throw new Error(r.errore);
       setMsg('Documento caricato: la segreteria lo controllerà.'); setDescrizione(''); setRata(''); if (file.current) file.current.value = '';
       router.refresh();

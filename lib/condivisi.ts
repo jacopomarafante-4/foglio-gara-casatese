@@ -43,7 +43,7 @@ export const NELL_APP: Record<string, string> = {
   rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
   statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
   campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
-  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione', piazzati: '/squadra/piazzati',
+  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione', piazzati: '/squadra/piazzati', pdf: '/squadra/foglio-gara',
   squadre: '/societa/squadre',
 };
 
