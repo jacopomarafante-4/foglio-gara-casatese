@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { pannelloIniziale, puoAccedere, type Ruolo } from '@/lib/ruoli';
 import { COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
 import { COOKIE_SQUADRA } from '@/lib/supabase/server';
+import { COOKIE_PROFILO } from '@/lib/auth';
 import { NELL_APP } from '@/lib/condivisi';
 
 export type StatoForm = { errore?: string; ok?: string };
@@ -45,6 +46,7 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   const biscotti = await cookies();
   biscotti.delete(COOKIE_MISTER);
   biscotti.delete(COOKIE_SQUADRA);   // squadra aperta da un mister di più squadre (0050)
+  biscotti.delete(COOKIE_PROFILO);   // doppio ruolo: si riparte dal profilo da staff
 
   const pinAdmin = process.env.PIN_ADMIN;
   if (pinAdmin && pin === pinAdmin) {
@@ -116,6 +118,7 @@ export async function esci() {
   await supabase.auth.signOut({ scope: 'local' });
   (await cookies()).delete(COOKIE_MISTER);
   (await cookies()).delete(COOKIE_SQUADRA);
+  (await cookies()).delete(COOKIE_PROFILO);
   // ?uscito=1: la pagina d'ingresso toglie anche il PIN che il Portale tiene nella scheda del browser
   redirect('/?uscito=1');
 }

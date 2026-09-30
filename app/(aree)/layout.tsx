@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';
 import { esci } from '@/app/auth/actions';
 import { Intestazione } from '@/components/Intestazione';
-import { getMister } from '@/lib/mister';
+import { getDoppioRuolo, getMister } from '@/lib/mister';
 
 export default async function LayoutAree({ children }: { children: React.ReactNode }) {
   const profilo = await getProfilo();
@@ -14,7 +14,7 @@ export default async function LayoutAree({ children }: { children: React.ReactNo
     if (!mister) redirect('/');
     return (
       <div className="flex min-h-dvh flex-col">
-        <Intestazione mister={mister} />
+        <Intestazione mister={mister} doppio={await getDoppioRuolo()} />
         <main className="mx-auto w-full max-w-[1000px] flex-1 px-4 pb-20 pt-6">{children}</main>
       </div>
     );
@@ -35,7 +35,7 @@ export default async function LayoutAree({ children }: { children: React.ReactNo
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <Intestazione profilo={profilo} />
+      <Intestazione profilo={profilo} doppio={await getDoppioRuolo()} />
       <main className="mx-auto w-full max-w-[1000px] flex-1 px-4 pb-20 pt-6">{children}</main>
     </div>
   );
