@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Copia dei PDF della Modulistica nell'archivio (archiviaPdf): i PDF passano dall'azione del server.
     // Su Vercel una richiesta non supera comunque 4,5 MB
-    serverActions: { bodySizeLimit: '4mb' },
+    serverActions: { bodySizeLimit: '4.5mb' },
   },
   async rewrites() {
     return {

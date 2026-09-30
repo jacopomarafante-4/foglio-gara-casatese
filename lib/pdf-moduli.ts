@@ -161,13 +161,3 @@ export function scarica(nome: string, blob: Blob) {
   a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-/** Blob → base64 (per l'archivio) */
-export function inBase64(blob: Blob) {
-  return new Promise<string>((ok, ko) => {
-    const r = new FileReader();
-    r.onload = () => ok(String(r.result).split(',')[1]);
-    r.onerror = ko;
-    r.readAsDataURL(blob);
-  });
-}

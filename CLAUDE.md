@@ -115,8 +115,10 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   Piazzati (`/squadra/piazzati`, `?schema=<id>`): elenco con filtri, I miei schemi (registro.schemi), modelli della società
   (shared/schemes, solo admin, ordine con `ordinaModelli`), editor con campo SVG (`components/piazzati/Campo.tsx`: trascina
   pedine e pallone, frecce, linee, scritte) e Compiti; regole pure in `lib/piazzati.ts` (prove in `tests/piazzati.test.mjs`).
-  Nel Portale resta solo il Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
-  `lib/condivisi.ts` (lo usa anche il Portale).
+  Foglio gara (`/squadra/foglio-gara`): anteprima e PDF A4 orizzontale (`lib/pdf-foglio-gara.ts`: distinta e formazione, poi una
+  pagina per schema scelto), casella "Mostra la categoria". Tutte le schede sono nell'app (`NELL_APP` in `lib/condivisi.ts`, lo usa
+  anche il Portale per rimandare). PDF nell'Archivio: `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo
+  base64 (un testo di oltre ~1 MB la server action lo rifiuta: "Maximum array nesting exceeded"); così anche `caricaDocumento` delle famiglie.
 - **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice
   l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`, anche nel
   Portale; `team_for_pin` sceglie solo tra le squadre del PIN; `coach_squadre(pin)` = tutte); staff che è anche mister = il `code` del

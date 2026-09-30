@@ -8,7 +8,7 @@ import { MODELLI_AVVISO } from '@/lib/condivisi';
 import { fmtData, siglaSquadra, type SquadraCal } from '@/lib/programma';
 import { nuovoId, squadreTesto } from '@/lib/calendario-portale';
 import { impaginaComunicazione } from '@/lib/pdf-comunicazione';
-import { inBase64, scarica } from '@/lib/pdf-moduli';
+import { scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf } from '@/app/(aree)/modulistica/actions';
 import { Messaggio, useSalva } from './salvataggio';
 
@@ -46,7 +46,7 @@ export function Avvisi({ avvisi: iniziali, squadre, autore, oggi, bozzaIniziale 
       const nome = await impaginaComunicazione(doc, { titolo: a.titolo, testo: a.testo, autore: a.autore || 'La società', categoria, data: a.data });
       const blob = doc.output('blob');
       scarica(nome, blob); setMessaggio('PDF pronto');
-      archiviaPdf(nome, 'Comunicazione', await inBase64(blob), a.squadre.length === 1 ? a.squadre[0] : null).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Comunicazione', blob, a.squadre.length === 1 ? a.squadre[0] : null).catch(() => { /* il PDF c'è comunque */ });
     } catch {
       setMessaggio('PDF non creato: riprova');
     }

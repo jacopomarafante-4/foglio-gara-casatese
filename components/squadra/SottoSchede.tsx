@@ -17,24 +17,22 @@ export function SchedeAllenamento({ attiva, eta, conSquadra }: { attiva: string;
   );
 }
 
-/** Partite: Foglio gara ancora nel Portale (#/s:<squadra>/… per lo staff); Dati partita, Convocazioni,
- *  Formazione, Piazzati, Tabellini, Statistiche e Campi nell'app. Attività di base: solo Convocazioni e Tabellini (SOLO_AGONISTICA del Portale) */
-export function SchedePartite({ attiva, adb, squadraId, staff, conSquadra }: { attiva: string; adb: boolean; squadraId: string; staff: boolean; conSquadra: (h: string) => string }) {
-  const portale = (t: string) => `/portale/#/${staff ? 's:' + squadraId + '/' : ''}${t}`;
-  const schede: [string, string, boolean][] = [
-    ...(adb ? [] : [['/squadra/partita', 'Dati partita', true] as [string, string, boolean]]),
-    ['/squadra/convocazioni', 'Convocazioni', true],
-    ...(adb ? [] : [['/squadra/formazione', 'Formazione', true], ['/squadra/piazzati', 'Piazzati', true], [portale('pdf'), 'Foglio gara', false]] as [string, string, boolean][]),
-    ['/squadra/tabellini', 'Tabellini', true],
-    ...(adb ? [] : [['/squadra/statistiche-partite', 'Statistiche', true], ['/squadra/campi', 'Campi', true]] as [string, string, boolean][]),
+/** Partite, tutte nell'app: Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche e Campi.
+ *  Attività di base: solo Convocazioni e Tabellini (SOLO_AGONISTICA del Portale) */
+export function SchedePartite({ attiva, adb, conSquadra }: { attiva: string; adb: boolean; squadraId?: string; staff?: boolean; conSquadra: (h: string) => string }) {
+  const schede: [string, string][] = [
+    ...(adb ? [] : [['/squadra/partita', 'Dati partita'] as [string, string]]),
+    ['/squadra/convocazioni', 'Convocazioni'],
+    ...(adb ? [] : [['/squadra/formazione', 'Formazione'], ['/squadra/piazzati', 'Piazzati'], ['/squadra/foglio-gara', 'Foglio gara']] as [string, string][]),
+    ['/squadra/tabellini', 'Tabellini'],
+    ...(adb ? [] : [['/squadra/statistiche-partite', 'Statistiche'], ['/squadra/campi', 'Campi']] as [string, string][]),
   ];
   return (
     <nav className="-mt-2 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]" aria-label="Schede delle partite">
-      {schede.map(([h, l, app]) => {
-        const cls = `whitespace-nowrap rounded-full border px-3 py-1 text-sm font-semibold ${attiva === h ? 'border-blu bg-blu text-white' : 'border-linea bg-white text-inchiostro hover:border-blu'}`;
-        return app ? <Link key={h} href={conSquadra(h)} aria-current={attiva === h ? 'page' : undefined} className={cls}>{l}</Link>
-          : <a key={h} href={h} className={cls}>{l}</a>;
-      })}
+      {schede.map(([h, l]) => (
+        <Link key={h} href={conSquadra(h)} aria-current={attiva === h ? 'page' : undefined}
+          className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm font-semibold ${attiva === h ? 'border-blu bg-blu text-white' : 'border-linea bg-white text-inchiostro hover:border-blu'}`}>{l}</Link>
+      ))}
     </nav>
   );
 }

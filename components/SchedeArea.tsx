@@ -16,7 +16,7 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
         <Scheda href={'/squadra/rosa' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Rosa</Scheda>
         <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/statistiche-allenamento', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
         <Scheda href={'/squadra/convocazioni' + (squadraScelta ? '?squadra=' + squadraScelta : '')}
-          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi']}>Partite</Scheda>
+          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi']}>Partite</Scheda>
       </nav>
     );
   }

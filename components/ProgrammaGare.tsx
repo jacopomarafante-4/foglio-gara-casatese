@@ -9,7 +9,7 @@ import {
   calendario, categoriaProgramma, fmtData, giorno, impegniDelPeriodo, ordineProgramma, siglaSquadra,
   type Evento, type Impegno, type SquadraCal,
 } from '@/lib/programma';
-import { BLU_RGB, GRIGIO_RGB, INK_RGB, LARGH, PAG, blocco, inBase64, intestazionePdf, misuraBlocco, nomeFile, nuovaPagina, piePdf, riga1, scarica } from '@/lib/pdf-moduli';
+import { BLU_RGB, GRIGIO_RGB, INK_RGB, LARGH, PAG, blocco, intestazionePdf, misuraBlocco, nomeFile, nuovaPagina, piePdf, riga1, scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf } from '@/app/(aree)/modulistica/actions';
 
 const RGB_CAL = { merate: BLU_RGB, cernusco: [212, 175, 55], trasferta: [196, 30, 58] } as const;
@@ -77,7 +77,7 @@ export function ProgrammaGare({ squadre, eventi, mia, dalIniziale, alIniziale }:
       const nome = nomeFile('PROGRAMMA', dal, al), blob = doc.output('blob');
       scarica(nome, blob);
       setMessaggio('PDF pronto');
-      archiviaPdf(nome, 'Programma gare', await inBase64(blob), mia).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Programma gare', blob, mia).catch(() => { /* il PDF c'è comunque */ });
     } catch {
       setMessaggio('PDF non creato: riprova');
     }

@@ -213,18 +213,12 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
     if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
     riga.viste.push(v);
-    /* poi il giro del Portale, dal Foglio gara (ancora nel Portale); chi non ha la Squadra (organizzativo) torna nell'app */
-    await pg.waitForTimeout(2000);
-    await pg.goto(BASE + '/portale/#/pdf');
-    await pg.waitForTimeout(4000);
-    riga.arrivo = '/inizio → ' + pg.url().replace(BASE, '');
-    if (!riga.arrivo.includes('/portale')) {
-      /* tutte le sue aree sono nell'app (organizzativo): giro delle aree e delle loro schede */
-      /* aree e, pagina per pagina, le loro schede e sotto-schede (fino a 40 pagine) */
+    /* tutte le schede sono nell'app: giro delle aree e, pagina per pagina, delle loro schede e sotto-schede (fino a 60 pagine) */
+    {
       const pagine = new Set(), daVedere = [];
       const aree = await pg.$$eval('nav[aria-label="Aree del portale"] a', (x) => x.map((a) => a.getAttribute('href'))).catch(() => []);
       aree.filter((h) => h && !h.startsWith('/portale')).forEach((h) => daVedere.push(h));
-      while (daVedere.length && pagine.size < 40) {
+      while (daVedere.length && pagine.size < 60) {
         const h = daVedere.shift();
         await pg.goto(BASE + h); await pg.waitForTimeout(600);
         const qui = new URL(pg.url()).pathname; if (pagine.has(qui) || qui.startsWith('/portale') || qui === '/') continue;

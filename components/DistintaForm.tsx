@@ -6,7 +6,7 @@ import '@fontsource/barlow/700.css';
 import { useRef, useState } from 'react';
 import { RUOLI_STAFF, TIPI_DISTINTA, categoriaDistinta, numeroPartita, type Distinta, type Foglio, type GiocatoreDistinta } from '@/lib/distinta';
 import { impaginaDistinta } from '@/lib/pdf-distinta';
-import { inBase64, scarica } from '@/lib/pdf-moduli';
+import { scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf, salvaDistinta } from '@/app/(aree)/modulistica/actions';
 
 const piccolo = 'rounded-lg border px-3 py-1.5 text-sm font-semibold';
@@ -51,7 +51,7 @@ export function DistintaForm({ squadraId, categoria, giocatori, foglio, iniziale
       const blob = doc.output('blob');
       scarica(nome, blob);
       setMessaggio('PDF pronto');
-      archiviaPdf(nome, 'Distinta', await inBase64(blob), squadraId).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Distinta', blob, squadraId).catch(() => { /* il PDF c'è comunque */ });
     } catch {
       setMessaggio('PDF non creato: riprova');
     }

@@ -13,7 +13,7 @@ import {
   ritrovo, stessaPartitaFoglio, type FoglioPartita, type PartitaAdb,
 } from '@/lib/foglio';
 import { creaConvocazione } from '@/lib/pdf-convocazione';
-import { inBase64, scarica } from '@/lib/pdf-moduli';
+import { scarica } from '@/lib/pdf-moduli';
 import { archiviaPdf } from '@/app/(aree)/modulistica/actions';
 import { svuotaFoglio } from '@/app/(aree)/docs-actions';
 import { Messaggio } from '@/components/calendario/salvataggio';
@@ -59,7 +59,7 @@ function usaPdf(p: Base, foglio: FoglioPartita, adb: boolean, setMessaggio: (t: 
       const { nome, blob } = await creaConvocazione({ foglio, nomeSquadra: foglio.team || p.nomeSquadra, categoria: foglio.senzaCategoria ? '' : (adb ? p.categoria.replace(/\s*-\s*attività di base/i, '') : foglio.category || p.categoria),
         giocatori: p.giocatori, calendario: p.calendario, campi: p.campi, mister: p.mister, adb });
       scarica(nome, blob); setMessaggio('Convocazione pronta');
-      archiviaPdf(nome, 'Convocazione', await inBase64(blob), p.squadraId).catch(() => { /* il PDF c'è comunque */ });
+      archiviaPdf(nome, 'Convocazione', blob, p.squadraId).catch(() => { /* il PDF c'è comunque */ });
     } catch { setMessaggio('Convocazione non creata: riprova'); }
   };
 }
