@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { applicaModifiche, type Modifica } from '@/lib/modifiche';
 import type { Partita } from '@/lib/programma';
 import type { Allenamento, Gara, Registro } from '@/lib/registro';
-import { applicaOpSquadre, senzaSpazi, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
+import { applicaOpSquadre, chiaveNome, senzaSpazi, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
 
 type Doc = Record<string, unknown>;
 type Esito<T = undefined> = { ok: boolean; errore?: string; valore?: T };
@@ -17,11 +17,15 @@ type Esito<T = undefined> = { ok: boolean; errore?: string; valore?: T };
 /** Legge il documento, lo cambia con `cambia` (null = niente da salvare) e lo salva sulla stessa versione; fino a 3 tentativi */
 async function aggiorna<T>(chi: Chi, path: string, cambia: (base: Doc | null) => { nuovo: Doc | null; valore?: T }): Promise<Esito<T>> {
   if (!chi.profilo && !chi.mister) return { ok: false, errore: 'Accesso scaduto: rimetti il PIN.' };
-  const supabase = await createClient();
+  // squadra del documento (roster/t_u15 → t_u15): il database la usa per scegliere tra le squadre del PIN (0050)
+  const squadra = path.match(/^(?:calendar|registro|roster|sheet)\/([\w-]+)$/)?.[1];
+  // col PIN: il mister, o lo staff che è anche mister di questa squadra
+  const mister = chi.mister ?? (squadra && chi.misterDi?.squadre.some((t) => t.id === squadra) ? chi.misterDi : null);
+  const supabase = await createClient(squadra);
   for (let prova = 0; prova < 3; prova++) {
     let base: Doc | null, versione: number | null;
-    if (chi.mister) {
-      const { data, error } = await supabase.rpc('coach_leggi', { p_pin: chi.mister.pin, p_path: path });
+    if (mister) {
+      const { data, error } = await supabase.rpc('coach_leggi', { p_pin: mister.pin, p_path: path });
       if (error) return { ok: false, errore: error.message };
       base = data?.data ?? null; versione = data?.versione ?? null;
     } else {
@@ -31,8 +35,8 @@ async function aggiorna<T>(chi: Chi, path: string, cambia: (base: Doc | null) =>
     }
     const { nuovo, valore } = cambia(base);
     if (!nuovo) return { ok: true, valore };
-    const { data: r, error } = chi.mister
-      ? await supabase.rpc('coach_salva', { p_pin: chi.mister.pin, p_path: path, p_data: nuovo, p_versione: versione })
+    const { data: r, error } = mister
+      ? await supabase.rpc('coach_salva', { p_pin: mister.pin, p_path: path, p_data: nuovo, p_versione: versione })
       : await supabase.rpc('salva_doc', { p_path: path, p_data: nuovo, p_versione: versione });
     if (error) return { ok: false, errore: /consentito|42501/.test(error.message + error.code) ? 'Non hai il permesso di cambiarlo.' : error.message };
     if (r?.ok) return { ok: true, valore };
@@ -98,6 +102,15 @@ export async function impostaRuolo(squadraId: string, pid: string, ruolo: string
   });
 }
 
+/** Rosa → preparatori dei portieri: segna o toglie "portiere" a un giocatore di un'altra squadra (coach_portiere, 0050) */
+export async function segnaPortiere(squadraId: string, pid: string, portiere: boolean): Promise<Esito> {
+  if (!squadraOk(squadraId) || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
+  const chi = await chiEntra();
+  if (!chi.mister?.squadra.vedeTutte) return { ok: false, errore: 'Solo i preparatori dei portieri.' };
+  const { error } = await (await createClient()).rpc('coach_portiere', { p_pin: chi.mister.pin, p_squadra: squadraId, p_giocatore: pid, p_portiere: portiere });
+  return error ? { ok: false, errore: error.message } : { ok: true };
+}
+
 /** Rosa → elimina un giocatore (solo admin): dalla rosa e da formazione e panchina del foglio della squadra */
 export async function eliminaGiocatore(squadraId: string, pid: string): Promise<Esito> {
   if (!squadraOk(squadraId) || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
@@ -137,16 +150,38 @@ export async function svuotaFoglio(squadraId: string, vuoto: Record<string, unkn
 }
 
 /** Società → Squadre: un cambio su shared/teams (squadre, mister, PIN), solo admin e direttori (0020; il database lo ricontrolla).
- *  I PIN dei mister: 4 cifre casuali, mai uguali a un PIN di squadra o di mister già usato. Restituisce le squadre salvate */
+ *  PIN dei mister (0050, un PIN per persona): il PIN personale se è anche staff, se no quello che ha già in un'altra squadra, se no
+ *  4 cifre casuali mai usate; va su tutte le righe della stessa persona. Restituisce le squadre salvate */
 export async function cambiaSquadre(op: OpSquadre): Promise<Esito<SquadraSocieta[]>> {
   const chi = await chiEntra();
   if (chi.profilo?.ruolo !== 'admin' && chi.profilo?.ruolo !== 'direttore') return { ok: false, errore: 'Solo admin e direttori.' };
-  const pinLibero = (usati: Set<string>) => { for (;;) { const p = String(randomInt(1000, 10000)); if (!usati.has(p)) return p; } };
-  return aggiorna(chi, 'shared/teams', (base) => {
-    const items = ((base?.items as SquadraSocieta[] | undefined) ?? []);
-    const nuove = applicaOpSquadre(items, senzaSpazi(op), pinLibero);
-    return nuove ? { nuovo: { ...base, items: nuove }, valore: nuove } : { nuovo: null, valore: items };
-  });
+  // un PIN per persona (0050): PIN personale di scout, direttori e segreteria con lo stesso nome (letti con i permessi di chi chiama)
+  const supabase = await createClient();
+  const [{ data: persone }, { data: codici }] = op.tipo === 'pinMister'
+    ? await Promise.all([supabase.from('profiles').select('id, nome, cognome, ruolo').in('ruolo', ['direttore', 'scout', 'segreteria']).eq('attivo', true),
+      supabase.from('codici_accesso').select('profilo_id, pin')])
+    : [{ data: [] }, { data: [] }];
+  const pinDi = new Map((codici ?? []).map((c) => [c.profilo_id as string, c.pin as string]));
+  const staff = new Map((persone ?? []).filter((p) => pinDi.get(p.id)).map((p) => [chiaveNome(`${p.nome ?? ''} ${p.cognome ?? ''}`), { pin: pinDi.get(p.id)!, ruolo: p.ruolo as string }]));
+  const pinStaff = new Set([...staff.values()].map((x) => x.pin));
+  const pinLibero = (usati: Set<string>, persona: { nome: string; attuale: string; altri: string[] }) => {
+    const suo = staff.get(chiaveNome(persona.nome));
+    if (suo && persona.attuale !== suo.pin) return suo.pin;   // è anche staff: il suo PIN personale
+    if (persona.attuale && pinStaff.has(persona.attuale)) {
+      throw new Error(`È il PIN personale (${suo?.ruolo ?? 'staff'}): si cambia dalla sua riga più in basso, e cambia anche qui.`);
+    }
+    if (!persona.attuale && persona.altri[0]) return persona.altri[0];   // mister anche di un'altra squadra: stesso PIN
+    for (;;) { const p = String(randomInt(1000, 10000)); if (!usati.has(p)) return p; }
+  };
+  try {
+    return await aggiorna(chi, 'shared/teams', (base) => {
+      const items = ((base?.items as SquadraSocieta[] | undefined) ?? []);
+      const nuove = applicaOpSquadre(items, senzaSpazi(op), pinLibero);
+      return nuove ? { nuovo: { ...base, items: nuove }, valore: nuove } : { nuovo: null, valore: items };
+    });
+  } catch (e) {
+    return { ok: false, errore: e instanceof Error ? e.message : 'Non riuscito.' };
+  }
 }
 
 /** Società → Backup: tutti i documenti del Portale delle squadre in un file JSON (admin e direttori leggono tutto, 0011) */

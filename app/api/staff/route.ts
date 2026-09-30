@@ -79,6 +79,7 @@ export async function POST(request: Request) {
   if (!persona) return errore('Persona non trovata.', 404);
 
   if (r.azione === 'pin') {
+    const { data: prima } = await db.from('codici_accesso').select('pin').eq('profilo_id', persona.id).maybeSingle();
     const pin = await nuovoCodice(db);
     const { error } = await db.auth.admin.updateUserById(persona.id, { password: pin });
     if (error) return errore(`Codice non cambiato: ${error.message}`, 500);
@@ -86,6 +87,15 @@ export async function POST(request: Request) {
       { profilo_id: persona.id, pin, nota: [persona.nome, persona.cognome].filter(Boolean).join(' ') },
       { onConflict: 'profilo_id' },
     );
+    // un PIN per persona (0050): se è anche mister, il nuovo PIN va anche sulle sue righe da mister
+    if (prima?.pin) {
+      const { data: doc } = await db.from('docs').select('data').eq('path', 'shared/teams').maybeSingle();
+      const items = (doc?.data?.items ?? []) as { coaches?: { code?: string }[] }[];
+      if (items.some((t) => (t.coaches ?? []).some((c) => c.code === prima.pin))) {
+        items.forEach((t) => (t.coaches ?? []).forEach((c) => { if (c.code === prima.pin) c.code = pin; }));
+        await db.from('docs').update({ data: doc!.data, updated_at: new Date().toISOString() }).eq('path', 'shared/teams');
+      }
+    }
     return Response.json({ ok: true, pin });
   }
 

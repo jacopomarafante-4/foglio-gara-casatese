@@ -104,7 +104,10 @@ const cookieStorage = {
       .forEach(n => { document.cookie = n + '=; path=/; max-age=0'; });
   }
 };
-const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, IN_APP_UNICA ? { auth: { storage: cookieStorage } } : undefined) : null;
+/* Mister con più squadre e un solo PIN (0050): la squadra scelta nell'app (cookie acm_squadra) va al database come "x-squadra" */
+const squadraScelta = (document.cookie.match(/(?:^|; )acm_squadra=([\w-]+)/) || [])[1];
+const supabaseClient = (!RUNNING_IN_CLAUDE && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  ...(IN_APP_UNICA ? { auth: { storage: cookieStorage } } : {}), ...(squadraScelta ? { global: { headers: { 'x-squadra': squadraScelta } } } : {}) }) : null;
 /* Nell'app unica la stessa sessione può essere di uno scout: qui conta solo quella dell'admin */
 /* Nell'app unica la sessione conta per il Portale se è dell'admin o di un direttore.
    Il direttore vede tutte le squadre senza modificarle (readOnly, 0011 nel database), ma modifica l'area
@@ -120,8 +123,12 @@ let squadraPropria = null;
 let squadraOrg = null;
 const isOrg = () => !!squadraOrg;
 const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
-/* Direttori: in sola lettura, tranne Società, Segreteria e calendario/eventi/avvisi (0020, 0031, 0034) */
-const readOnly = () => (isDirettore() && !['tesserati','calendario','calendariotutte','avvisi','comunicazione','archivio'].includes(tab)) || guardaAltra();
+/* Direttore che è anche mister (stesso PIN, 0050): nelle sue squadre modifica foglio gara e registro come un mister;
+   i salvataggi passano da /api/portale/salva, che usa la sua tessera (il PIN non arriva mai qui) */
+let squadreMister = [];
+const misterQui = () => isDirettore() && squadreMister.includes(curTeam);
+/* Direttori: in sola lettura, tranne Società, Segreteria e calendario/eventi/avvisi (0020, 0031, 0034) e le squadre di cui sono mister */
+const readOnly = () => (isDirettore() && !misterQui() && !['tesserati','calendario','calendariotutte','avvisi','comunicazione','archivio'].includes(tab)) || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
 const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore' || staffRole === 'segreteria')));
 async function loadStaffRole(s){
@@ -212,7 +219,8 @@ function payload(name){
 }
 function save(name){
   /* Sola lettura (direttori, tranne Società): niente salvataggio, si ricarica il dato vero e la modifica sparisce */
-  if((isDirettore() && name !== 'calendar') || guardaAltra()){   // Società → Squadre (shared/teams) è nell'app: /societa/squadre
+  const comeMister = misterQui() && (name === 'sheet' || name === 'registro');
+  if((isDirettore() && !comeMister && name !== 'calendar') || guardaAltra()){   // Società → Squadre (shared/teams) è nell'app: /societa/squadre
     setStatus('Sola lettura: nessuna modifica');
     db?.doc(docPath(name)).get().then(snap => { applyDoc(name, snap.data()); render(); }).catch(() => {});
     return;
@@ -308,8 +316,14 @@ function makeSupabaseDb(client){
            Restituisce la scheda salvata. Senza la migrazione 0048: come prima (sovrascrive). */
         async set(data){
           let b = basiDocs[path], mio = data;
+          const squadra = (path.match(/^(?:sheet|registro)\/([\w-]+)$/) || [])[1];
+          /* direttore anche mister di questa squadra: salva il server con la sua tessera (coach_salva) */
+          const salva = isDirettore() && squadreMister.includes(squadra)
+            ? async p => { const risposta = await fetch('/api/portale/salva', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(p) });
+                const j = await risposta.json().catch(() => ({ errore: 'Accesso scaduto' })); return risposta.ok ? { data: j } : { error: new Error(j.errore || 'Non salvato') }; }
+            : p => client.rpc('salva_doc', { p_path: p.path, p_data: p.data, p_versione: p.versione });
           for(let prova = 0; prova < 4; prova++){
-            const { data: r, error } = await client.rpc('salva_doc', { p_path: path, p_data: mio, p_versione: b ? b.versione : null });
+            const { data: r, error } = await salva({ path, data: mio, versione: b ? b.versione : null });
             if(error && vecchio(error)){
               const { error: e2 } = await client.from('docs').upsert({ path, data: mio, updated_at: new Date().toISOString() });
               if(e2) throw e2; return mio;
@@ -451,6 +465,8 @@ async function initStore(){
     let session = null;
     try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
     if(IN_APP_UNICA){ supaSession = session; await loadStaffRole(session); }
+    /* direttore che è anche mister: le sue squadre (dalla tessera, lato server) */
+    if(IN_APP_UNICA && isDirettore()){ try{ const r = await fetch('/api/portale/mister', { credentials: 'same-origin' }); if(r.ok) squadreMister = (await r.json()).squadre || []; }catch(e){} }
     /* Famiglia: pagina del solo ragazzo (famiglia.js) */
     const pinFam = famigliaPinFromUrl();
     if(pinFam && !(sessionOk(session) && !isSegreteria())){ if(await famigliaLogin(pinFam)) return; }

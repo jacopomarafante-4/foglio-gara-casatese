@@ -21,6 +21,8 @@ const PinBox = ({ pin, vuoto }: { pin?: string; vuoto: string }) => pin
 
 export function SquadreSocieta({ squadre: iniziali, staff, io }: { squadre: SquadraSocieta[]; staff: PersonaStaff[]; io: string }) {
   const [squadre, setSquadre] = useState(iniziali);
+  /* un PIN per persona (0050): il mister che usa il PIN personale di uno staff */
+  const staffDi = (pin: string) => { const p = pin ? staff.find((x) => x.pin === pin) : undefined; return p ? GRUPPI.find((g) => g.ruolo === p.ruolo)?.titolo.toLowerCase() : ''; };
   const [messaggio, setMessaggio] = useState('');
   const timer = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -31,10 +33,10 @@ export function SquadreSocieta({ squadre: iniziali, staff, io }: { squadre: Squa
     const manda = async () => {
       const r = await cambiaSquadre(op).catch(() => ({ ok: false, errore: 'rete assente', valore: undefined }));
       setMessaggio(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
-      // il PIN nuovo lo decide il server: si prende solo quello, il resto della pagina resta com'è
-      if (r.ok && op.tipo === 'pinMister') {
-        const code = r.valore?.find((t) => t.id === op.id)?.coaches.find((c) => c.id === op.mister)?.code ?? '';
-        setSquadre((s) => s.map((t) => (t.id !== op.id ? t : { ...t, coaches: t.coaches.map((c) => (c.id === op.mister ? { ...c, code } : c)) })));
+      // il PIN nuovo lo decide il server (anche per le altre righe della stessa persona): si prendono solo i PIN
+      if (r.ok && op.tipo === 'pinMister' && r.valore) {
+        const pin = new Map(r.valore.flatMap((t) => t.coaches.map((c) => [`${t.id}|${c.id}`, c.code] as const)));
+        setSquadre((s) => s.map((t) => ({ ...t, coaches: t.coaches.map((c) => ({ ...c, code: pin.get(`${t.id}|${c.id}`) ?? c.code })) })));
       }
     };
     clearTimeout(timer.current[chiave]);
@@ -67,10 +69,14 @@ export function SquadreSocieta({ squadre: iniziali, staff, io }: { squadre: Squa
                   <input className="campo min-w-0 flex-1 py-2" value={c.name} placeholder="Nome e cognome" aria-label="Nome del mister"
                     onChange={(e) => fai({ tipo: 'nomeMister', id: t.id, mister: c.id, valore: e.target.value }, 700, `n:${c.id}`)} />
                   <PinBox pin={c.code} vuoto="Senza PIN" />
-                  <button type="button" className={c.code ? chiaro : pieno}
-                    onClick={() => (!c.code || confirm(`Rigenerare il PIN di ${c.name || 'questo mister'}? Quello vecchio smette di funzionare.`)) && fai({ tipo: 'pinMister', id: t.id, mister: c.id })}>
-                    {c.code ? 'Rigenera' : 'Genera PIN'}
-                  </button>
+                  {staffDi(c.code) ? (
+                    <span className="flex-none text-xs text-grigio" title="Stessa persona: un solo PIN, si cambia dalla riga dello staff">= PIN {staffDi(c.code)}</span>
+                  ) : (
+                    <button type="button" className={c.code ? chiaro : pieno}
+                      onClick={() => (!c.code || confirm(`Rigenerare il PIN di ${c.name || 'questo mister'}? Quello vecchio smette di funzionare (anche nelle altre squadre di questa persona).`)) && fai({ tipo: 'pinMister', id: t.id, mister: c.id })}>
+                      {c.code ? 'Rigenera' : 'Genera PIN'}
+                    </button>
+                  )}
                   <button type="button" className={croce} aria-label={`Togli ${c.name || 'mister'}`}
                     onClick={() => confirm(`Togliere ${c.name || 'questo mister'}? Il suo PIN smette di funzionare.`) && fai({ tipo: 'togliMister', id: t.id, mister: c.id })}>×</button>
                 </div>

@@ -95,6 +95,10 @@ async function permessi() {
     await permesso('Mister U14', 'legge la propria rosa', a.rpc('coach_get', { p_pin: p, p_path: 'roster/t_u14' }), (d) => Array.isArray(d?.players));
     await vietato('Mister U14', 'legge la rosa U15', a.rpc('coach_get', { p_pin: p, p_path: 'roster/t_u15' }));
     await vietato('Mister U14', 'legge il registro U15', a.rpc('coach_get', { p_pin: p, p_path: 'registro/t_u15' }));
+    // prova innocua: toglierebbe "portiere" a un id che non c'è; deve essere vietato prima (solo i preparatori, 0050)
+    await vietato('Mister U14', 'segna i portieri di un\'altra squadra', a.rpc('coach_portiere', { p_pin: p, p_squadra: 't_u15', p_giocatore: 'nessuno', p_portiere: false }));
+    await vietato('Mister U14', 'forza un\'altra squadra con l\'intestazione x-squadra', createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { auth: { persistSession: false }, global: { headers: { 'x-squadra': 't_u15' } } }).rpc('coach_get', { p_pin: p, p_path: 'roster/t_u15' }));
     await permesso('Mister U14', 'vede solo la sua squadra (senza PIN)', a.rpc('coach_get', { p_pin: p, p_path: 'shared/teams' }), (d) => d.items.length === 1 && !JSON.stringify(d).match(/"code":"\d/));
     await permesso('Mister U14', 'calendari di tutte le squadre', a.rpc('coach_calendari', { p_pin: p }), (d) => d.length >= 8 && !JSON.stringify(d).match(/"players"|"code":"\d/));
     await permesso('Mister U14', 'giocatori della sua annata (senza contatti)', a.rpc('coach_giocatori', { p_pin: p }), (d) => Array.isArray(d) && !JSON.stringify(d).match(/telefono|email|"note"/));

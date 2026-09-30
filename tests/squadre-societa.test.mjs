@@ -1,7 +1,7 @@
 // Società → Squadre (lib/squadre-societa.ts): operazioni su shared/teams
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applicaOpSquadre, conMister, leggiEta, pinUsati, senzaSpazi } from '@/lib/squadre-societa';
+import { applicaOpSquadre, chiaveNome, conMister, leggiEta, pinUsati, senzaSpazi } from '@/lib/squadre-societa';
 
 const base = () => [
   { id: 't_u14', name: 'Academy', category: 'Under 14', code: '1111', coaches: [{ id: 'm1', name: 'Rossi', code: '2222' }] },
@@ -63,4 +63,22 @@ test('mentre si scrive gli spazi restano, al salvataggio si tolgono', () => {
   assert.equal(applicaOpSquadre(base(), op, pinFisso)[0].category, 'Under ');
   assert.equal(senzaSpazi({ ...op, valore: '  Under   15 ' }).valore, 'Under 15');
   assert.deepEqual(senzaSpazi({ tipo: 'eliminaSquadra', id: 'x' }), { tipo: 'eliminaSquadra', id: 'x' });
+});
+
+test('un PIN per persona: stesso nome (anche invertito) in più squadre = stesso PIN su tutte', () => {
+  assert.equal(chiaveNome('Di Luccio  Alessandro'), chiaveNome('alessandro di luccio'));
+  assert.equal(chiaveNome(''), '');
+  const sq = [
+    { id: 't_u18', name: 'A', coaches: [{ id: 'm1', name: 'Di Luccio Alessandro', code: '' }] },
+    { id: 't_u19', name: 'A', coaches: [{ id: 'm1', name: 'Alessandro Di Luccio', code: '' }, { id: 'm2', name: 'Del Nero Matteo', code: '' }] },
+  ];
+  let visto;
+  const s = applicaOpSquadre(sq, { tipo: 'pinMister', id: 't_u18', mister: 'm1' }, (usati, persona) => { visto = persona; return '4321'; });
+  assert.deepEqual(visto, { nome: 'Di Luccio Alessandro', attuale: '', altri: [] });
+  assert.equal(s[0].coaches[0].code, '4321'); assert.equal(s[1].coaches[0].code, '4321'); assert.equal(s[1].coaches[1].code, '');
+  // dopo: il PIN che ha già in un'altra squadra arriva a chi lo genera
+  const s2 = applicaOpSquadre(s, { tipo: 'pinMister', id: 't_u19', mister: 'm1' }, (u, p) => { visto = p; return p.altri[0]; });
+  assert.deepEqual(visto.altri, ['4321']); assert.equal(s2[1].coaches[0].code, '4321');
+  // chi genera può fermare l'operazione (es. PIN personale di un direttore)
+  assert.throws(() => applicaOpSquadre(s, { tipo: 'pinMister', id: 't_u18', mister: 'm1' }, () => { throw new Error('no'); }), /no/);
 });

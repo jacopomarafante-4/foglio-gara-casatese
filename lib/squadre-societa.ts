@@ -39,9 +39,17 @@ export function leggiEta(s: string): number[] {
   return [...new Set((s.match(/\d{1,2}/g) ?? []).map(Number))];
 }
 
-/** Applica l'operazione e restituisce il nuovo elenco (null se non cambia nulla). `nuovoPin` dà un PIN libero.
+/** La stessa persona, scritta "Rossi Mario" o "Mario  Rossi": parole senza accenti né maiuscole, in ordine ('' se manca) */
+export function chiaveNome(nome?: string | null): string {
+  return String(nome ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9']+/).filter(Boolean).sort().join(' ');
+}
+
+/** Applica l'operazione e restituisce il nuovo elenco (null se non cambia nulla). `nuovoPin` dà il PIN della persona
+ *  (0050: un PIN per persona: quello che ha già da mister di un'altra squadra, il suo PIN personale se è anche staff, o uno
+ *  nuovo) e lo si mette su tutte le sue righe da mister, in ogni squadra; può fermare l'operazione lanciando un errore.
  *  I testi si prendono come sono (la pagina lo applica mentre si scrive): gli spazi in più li toglie chi salva (senzaSpazi) */
-export function applicaOpSquadre(items: SquadraSocieta[], op: OpSquadre, nuovoPin: (usati: Set<string>) => string): SquadraSocieta[] | null {
+export function applicaOpSquadre(items: SquadraSocieta[], op: OpSquadre,
+  nuovoPin: (usati: Set<string>, persona: { nome: string; attuale: string; altri: string[] }) => string): SquadraSocieta[] | null {
   const squadre = items.map(conMister);
   if (op.tipo === 'aggiungiSquadra') {
     if (squadre.some((t) => t.id === op.id)) return null;
@@ -67,9 +75,17 @@ export function applicaOpSquadre(items: SquadraSocieta[], op: OpSquadre, nuovoPi
     case 'etaMister':
       if (!mister) return null;
       mister.eta = leggiEta(op.valore); break;
-    case 'pinMister':
+    case 'pinMister': {
       if (!mister) return null;
-      mister.code = nuovoPin(pinUsati(squadre)); break;
+      const chiave = chiaveNome(mister.name);
+      // le altre righe della stessa persona (altre squadre), per riusare il suo PIN e darlo a tutte
+      const stessa = (squadra: string, c: MisterSquadra) => !(squadra === t.id && c.id === mister.id) && !!chiave && chiaveNome(c.name) === chiave;
+      const altri = [...new Set(squadre.flatMap((x) => x.coaches.filter((c) => stessa(x.id, c)).map((c) => c.code)).filter(Boolean))];
+      const pin = nuovoPin(pinUsati(squadre), { nome: mister.name, attuale: mister.code, altri });
+      mister.code = pin;
+      return squadre.map((x, j) => (j === i ? t : x)).map((x) => (x.coaches.some((c) => stessa(x.id, c))
+        ? { ...x, coaches: x.coaches.map((c) => (stessa(x.id, c) ? { ...c, code: pin } : c)) } : x));
+    }
     case 'togliMister':
       if (!mister) return null;
       t.coaches = t.coaches.filter((c) => c !== mister); riassunto(); break;

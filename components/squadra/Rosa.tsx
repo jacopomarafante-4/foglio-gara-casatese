@@ -2,7 +2,7 @@
 // Squadra → Rosa: per il mister numero della partita, nome e ruolo (lo sceglie lui); per l'admin anche nome modificabile,
 // aggiunta (uno a uno o incollando un elenco) ed eliminazione. Da Under 13 in su ruoli completi, sotto portiere o movimento.
 import { useState } from 'react';
-import { eliminaGiocatore, impostaRuolo } from '@/app/(aree)/docs-actions';
+import { eliminaGiocatore, impostaRuolo, segnaPortiere } from '@/app/(aree)/docs-actions';
 import { nuovoId } from '@/lib/calendario-portale';
 import { Messaggio, useSalva } from '@/components/calendario/salvataggio';
 
@@ -11,8 +11,10 @@ type Giocatore = { id: string; name: string; numero: string; ruolo: string; dati
 const RUOLI_PIENI = [['portiere', 'Portiere'], ['difensore', 'Difensore'], ['centrocampista', 'Centrocampista'], ['attaccante', 'Attaccante']];
 const RUOLI_BASE = [['portiere', 'Portiere'], ['movimento', 'Giocatore di movimento']];
 
-export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLettura }: {
+export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLettura, soloPortieri = false }: {
   squadraId: string; giocatori: Giocatore[]; ruoliBase: boolean; admin: boolean; soloLettura: boolean;
+  /** preparatori dei portieri sulla rosa di un'altra squadra: solo "portiere sì / no" */
+  soloPortieri?: boolean;
 }) {
   const [giocatori, setGiocatori] = useState(iniziali);
   const [elenco, setElenco] = useState('');
@@ -47,7 +49,19 @@ export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLet
   /* un nome per riga; un numero davanti ("7. Rossi", "7 - Rossi") si ignora */
   const dallElenco = () => elenco.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => (l.match(/^\d{1,3}\s*[-.)]?\s*(.+)$/)?.[1] ?? l).trim());
 
-  const selettore = (g: Giocatore) => (
+  async function portiere(g: Giocatore) {
+    const si = g.ruolo !== 'portiere';
+    setGiocatori((l) => l.map((x) => (x.id === g.id ? { ...x, ruolo: si ? 'portiere' : '' } : x)));
+    setMessaggio('Salvataggio…');
+    const r = await segnaPortiere(squadraId, g.id, si).catch(() => ({ ok: false, errore: 'rete assente' }));
+    setMessaggio(r.ok ? (si ? 'Segnato come portiere' : 'Tolto dai portieri') : `Non salvato: ${r.errore ?? 'riprova'}`);
+  }
+  const selettore = (g: Giocatore) => soloPortieri ? (
+    <button type="button" aria-pressed={g.ruolo === 'portiere'} onClick={() => portiere(g)}
+      className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-semibold ${g.ruolo === 'portiere' ? 'border-blu bg-blu text-white' : 'border-linea bg-white hover:border-blu'}`}>
+      🧤 {g.ruolo === 'portiere' ? 'Portiere' : 'Segna portiere'}
+    </button>
+  ) : (
     <select className="w-36 shrink-0 rounded-lg border border-linea bg-white px-2 py-2 text-sm disabled:opacity-70 sm:w-44" aria-label={`Ruolo di ${g.name}`} value={g.ruolo} disabled={soloLettura} onChange={(e) => cambiaRuolo(g, e.target.value)}>
       <option value="">Ruolo</option>
       {ruoli.map(([v, e]) => <option key={v} value={v}>{e}</option>)}
@@ -64,7 +78,8 @@ export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLet
           : 'Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione. Scegli il ruolo di ogni giocatore: per i portieri potrai inserire i gol subiti nelle partite'}
         {ruoliBase ? ' (in questa categoria: portiere o giocatore di movimento).' : '.'}
       </p>
-      {!admin && <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🔒 La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all’amministratore.</p>}
+      {soloPortieri ? <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🧤 Rosa di un’altra squadra: qui segni solo chi è portiere. Lo vede anche il mister.</p>
+        : !admin && <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🔒 La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all’amministratore.</p>}
 
       {giocatori.length === 0 ? (
         <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">
