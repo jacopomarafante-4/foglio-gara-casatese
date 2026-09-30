@@ -416,8 +416,9 @@ Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` s
 giro completo del sito vero con ogni profilo (identità di prova temporanee, cancellate alla fine). Rifarlo dopo modifiche a
 permessi, migrazioni o navigazione del Portale.
 Parte anche ogni notte su GitHub (`.github/workflows/notte.yml`, "Prova notturna dei profili", segreti del repository
-NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY; `CHROME_PATH`): a video solo nomi delle prove fallite e
-conteggi (registri pubblici), esce con errore se qualcosa non va.
+NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY; `CHROME_PATH`): a video solo nomi delle prove fallite,
+conteggi e tipo del problema (frasi fisse, mai testo delle pagine: registri pubblici), esce con errore se qualcosa non va.
+Un profilo che fallisce si riprova una volta (riga "↻ riprovato"): conta il secondo giro.
 
 ## Backup
 `npm run backup` (scripts/backup.mjs) → `private/backup/` (`_riepilogo.json` con `problemi`). Attività di macOS (LaunchAgent
