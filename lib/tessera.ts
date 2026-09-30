@@ -50,3 +50,27 @@ export async function leggiTessera(valore: string | undefined): Promise<Tessera 
 export const opzioniCookieMister = {
   httpOnly: true, sameSite: 'lax' as const, path: '/', secure: process.env.NODE_ENV === 'production',
 };
+
+/** Cifra un testo con la stessa chiave (SEGRETO_SESSIONE): es. il token di Google Calendar salvato nel database (0049).
+ *  Null se manca il segreto */
+export async function cifraTesto(testo: string) {
+  const k = await chiave();
+  if (!k) return null;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const cifrato = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(testo)));
+  const tutto = new Uint8Array(iv.length + cifrato.length);
+  tutto.set(iv); tutto.set(cifrato, iv.length);
+  return base64url(tutto);
+}
+
+/** Il testo di cifraTesto (null se manca il segreto o il valore è alterato) */
+export async function decifraTesto(valore: string) {
+  const k = await chiave();
+  if (!k) return null;
+  try {
+    const tutto = daBase64url(valore);
+    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: tutto.slice(0, 12) }, k, tutto.slice(12)));
+  } catch {
+    return null;
+  }
+}

@@ -2,7 +2,7 @@
 // Da Google: gli eventi "U14 - 2013 - Avversario", "AdB - 2014 - …" diventano amichevoli/tornei della squadra
 // dell'annata (gcal = id dell'evento, gcalCal = calendario); il campionato ufficiale non si tocca mai;
 // nelle note niente contatti né telefoni. Verso Google: amichevoli, tornei ed eventi creati nell'app.
-import { CALENDARI, type Calendario, type EventoGoogle, leggiEventi } from './google-calendar';
+import { CALENDARI, type Calendario, type EventoGoogle, type Google, leggiEventi } from './google-calendar';
 import { calendarioDi, etaCategoria } from './condivisi';
 
 export type Partita = {
@@ -43,12 +43,12 @@ type DaGoogle = { gcal: string; gcalCal: Calendario; eta: number; ufficiale: boo
   home: boolean; location: string; note: string; tipo: string };
 
 /** Le partite delle giovanili nei tre calendari, da oggi a fine stagione */
-export async function partiteDaGoogle(): Promise<{ partite: DaGoogle[]; eventi: number }> {
+export async function partiteDaGoogle(g: Google): Promise<{ partite: DaGoogle[]; eventi: number }> {
   const dal = oggi(), al = fineStagione();
   const partite: DaGoogle[] = [], visti = new Set<string>();
   let eventi = 0;
   for (const cal of CALENDARI) {
-    for (const e of await leggiEventi(cal, dal, al) as EventoGoogle[]) {
+    for (const e of await leggiEventi(g, cal, dal, al) as EventoGoogle[]) {
       eventi++;
       if (e.status === 'cancelled' || e.recurringEventId || visti.has(e.id)) continue;
       const t = (e.summary ?? '').match(/^\s*(U\s*\d{2}|AdB)\s*-\s*(\d{4})(?:\/\d{2})?\s*-\s*(.+?)\s*$/i);

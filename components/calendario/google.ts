@@ -42,5 +42,7 @@ export function useGoogle(attivo: boolean, avvisa: (testo: string) => void) {
       dopo('c:' + x.gcal, async () => { await chiama('cancella', { gcal: x.gcal, gcalCal: x.gcalCal }); avvisa('Tolto anche da Google'); });
     },
     importa: () => chiama('importa') as Promise<{ partite: number; squadre: { aggiunte: number; aggiornate: number; tolte: number }[] }>,
+    /** all'apertura: rilegge Google se sono passati 30 minuti dall'ultima volta (se no `saltato`) */
+    auto: () => chiama('auto') as Promise<{ saltato?: string; squadre?: { aggiunte: number; aggiornate: number; tolte: number }[] }>,
   };
 }
