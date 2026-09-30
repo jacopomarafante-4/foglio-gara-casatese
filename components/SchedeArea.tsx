@@ -1,13 +1,12 @@
 'use client';
-// Seconda riga dell'intestazione: le schede dell'area aperta. Scouting: le sue pagine; Società: Squadre (nel Portale),
-// Archivio documenti e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati; Modulistica e Calendario: tutte.
+// Seconda riga dell'intestazione: le schede dell'area aperta. Scouting: le sue pagine; Società: Squadre, Archivio documenti
+// e Storico modifiche (pagine dell'app, tappa 3); Segreteria: Tesserati; Modulistica e Calendario: tutte.
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Scheda } from '@/components/Scheda';
 import type { Ruolo } from '@/lib/ruoli';
 
 export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
-  const nelPortale = 'whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2.5 pt-2 font-display text-lg font-semibold text-grigio hover:text-inchiostro';
   const squadraScelta = useSearchParams().get('squadra');
   if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
   if (percorso.startsWith('/squadra/')) {
@@ -60,7 +59,7 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
   if (percorso.startsWith('/societa')) {
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della società">
-        <a href="/portale/#/squadre" className={nelPortale}>Squadre</a>
+        <Scheda href="/societa/squadre">Squadre</Scheda>
         <Scheda href="/societa/archivio">Archivio documenti</Scheda>
         {ruolo === 'admin' && <Scheda href="/societa/modifiche">Storico modifiche</Scheda>}
       </nav>

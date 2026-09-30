@@ -146,10 +146,9 @@ function render(){
   const T0 = TEAM();
   $('#matchline').textContent = isSegreteria() ? 'Segreteria' : T0?.category || '';
   const v = $('#view');
-  if(tab==='squadre') v.innerHTML = viewSquadre();
   /* Schede che non dipendono da una squadra aperta */
   /* nell'app solo dopo aver caricato le squadre: prima la scheda non è ancora quella dell'indirizzo (tab parte da 'home') */
-  else if(NELL_APP[tab]){ if(IN_APP_UNICA){ if(teamsLoaded) location.replace(indirizzoApp(tab)); else v.innerHTML = '<section class="panel"><p class="note">Carico…</p></section>'; } else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
+  if(NELL_APP[tab]){ if(IN_APP_UNICA){ if(teamsLoaded) location.replace(indirizzoApp(tab)); else v.innerHTML = '<section class="panel"><p class="note">Carico…</p></section>'; } else v.innerHTML = `<section class="panel"><h2>${TAB_NAMES[tab]}</h2><p class="empty">Questa scheda si apre dal sito: ${NELL_APP[tab]}</p></section>`; }
   else if(!curTeam) v.innerHTML = `<section class="panel"><p class="empty">Nessuna squadra. Creane una nella scheda Squadre.</p></section>`;
   else if(tab==='formazione') v.innerHTML = viewFormazione();
   else if(tab==='piazzati') v.innerHTML = openSchemeId ? viewScheme() : viewSchemes();
@@ -166,137 +165,7 @@ function render(){
   }
 }
 
-function viewSquadre(){
-  const cards = S.teams.map(t => {
-    const mister = (t.coaches||[]).map(c => `
-        <div class="coachrow">
-          <input data-coach="${t.id}:${c.id}" value="${esc(c.name)}" placeholder="Nome e cognome" aria-label="Nome del mister">
-          ${c.code ? `<span class="code" title="PIN personale">${esc(c.code)}</span>` : '<span class="nocode">Senza PIN</span>'}
-          <button class="btn small ${c.code?'ghost':'primary'}" data-coachpin="${t.id}:${c.id}">${c.code ? 'Rigenera' : 'Genera PIN'}</button>
-          <button class="iconbtn" aria-label="Togli ${esc(c.name||'mister')}" data-coachdel="${t.id}:${c.id}">×</button>
-        </div>${t.vedeTutte ? `
-        <div class="coachcat"><label class="note" for="cc_${c.id}">Portieri di: Under</label>
-          <input id="cc_${c.id}" data-coachcat="${t.id}:${c.id}" value="${esc((c.eta||[]).join(', '))}" placeholder="Es. 15, 14, 11" inputmode="numeric"></div>` : ''}`).join('');
-    return `
-    <div class="teamcard">
-      <div class="hd">
-        <div><strong>${esc(t.category || t.name || 'Senza nome')}</strong>${t.category && t.name ? `<span class="stat"> · ${esc(t.name)}</span>` : ''}</div>
-        <div class="row">
-          <button class="btn small" data-teamgo="${t.id}">Gestisci rosa</button>
-          <button class="btn small ghost" data-teamas="${t.id}">Vedi come mister</button>
-          <button class="iconbtn" aria-label="Elimina ${esc(t.category||t.name)}" data-teamdel="${t.id}">×</button>
-        </div>
-      </div>
-      <div class="coachlist">
-        <div class="coachhd">Mister</div>
-        ${mister || '<p class="note">Nessun mister: aggiungilo e genera il suo PIN.</p>'}
-        <button class="btn small ghost" data-coachadd="${t.id}">+ Aggiungi mister</button>
-      </div>
-      ${t.code ? `<p class="note legacy">PIN di squadra condiviso (vecchio): <span class="code">${esc(t.code)}</span>
-        <button class="linkbtn" data-teamcodeoff="${t.id}">Disattiva</button> — quando ogni mister ha il suo PIN, disattivalo.</p>` : ''}
-      <details class="teamedit"><summary>Nome e categoria</summary>
-        <div class="grid">
-          <div><label class="f">Nome squadra</label><input data-team="${t.id}" data-tf="name" value="${esc(t.name)}"></div>
-          <div><label class="f">Categoria</label><input data-team="${t.id}" data-tf="category" value="${esc(t.category)}" placeholder="Es. Under 15"></div>
-        </div>
-        <label class="row" style="gap:6px;margin-top:10px"><input type="checkbox" data-teamflag="${t.id}:vedeTutte" ${t.vedeTutte?'checked':''}> Preparatori dei portieri: vedono tutte le squadre in sola lettura</label>
-        <label class="row" style="gap:6px;margin-top:6px"><input type="checkbox" data-teamflag="${t.id}:organizza" ${t.organizza?'checked':''}> Responsabile organizzativo: calendari di tutte le squadre, eventi e avvisi</label>
-      </details>
-    </div>`;
-  }).join('');
-  return `<section class="panel">
-    <h2>Squadre, scouting e direttori</h2>
-    <p class="hint">La vedete solo tu e i direttori. Ognuno entra dalla pagina d'ingresso con il suo PIN personale: i mister trovano solo la loro squadra, gli scout lo Scouting.</p>
-    ${cards || '<p class="empty">Nessuna squadra ancora.</p>'}
-    <div class="row" style="margin-top:14px"><button class="btn primary" data-act="teamadd">Aggiungi squadra</button></div>
-    ${viewStaff()}
-  </section>
-  <section class="panel">
-    <h3 style="margin-top:0">Chi può fare cosa</h3>
-    <div class="rolebox">
-      <div><b>Amministratore e direttori</b>L'amministratore crea le squadre e i PIN di mister, scout e direttori, inserisce le rose, carica e disegna gli schemi. I direttori vedono tutte le squadre senza poterle modificare; in Società (squadre, mister, scout, direttori e PIN) e nello Scouting invece modificano come l'amministratore.</div>
-      <div><b>Mister</b>Vede solo la propria squadra. Compila partita, formazione e panchina, sceglie gli schemi da stampare e scarica il PDF. Segna presenze, minuti e test, vede le statistiche e segnala giocatori allo scouting.</div>
-      <div><b>In comune</b>Database degli schemi (angoli e punizioni, a favore e a sfavore) e moduli di gioco. Quando aggiungi uno schema, lo trovano tutti.</div>
-    </div>
-  </section>
-  <section class="panel">
-    <h3 style="margin-top:0">Backup</h3>
-    <p class="hint">Scarica un file con tutti i dati attuali (squadre, rose, schemi, formazioni): una copia di sicurezza da tenere da parte.</p>
-    <button class="btn" data-act="exportbackup">Esporta backup</button>
-  </section>`;
-}
-/* Scouting e Direttori, mostrati come le squadre: ogni persona col suo PIN personale.
-   Elenco letto con la sessione di admin/direttore (profiles + codici_accesso, 0010);
-   creare account e cambiare PIN passa da /api/staff (il PIN è anche la password dell'account). */
-let staff = null, staffBusy = false, staffMsg = '';
-const staffAdding = {};
-function loadStaff(){
-  staff = 'loading';
-  Promise.all([
-    supabaseClient.from('profiles').select('id, nome, cognome, email, ruolo, attivo').neq('ruolo', 'admin').order('cognome'),
-    supabaseClient.from('codici_accesso').select('profilo_id, pin'),
-  ]).then(([p, c]) => {
-    const pin = new Map((c.data||[]).map(x => [x.profilo_id, x.pin]));
-    staff = (p.data||[]).filter(x => GRUPPI_STAFF[x.ruolo]).map(x => ({...x, pin: pin.get(x.id) || ''}));
-    if(tab==='squadre') render();
-  }).catch(() => { staff = []; });
-}
-async function staffAction(body){
-  if(staffBusy) return; staffBusy = true; staffMsg = ''; render();
-  try{
-    const r = await fetch('/api/staff', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(body)});
-    const j = await r.json().catch(() => ({errore: 'Sessione scaduta: rientra dalla pagina d’ingresso.'}));
-    if(!r.ok || j.errore) staffMsg = j.errore || 'Operazione non riuscita.';
-    else if(body.azione === 'crea') staffAdding[body.ruolo] = false;
-  }catch(e){ staffMsg = 'Operazione non riuscita: controlla la connessione.'; }
-  staffBusy = false; loadStaff(); render();
-}
-/* Gruppi del personale con account e PIN (0020, 0030): titolo, sottotitolo, nome della persona */
-const GRUPPI_STAFF = {
-  scout: {titolo:'Scouting', sotto:'Academy Casatese Merate', chi:'scout', elenco:'Scout'},
-  direttore: {titolo:'Direttori', sotto:'a capo di squadre e scout', chi:'direttore', elenco:'Direttori'},
-  segreteria: {titolo:'Segreteria', sotto:'tesserati, famiglie, iscrizioni e quote', chi:'addetto di segreteria', elenco:'Segreteria'}
-};
-function viewStaffCard(ruolo){
-  const scout = ruolo === 'scout', G = GRUPPI_STAFF[ruolo];
-  const chi = G.chi;
-  const persone = Array.isArray(staff) ? staff.filter(x => x.ruolo === ruolo) : [];
-  const dis = staffBusy ? 'disabled' : '';
-  const righe = persone.map(x => {
-    const nome = [x.nome, x.cognome].filter(Boolean).join(' ');
-    return `
-        <div class="coachrow staffrow${x.attivo ? '' : ' off'}">
-          <input data-staffname="${x.id}" value="${esc(nome)}" placeholder="Nome e cognome" aria-label="Nome">
-          ${!x.attivo ? '<span class="nocode">Sospeso</span>' : x.pin ? `<span class="code" title="PIN personale">${esc(x.pin)}</span>` : '<span class="nocode">Senza PIN</span>'}
-          ${x.attivo ? `<button class="btn small ${x.pin?'ghost':'primary'}" data-staffpin="${x.id}" ${dis}>${x.pin ? 'Rigenera' : 'Genera PIN'}</button>` : '<span></span>'}
-          ${x.attivo ? `<button class="iconbtn" aria-label="Sospendi ${esc(nome)}" title="Sospendi l'accesso" data-staffstato="${x.id}" data-attivo="0" ${dis}>×</button>`
-                     : `<button class="btn small ghost" data-staffstato="${x.id}" data-attivo="1" ${dis}>Riattiva</button>`}
-        </div>`;
-  }).join('');
-  return `
-    <div class="teamcard">
-      <div class="hd">
-        <div><strong>${G.titolo}</strong><span class="stat"> · ${G.sotto}</span></div>
-        ${scout ? '<div class="row"><a class="btn small" href="/home">Apri Scouting</a></div>' : ''}
-      </div>
-      <div class="coachlist">
-        <div class="coachhd">${G.elenco}</div>
-        ${staff === 'loading' ? '<p class="note">Caricamento…</p>' : righe || `<p class="note">Nessun ${chi}: aggiungilo e genera il suo PIN.</p>`}
-        ${staffAdding[ruolo]
-          ? `<div class="addrow"><input id="staffnew_${ruolo}" placeholder="Nome e cognome del nuovo ${chi}" aria-label="Nuovo ${chi}">
-               <button class="btn small primary" data-staffadd="${ruolo}" ${dis}>Crea e genera PIN</button></div>`
-          : `<button class="btn small ghost" data-staffnew="${ruolo}">+ Aggiungi ${chi}</button>`}
-      </div>
-    </div>`;
-}
-function viewStaff(){
-  if(!supabaseClient || !sessionOk(supaSession)) return '';
-  if(staff === null) loadStaff();
-  return `${staffMsg ? `<p class="esito ko" role="alert" style="margin-top:14px">${esc(staffMsg)}</p>` : ''}
-    ${viewStaffCard('scout')}
-    ${viewStaffCard('direttore')}
-    ${viewStaffCard('segreteria')}`;
-}
+/* Società → Squadre (squadre, mister e PIN, scout, direttori, segreteria, backup): nell'app dalla tappa 3, /societa/squadre (NELL_APP) */
 
 const gkBtn = p => `<button class="gkbtn" data-gktoggle="${p.id}" aria-pressed="${isGk(p.id)}" title="${isGk(p.id)?'Portiere (tocca per togliere)':'Segna come portiere'}">🧤</button>`;
 /* Rosa: nell'app dalla tappa 3 (/squadra/rosa, NELL_APP) */

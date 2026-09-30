@@ -12,7 +12,7 @@ const AREE = [
   { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/distinta' },   // l'organizzativo (senza distinta) va al Programma
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
-  { k: 'societa', etichetta: 'Società', href: '/portale/#/squadre' },
+  { k: 'societa', etichetta: 'Società', href: '/societa/squadre' },
 ];
 
 /** Come allowedAreas() del Portale: admin e direttori vedono tutte le aree, la segreteria solo la sua; i mister niente

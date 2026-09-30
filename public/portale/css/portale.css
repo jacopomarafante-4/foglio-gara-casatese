@@ -324,7 +324,6 @@ a.iconbtn2{filter:none;opacity:1}
 .wklist li.mia .wkmatch::after{content:" · la tua squadra";font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted)}
 .callist .wkwhen{flex-basis:88px}
 .wklist li.calmese{display:block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:13px;padding:16px 0 4px;border-top:0}
-.teamcard[class*="cal-"]{border-left:5px solid var(--calc)}
 /* Portieri sotto ogni partita (preparatori): stato della convocazione */
 .gkchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .gkchip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted)}
@@ -373,8 +372,6 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .distrow{padding:8px 0;border-bottom:1px solid var(--line)}
 .distrow.on b{color:var(--sel)}
 .distcampi{display:grid;grid-template-columns:60px 1fr 1fr;gap:6px;margin-top:6px}
-.coachcat{display:flex;align-items:center;gap:8px;margin:0 0 10px 4px}
-.coachcat input{max-width:180px}
 .storico{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
 /* Vista a giornata (Calendario → Tutte le squadre) */
 .cg-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 10px}
@@ -430,40 +427,14 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .ro-row .n.off{background:none;color:var(--muted);border:2px dashed var(--line)}
 .ro-row .nm{font-weight:600}
 .cols2{columns:2 240px;column-gap:28px}
-.teamcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:var(--paper)}
 .nextmatch{background:var(--paper);border:2px solid var(--sel);border-radius:10px;padding:10px 12px;margin-bottom:14px}
-.teamcard.past{opacity:.7}
-.teamcard .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-.teamcard .hd strong{font-family:var(--cond);font-size:21px;font-weight:700}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--bg);padding:4px 9px;border-radius:6px;border:1px solid var(--line);letter-spacing:.05em}
-.stat{font-size:13px;color:var(--muted)}
-.rolebox{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:6px}
-.rolebox div{border:1px solid var(--line);border-radius:10px;padding:12px;font-size:14px}
-.rolebox b{font-family:var(--cond);font-size:17px;display:block;margin-bottom:4px}
 .ro-field{padding:8px 0}
 .ro-field .v{font-weight:600}
 .esito{border-radius:8px;padding:10px 14px;font-weight:600;margin:0 0 14px}
 .esito.ok{background:color-mix(in srgb, var(--grass) 12%, var(--paper));color:var(--grass);border:1px solid var(--grass)}
 .esito.ko{background:color-mix(in srgb, var(--red) 10%, var(--paper));color:var(--red);border:1px solid var(--red)}
-/* Società: squadre con i loro mister e i PIN personali */
-.teamcard .hd{flex-wrap:wrap}
-.coachlist{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
 .coachhd{font-family:var(--cond);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-.coachrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto 40px;gap:8px;align-items:center}
-.coachrow .code{min-width:64px;text-align:center}
-.nocode{font-size:13px;color:var(--muted);min-width:64px;text-align:center}
-.coachlist > .btn{justify-self:start}
-.legacy{margin:12px 0 0}
-.teamedit{margin-top:12px}
-.teamedit summary{font-size:14px;color:var(--muted)}
-.teamedit .grid{margin-top:8px}
-@media (max-width:560px){.coachrow{grid-template-columns:minmax(0,1fr) auto auto}.coachrow input{grid-column:1 / -1}}
-.coachrow.off input{color:var(--muted);text-decoration:line-through}
-.addrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
-.teamcard .hd a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
-@media (max-width:560px){.addrow{grid-template-columns:1fr}}
-.staffrow{grid-template-columns:minmax(0,1fr) auto auto minmax(40px,auto)}
-@media (max-width:560px){.staffrow{grid-template-columns:minmax(0,1fr) auto auto}}
 .demo select,.ctx select{max-width:100%;min-width:0;text-overflow:ellipsis}
 .demo select{flex:1 1 160px}
 .badge.dir{background:#fff;color:var(--brand)}
@@ -480,7 +451,7 @@ a.areabtn{text-decoration:none}
 /* Direttori in sola lettura: niente pulsanti di gestione */
 .ro [data-act="teamadd"],.ro [data-coachpin],.ro [data-coachdel],.ro [data-coachadd],.ro [data-teamdel],.ro [data-teamcodeoff],
 .ro [data-staffpin],.ro [data-staffstato],.ro [data-staffnew],.ro [data-staffadd],.ro [data-act="padd"],.ro [data-act="bulk"],
-.ro [data-pdel],.ro [data-act="newscheme"],.ro [data-act="caladd"],.ro [data-caldel],.ro .teamedit,.ro [data-act="exportbackup"]{display:none!important}
+.ro [data-pdel],.ro [data-act="newscheme"],.ro [data-act="caladd"],.ro [data-caldel]{display:none!important}
 .ro #view input[readonly],.ro #view textarea[readonly]{background:var(--bg);cursor:default}
 
 /* Ruolo nella rosa */
