@@ -107,6 +107,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   lo staff va al suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni
   in `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
   `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata (`GiaInLista elenco=…`), elenco `components/GiocatoriMister.tsx`.
+  Famiglie nell'app (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): tessera `acm_famiglia` (stesso formato di quella
+  dei mister, `lib/famiglia.ts` getFamiglia → famiglia_get), azioni in `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti,
+  famiglia_carica; foto ridotte nel browser), componenti in `components/famiglia/`; all'accesso col PIN famiglia si va lì.
   Nel Portale restano Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice

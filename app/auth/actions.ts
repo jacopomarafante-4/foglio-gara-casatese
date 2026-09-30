@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { pannelloIniziale, puoAccedere, type Ruolo } from '@/lib/ruoli';
-import { COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
+import { COOKIE_FAMIGLIA, COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
 import { COOKIE_SQUADRA } from '@/lib/supabase/server';
 import { COOKIE_PROFILO } from '@/lib/auth';
 import { NELL_APP } from '@/lib/condivisi';
@@ -32,7 +32,7 @@ async function pannello(supabase: Supabase, userId: string, next: string) {
  * Accesso unico col PIN. Il PIN dice chi sei:
  * - PIN admin (PIN_ADMIN, solo sul server): poi email e password;
  * - PIN di un mister (o il vecchio PIN di squadra): Portale squadre, solo quella squadra;
- * - PIN di una famiglia (tesserati, 0031): Portale, solo quel ragazzo;
+ * - PIN di una famiglia (tesserati, 0031): pagine /famiglia, solo quel ragazzo;
  * - PIN personale (scout, direttori, segreteria: tabella codici_accesso): Scouting Hub o Portale.
  * Il tipo di PIN lo dice tipo_pin() con UN solo controllo (e un solo errore annotato se il PIN non esiste).
  */
@@ -45,6 +45,7 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
   // Un nuovo PIN toglie la tessera di un mister entrato prima (telefono condiviso); la si ridà sotto se è ancora un mister
   const biscotti = await cookies();
   biscotti.delete(COOKIE_MISTER);
+  biscotti.delete(COOKIE_FAMIGLIA);
   biscotti.delete(COOKIE_SQUADRA);   // squadra aperta da un mister di più squadre (0050)
   biscotti.delete(COOKIE_PROFILO);   // doppio ruolo: si riparte dal profilo da staff
 
@@ -85,10 +86,13 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     const scheda = Object.entries(NELL_APP).find(([, percorso]) => percorso === next.split('?')[0])?.[0];
     return { vai: `/portale/#squadra=${encodeURIComponent(pin)}${scheda ? '/' + scheda : ''}` };
   }
-  // PIN di una famiglia: il Portale apre la pagina del ragazzo (#famiglia=PIN)
+  // PIN di una famiglia: pagine /famiglia dell'app, con la sua tessera (lib/famiglia.ts)
   if (tipo === 'famiglia') {
     await supabase.auth.signOut({ scope: 'local' });
-    return { vai: `/portale/#famiglia=${encodeURIComponent(pin)}` };
+    const tessera = await creaTessera(pin);
+    if (!tessera) return { vai: `/portale/#famiglia=${encodeURIComponent(pin)}` };   // senza SEGRETO_SESSIONE: il Portale come prima
+    biscotti.set(COOKIE_FAMIGLIA, tessera, opzioniCookieMister);
+    return { vai: '/famiglia' };
   }
   if (tipo !== 'personale') return { errore: 'PIN non riconosciuto. Controlla e riprova.' };
 
@@ -117,6 +121,7 @@ export async function esci() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: 'local' });
   (await cookies()).delete(COOKIE_MISTER);
+  (await cookies()).delete(COOKIE_FAMIGLIA);
   (await cookies()).delete(COOKIE_SQUADRA);
   (await cookies()).delete(COOKIE_PROFILO);
   // ?uscito=1: la pagina d'ingresso toglie anche il PIN che il Portale tiene nella scheda del browser
