@@ -7,7 +7,6 @@ import { pannelloIniziale, puoAccedere, type Ruolo } from '@/lib/ruoli';
 import { COOKIE_FAMIGLIA, COOKIE_MISTER, creaTessera, opzioniCookieMister } from '@/lib/tessera';
 import { COOKIE_SQUADRA } from '@/lib/supabase/server';
 import { COOKIE_PROFILO } from '@/lib/auth';
-import { NELL_APP } from '@/lib/condivisi';
 
 export type StatoForm = { errore?: string; ok?: string };
 
@@ -31,7 +30,7 @@ async function pannello(supabase: Supabase, userId: string, next: string) {
 /**
  * Accesso unico col PIN. Il PIN dice chi sei:
  * - PIN admin (PIN_ADMIN, solo sul server): poi email e password;
- * - PIN di un mister (o il vecchio PIN di squadra): Portale squadre, solo quella squadra;
+ * - PIN di un mister (o il vecchio PIN di squadra): Home della sua squadra (/inizio), solo quella squadra;
  * - PIN di una famiglia (tesserati, 0031): pagine /famiglia, solo quel ragazzo;
  * - PIN personale (scout, direttori, segreteria: tabella codici_accesso): Scouting Hub o Portale.
  * Il tipo di PIN lo dice tipo_pin() con UN solo controllo (e un solo errore annotato se il PIN non esiste).
@@ -64,6 +63,8 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     return { vai };
   }
 
+  // Mister e famiglie entrano con la tessera cifrata: senza SEGRETO_SESSIONE (variabile d'ambiente) non si può
+  const SENZA_TESSERA = 'Accesso col PIN non disponibile in questo momento: avvisa l’admin.';
   // Troppi PIN sbagliati in poco tempo: il database blocca le verifiche per qualche minuto (0015)
   const BLOCCO = { errore: 'Troppi PIN sbagliati da parte di qualcuno: riprova tra qualche minuto.' };
 
@@ -76,21 +77,19 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     if (erroreSquadra?.code === 'PT429') return BLOCCO;
     tipo = squadra ? 'mister' : 'personale';
   }
-  // PIN di un mister o della squadra: il Portale apre la squadra dal link (#squadra=PIN)
+  // PIN di un mister o della squadra: la tessera (lib/mister.ts) e la sua Home, o la pagina da cui arrivava
   if (tipo === 'mister') {
     await supabase.auth.signOut({ scope: 'local' }); // su un telefono condiviso non resta aperto un altro account
-    // Tessera per le pagine del Portale portate nell'app (lib/mister.ts)
     const tessera = await creaTessera(pin);
-    if (tessera) biscotti.set(COOKIE_MISTER, tessera, opzioniCookieMister);
-    // Arrivava da una di quelle pagine: si passa dal Portale (che tiene il PIN) con la sua scheda, e lui la riapre
-    const scheda = Object.entries(NELL_APP).find(([, percorso]) => percorso === next.split('?')[0])?.[0];
-    return { vai: `/portale/#squadra=${encodeURIComponent(pin)}${scheda ? '/' + scheda : ''}` };
+    if (!tessera) return { errore: SENZA_TESSERA };
+    biscotti.set(COOKIE_MISTER, tessera, opzioniCookieMister);
+    return { vai: /^\/[^/?]/.test(next) ? next : '/inizio' };
   }
   // PIN di una famiglia: pagine /famiglia dell'app, con la sua tessera (lib/famiglia.ts)
   if (tipo === 'famiglia') {
     await supabase.auth.signOut({ scope: 'local' });
     const tessera = await creaTessera(pin);
-    if (!tessera) return { vai: `/portale/#famiglia=${encodeURIComponent(pin)}` };   // senza SEGRETO_SESSIONE: il Portale come prima
+    if (!tessera) return { errore: SENZA_TESSERA };
     biscotti.set(COOKIE_FAMIGLIA, tessera, opzioniCookieMister);
     return { vai: '/famiglia' };
   }

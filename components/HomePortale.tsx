@@ -71,7 +71,7 @@ function Andamento({ punti }: { punti: { mese: string; pct: number }[] }) {
 }
 
 export function HomeSquadra(p: {
-  squadra: { id: string; name: string; category: string; mister: string }; portale: string; squadraQs: string; oggi: string; weekend: string[]; adb: boolean;
+  squadra: { id: string; name: string; category: string; mister: string }; squadraQs: string; oggi: string; weekend: string[]; adb: boolean;
   impegni: Impegno[]; portieri: Portieri | null; prossima: (Partita & { id: string }) | null; foglioPronto: boolean;
   allenamentoOggi: Allenamento | null; giocatori: string[]; daFare: DaFare[]; calendario: (Partita & { id: string })[];
   riepilogo: ReturnType<typeof riepilogo>; avvisi: Avviso[]; soloLettura: boolean;
@@ -90,7 +90,7 @@ export function HomeSquadra(p: {
   };
   const vai = (scheda: string) => {
     const [k, id] = scheda.split('/');
-    window.location.assign(NELL_APP_SQUADRA[k] ? NELL_APP_SQUADRA[k](id) : p.portale + scheda);
+    window.location.assign(NELL_APP_SQUADRA[k] ? NELL_APP_SQUADRA[k](id) : app('/inizio'));
   };
   /* crea (se serve) e apre; i direttori sono in sola lettura: aprono soltanto */
   async function esegui(etichetta: string, azione: () => Promise<{ ok: boolean; errore?: string; valore?: string }>, poi: (id?: string) => string) {

@@ -1,7 +1,6 @@
-// Regole comuni a Scouting (Next) e Portale (public/portale): scritte una volta sola, qui.
-// Il Portale non ha un passaggio di build: `npm run condivisi` (scripts/genera-condivisi.mjs) toglie i tipi e crea
-// public/portale/js/condivisi.js (file generato, da non modificare). Le prove rapide falliscono se non è aggiornato.
-// Solo funzioni e costanti semplici, senza import: devono funzionare uguali nel browser del Portale.
+// Regole comuni alle parti dell'app (squadre, Scouting, famiglie): calendari e colori, età della categoria, colori delle
+// annate e di chi valuta, icone delle aree, modelli degli avvisi, moduli e piazzati. Scritte una volta sola, qui.
+// (Nate per il vecchio Portale senza build, ora spento: per questo sono funzioni e costanti semplici, senza import.)
 
 /* ---------- Calendari della società ---------- */
 /** I tre calendari (come quelli Google della società), ognuno col suo colore */
@@ -34,20 +33,7 @@ export const ICONE_AREE: Record<string, string> = {
   societa:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
 
-/** Schede del Portale già portate nell'app (tappa 3): nel Portale si aprono lì (`goTab` in portale.js); un mister che apre
- *  una di queste pagine senza essere entrato passa dal PIN e ci torna (`accedi` in app/auth/actions.ts) */
-export const NELL_APP: Record<string, string> = {
-  archivio: '/societa/archivio', modifiche: '/societa/modifiche', tesserati: '/segreteria', programma: '/modulistica/programma',
-  distinta: '/modulistica/distinta', comunicazione: '/modulistica/comunicazione',
-  calendario: '/calendari/squadra', calendariotutte: '/calendari/tutte', avvisi: '/calendari/avvisi', home: '/inizio',
-  rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
-  statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
-  campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
-  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione', piazzati: '/squadra/piazzati', pdf: '/squadra/foglio-gara',
-  squadre: '/societa/squadre',
-};
-
-/** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */
+/** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi, Modulistica → Comunicazione) */
 export const MODELLI_AVVISO: Record<string, { label: string; titolo: string; testo: string }> = {
   libero: {label:'Avviso libero', titolo:'', testo:''},
   campo: {label:'Cambio campo', titolo:'Cambio campo', testo:'⚠️ CAMBIO CAMPO\nLa partita di [giorno] contro [avversario] si gioca a [campo, indirizzo].\nOrario invariato: ritrovo alle [ora].'},

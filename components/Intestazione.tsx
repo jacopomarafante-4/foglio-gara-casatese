@@ -7,8 +7,8 @@ import { Aree } from '@/components/Aree';
 import { SchedeArea } from '@/components/SchedeArea';
 import { NomeArea } from '@/components/NomeArea';
 
-/** Intestazione di tutte le pagine dell'app: la stessa del Portale squadre (public/portale), con la barra delle aree
- *  e le schede dell'area aperta. La usano i layout dello Scouting, app/(app), e delle aree portate dal Portale, app/(aree).
+/** Intestazione di tutte le pagine dell'app, con la barra delle aree
+ *  e le schede dell'area aperta. La usano i layout dello Scouting, app/(app), e delle altre aree, app/(aree).
  *  Chi è entrato: un account (profilo) o un mister col PIN (tessera, lib/mister.ts). */
 export function Intestazione({ profilo, mister, doppio }: { profilo?: Profilo; mister?: Mister; doppio?: DoppioRuolo | null }) {
   const ruolo = profilo?.ruolo ?? 'mister';

@@ -1,5 +1,5 @@
 'use client';
-// Barra delle aree: la stessa del Portale (AREAS in public/portale/js/portale.js), stesse icone (ICONE_AREE in lib/condivisi.ts).
+// Barra delle aree dell'app, con le icone di ICONE_AREE (lib/condivisi.ts).
 // Le aree già portate nell'app (Scouting, Società → archivio e storico, Segreteria) si aprono qui; le altre aprono il Portale.
 import { usePathname } from 'next/navigation';
 import type { Ruolo } from '@/lib/ruoli';

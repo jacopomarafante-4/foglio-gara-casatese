@@ -1,4 +1,4 @@
-// Regole comuni a Scouting e Portale (lib/condivisi.ts → public/portale/js/condivisi.js)
+// Regole comuni alle parti dell’app (lib/condivisi.ts)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { calendarioDi, etaCategoria, coloreAutore, inizialiAutore, coloreAnnata } from '@/lib/condivisi';

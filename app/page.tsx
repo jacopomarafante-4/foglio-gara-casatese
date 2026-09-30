@@ -34,9 +34,9 @@ function CampoSfondo() {
 
 /**
  * Pagina d'ingresso unica: tutti digitano il PIN e il PIN dice chi sei
- * (mister → Portale squadre, scout → Scouting, direttore → Portale, admin → email e password → Portale).
+ * (mister → Home della squadra, famiglia → sue pagine, scout → Scouting, direttore → Home, admin → email e password → Home).
  * Il PIN si chiede sempre, anche se c'è già una sessione aperta (niente accesso automatico);
- * solo admin e direttori già entrati tornano dritti al Portale, dove c'è tutto (Scouting compreso).
+ * solo admin e direttori già entrati tornano dritti alla Home, dove c'è tutto (Scouting compreso).
  */
 export default async function Ingresso({
   searchParams,
@@ -47,7 +47,7 @@ export default async function Ingresso({
   // Già entrato e arrivato qui da una pagina che chiedeva l'accesso (?next=): si torna lì (anche subito dopo il PIN)
   const interna = !!next && /^\/[^/?]/.test(next);   // un percorso interno, mai questa pagina (niente giri a vuoto)
   if (profilo?.attivo && interna && profilo.ruolo !== 'segreteria' && profilo.ruolo !== 'mister') redirect(next!);
-  // ?pin=1: il Portale ha rimandato qui (sessione non valida per lui) → PIN, niente giro di rimandi
+  // ?pin=1: mostra sempre il PIN (es. per cambiare persona), niente giro di rimandi
   if (!pin && (profilo?.ruolo === 'admin' || (profilo?.ruolo === 'direttore' && profilo.attivo))) redirect('/inizio');
   if (!pin && profilo?.ruolo === 'segreteria' && profilo.attivo) redirect('/segreteria');
 
