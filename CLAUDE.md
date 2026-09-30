@@ -110,7 +110,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   Famiglie nell'app (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): tessera `acm_famiglia` (stesso formato di quella
   dei mister, `lib/famiglia.ts` getFamiglia → famiglia_get), azioni in `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti,
   famiglia_carica; foto ridotte nel browser), componenti in `components/famiglia/`; all'accesso col PIN famiglia si va lì.
-  Nel Portale restano Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
+  Formazione nell'app (`/squadra/formazione`, `components/squadra/Formazione.tsx`: tocca una posizione per scegliere, trascina per
+  spostare, `slotPos`; regole in `lib/formazione.ts`, moduli `FORMATIONS` in `lib/condivisi.ts` per app e Portale; salva per campi con useFoglio).
+  Nel Portale restano Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice
   l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`, anche nel

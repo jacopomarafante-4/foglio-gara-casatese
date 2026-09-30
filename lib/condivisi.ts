@@ -43,7 +43,7 @@ export const NELL_APP: Record<string, string> = {
   rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
   statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
   campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
-  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori',
+  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione',
   squadre: '/societa/squadre',
 };
 
@@ -88,3 +88,17 @@ export function coloreAutore(nome: string, mister = false): string {
   for (const c of chiave) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return COLORI_AUTORE[h % COLORI_AUTORE.length];
 }
+
+/* ---------- Formazione ---------- */
+/** Moduli: per ogni schieramento le 11 posizioni [numero, x %, y %] sul campo (1 = portiere, in basso). Formazione e foglio gara */
+export const FORMATIONS: Record<string, [number, number, number][]> = {
+  "1-4-4-2":   [[1,50,92],[2,86,73],[5,62,77],[6,38,77],[3,14,73],[7,86,48],[8,62,52],[4,38,52],[11,14,48],[9,62,22],[10,38,22]],
+  "1-4-4-1-1": [[1,50,92],[2,86,73],[5,62,77],[6,38,77],[3,14,73],[7,86,54],[8,62,58],[4,38,58],[11,14,54],[10,50,35],[9,50,15]],
+  "1-4-3-3":   [[1,50,92],[2,86,73],[5,62,77],[6,38,77],[3,14,73],[8,30,54],[4,50,60],[10,70,54],[7,84,26],[9,50,17],[11,16,26]],
+  "1-4-2-3-1": [[1,50,92],[2,86,73],[5,62,77],[6,38,77],[3,14,73],[4,38,60],[8,62,60],[7,84,38],[10,50,36],[11,16,38],[9,50,15]],
+  "1-4-3-1-2": [[1,50,92],[2,86,73],[5,62,77],[6,38,77],[3,14,73],[8,26,56],[4,50,60],[7,74,56],[10,50,38],[9,62,17],[11,38,17]],
+  "1-3-5-2":   [[1,50,92],[2,72,76],[5,50,80],[6,28,76],[7,88,48],[8,66,54],[4,50,60],[10,34,54],[3,12,48],[9,62,20],[11,38,20]],
+  "1-3-4-3":   [[1,50,92],[2,72,76],[5,50,80],[6,28,76],[7,88,52],[8,62,56],[4,38,56],[3,12,52],[10,82,24],[9,50,17],[11,18,24]],
+  "1-3-4-2-1": [[1,50,92],[2,72,76],[5,50,80],[6,28,76],[7,88,54],[8,62,58],[4,38,58],[3,12,54],[10,64,33],[11,36,33],[9,50,15]],
+  "1-5-3-2":   [[1,50,92],[2,90,66],[4,68,78],[5,50,80],[6,32,78],[3,10,66],[7,74,50],[8,50,54],[10,26,50],[9,62,20],[11,38,20]]
+};
