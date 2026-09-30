@@ -2,152 +2,117 @@
 
 # Academy Casatese Merate — contesto per Claude
 
-App web unica del settore giovanile di calcio (Brianza), con due pannelli:
-- **Portale squadre** (`public/portale/`): rosa, calendario, foglio gara, convocazioni, formazione,
-  presenze, statistiche. Per mister (PIN della squadra) e admin.
-- **Scouting Hub** (Next.js, `app/`): segnalazioni dal campo, report a 4 aree
-  (Tecnica, Motoria, Tattica, Mentale), pipeline dei giocatori. Per scout, direttori, admin.
+App web unica (Next.js, `app/`) del settore giovanile di calcio (Brianza):
+- **Squadre** (aree Home, Calendario, Modulistica, Squadra, Società, Segreteria; gruppo `app/(aree)/`): rosa, presenze, test,
+  convocazioni, formazione, piazzati, foglio gara, tabellini, statistiche, campi. Per mister (PIN), admin, direttori, segreteria.
+- **Scouting Hub** (gruppo `app/(app)/`): segnalazioni dal campo, valutazioni, pipeline dei giocatori. Per scout, direttori, admin.
+- **Famiglie** (`app/famiglia/`): convocazioni con risposta, calendario, anagrafica, documenti per la segreteria (PIN della famiglia).
+Il vecchio **Portale squadre** (`public/portale/`, JavaScript senza build) è **spento** dal 30/09/2026: tutte le sue schede sono
+pagine dell'app. `next.config.ts` rimanda i vecchi indirizzi (`/portale/`, js, css) a `/inizio`; in `public/portale/` restano solo gli
+stemmi (`casatese-logo.png`, `figc-sgs-logo.png`, usati da pagine e PDF). `npm run prove:portale` (`scripts/prove-portale.mjs`)
+controlla che resti spento. Nei nomi (dati `docs`, `lib/portale-dati.ts`, `HomePortale`) "Portale" = la parte squadre dell'app.
 
 Repository **pubblico**: niente dati personali dei ragazzi su git (`private/`,
 `scripts/import-sheet/dati/` sono esclusi).
 
 ## Accesso (pagina `/`, `app/auth/actions.ts` → `accedi`)
-Un solo campo PIN per tutti: PIN squadra → `/portale/#squadra=PIN` (mister); PIN personale
-(`email_per_pin()`, migrazione 0006; il PIN è la password dell'account) → Scouting Hub;
-`PIN_ADMIN` (variabile solo server) → poi email e password → Portale. Admin e direttori già entrati che aprono `/`
-tornano dritti al Portale (niente pagina di scelta); il Portale, se non riconosce la sessione, rimanda a `/?pin=1`
-(mostra sempre il PIN, evita il giro di rimandi).
-Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal login
-(`lib/supabase/durata.ts`, stesso valore in `public/portale/js/core.js`). Uscite sempre
-`signOut({ scope: 'local' })`, per non chiudere la sessione sugli altri dispositivi.
-
-## Portale squadre (`public/portale/`)
-- JavaScript classico senza build, variabili globali condivise, caricato nell'ordine di
-  `index.html`; ESLint lo ignora. Dopo ogni modifica a CSS/JS lancia `npm run portale:versioni`: il `?v=` di ogni file è
-  l'impronta del suo contenuto (scripts/versioni-portale.mjs; le prove falliscono se non è aggiornato).
-- Una variabile globale si cambia solo nel file che la dichiara: dagli altri file con la sua `impostaX()` (es. `impostaTab('rosa')`,
-  `impostaCurTeam(id)`), in fondo al file proprietario. Le prove falliscono se un file cambia la variabile di un altro.
-- Regole comuni con lo Scouting (calendari e colori, età della categoria, colori delle annate, iniziali e colore di chi valuta) in
-  `lib/condivisi.ts`, UNA volta sola: `npm run condivisi` genera `public/portale/js/condivisi.js` (non modificarlo a mano; le prove
-  falliscono se non è aggiornato). Se aggiungi una regola usata da tutte e due le parti, mettila lì.
-- Servito su `/portale/` (la barra finale serve ai percorsi relativi: `next.config.ts` + `proxy.ts`),
-  fuori dal controllo login del proxy.
-- Dati: tabella `docs` a chiave/valore (`shared/teams`, `roster/<squadra>`, …), permessi in
-  `supabase/sicurezza.sql`: admin per email, mister solo via funzioni `coach_*` col PIN.
-- Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, admin e direttori);
-  `code` sulla squadra = vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo.
-  `coach_team()` non restituisce mai PIN.
-- Società (la modificano admin e direttori, 0020): squadre con i mister, poi "Scouting" (scout) e "Direttori"
-  mostrati come squadre, ognuno col suo PIN. Account e PIN di scout/direttori via `POST /api/staff` (admin e direttori)
-  (crea, pin, nome, stato): il codice è la password dell'account, salvato anche in `codici_accesso`.
-- Barra delle aree sempre in alto nell'intestazione (anche da telefono), sotto le schede dell'area. Aree (`AREAS` in
-  `portale.js`): Home (weekend, da fare, riepilogo) · Calendario (La mia squadra `calendario`, Tutte le squadre `calendariotutte`) ·
-  Modulistica (distinta, programma, comunicazione) · Squadra con tre sottopannelli (`GRUPPI_SQUADRA`, schede sulla seconda riga `#subtabs`): Rosa · Allenamento (Presenze, Test solo
-  Under 15 `SOLO_U15`, Statistiche `statallen`) · Partite (Dati partita, Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche
-  `statpartite`, Campi) · Scouting (mister: Segnala, Giocatori) · Società (admin).
-  Attività di base: niente Dati partita/Formazione/Piazzati/Foglio gara/Campi/Statistiche partite (`SOLO_AGONISTICA`):
-  Tabellini con la sola presenza (`x.pres`, `viewGamesAdb`/`gameEditorAdb` in `registro.js`) e le statistiche in cima;
-  convocazioni con le partite del weekend proposte (`data-adbsug`, `data-adbweekend`).
-- Lo Scouting (pagine Next) è un'area del Portale: stessa intestazione (`app/(app)/layout.tsx`, `components/Aree.tsx` con le aree e le
-  icone del Portale da `ICONE_AREE` in `lib/condivisi.ts`, `components/SchedeArea.tsx` = schede dell'area aperta); nel Portale l'area
-  "Scouting" di admin e dirigenti porta a `/home`.
-- App unica (tappa 3): le aree si portano nell'app Next una alla volta, nel gruppo `app/(aree)/` (layout che fa entrare admin,
-  direttori e segreteria; ogni pagina controlla il suo ruolo; intestazione comune `components/Intestazione.tsx`). Fatte: Società →
-  Squadre (`/societa/squadre`, admin e direttori: squadre, mister e PIN con `cambiaSquadre(op)` in `app/(aree)/docs-actions.ts`, regole
-  pure e PIN liberi in `lib/squadre-societa.ts`, prove in `tests/squadre-societa.test.mjs`; scout, direttori e segreteria via `/api/staff`;
-  backup con `esportaBackup`; componente `components/SquadreSocieta.tsx`), Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
-  (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`; Segreteria → Tesserati (`/segreteria`, admin,
-  direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area); tutta la
-  Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`, copia nell'archivio con `archiviaPdf`):
-  Distinta (`/modulistica/distinta`, `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; salva solo
-  `distinta` e `senzaCategoria` nel foglio della squadra con `salvaDistinta`, sulla versione più recente; regole `lib/distinta.ts`,
-  PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`), Comunicazione
-  (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO` in `lib/condivisi.ts`, PDF `lib/pdf-comunicazione.ts`). Impaginazione
-  comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`); `modulistica.js` tolto dal Portale.
-  Tutto il Calendario (`/calendari/…`, non `/calendario`, che è la pagina dello Scouting): La mia squadra (`squadra`: mister,
-  preparatori con i portieri e la convocazione, admin e direttori con `?squadra=`, direttori in sola lettura; amichevoli del
-  mister in `registro/<squadra>.friendlies`, partite ufficiali solo admin in `calendar/<squadra>`), Tutte le squadre (`tutte`:
-  vista Giorno/Elenco, admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra ed eventi, Google con
-  `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`, admin, direttori, organizzativo; `?evento=id` =
-  bozza per un evento). Componenti in `components/calendario/`, regole pure in `lib/calendario-portale.ts`, dati in
-  `lib/portale-dati.ts` (`chiEntra`, `leggiDocs`, `calendariTutti`). Modifiche ai documenti del Portale dalle pagine dell'app:
-  `modificaDoc(path, modifiche)` in `app/(aree)/docs-actions.ts`, voce per voce per id (`lib/modifiche.ts`) sulla versione più
-  recente, con coach_leggi/coach_salva o salva_doc (i permessi li decide il database). Nel Portale restano righe ed elenchi del
-  calendario per le famiglie.
-  Home (`/inizio`; `/home` è la Home dello Scouting), stile A (scelto il 30/09/2026, colori del club su fondo chiaro): mister (prossima
-  partita in grande con risposte delle famiglie e link al campo, avvisi, da fare, prossimi impegni, ultimo risultato coi marcatori,
-  stagione e presenze mese per mese: calcoli in `lib/home.ts`, prove in `tests/home.test.mjs`; regole in `lib/registro.ts`); admin e
-  direttori senza `?squadra=`: Home della società (`HomeSocieta`: weekend di tutte, risultati degli ultimi 10 giorni, da sistemare,
-  scouting, stagione squadra per squadra), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore` in `lib/portale-dati.ts`),
-  organizzativo (weekend per calendario, eventi, avvisi), admin e direttori con `?squadra=`. Dopo il PIN admin e direttori
-  vanno lì; i mister passano dal Portale (che tiene il PIN) e ci arrivano con `NELL_APP.home`. I pulsanti verso la Squadra
-  aprono il Portale con `#/<scheda>/<id>` (allenamento o partita da aprire) e `#/s:<squadra>/…` per lo staff (`rotta()`,
-  `squadraDaRotta()`, `apriDaRotta()` in portale.js); prima creano quello che serve con le azioni `allenamentoDiOggi`,
-  `tabellinoDi`, `preparaGara` (`app/(aree)/docs-actions.ts`, stesso controllo di versione di `modificaDoc`). Il Portale rimanda
-  all'app e riscrive l'indirizzo solo dopo aver caricato le squadre (prima la scheda è ancora "home").
-  Squadra → Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`roster/<squadra>`
-  con `modificaDoc`, `eliminaGiocatore` toglie anche da formazione e panchina), ruolo anche il mister (`impostaRuolo`: registro.ruoli
-  + registro.gk), direttori in sola lettura. Scelta della squadra per lo staff: `squadraDellaPagina()` + `components/SceltaSquadra.tsx`.
-  Dal Portale alle pagine dell'app lo staff porta la squadra aperta (`indirizzoApp()` in portale.js: `?squadra=`); le schede
-  Partite (ancora nel Portale) la riportano con `#/s:<squadra>/…`. Pagine della Squadra: `apriSquadra()` in `lib/pagina-squadra.ts`
-  (chi entra, squadra, sola lettura dei direttori, `conSquadra()` per i link).
-  Squadra → Allenamento nell'app: Presenze (`/squadra/presenze`, `?allenamento=<id>` = scheda aperta), Test atletici (`/squadra/test`,
-  solo Under 15, `?test=<id>`), Statistiche (`/squadra/statistiche-allenamento`, `?periodo=2026-09`), I miei allenamenti (lavori in
-  corso). Regole in `lib/registro.ts` (`statisticheAllenamento`, `presenzePerMese`, `leggiTempo`), sotto-schede
-  `components/squadra/SottoSchede.tsx`.
-  Squadra → Partite nell'app: Tabellini (`/squadra/tabellini`, `?partita=<id>`; agonistica minuti/gol/subiti/autogol/durata,
-  attività di base presenti e risultato a tempi, `components/squadra/Tabellini.tsx`), Statistiche (`/squadra/statistiche-partite`,
-  non per l'attività di base) e Campi (`/squadra/campi`, posizione del cancello con `impostaCampo`, regole in `lib/campi.ts`).
-  Report PDF delle statistiche (admin e direttori, in entrambe le pagine di statistiche): `lib/report-statistiche.ts` su tela
-  (`lib/tela.ts` = aiuti di disegno di pdf.js: T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta). Dati partita (`/squadra/partita`) e
-  Convocazioni (`/squadra/convocazioni`: agonistica con lo stato di ogni giocatore, attività di base da 1 a 4 partite, risposte delle
-  famiglie con `risposteFamiglie()`, PDF `lib/pdf-convocazione.ts` con i link a Google Maps) salvano i campi del foglio con
-  `aggiornaFoglio` (solo i campi cambiati, `useFoglio`), "Nuova partita" con `svuotaFoglio`; regole in `lib/foglio.ts`.
-  Scouting dei mister nell'app (`/scouting/segnala`, `/scouting/giocatori`, `/scouting/valuta/[id]`; solo mister con la tessera,
-  lo staff va al suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni
-  in `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
-  `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata (`GiaInLista elenco=…`), elenco `components/GiocatoriMister.tsx`.
-  Famiglie nell'app (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): tessera `acm_famiglia` (stesso formato di quella
-  dei mister, `lib/famiglia.ts` getFamiglia → famiglia_get), azioni in `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti,
-  famiglia_carica; foto ridotte nel browser), componenti in `components/famiglia/`; all'accesso col PIN famiglia si va lì.
-  Formazione nell'app (`/squadra/formazione`, `components/squadra/Formazione.tsx`: tocca una posizione per scegliere, trascina per
-  spostare, `slotPos`; regole in `lib/formazione.ts`, moduli `FORMATIONS` in `lib/condivisi.ts` per app e Portale; salva per campi con useFoglio).
-  Piazzati (`/squadra/piazzati`, `?schema=<id>`): elenco con filtri, I miei schemi (registro.schemi), modelli della società
-  (shared/schemes, solo admin, ordine con `ordinaModelli`), editor con campo SVG (`components/piazzati/Campo.tsx`: trascina
-  pedine e pallone, frecce, linee, scritte) e Compiti; regole pure in `lib/piazzati.ts` (prove in `tests/piazzati.test.mjs`).
-  Foglio gara (`/squadra/foglio-gara`): anteprima e PDF A4 orizzontale (`lib/pdf-foglio-gara.ts`: distinta e formazione, poi una
-  pagina per schema scelto), casella "Mostra la categoria". Tutte le schede sono nell'app (`NELL_APP` in `lib/condivisi.ts`, lo usa
-  anche il Portale per rimandare). PDF nell'Archivio: `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo
-  base64 (un testo di oltre ~1 MB la server action lo rifiuta: "Maximum array nesting exceeded"); così anche `caricaDocumento` delle famiglie.
+Un solo campo PIN per tutti (`tipo_pin()`): PIN di un mister → tessera e `/inizio` (o la pagina da cui arrivava, `?next=`); PIN di
+una famiglia → tessera famiglia e `/famiglia`; PIN personale (`email_per_pin()`, 0006; il PIN è la password dell'account) → Home o
+Scouting (`pannelloIniziale()`), la segreteria → `/segreteria`; `PIN_ADMIN` (variabile solo server) → poi email e password → `/inizio`.
+Admin e direttori già entrati che aprono `/` tornano dritti a `/inizio`; `/?pin=1` mostra sempre il PIN.
+Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal login (`lib/supabase/durata.ts`, anche per le
+tessere). Uscite sempre `signOut({ scope: 'local' })`, per non chiudere la sessione sugli altri dispositivi; `esci` e `/esci`
+tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
+- **Tessera** (mister e famiglie): cookie `acm_mister` / `acm_famiglia` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
+  d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione (`lib/tessera.ts`). Senza `SEGRETO_SESSIONE` mister e
+  famiglie non entrano ("Accesso col PIN non disponibile"). Il proxy (`lib/supabase/sessione.ts`) lascia passare chi ha la tessera;
+  `getMister()` (`lib/mister.ts`) la verifica con `coach_team`, `getFamiglia()` (`lib/famiglia.ts`) con `famiglia_get`; le pagine
+  leggono e scrivono con le funzioni `coach_*` / `famiglia_*` (i permessi restano nel database). Un mister che apre una pagina senza
+  accesso passa dal PIN e ci torna (`?next=`).
 - **Un PIN per persona** (0050, tranne l'admin): mister di più squadre = stesso `code` su ogni riga (la squadra aperta la dice
-  l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`, anche nel
-  Portale; `team_for_pin` sceglie solo tra le squadre del PIN; `coach_squadre(pin)` = tutte); staff che è anche mister = il `code` del
-  mister è il suo PIN personale: `tipo_pin` prima i PIN personali, all'accesso `sono_anche_mister()` → tessera anche allo staff
-  (`chi.misterDi` in `lib/portale-dati.ts`: nelle sue squadre scrive come un mister, `aggiorna` in docs-actions; nel Portale
-  `squadreMister`/`misterQui()` in core.js, salvataggi via `/api/portale/salva`). Società → Squadre, "Genera PIN": PIN personale se è
-  anche staff (stesso nome, `chiaveNome`), se no quello che ha già in un'altra squadra, e va su tutte le sue righe; rigenerare il PIN
-  di uno staff (`/api/staff`) aggiorna anche le sue righe da mister. Preparatori dei portieri: in Squadra → Rosa delle altre squadre
-  segnano solo i portieri (`coach_portiere`, `segnaPortiere`).
+  l'intestazione `x-squadra`: cookie `acm_squadra` scelto con `/api/squadra`, `createClient(squadra)` in `lib/supabase/server.ts`;
+  `team_for_pin` sceglie solo tra le squadre del PIN; `coach_squadre(pin)` = tutte); staff che è anche mister = il `code` del mister è
+  il suo PIN personale: `tipo_pin` prima i PIN personali, all'accesso `sono_anche_mister()` → tessera anche allo staff (`chi.misterDi`
+  in `lib/portale-dati.ts`: nelle sue squadre scrive come un mister, `aggiorna` in docs-actions). Società → Squadre, "Genera PIN": PIN
+  personale se è anche staff (stesso nome, `chiaveNome`), se no quello che ha già in un'altra squadra, e va su tutte le sue righe;
+  rigenerare il PIN di uno staff (`/api/staff`) aggiorna anche le sue righe da mister. Preparatori dei portieri: in Squadra → Rosa delle
+  altre squadre segnano solo i portieri (`coach_portiere`, `segnaPortiere`).
   Doppio ruolo: in alto nell'intestazione "Direttore | Mister Under 15" (`getDoppioRuolo()` in `lib/mister.ts`, `/api/profilo?usa=`):
-  con "mister" il cookie `acm_profilo` fa sì che `getProfilo()` (lib/auth.ts) restituisca null → per l'app e per il Portale (`modoMister`
-  in core.js, passando da `/portale/#squadra=PIN`) è un mister e basta; `getAccount()` = l'account vero. Accesso e uscita tornano allo staff.
-- Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
-  d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).
-  La crea `accedi` col PIN di un mister (e la toglie a ogni altro PIN), la toglie `esci` e `/esci` (uscita dal Portale). Il proxy
-  lascia passare chi ha la tessera; `getMister()` (`lib/mister.ts`) la verifica con `coach_team` e le pagine leggono con le
-  funzioni `coach_*` (niente account né migrazioni: i permessi restano quelli del database). Un mister che apre una pagina
-  dell'app senza accesso passa dal PIN e ci torna (dal Portale, che tiene il PIN in `sessionStorage`). Senza `SEGRETO_SESSIONE` i
-  mister restano nel solo Portale. Uscendo dall'app `/?uscito=1` toglie anche il PIN del Portale. Nel Portale `NELL_APP` (portale.js) apre quelle pagine al posto delle schede; il vecchio codice
-  (archivio.js, modifiche.js, segreteria.js) è tolto. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
-- Direttori nel Portale: vedono tutte le squadre in sola lettura (`readOnly()` in `core.js`, vero tranne nella scheda
-  Società `squadre`: `save()` non scrive e ricarica il dato vero, campi `readonly`, pulsanti nascosti con `.ro`); nel database
-  `docs` solo in lettura (0011) tranne `shared/teams`, che scrivono (0020).
-  La sessione vale per il Portale se è dell'admin (`ADMIN_EMAIL`) o di un direttore (`staffRole`).
-- `IN_APP_UNICA` (percorso `/portale/`): legge la sessione dagli stessi cookie di `@supabase/ssr`
-  (`cookieStorage` in `core.js`), il PIN del mister sta in `sessionStorage` e non nell'indirizzo,
-  senza accesso valido torna a `/`. Fuori da `/portale/` (solo prove in locale: GitHub Pages è spento) usa ancora la sua schermata: PIN squadra
-  per i mister, email e password per l'admin. Nessun PIN admin nel codice (repository pubblico).
-- Colori e caratteri uguali a `app/globals.css`; il verde resta solo per il campo e "presente".
+  con "mister" il cookie `acm_profilo` fa sì che `getProfilo()` (lib/auth.ts) restituisca null → per l'app è un mister e basta;
+  `getAccount()` = l'account vero. Accesso e uscita tornano allo staff.
+
+## Squadre (aree dell'app, `app/(aree)/`)
+- Dati: tabella `docs` a chiave/valore (`shared/teams`, `roster/<squadra>`, `sheet/<squadra>` = foglio della partita,
+  `registro/<squadra>`, `calendar/<squadra>`, `shared/schemes`, `shared/eventi`, `shared/avvisi`), permessi in
+  `supabase/sicurezza.sql` e migrazioni: admin per email, mister e organizzativo solo via funzioni `coach_*` col PIN, direttori in
+  lettura (0011) tranne `shared/teams` (0020) e i calendari (0034). Lettura: `leggiDocs`, `chiEntra` in `lib/portale-dati.ts`.
+  Scrittura: `modificaDoc(path, modifiche)` in `app/(aree)/docs-actions.ts`, voce per voce per id (`lib/modifiche.ts`) sulla versione
+  più recente (0048, coach_leggi/coach_salva o salva_doc); foglio della partita per campi con `aggiornaFoglio` (`useFoglio`).
+- Squadre: `coaches: [{id, name, code}]` = mister con PIN personale (Società → Squadre, admin e direttori); `code` sulla squadra =
+  vecchio PIN condiviso, valido finché l'admin non lo disattiva. `coach` = testo riassuntivo. `coach_team()` non restituisce mai PIN.
+- Layout di `app/(aree)/` (fa entrare admin, direttori, segreteria e chi ha la tessera; ogni pagina controlla il suo ruolo),
+  intestazione comune `components/Intestazione.tsx` con la barra delle aree (`components/Aree.tsx`, icone `ICONE_AREE` in
+  `lib/condivisi.ts`) e le schede dell'area aperta (`components/SchedeArea.tsx`). Lo Scouting (`app/(app)/layout.tsx`) usa la stessa
+  intestazione. Conferme prima di eliminare/ripristinare: `components/Conferma.tsx`.
+- Regole comuni (calendari e colori, età della categoria, colori delle annate, iniziali e colore di chi valuta, icone, modelli degli
+  avvisi, moduli `FORMATIONS`, colori dei compiti, schemi di partenza `BASES`) in `lib/condivisi.ts`, UNA volta sola.
+- Società: Squadre (`/societa/squadre`, admin e direttori: squadre, mister e PIN con `cambiaSquadre(op)` in
+  `app/(aree)/docs-actions.ts`, regole pure e PIN liberi in `lib/squadre-societa.ts`; scout, direttori e segreteria via `/api/staff`
+  (crea, pin, nome, stato: il codice è la password dell'account, salvato anche in `codici_accesso`); backup con `esportaBackup`;
+  `components/SquadreSocieta.tsx`), Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e
+  Storico modifiche (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`.
+- Segreteria → Tesserati (`/segreteria`, admin, direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e
+  vede solo quest'area).
+- Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
+  `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; `salvaDistinta` salva solo `distinta` e
+  `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`),
+  Comunicazione (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO`, PDF `lib/pdf-comunicazione.ts`). Impaginazione comune in
+  `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`). Ogni PDF scaricato lascia una copia nell'Archivio:
+  `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo base64 (un testo di oltre ~1 MB la server action lo
+  rifiuta: "Maximum array nesting exceeded"); così anche `caricaDocumento` delle famiglie.
+- Calendario (`/calendari/…`, non `/calendario`, che è la pagina dello Scouting): La mia squadra (`squadra`: mister, preparatori con i
+  portieri e la convocazione, admin e direttori con `?squadra=`, direttori in sola lettura; amichevoli del mister in
+  `registro/<squadra>.friendlies`, partite ufficiali solo admin in `calendar/<squadra>`), Tutte le squadre (`tutte`: vista
+  Giorno/Elenco, admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra ed eventi, Google con
+  `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`, admin, direttori, organizzativo; `?evento=id` = bozza
+  per un evento). Componenti in `components/calendario/`, regole pure in `lib/calendario-portale.ts`, dati in `lib/portale-dati.ts`
+  (`calendariTutti`).
+- Home (`/inizio`; `/home` è la Home dello Scouting), stile A (colori del club su fondo chiaro): mister (prossima partita in grande con
+  risposte delle famiglie e link al campo, avvisi, da fare, prossimi impegni, ultimo risultato coi marcatori, stagione e presenze mese
+  per mese: calcoli in `lib/home.ts`, prove in `tests/home.test.mjs`; regole in `lib/registro.ts`); admin e direttori senza
+  `?squadra=`: Home della società (`HomeSocieta`: weekend di tutte, risultati degli ultimi 10 giorni, da sistemare, scouting, stagione
+  squadra per squadra), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore`), organizzativo (weekend per
+  calendario, eventi, avvisi), admin e direttori con `?squadra=`. I pulsanti verso la Squadra (`components/HomePortale.tsx`) prima
+  creano quello che serve con `allenamentoDiOggi`, `tabellinoDi`, `preparaGara` (`app/(aree)/docs-actions.ts`) e poi aprono la pagina.
+- Squadra: pagine con `apriSquadra()` in `lib/pagina-squadra.ts` (chi entra, squadra, sola lettura dei direttori, `conSquadra()` per i
+  link); scelta della squadra per lo staff `components/SceltaSquadra.tsx` (`?squadra=`); sotto-schede `components/squadra/SottoSchede.tsx`.
+  Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`eliminaGiocatore` toglie anche
+  da formazione e panchina), ruolo anche il mister (`impostaRuolo`: registro.ruoli + registro.gk; da Under 13 in su ruoli completi,
+  sotto portiere/movimento).
+  Allenamento: Presenze (`/squadra/presenze`, `?allenamento=<id>`), Test atletici (`/squadra/test`, solo Under 15, `?test=<id>`),
+  Statistiche (`/squadra/statistiche-allenamento`, `?periodo=2026-09`), I miei allenamenti (lavori in corso). Regole in
+  `lib/registro.ts` (`statisticheAllenamento`, `presenzePerMese`, `leggiTempo`).
+  Partite: Dati partita (`/squadra/partita`) e Convocazioni (`/squadra/convocazioni`: agonistica con lo stato di ogni giocatore,
+  attività di base da 1 a 4 partite, risposte delle famiglie con `risposteFamiglie()`, PDF `lib/pdf-convocazione.ts` con i link a
+  Google Maps; "Nuova partita" con `svuotaFoglio`; regole in `lib/foglio.ts`), Formazione (`/squadra/formazione`,
+  `components/squadra/Formazione.tsx`: tocca una posizione per scegliere, trascina per spostare, `slotPos`; regole in
+  `lib/formazione.ts`), Piazzati (`/squadra/piazzati`, `?schema=<id>`: I miei schemi in registro.schemi, modelli della società in
+  shared/schemes solo admin con `ordinaModelli`; editor `components/piazzati/` con campo SVG che trascina pedine e pallone, frecce,
+  linee, scritte, e Compiti; regole pure in `lib/piazzati.ts`, prove in `tests/piazzati.test.mjs`), Foglio gara
+  (`/squadra/foglio-gara`: anteprima e PDF A4 orizzontale `lib/pdf-foglio-gara.ts`, distinta e formazione poi una pagina per schema
+  scelto; casella "Mostra la categoria" = `sheet.senzaCategoria`), Tabellini (`/squadra/tabellini`, `?partita=<id>`; agonistica
+  minuti/gol/subiti/autogol/durata, attività di base presenti e risultato a tempi), Statistiche (`/squadra/statistiche-partite`) e
+  Campi (`/squadra/campi`, posizione del cancello con `impostaCampo`, `lib/campi.ts`). Attività di base (da Under 13 in giù): solo
+  Convocazioni e Tabellini. Report PDF delle statistiche (admin e direttori): `lib/report-statistiche.ts`. Disegno dei PDF a pagina
+  intera su tela: `lib/tela.ts` (T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta).
+- Scouting dei mister (`/scouting/segnala`, `/scouting/giocatori`, `/scouting/valuta/[id]`; solo mister con la tessera, lo staff va al
+  suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni in
+  `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
+  `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata, elenco `components/GiocatoriMister.tsx`.
+- Famiglie (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): `getFamiglia` → famiglia_get, azioni in
+  `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti, famiglia_carica; foto ridotte nel browser), componenti in
+  `components/famiglia/`.
+- Colori e caratteri in `app/globals.css`; il verde resta solo per il campo e "presente".
 
 ## Chi sviluppa
 L'utente sviluppa da solo con Claude, in VSCode, su Mac. Spiega i passaggi in italiano,
@@ -189,6 +154,8 @@ I mister non hanno account personali: entrano nel Portale col PIN della squadra.
 codice che confronta stringhe di ruolo, usa i nomi nuovi.
 
 ## Modello dati (supabase/migrations)
+Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui (`portale.js`, `core.js`, `schede.js`, `pdf.js`,
+`registro.js`, …) non esistono più (Portale spento il 30/09/2026); le stesse regole sono nelle pagine dell'app descritte sopra.
 - 0001: `profiles` (ruolo, annate, attivo) + funzioni `mio_ruolo()`, `vede_tutto()`, `is_admin()`, `imposta_ruolo()`
 - 0002: `societa` (con `alias`), `giocatori` (cognome O descrizione obbligatori, `stato`),
   `contatti` (protetti), `segnalazioni`, `valutazioni` (4 aree 1–5), `storico_stati` (trigger);
@@ -427,15 +394,15 @@ Import da file (Calendario → Tutte le squadre → "Importa da file", `componen
 organizzativo): ICS, CSV, Excel .xlsx letti nel browser (`lib/import-calendario.ts`, lettore xlsx senza librerie `lib/xlsx.ts`, prove in
 `tests/import-calendario.test.mjs` con `tests/dati/calendario-prova.xlsx`), anteprima con squadra e casa/trasferta, salvataggio con
 `modificaDoc`; `fonte` sulla voce = non si importa due volte. Solo amichevoli, tornei ed eventi (mai il campionato); niente invio a Google
-delle voci importate (spesso vengono da lì). PDF federali: ancora con gli script di `scripts/import-calendari/`. Nel Portale "↻ Aggiorna da Google" (Tutte le squadre)
-e invio automatico di amichevoli, tornei ed eventi modificati (`partitaSuGoogle`, `eventoSuGoogle` in `organizzazione.js`).
+delle voci importate (spesso vengono da lì). PDF federali: ancora con gli script di `scripts/import-calendari/`.
 Il percorso è escluso dal controllo login di `lib/supabase/sessione.ts` (controlla da solo chi chiama).
 
 Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--tutte] [--conferma]` le ricava da
 OpenStreetMap (`scripts/lib/luoghi.mjs`: Nominatim, 1 richiesta al secondo, posizione accettata solo se nel comune giusto)
 dall'indirizzo del campo o dal centro del paese. `portale.mjs` fa lo stesso per le gare dell'Academy (`gare.lat/lon`).
-Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come nel calendario/comunicato), `address`, `ll`
-("lat,lon"); le convocazioni li leggono dal calendario (`luogoPartita()` in `schede.js`), il ritrovo (`meetAddress`) solo se altrove.
+Calendario delle squadre (`calendar/<squadra>`): ogni partita collegata ha `venue` (campo scritto come nel calendario/comunicato),
+`address`, `ll` ("lat,lon"); le convocazioni li leggono dal calendario (`luogoPartita()` in `lib/foglio.ts`), il ritrovo (`meetAddress`)
+solo se altrove.
 
 ## Convenzioni del codice
 - Form = Server Action che, a fine lavoro, fa `redirect` con `?ok=` o `?errore=` (mostrati da `<Avviso>`).
@@ -446,18 +413,18 @@ Calendario del Portale: ogni partita collegata ha `venue` (campo scritto come ne
 
 ## Prove rapide
 `npm run prove` = lint, tipi, regole di calcolo (`npm run prove:regole`: `tests/*.test.mjs` con `node --test`, indirizzi `@/` tradotti da
-`tests/registra.mjs`; categorie, testi e date, doppioni, 3 valutazioni in `lib/valutazioni.ts`, calendari Google, impaginazione dei PDF
-del Portale caricata in un ambiente finto), `scripts/prove-portale.mjs` (sintassi di ogni file del Portale, file di `index.html` esistenti e con
-`?v=`, nessun file dimenticato, nessun nome globale dichiarato in due file o usato senza essere definito, `condivisi.js` aggiornato),
-`scripts/prove-schede.mjs` (giro di tutte le schede del Portale con 7 profili e dati inventati di `scripts/prove-schede/dati.mjs`,
-Chrome da `CHROME_PATH` o quello di sistema), build. Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
+`tests/registra.mjs`; categorie, testi e date, doppioni, 3 valutazioni in `lib/valutazioni.ts`, calendari Google, formazione, piazzati,
+Home, impaginazione dei moduli), `scripts/prove-portale.mjs` (il vecchio Portale resta spento: solo gli stemmi in `public/portale/`,
+vecchi indirizzi verso la Home, nessun rimando `/portale/#…` nel codice), build. Il giro delle pagine con i profili veri è nel Test dei
+profili (sotto). Le stesse partono da sole su GitHub a ogni salvataggio (`.github/workflows/prove.yml`,
 "Prove rapide", senza segreti): se falliscono arriva un'email. Prima di pubblicare su Vercel lanciare `npm run prove`.
 Il token di `gh` non ha il permesso `workflow`: i file in `.github/workflows/` si creano dal sito di GitHub.
 
 ## Test dei profili
 `node --env-file=.env.local scripts/test-profili.mjs private/test-profili.json`: permessi di tutti i profili sul database e
 giro completo del sito vero con ogni profilo (identità di prova temporanee, cancellate alla fine). Rifarlo dopo modifiche a
-permessi, migrazioni o navigazione del Portale.
+permessi, migrazioni o navigazione. Il giro nel browser segue, profilo per profilo, la barra delle aree e le schede di ogni
+area (fino a 60 pagine; preparatori e direttori anche un'altra squadra), le pagine delle famiglie, la segreteria e lo Scouting.
 Parte anche ogni notte su GitHub (`.github/workflows/notte.yml`, "Prova notturna dei profili", segreti del repository
 NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY; `CHROME_PATH`): a video solo nomi delle prove fallite,
 conteggi e tipo del problema (frasi fisse, mai testo delle pagine: registri pubblici), esce con errore se qualcosa non va.

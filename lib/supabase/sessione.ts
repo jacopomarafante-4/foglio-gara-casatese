@@ -46,7 +46,7 @@ export async function aggiornaSessione(request: NextRequest) {
   if (percorso === '/privacy') return response;
   // Calendari Google: controlla da sola chi chiama (sessione di admin/direttori o PIN dell'organizzativo)
   if (percorso === '/api/calendario-google') return response;
-  // Uscita dal Portale: toglie sessione e tessera del mister
+  // Uscita: toglie sessione e tessere
   if (percorso === '/esci') return response;
   // Famiglia con la tessera (lib/famiglia.ts): solo le sue pagine; il layout ricontrolla il PIN nel database
   if (!loggato && percorso.startsWith('/famiglia') && (await leggiTessera(request.cookies.get(COOKIE_FAMIGLIA)?.value))) return response;

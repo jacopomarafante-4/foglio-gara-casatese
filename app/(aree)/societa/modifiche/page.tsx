@@ -19,7 +19,7 @@ const CONDIVISI: Record<string, string> = { teams: 'Squadre, mister e PIN', sche
 
 export default async function StoricoModifiche({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const profilo = await getProfilo();
-  if (!profilo) redirect('/portale/');   // mister con la tessera: qui non entra
+  if (!profilo) redirect('/inizio');   // mister con la tessera: qui non entra
   if (profilo.ruolo !== 'admin') redirect('/societa/archivio');
   const { ok, errore, aperta } = await searchParams;
   const supabase = await createClient();

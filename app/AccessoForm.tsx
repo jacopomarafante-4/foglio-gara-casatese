@@ -7,13 +7,13 @@ export function AccessoForm({ next, uscito }: { next?: string; uscito?: boolean 
   const [stato, azione, inCorso] = useActionState<StatoAccesso, FormData>(accedi, {});
   const admin = stato.passo === 'admin';
 
-  // Uscito da una pagina dell'app: si toglie anche il PIN che il Portale tiene in questa scheda (core.js)
+  // Uscito: si toglie anche il PIN che il vecchio Portale teneva nella scheda del browser (se è ancora lì)
   useEffect(() => {
     if (!uscito) return;
     try { sessionStorage.removeItem('fg:pin'); sessionStorage.removeItem('fg:famiglia'); } catch { /* niente da togliere */ }
   }, [uscito]);
 
-  // Pagina completa: il Portale squadre non fa parte del router di Next
+  // Pagina completa: dopo l'accesso i cookie nuovi valgono per tutta l'app (layout compresi)
   useEffect(() => {
     if (stato.vai) window.location.assign(stato.vai);
   }, [stato.vai]);

@@ -1,5 +1,5 @@
-// Uscita dal Portale squadre (logout() in public/portale/js/core.js): toglie la sessione e la tessera del mister
-// (lib/mister.ts, cookie che il Portale non può toccare) e torna al PIN
+// Uscita (vecchi link e pulsanti "Esci"): toglie la sessione e le tessere di mister e famiglia
+// (cookie httpOnly: solo il server li può togliere) e torna al PIN
 import { NextResponse, type NextRequest } from 'next/server';
 import { COOKIE_SQUADRA, createClient } from '@/lib/supabase/server';
 import { COOKIE_FAMIGLIA, COOKIE_MISTER } from '@/lib/tessera';

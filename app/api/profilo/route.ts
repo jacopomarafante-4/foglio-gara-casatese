@@ -1,6 +1,5 @@
 // Doppio ruolo (staff che è anche mister, stesso PIN, 0050): scelta del profilo dall'intestazione.
-// ?usa=mister → cookie acm_profilo=mister: per l'app è un mister e basta (lib/auth.ts getProfilo); si passa dal Portale
-// col PIN (come all'accesso di un mister), così anche il Portale lavora da mister, e il Portale riporta alla Home.
+// ?usa=mister → cookie acm_profilo=mister: per l'app è un mister e basta (lib/auth.ts getProfilo), e si va alla sua Home.
 // ?usa=staff → si toglie il cookie e si torna alla Home da staff.
 import { NextResponse } from 'next/server';
 import { COOKIE_PROFILO } from '@/lib/auth';
@@ -11,7 +10,7 @@ export async function GET(request: Request) {
   const doppio = await getDoppioRuolo();
   const mister = await getMister();
   if (usa === 'mister' && doppio && mister) {
-    const r = NextResponse.redirect(new URL(`/portale/#squadra=${encodeURIComponent(mister.pin)}/home`, request.url));
+    const r = NextResponse.redirect(new URL('/inizio', request.url));
     r.cookies.set(COOKIE_PROFILO, 'mister', { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     return r;
   }

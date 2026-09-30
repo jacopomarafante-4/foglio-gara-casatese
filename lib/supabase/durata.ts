@@ -2,7 +2,7 @@
 // e comunque dopo ORE_ACCESSO ore (sui telefoni il browser non si chiude quasi mai).
 import type { CookieOptions } from '@supabase/ssr';
 
-/** Ore dall'ultimo PIN dopo cui si torna alla pagina d'ingresso (stesso valore in public/portale/js/core.js) */
+/** Ore dall'ultimo PIN dopo cui si torna alla pagina d'ingresso (anche per le tessere di mister e famiglie) */
 export const ORE_ACCESSO = 6;
 
 /** Cookie di sessione: @supabase/ssr li farebbe durare 400 giorni, qui spariscono chiudendo il browser */

@@ -1,21 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Il Portale squadre (public/portale/) usa percorsi relativi (css/, js/):
-  // va servito come /portale/ con la barra finale, che Next toglierebbe
-  // (il passaggio da /portale a /portale/ lo fa proxy.ts).
-  skipTrailingSlashRedirect: true,
   experimental: {
-    // Copia dei PDF della Modulistica nell'archivio (archiviaPdf): i PDF passano dall'azione del server.
+    // Copia dei PDF nell'archivio (archiviaPdf) e documenti delle famiglie: i file passano dall'azione del server.
     // Su Vercel una richiesta non supera comunque 4,5 MB
     serverActions: { bodySizeLimit: '4.5mb' },
   },
-  async rewrites() {
-    return {
-      beforeFiles: [{ source: '/portale/', destination: '/portale/index.html' }],
-      afterFiles: [],
-      fallback: [],
-    };
+  // Il vecchio Portale squadre (public/portale/, JavaScript senza build) è spento: tutte le sue schede sono pagine dell'app.
+  // Chi apre un vecchio indirizzo o segnalibro va alla Home (senza accesso, il proxy lo manda al PIN). In public/portale/
+  // restano solo gli stemmi usati dalle pagine e dai PDF.
+  async redirects() {
+    return ['/portale', '/portale/', '/portale/index.html', '/portale/js/:file*', '/portale/css/:file*']
+      .map((source) => ({ source, destination: '/inizio', permanent: false }));
   },
 };
 

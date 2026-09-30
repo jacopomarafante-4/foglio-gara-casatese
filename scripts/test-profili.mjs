@@ -199,8 +199,7 @@ async function ui(browser, profilo, pin, opzioni = {}) {
   await pg.goto(BASE + '/?pin=1', { waitUntil: 'domcontentloaded' });
   await pg.fill('input[name=pin]', pin);
   await pg.click('button[type=submit]');
-  try { await pg.waitForURL(/\/portale\/|\/home|\/segreteria|\/inizio|\/famiglia/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
-  /* mister e staff passano dal Portale (che tiene il PIN) alla Home dell'app */
+  try { await pg.waitForURL(/\/home|\/segreteria|\/inizio|\/famiglia/, { timeout: 25000 }); } catch { riga.problemi.push('accesso non riuscito: ' + (await pg.locator('[role=alert]').textContent().catch(() => '?'))); }
   await pg.waitForURL((u) => /^\/(inizio|home|segreteria)/.test(u.pathname), { timeout: 20000, waitUntil: 'commit' }).catch(() => {});
   await pg.waitForLoadState('domcontentloaded').catch(() => {});
   riga.arrivo = pg.url().replace(BASE, '');
@@ -217,19 +216,20 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     {
       const pagine = new Set(), daVedere = [];
       const aree = await pg.$$eval('nav[aria-label="Aree del portale"] a', (x) => x.map((a) => a.getAttribute('href'))).catch(() => []);
-      aree.filter((h) => h && !h.startsWith('/portale')).forEach((h) => daVedere.push(h));
+      aree.filter(Boolean).forEach((h) => daVedere.push(h));
+      if (opzioni.altraSquadra) daVedere.push(`/squadra/rosa?squadra=${opzioni.altraSquadra}`);   // preparatori e direttori: un'altra squadra
       while (daVedere.length && pagine.size < 60) {
         const h = daVedere.shift();
         await pg.goto(BASE + h); await pg.waitForTimeout(600);
-        const qui = new URL(pg.url()).pathname; if (pagine.has(qui) || qui.startsWith('/portale') || qui === '/') continue;
+        const u = new URL(pg.url()), qui = u.pathname + (h.includes('?squadra=') ? u.search : ''); if (pagine.has(qui) || qui === '/') continue;
         pagine.add(qui);
         const schede = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((e) => e.getAttribute('href').split('?')[0])).catch(() => []);
-        schede.filter((x) => !x.startsWith('/portale') && !pagine.has(x)).forEach((x) => daVedere.push(x));
+        schede.filter((x) => !pagine.has(x)).forEach((x) => daVedere.push(x));
       }
       for (const h of pagine) {
         await pg.goto(BASE + h); await pg.waitForTimeout(700);
         const testo = await pg.locator('main').innerText().catch(() => '');
-        const v = { nome: `app ${new URL(pg.url()).pathname}`, caratteri: testo.length };
+        const v = { nome: `app ${h}`, caratteri: testo.length };
         if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
         if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${h}: rimandato alla pagina del PIN`);
         if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
@@ -237,73 +237,7 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       }
     }
   }
-  if (riga.arrivo.includes('/portale')) {
-    await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => riga.problemi.push('Portale: pagina vuota dopo l\'accesso'));
-    riga.tempoAccesso = Date.now() - t0;
-    await pg.waitForTimeout(2500);   // dati che arrivano dopo (calendari, avvisi)
-    const guarda = async (nome) => {
-      await pg.waitForTimeout(1200);
-      const testo = await pg.locator('#view').innerText().catch(() => '');
-      const v = { nome, caratteri: testo.length };
-      if (testo.trim().length < 25) v.vuota = true;
-      const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
-      const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
-      const larga = await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2); if (larga) v.scorreDiLato = true;
-      riga.viste.push(v);
-    };
-    await guarda('(inizio)');
-    const aree = await pg.$$eval('#areanav button[data-area]', (x) => x.map((e) => e.dataset.area));
-    riga.aree = aree;
-    if (!aree.length) {   // famiglia: solo le schede
-      for (const k of await pg.$$eval('#tabs [data-famtab]', (x) => x.map((e) => e.dataset.famtab))) { await pg.click(`[data-famtab="${k}"]`); await guarda('famiglia/' + k); }
-    }
-    /* pagina portata nell'app (tappa 3, NELL_APP): si controlla e si torna al Portale */
-    const nellApp = async (nome) => {
-      if (!await pg.waitForURL((u) => !u.pathname.startsWith('/portale'), { timeout: 3000 }).then(() => true).catch(() => false)) return false;
-      const controlla = async () => {
-        await pg.waitForLoadState('domcontentloaded'); await pg.waitForTimeout(800);
-        const testo = await pg.locator('main').innerText().catch(() => '');
-        const v = { nome: `${nome} (app ${new URL(pg.url()).pathname})`, caratteri: testo.length };
-        if (/Application error|Something went wrong|Unhandled/i.test(testo) || testo.trim().length < 25) v.vuota = true;
-        if (new URL(pg.url()).pathname === '/') riga.problemi.push(`${nome}: rimandato alla pagina del PIN (tessera del mister?)`);
-        const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
-        if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
-        riga.viste.push(v);
-      };
-      await controlla();
-      /* le altre schede dell'area che sono già nell'app */
-      const qui = new URL(pg.url()).pathname;
-      const altre = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('/portale'))).catch(() => []);
-      for (const h of altre.filter((h) => h !== qui)) { await pg.goto(BASE + h); await controlla(); }
-      /* si torna al Portale dal Foglio gara (il resto della Squadra ora è nell'app) */
-      await pg.goto(BASE + '/portale/#/pdf'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
-      return true;
-    };
-    for (const a of aree) {
-      await pg.click(`#areanav [data-area="${a}"]`);
-      if (await nellApp(a)) continue;   // area con la sola scheda portata nell'app (es. Segreteria)
-      await guarda(a);
-      const schede = await pg.$$eval('#tabs [data-tab]', (x) => x.map((e) => e.dataset.tab));
-      for (const s of schede) {
-        await pg.click(`#tabs [data-tab="${s}"]`);
-        if (await nellApp(`${a}/${s}`)) { await pg.click(`#areanav [data-area="${a}"]`).catch(() => {}); await pg.waitForTimeout(800); continue; }
-        await guarda(`${a}/${s}`);
-        const sotto = await pg.$$eval('#subtabs [data-tab]', (x) => x.map((e) => e.dataset.tab)).catch(() => []);
-        for (const t of sotto) {
-          if (t === s) continue;
-          await pg.click(`#subtabs [data-tab="${t}"]`);
-          if (await nellApp(`${a}/${s}/${t}`)) continue;   // sotto-scheda nell'app: si torna alle Convocazioni (stesso gruppo)
-          await guarda(`${a}/${s}/${t}`);
-        }
-        if (s === 'calendariotutte') { await pg.click('[data-calvista="elenco"]').catch(() => {}); await guarda(`${a}/${s}/elenco`); await pg.click('[data-calvista="giorno"]').catch(() => {}); }
-      }
-    }
-    if (opzioni.altraSquadra) {   // preparatori e direttori: scegli un'altra squadra
-      await pg.selectOption('#curteam', opzioni.altraSquadra).catch(() => riga.problemi.push('scelta squadra non riuscita'));
-      await pg.waitForTimeout(1500); await guarda('altra squadra: ' + opzioni.altraSquadra);
-      riga.solaLettura = await pg.locator('body.ro, .badge.dir').count() > 0;
-    }
-  } else if (riga.arrivo.startsWith('/famiglia')) {
+  if (riga.arrivo.startsWith('/famiglia')) {
     // Famiglia: pagine dell'app (tappa 3), si guardano senza scrivere nulla
     riga.tempoAccesso = Date.now() - t0;
     for (const pagina of ['/famiglia', '/famiglia/calendario', '/famiglia/anagrafica', '/famiglia/segreteria']) {
@@ -331,8 +265,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     const e = testo.match(ERRORI_TESTO); if (e) v.messaggio = testo.slice(Math.max(0, e.index - 40), e.index + 60).replace(/\s+/g, ' ');
     if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
     riga.viste.push(v);
-    // e dal Portale torna qui
-    await pg.goto(BASE + '/portale/'); await pg.waitForURL(/\/segreteria/, { timeout: 15000 }).catch(() => riga.problemi.push('Portale: la segreteria non torna a /segreteria'));
+    // un vecchio indirizzo del Portale (spento) riporta qui
+    await pg.goto(BASE + '/portale/'); await pg.waitForURL(/\/segreteria/, { timeout: 15000 }).catch(() => riga.problemi.push('vecchio indirizzo del Portale: la segreteria non torna a /segreteria'));
   } else if (riga.arrivo.startsWith('/home')) {
     riga.tempoAccesso = Date.now() - t0;
     for (const pagina of ['/home', '/giocatori', '/gare', '/segnala', '/profilo', '/giocatori/stati']) {
