@@ -42,6 +42,8 @@ export async function aggiornaSessione(request: NextRequest) {
   const percorso = request.nextUrl.pathname;
   // La pagina d'ingresso (accesso col PIN) è aperta a tutti
   if (percorso === '/') return response;
+  // Informativa sulla privacy: pubblica (la chiede Google per il collegamento con Google Calendar)
+  if (percorso === '/privacy') return response;
   // Calendari Google: controlla da sola chi chiama (sessione di admin/direttori o PIN dell'organizzativo)
   if (percorso === '/api/calendario-google') return response;
   // Uscita dal Portale: toglie sessione e tessera del mister
