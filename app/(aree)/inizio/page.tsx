@@ -1,15 +1,19 @@
 // Home del Portale (nell'app dalla tappa 3; /home resta la Home dello Scouting). Mister e preparatori: la loro squadra;
-// admin e direttori: la squadra scelta (?squadra=); organizzativo: weekend di tutta la società, eventi e avvisi.
+// admin e direttori: la società intera (HomeSocieta), o con ?squadra= la Home di quella squadra; organizzativo: weekend di tutta
+// la società, eventi e avvisi. Stile A (30/09/2026): la prossima partita in grande; calcoli in lib/home.ts.
 // Riquadri come nel Portale: avvisi della società (14 giorni), impegni del weekend, da fare, riepilogo della stagione.
 import { redirect } from 'next/navigation';
-import { oggiIso } from '@/lib/utili';
-import { calendariTutti, chiEntra, datiPreparatore, leggiDocs, squadreDelPortale } from '@/lib/portale-dati';
+import { istanteTraOre, oggiIso } from '@/lib/utili';
+import { createClient } from '@/lib/supabase/server';
+import { calendariTutti, chiEntra, datiPreparatore, leggiDocs, risposteFamiglie, squadreDelPortale } from '@/lib/portale-dati';
 import { eventoCome, etaSquadra, settimanaDi, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
 import { inOrdine } from '@/lib/calendario-portale';
 import { daFare, riepilogo, type Registro } from '@/lib/registro';
 import { nomiMister } from '@/lib/distinta';
 import type { Avviso } from '@/components/calendario/Avvisi';
-import { HomeOrganizzazione, HomeSquadra } from '@/components/HomePortale';
+import { HomeOrganizzazione, HomeSocieta, HomeSquadra, type RigaSocieta } from '@/components/HomePortale';
+import { contaRisposte, presenzePerMeseSquadra, risultati, saluto, stagioneSquadra, traQuanto } from '@/lib/home';
+import { linkLuogo, type Campi } from '@/lib/campi';
 
 type Id = Partita & { id: string };
 
@@ -23,6 +27,40 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const weekend = [sab.toISOString().slice(0, 10), al];
   const limiteAvvisi = new Date(oggi + 'T12:00:00'); limiteAvvisi.setDate(limiteAvvisi.getDate() - 14);
   const daQuando = limiteAvvisi.toISOString().slice(0, 10);
+  const piu = (giorni: number) => { const d = new Date(oggi + 'T12:00:00'); d.setDate(d.getDate() + giorni); return d.toISOString().slice(0, 10); };
+  const ora = +new Intl.DateTimeFormat('it-IT', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Rome' }).format(new Date(istanteTraOre(0)));
+  const { squadra: sceltaSquadra } = await searchParams;
+
+  /* ---------- admin e direttori: la società intera (con ?squadra= la Home di una squadra) ---------- */
+  if (chi.profilo && !sceltaSquadra) {
+    const supabase = await createClient();
+    const [{ data: docsTutti }, segn, inc, nec] = await Promise.all([
+      supabase.from('docs').select('path, data').or('path.eq.shared/teams,path.eq.shared/eventi,path.eq.shared/avvisi,path.like.calendar/%,path.like.registro/%,path.like.roster/%'),
+      supabase.from('segnalazioni').select('id', { count: 'exact', head: true }).gte('created_at', istanteTraOre(-24 * 7)),
+      supabase.from('incarichi').select('id', { count: 'exact', head: true }).eq('fatto', false),
+      supabase.from('necessita').select('id', { count: 'exact', head: true }).eq('aperta', true),
+    ]);
+    const doc = (path: string) => docsTutti?.find((d) => d.path === path)?.data as Record<string, unknown> | undefined;
+    const squadreSoc = ((doc('shared/teams')?.items ?? []) as SquadraCal[]).filter((t) => !t.organizza && !t.vedeTutte);
+    const righe: RigaSocieta[] = squadreSoc.map((t) => {
+      const reg = (doc('registro/' + t.id) ?? {}) as Registro;
+      const giocatori = ((doc('roster/' + t.id)?.players ?? []) as { id: string }[]);
+      const cal: Id[] = [...((doc('calendar/' + t.id)?.matches ?? []) as Id[]), ...(reg.friendlies ?? []).map((f) => ({ ...f, friendly: true }))];
+      const adbT = etaSquadra(t) <= 13;
+      const fare = daFare(reg, cal, oggi, adbT, giocatori.length > 0);
+      return {
+        squadra: { id: t.id, name: t.name, category: t.category }, adb: adbT, stagione: stagioneSquadra(reg, giocatori, cal),
+        risultati: risultati(reg, cal).filter((x) => x.data >= piu(-10)),
+        weekend: cal.filter((m) => weekend.includes(m.date ?? '')).map((m) => ({ ...m, team: { ...t, matches: [] } })),
+        tabelliniMancanti: fare.filter((x) => x.tipo === 'tabellino' || x.tipo === 'gol').length,
+      };
+    });
+    const eventi = ((doc('shared/eventi')?.items ?? []) as Evento[]);
+    return <HomeSocieta saluto={saluto(ora)} nome={chi.profilo.nome || ''} oggi={oggi} weekend={weekend} righe={righe}
+      eventiWeekend={eventi.filter((e) => weekend.includes(e.data ?? '')).map(eventoCome)}
+      avvisi={((doc('shared/avvisi')?.items ?? []) as Avviso[]).filter((a) => (a.data || '') >= daQuando).sort((x, y) => (y.data || '').localeCompare(x.data || '')).slice(0, 3)}
+      scouting={{ segnalazioni: segn.count ?? 0, incarichi: inc.count ?? 0, necessita: nec.count ?? 0 }} />;
+  }
 
   /* ---------- organizzativo ---------- */
   if (chi.mister?.squadra.organizza) {
@@ -38,8 +76,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   if (chi.mister) squadra = { ...chi.mister.squadra, matches: [] };
   else {
     squadre = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] }));
-    const { squadra: scelta } = await searchParams;
-    squadra = squadre.find((t) => t.id === scelta) ?? squadre[0];
+    squadra = squadre.find((t) => t.id === sceltaSquadra) ?? squadre[0];
   }
   if (!squadra) return <p className="text-grigio">Nessuna squadra. Creane una in Società → Squadre.</p>;
   const id = squadra.id;
@@ -65,6 +102,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     <div className="space-y-4">
       {squadre.length > 0 && (
         <form method="GET" className="flex flex-wrap items-end gap-2">
+          <a href="/inizio" className="rounded-lg border border-linea bg-white px-3 py-2 font-semibold hover:border-blu">‹ Tutta la società</a>
           <label className="min-w-56 flex-1 sm:max-w-xs">
             <span className="mb-1 block text-sm font-semibold text-grigio">Squadra</span>
             <select name="squadra" defaultValue={id} className="campo">
@@ -88,6 +126,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         riepilogo={riepilogo(reg, giocatori, calendario)}
         avvisi={avvisi.slice(0, 3)}
         soloLettura={chi.profilo?.ruolo === 'direttore'}
+        saluto={saluto(ora)} nomi={Object.fromEntries(giocatori.map((g) => [g.id, g.name]))}
+        prossimi={inOrdine(impegni.filter((x) => x.date && x.date >= oggi && x.date <= piu(21) && x.id !== prossima?.id)).slice(0, 4)}
+        ultima={risultati(reg, calendario)[0] ?? null} andamento={presenzePerMeseSquadra(reg, giocatori)}
+        risposte={prossima ? contaRisposte(await risposteFamiglie(chi, id).catch(() => ({})), giocatori, prossima) : null}
+        linkCampo={prossima ? linkLuogo((reg as Registro & { venues?: Campi }).venues, prossima) : ''} traQuanto={traQuanto(oggi, prossima?.date)}
       />
     </div>
   );

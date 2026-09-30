@@ -74,8 +74,11 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   `modificaDoc(path, modifiche)` in `app/(aree)/docs-actions.ts`, voce per voce per id (`lib/modifiche.ts`) sulla versione più
   recente, con coach_leggi/coach_salva o salva_doc (i permessi li decide il database). Nel Portale restano righe ed elenchi del
   calendario per le famiglie.
-  Home (`/inizio`; `/home` è la Home dello Scouting): mister (avvisi, weekend, da fare, riepilogo della stagione: regole in
-  `lib/registro.ts`), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore` in `lib/portale-dati.ts`),
+  Home (`/inizio`; `/home` è la Home dello Scouting), stile A (scelto il 30/09/2026, colori del club su fondo chiaro): mister (prossima
+  partita in grande con risposte delle famiglie e link al campo, avvisi, da fare, prossimi impegni, ultimo risultato coi marcatori,
+  stagione e presenze mese per mese: calcoli in `lib/home.ts`, prove in `tests/home.test.mjs`; regole in `lib/registro.ts`); admin e
+  direttori senza `?squadra=`: Home della società (`HomeSocieta`: weekend di tutte, risultati degli ultimi 10 giorni, da sistemare,
+  scouting, stagione squadra per squadra), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore` in `lib/portale-dati.ts`),
   organizzativo (weekend per calendario, eventi, avvisi), admin e direttori con `?squadra=`. Dopo il PIN admin e direttori
   vanno lì; i mister passano dal Portale (che tiene il PIN) e ci arrivano con `NELL_APP.home`. I pulsanti verso la Squadra
   aprono il Portale con `#/<scheda>/<id>` (allenamento o partita da aprire) e `#/s:<squadra>/…` per lo staff (`rotta()`,
