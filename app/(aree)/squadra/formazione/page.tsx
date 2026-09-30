@@ -20,7 +20,7 @@ export default async function PaginaFormazione({ searchParams }: { searchParams:
   const foglio = (docs['sheet/' + id] ?? {}) as FoglioFormazione & FoglioPartita;
   const schemi = [...((docs['shared/schemes']?.items ?? []) as { id: string; name?: string }[]), ...(((docs['registro/' + id] as { schemi?: { id: string; name?: string }[] } | null)?.schemi) ?? [])];
   const piazzati = ((foglio.selected ?? []) as string[]).map((sid) => schemi.find((q) => q.id === sid)?.name).filter(Boolean) as string[];
-  const linkPiazzati = `/portale/#/${chi.profilo ? 's:' + id + '/' : ''}piazzati`;
+  const linkPiazzati = conSquadra('/squadra/piazzati');
   return (
     <div className="space-y-4">
       <h1 className="font-display text-4xl font-bold">Formazione{foglio.opponent ? ` · ${foglio.opponent}` : ''}</h1>

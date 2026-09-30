@@ -125,7 +125,7 @@ export function Formazione({ squadraId, giocatori, iniziale, soloLettura, piazza
       {/* ---------- modulo, capitani, piazzati, note ---------- */}
       <div className="space-y-3 lg:order-3">
         <label className="block text-sm font-semibold">Modulo
-          <select id="f-modulo" className="campo mt-1 font-display text-lg" value={f.formation || '1-4-4-1-1'} disabled={soloLettura} onChange={(e) => salva({ formation: e.target.value })}>
+          <select id="f-modulo" className="campo mt-1 font-display text-lg" value={f.formation || '1-4-4-1-1'} disabled={soloLettura} onChange={(e) => salva({ formation: e.target.value, slotPos: {} })}>
             {MODULI.map((m) => <option key={m}>{m}</option>)}
           </select></label>
         {(['captain', 'vice'] as const).map((k) => (

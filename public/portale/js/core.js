@@ -2,14 +2,8 @@
    I file si caricano in ordine (vedi index.html) e condividono le stesse variabili globali. */
 /* ---------- Dati di base ---------- */
 /* FORMATIONS (moduli): in lib/condivisi.ts → condivisi.js */
-const ROLE_COLORS = ['#C8102E','#1F5FA8','#D98E04','#2E7D4F','#6B3FA0','#0F8A8A','#A34A1E','#4A5563','#B8336A'];
-const BASES = {
-  'angolo-favore':  {name:'Angolo a favore', side:'favore', ball:{x:33.3,y:0.7}},
-  'angolo-sfavore': {name:'Angolo a sfavore', side:'sfavore', ball:{x:33.3,y:0.7}},
-  'punizione-favore':{name:'Punizione a favore', side:'favore', ball:{x:12,y:26}},
-  'punizione-sfavore':{name:'Punizione a sfavore', side:'sfavore', ball:{x:12,y:26}},
-  'libero':{name:'Nuovo schema', side:'favore', ball:{x:0,y:30}}
-};
+/* ROLE_COLORS (colori dei compiti dei piazzati): in lib/condivisi.ts → condivisi.js */
+/* BASES (tipi di schema di partenza): in lib/condivisi.ts → condivisi.js */
 function defaultSheet(){return {team:'',opponent:'',date:'',time:'',venue:'',category:'',formation:'1-4-4-1-1',lineup:{},bench:[],captain:'',vice:'',notes:'',selected:[],overrides:{},schemeEdits:{},slotPos:{},home:true,convType:'Campionato',meetTime:'',meetAddress:'',convNotes:'',callup:{}}}
 function effSlot(s, n, bx, by){ const o = (s.slotPos||{})[n]; return o ? {x:o.x, y:o.y} : {x:bx, y:by}; }
 

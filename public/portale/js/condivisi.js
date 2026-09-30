@@ -1,5 +1,5 @@
 /* FILE GENERATO da lib/condivisi.ts con "npm run condivisi": non modificarlo qui.
-   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, NELL_APP, MODELLI_AVVISO, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore, FORMATIONS. */
+   Regole comuni a Scouting e Portale: CALENDARI, calendarioDi, ICONE_AREE, NELL_APP, MODELLI_AVVISO, etaCategoria, COLORI_ANNATA, coloreAnnata, COLORI_AUTORE, inizialiAutore, coloreAutore, FORMATIONS, ROLE_COLORS, BASES. */
 // Regole comuni a Scouting (Next) e Portale (public/portale): scritte una volta sola, qui.
 // Il Portale non ha un passaggio di build: `npm run condivisi` (scripts/genera-condivisi.mjs) toglie i tipi e crea
 // public/portale/js/condivisi.js (file generato, da non modificare). Le prove rapide falliscono se non è aggiornato.
@@ -44,7 +44,7 @@ const NELL_APP                         = {
   rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
   statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
   campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
-  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione',
+  segnala: '/scouting/segnala', giocatori: '/scouting/giocatori', formazione: '/squadra/formazione', piazzati: '/squadra/piazzati',
   squadre: '/societa/squadre',
 };
 
@@ -102,4 +102,16 @@ const FORMATIONS                                             = {
   "1-3-4-3":   [[1,50,92],[2,72,76],[5,50,80],[6,28,76],[7,88,52],[8,62,56],[4,38,56],[3,12,52],[10,82,24],[9,50,17],[11,18,24]],
   "1-3-4-2-1": [[1,50,92],[2,72,76],[5,50,80],[6,28,76],[7,88,54],[8,62,58],[4,38,58],[3,12,54],[10,64,33],[11,36,33],[9,50,15]],
   "1-5-3-2":   [[1,50,92],[2,90,66],[4,68,78],[5,50,80],[6,32,78],[3,10,66],[7,74,50],[8,50,54],[10,26,50],[9,62,20],[11,38,20]]
+};
+
+/* ---------- Calci piazzati ---------- */
+/** Colori dei compiti nei calci piazzati, nell'ordine in cui compaiono i compiti */
+const ROLE_COLORS           = ['#C8102E','#1F5FA8','#D98E04','#2E7D4F','#6B3FA0','#0F8A8A','#A34A1E','#4A5563','#B8336A'];
+/** Schemi nuovi dei piazzati: da dove si parte (nome, a favore o sfavore, posizione del pallone) */
+const BASES                                                                                               = {
+  'angolo-favore':{name:'Angolo a favore', side:'favore', ball:{x:33.3,y:0.7}},
+  'angolo-sfavore': {name:'Angolo a sfavore', side:'sfavore', ball:{x:33.3,y:0.7}},
+  'punizione-favore':{name:'Punizione a favore', side:'favore', ball:{x:12,y:26}},
+  'punizione-sfavore':{name:'Punizione a sfavore', side:'sfavore', ball:{x:12,y:26}},
+  'libero':{name:'Nuovo schema', side:'favore', ball:{x:0,y:30}}
 };
