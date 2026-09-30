@@ -16,14 +16,14 @@ const AREE = [
 ];
 
 /** Come allowedAreas() del Portale: admin e direttori vedono tutte le aree, la segreteria solo la sua; i mister niente
- *  Segreteria né Società, e il loro Scouting è quello del Portale (Segnala, Giocatori); l'organizzativo niente Squadra né
+ *  Segreteria né Società, e il loro Scouting è /scouting (Segnala, Giocatori della loro annata); l'organizzativo niente Squadra né
  *  Scouting. Gli scout hanno solo lo Scouting, quindi niente barra */
 export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: boolean }) {
   const percorso = usePathname();
   if (ruolo === 'scout') return null;
   const aree = ruolo === 'segreteria' ? AREE.filter((a) => a.k === 'segreteria')
     : ruolo === 'mister' ? AREE.filter((a) => a.k !== 'segreteria' && a.k !== 'societa' && !(organizza && (a.k === 'squadra' || a.k === 'scouting')))
-      .map((a) => (a.k === 'scouting' ? { ...a, href: '/portale/#/segnala' } : a))
+      .map((a) => (a.k === 'scouting' ? { ...a, href: '/scouting/segnala' } : a))
     : AREE;
   const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
     : percorso.startsWith('/modulistica') ? 'modulistica' : percorso.startsWith('/calendari/') ? 'calendario'

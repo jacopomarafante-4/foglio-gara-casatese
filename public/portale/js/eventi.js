@@ -6,7 +6,6 @@ document.addEventListener('click', e => {
   if(!t) return;
   if(t.dataset.tab){ goTab(t.dataset.tab); return; }
   if(t.dataset.area){ const a = AREAS.find(x => x.k===t.dataset.area); if(a){ const ok = tabsDi(a); goTab(ok.includes(areaLast[a.k]) ? areaLast[a.k] : ok[0]); } return; }
-  if(t.dataset.segvoto){ segDraft.voto = segDraft.voto === t.dataset.segvoto ? '' : t.dataset.segvoto; render(); return; }
   /* Scelta del giocatore per una posizione toccata sul campo. Il telefono manda un "clic" subito dopo il tocco
      che ha aperto l'elenco: se arriva nel primo mezzo secondo lo ignoriamo (chiuderebbe o sceglierebbe per sbaglio) */
   if((t.dataset.pickplayer || t.dataset.pickclear !== undefined || t.dataset.pickclose !== undefined) && Date.now() - slotPickAt < 450) return;
@@ -58,9 +57,6 @@ document.addEventListener('click', e => {
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
     case 'exportbackup': exportBackup(); break;
-    case 'segnala': inviaSegnalazione(); break;
-    case 'valuta': inviaValutazione(); break;
-    case 'valutaannulla': impostaSegValuta(null); impostaSegEsito(null); render(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(secureMode){
@@ -87,7 +83,6 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if(t.dataset.seg){ segDraft[t.dataset.seg] = t.value; return; }
   if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid || t.dataset.coach || t.dataset.coachcat)) return;
   /* Preparatori dei portieri: le categorie (Under) dei loro portieri, per Home e calendario */
   if(t.dataset.coachcat){ const [tid, cid] = t.dataset.coachcat.split(':'); const c = S.teams.find(x => x.id===tid)?.coaches?.find(x => x.id===cid);

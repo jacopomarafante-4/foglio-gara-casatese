@@ -154,8 +154,6 @@ function render(){
   else if(tab==='formazione') v.innerHTML = viewFormazione();
   else if(tab==='piazzati') v.innerHTML = openSchemeId ? viewScheme() : viewSchemes();
   else if(tab==='pdf'){ v.innerHTML = viewPdf(); buildPreview(); }
-  else if(tab==='segnala') v.innerHTML = viewSegnala();
-  else if(tab==='giocatori') v.innerHTML = viewGiocatori();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
     v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {
