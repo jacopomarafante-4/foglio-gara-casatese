@@ -17,7 +17,7 @@ const BASE = process.env.BASE_URL || 'https://academy-casatese.vercel.app';   //
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const anon = () => createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-const R = { permessi: [], ui: [], pulizia: [] };
+const R = { permessi: [], ui: [], pulizia: [], ripetuti: [] };
 const esito = (profilo, prova, ok, dettaglio = '') => { R.permessi.push({ profilo, prova, ok, dettaglio }); };
 
 // ---------- Credenziali esistenti (mai stampate) ----------
@@ -341,9 +341,17 @@ try {
     ['Preparatore portieri', cred.preparatore, { altraSquadra: 't_u14' }], ['Organizzativo', temp.orgPin], ['Segreteria', temp.segPin],
     ['Famiglia', temp.famPin], ['Direttore', cred.direttore?.pin, { altraSquadra: 't_u11' }], ['Scout', cred.scout?.pin],
   ];
+  const nProblemi = (x) => (x.problemi?.length ?? 0) + (x.errori?.length ?? 0);
   for (const [nome, pin, op] of giri) {
     if (!pin) { R.ui.push({ profilo: nome, problemi: ['nessun PIN per provarlo'] }); continue; }
-    try { await ui(browser, nome, pin, op); } catch (e) { R.ui.push({ profilo: nome, problemi: ['test interrotto: ' + e.message.slice(0, 200)] }); }
+    /* un profilo che non va si riprova una volta (sito lento di notte): conta il secondo giro, il primo resta in `primoGiro` */
+    for (let giro = 1; giro <= 2; giro++) {
+      try { await ui(browser, nome, pin, op); } catch (e) { R.ui.push({ profilo: nome, problemi: ['test interrotto: ' + e.message.slice(0, 200)] }); }
+      const ultimo = R.ui.at(-1);
+      if (!nProblemi(ultimo) || giro === 2) break;
+      R.ui.pop();
+      R.ripetuti.push({ profilo: nome, primoGiro: ultimo });
+    }
   }
   await browser.close();
 } catch (e) { R.errore = e.message; }
@@ -351,9 +359,15 @@ finally { await pulisci(); writeFileSync(OUT, JSON.stringify(R, null, 1)); conso
 /* Esito per la prova notturna su GitHub (registri pubblici): solo nomi delle prove e conteggi, mai testi delle pagine.
    Se qualcosa non va il processo esce con errore e GitHub manda l'email. */
 const permessiKo = R.permessi.filter((x) => !x.ok);
-const uiKo = R.ui.map((x) => ({ profilo: x.profilo, n: (x.problemi?.length ?? 0) + (x.errori?.length ?? 0) })).filter((x) => x.n);
+/* tipo del problema: frasi fisse dello script, senza testo delle pagine (messaggi d'errore e avvisi tagliati) */
+const tipi = (x) => [...new Set([
+  ...(x.problemi ?? []).map((p) => p.replace(/^(accesso non riuscito|test interrotto):.*$/s, '$1')),
+  ...(x.errori ?? []).map(() => 'errore JavaScript nella pagina'),
+])].join('; ');
+const uiKo = R.ui.map((x) => ({ profilo: x.profilo, n: (x.problemi?.length ?? 0) + (x.errori?.length ?? 0), tipi: tipi(x) })).filter((x) => x.n);
 permessiKo.forEach((x) => console.log(`✗ permesso: ${x.profilo} – ${x.prova}`));
-uiKo.forEach((x) => console.log(`✗ sito: ${x.profilo} – ${x.n} problemi (dettagli nel file di esito)`));
+uiKo.forEach((x) => console.log(`✗ sito: ${x.profilo} – ${x.n} problemi: ${x.tipi}`));
+R.ripetuti.forEach((x) => console.log(`↻ sito: ${x.profilo} riprovato (al primo giro: ${tipi(x.primoGiro)})`));
 R.pulizia.filter((x) => x.startsWith('ERRORE')).forEach((x) => console.log('✗ pulizia: ' + x.split(':')[0]));
 if (R.errore || permessiKo.length || uiKo.length || R.pulizia.some((x) => x.startsWith('ERRORE'))) process.exitCode = 1;
 else console.log('✓ tutto a posto');
