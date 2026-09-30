@@ -72,3 +72,64 @@ export function daFare(reg: Registro, calendario: Partita[], oggi: string, adb: 
   if (!adb && conGiocatori && !(reg.gk ?? []).length) out.push({ testo: 'Segna i portieri con 🧤 nella Rosa', tipo: 'portieri' });
   return out;
 }
+
+/* ---------- Allenamento: presenze, test, statistiche ---------- */
+export type Test = { id: string; date: string; name?: string; res?: Record<string, { s?: number; note?: string }> };
+export const MOTIVI: { k: string; l: string; s: string }[] = [
+  { k: 'MAL', l: 'Malattia', s: 'M' }, { k: 'INF', l: 'Infortunio', s: 'I' }, { k: 'SCU', l: 'Scuola / studio', s: 'S' },
+  { k: 'FAM', l: 'Motivi familiari', s: 'F' }, { k: 'ING', l: 'Ingiustificata', s: 'X' },
+];
+/** % presenza = presenze / sedute registrate, escluse le assenze per infortunio */
+export const percentuale = (P: number, assenzeSenzaInfortuni: number) => (P + assenzeSenzaInfortuni ? P / (P + assenzeSenzaInfortuni) : null);
+export const pctTesto = (v: number | null) => (v == null ? '—' : Math.round(v * 100) + '%');
+
+/** Tempo scritto dal mister: "12:51", "12.51", "12'51", "12" (minuti) → secondi; null se non è un tempo (resta come nota) */
+export function leggiTempo(v: string) {
+  const m = String(v || '').trim().match(/^(\d{1,2})(?:\s*[:,.'’]\s*(\d{1,2}))?\s*["”]?$/);
+  if (!m) return null;
+  const sec = m[2] === undefined ? 0 : m[2].length === 1 ? +m[2] * 10 : +m[2];
+  return sec > 59 ? null : +m[1] * 60 + sec;
+}
+export const scriviTempo = (sec: number) => `${Math.floor(sec / 60)}'${String(sec % 60).padStart(2, '0')}"`;
+export const tempoPerCampo = (r?: { s?: number; note?: string }) => (!r ? '' : r.s != null ? `${Math.floor(r.s / 60)}:${String(r.s % 60).padStart(2, '0')}` : r.note || '');
+export const tempoCella = (r?: { s?: number; note?: string }) => (!r ? '' : r.s != null ? scriviTempo(r.s) : r.note || '');
+
+/** Mesi con allenamenti o partite giocate (per il filtro del periodo) */
+export function mesiDelRegistro(reg: Registro, calendario: Partita[]) {
+  return [...new Set([...(reg.trainings ?? []).map((t) => t.date), ...(reg.games ?? []).filter(garaGiocata).map((g) => dataGara(g, calendario))]
+    .map((d) => (d || '').slice(0, 7)).filter(Boolean))].sort();
+}
+
+/** Statistiche di allenamento nel periodo ('all' = stagione, se no "2026-09") */
+export function statisticheAllenamento(reg: Registro, giocatori: { id: string; name: string }[], periodo: string) {
+  const nel = (d?: string) => periodo === 'all' || (d || '').startsWith(periodo);
+  const tr = (reg.trainings ?? []).filter((t) => nel(t.date)).sort((a, b) => a.date.localeCompare(b.date));
+  const righe = giocatori.map((p) => {
+    const c: Record<string, number> = { P: 0, A: 0 }; MOTIVI.forEach((a) => { c[a.k] = 0; });
+    tr.forEach((t) => { const v = presenzaDi(t, p.id); if (v in c) c[v]++; });
+    const assenze = c.A + MOTIVI.reduce((a, x) => a + c[x.k], 0);
+    return { p, c, assenze, pct: percentuale(c.P, assenze - c.INF) };
+  });
+  const conPct = righe.filter((r) => r.pct != null) as (typeof righe[number] & { pct: number })[];
+  return {
+    tr, righe,
+    media: conPct.length ? conPct.reduce((a, r) => a + r.pct, 0) / conPct.length : null,
+    presentiMedi: tr.length ? tr.reduce((a, t) => a + Object.values(t.att ?? {}).filter((v) => v === 'P').length, 0) / tr.length : null,
+    sottoSoglia: conPct.filter((r) => r.pct < SOGLIA_PRESENZE).length,
+    assenze: righe.reduce((a, r) => a + r.assenze, 0), infortuni: righe.reduce((a, r) => a + r.c.INF, 0),
+  };
+}
+
+/** Presenze per mese: per ogni giocatore {mese: {P, tot}} (tot senza gli infortuni) */
+export function presenzePerMese(reg: Registro, giocatori: { id: string }[]) {
+  const mesi = [...new Set((reg.trainings ?? []).map((t) => (t.date || '').slice(0, 7)).filter(Boolean))].sort();
+  const per: Record<string, Record<string, { P: number; tot: number }>> = Object.fromEntries(giocatori.map((p) => [p.id, {}]));
+  (reg.trainings ?? []).forEach((t) => {
+    const ym = (t.date || '').slice(0, 7);
+    giocatori.forEach((p) => {
+      const v = presenzaDi(t, p.id); if (!v) return;
+      const m = (per[p.id][ym] ??= { P: 0, tot: 0 }); if (v !== 'INF') m.tot++; if (v === 'P') m.P++;
+    });
+  });
+  return { mesi, per };
+}

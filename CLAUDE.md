@@ -84,7 +84,12 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   con `modificaDoc`, `eliminaGiocatore` toglie anche da formazione e panchina), ruolo anche il mister (`impostaRuolo`: registro.ruoli
   + registro.gk), direttori in sola lettura. Scelta della squadra per lo staff: `squadraDellaPagina()` + `components/SceltaSquadra.tsx`.
   Dal Portale alle pagine dell'app lo staff porta la squadra aperta (`indirizzoApp()` in portale.js: `?squadra=`); le schede
-  Allenamento e Partite (ancora nel Portale) la riportano con `#/s:<squadra>/…`. Elenco delle schede portate: `NELL_APP` in
+  Partite (ancora nel Portale) la riportano con `#/s:<squadra>/…`. Pagine della Squadra: `apriSquadra()` in `lib/pagina-squadra.ts`
+  (chi entra, squadra, sola lettura dei direttori, `conSquadra()` per i link).
+  Squadra → Allenamento nell'app: Presenze (`/squadra/presenze`, `?allenamento=<id>` = scheda aperta), Test atletici (`/squadra/test`,
+  solo Under 15, `?test=<id>`), Statistiche (`/squadra/statistiche-allenamento`, `?periodo=2026-09`), I miei allenamenti (lavori in
+  corso). Regole in `lib/registro.ts` (`statisticheAllenamento`, `presenzePerMese`, `leggiTempo`), sotto-schede
+  `components/squadra/SottoSchede.tsx`. Il report PDF delle statistiche (solo admin) resta in Partite → Statistiche nel Portale. Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).

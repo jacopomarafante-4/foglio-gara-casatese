@@ -63,7 +63,13 @@ function writeRoute(push){
 }
 /* Schede già portate nell'app (tappa 3 dell'app unica, NELL_APP in lib/condivisi.ts): nel sito si aprono lì, stessa intestazione e stessa barra */
 /* admin e direttori: la squadra aperta passa alla pagina dell'app (?squadra=), i mister hanno sempre la loro */
-const indirizzoApp = t => NELL_APP[t] + (!hashLocked && curTeam ? '?squadra=' + encodeURIComponent(curTeam) : '');
+const indirizzoApp = t => {
+  const q = new URLSearchParams(), id = rotta().id;
+  if(!hashLocked && curTeam) q.set('squadra', curTeam);
+  if(id && t === 'allenamenti') q.set('allenamento', id);   // #/allenamenti/<id> → allenamento da aprire
+  if(id && t === 'test') q.set('test', id);
+  return NELL_APP[t] + (q.toString() ? '?' + q : '');
+};
 function goTab(t){
   if(!allowedTabs().includes(t)) t = 'home';
   if(NELL_APP[t] && IN_APP_UNICA){ location.assign(indirizzoApp(t)); return; }
@@ -252,17 +258,6 @@ const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padSt
 const daGiocare = m => !m.date || m.date >= todayISO();
 /* Calendario (La mia squadra, Tutte le squadre, Avvisi): nell'app dalla tappa 3, /calendari/… (NELL_APP).
    Qui restano le righe e gli elenchi usati da Home e famiglie. */
-/* Squadra → Allenamento → I miei allenamenti: in programma (lavori in corso) */
-function viewMieiAllenamenti(){
-  return `<section class="panel lavori">
-    <div class="lavori-icona" aria-hidden="true">🚧</div>
-    <h2>I miei allenamenti</h2>
-    <p class="lavori-tag">Lavori in corso</p>
-    <p class="hint">Qui potrai preparare e ritrovare le tue sedute: esercizi, obiettivi, durata, materiale, e riusarle durante la stagione.
-    La funzione è in programma e arriverà nei prossimi aggiornamenti.</p>
-    <p class="note">Nel frattempo le presenze si segnano in <button class="linkbtn" data-tab="allenamenti">Presenze</button>.</p>
-  </section>`;
-}
 /* Squadra → Campi: posizione esatta dei campi per il link di Google Maps */
 function viewCampi(){
   return viewVenues() || `<section class="panel"><h2>Campi</h2><p class="empty">Nessun campo: i campi arrivano dalle partite del calendario.</p></section>`;

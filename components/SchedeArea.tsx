@@ -11,12 +11,12 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
   const squadraScelta = useSearchParams().get('squadra');
   if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
   if (percorso.startsWith('/squadra/')) {
-    // Rosa nell'app; Allenamento e Partite ancora nel Portale (per lo staff con la squadra aperta: #/s:<squadra>/…)
+    // Rosa e Allenamento nell'app; Partite ancora nel Portale (per lo staff con la squadra aperta: #/s:<squadra>/…)
     const portale = (scheda: string) => `/portale/#/${squadraScelta ? 's:' + squadraScelta + '/' : ''}${scheda}`;
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della squadra">
-        <Scheda href="/squadra/rosa">Rosa</Scheda>
-        <a href={portale('allenamenti')} className={nelPortale}>Allenamento</a>
+        <Scheda href={'/squadra/rosa' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Rosa</Scheda>
+        <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/statistiche-allenamento', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
         <a href={portale('convocazioni')} className={nelPortale}>Partite</a>
       </nav>
     );

@@ -103,3 +103,18 @@ test('registro: presenze senza gli infortuni, risultato dai gol, cose da fare', 
   assert.deepEqual(f.map((x) => x.tipo), ['assenze', 'tabellino', 'gol']);
   assert.equal(f[1].calId, 'c3');
 });
+
+import { leggiTempo, statisticheAllenamento, presenzePerMese } from '@/lib/registro';
+test('allenamento: tempi dei test, statistiche e presenze per mese', () => {
+  assert.equal(leggiTempo('12:51'), 771); assert.equal(leggiTempo("12'5"), 770); assert.equal(leggiTempo('12'), 720);
+  assert.equal(leggiTempo('12:75'), null); assert.equal(leggiTempo('differenziato'), null);
+  const reg = { trainings: [
+    { id: 'a', date: '2026-09-01', att: { x: 'P', y: 'INF' } }, { id: 'b', date: '2026-09-03', att: { x: 'MAL', y: 'P' } },
+    { id: 'c', date: '2026-10-01', att: { x: 'P', y: 'A' } }] };
+  const g = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }];
+  const s = statisticheAllenamento(reg, g, 'all');
+  assert.equal(s.righe[0].pct, 2 / 3); assert.equal(s.righe[1].pct, 1 / 2); assert.equal(s.infortuni, 1); assert.equal(s.assenze, 3);
+  assert.equal(statisticheAllenamento(reg, g, '2026-10').tr.length, 1);
+  const m = presenzePerMese(reg, g);
+  assert.deepEqual(m.mesi, ['2026-09', '2026-10']); assert.deepEqual(m.per.y['2026-09'], { P: 1, tot: 1 });
+});
