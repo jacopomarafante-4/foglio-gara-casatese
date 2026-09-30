@@ -1,7 +1,7 @@
 'use client';
 // Calendario → Tutte le squadre: le partite da giocare di tutte le squadre ed eventi della società, vista Giorno (come Google
 // Calendar) o Elenco, filtro per categoria. Admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra
-// (calendar/<squadra>) e gli eventi (shared/eventi), aggiungono amichevoli ed eventi e aggiornano da Google. Il campionato
+// (calendar/<squadra>) e gli eventi (shared/eventi), aggiungono amichevoli ed eventi, importano da file (ImportaFile) e aggiornano da Google. Il campionato
 // no: vale sempre il calendario ufficiale (salvo comunicati).
 import { useEffect, useRef, useState } from 'react';
 import { eventoCome, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
@@ -11,6 +11,7 @@ import { VistaGiorno } from './VistaGiorno';
 import { ModificaEvento, ModificaPartita } from './Modifiche';
 import { Messaggio, useSalva } from './salvataggio';
 import { useGoogle } from './google';
+import { ImportaFile } from './ImportaFile';
 
 export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia, oggi, puoOrganizzare, google }: {
   squadre: SquadraCal[]; eventi: Evento[]; mia: string | null; oggi: string; puoOrganizzare: boolean; google: boolean;
@@ -147,6 +148,7 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
             </select>
             <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={aggiungiAmichevole}>+ Aggiungi amichevole</button>
             <button className="rounded-lg border border-blu bg-blu px-3 py-1.5 text-sm font-semibold text-white" onClick={nuovoEvento}>+ Nuovo evento</button>
+            <ImportaFile squadre={squadre} eventi={eventi} oggi={oggi} />
           </div>
           {google ? (
             <div className="flex flex-wrap items-center gap-2">
