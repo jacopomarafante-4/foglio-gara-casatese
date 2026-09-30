@@ -312,7 +312,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
   } else if (riga.arrivo.startsWith('/segreteria')) {
     // Segreteria: la sua area è una pagina dell'app (tappa 3); si apre un ragazzo senza scrivere nulla
     riga.tempoAccesso = Date.now() - t0;
-    await pg.waitForTimeout(1500);
+    // si aspetta che l'elenco dei ragazzi arrivi (di notte il sito può essere lento), non un tempo fisso
+    await pg.locator('main details summary').first().waitFor({ timeout: 20000 }).catch(() => {});
     await pg.locator('main details summary').first().click().catch(() => riga.problemi.push('Segreteria: nessun ragazzo da aprire'));
     await pg.waitForTimeout(800);
     const testo = await pg.locator('main').innerText().catch(() => '');
