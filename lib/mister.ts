@@ -8,6 +8,8 @@ import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { COOKIE_MISTER, leggiTessera } from '@/lib/tessera';
+import { getAccount, getProfilo } from '@/lib/auth';
+import type { Ruolo } from '@/lib/ruoli';
 
 export { COOKIE_MISTER } from '@/lib/tessera';
 export type SquadraMister = {
@@ -30,4 +32,15 @@ export const getMister = cache(async (): Promise<Mister | null> => {
   const { data: tutte } = await supabase.rpc('coach_squadre', { p_pin: tessera.pin });   // senza la 0050: solo quella aperta
   const squadre = Array.isArray(tutte) && tutte.length ? (tutte as SquadraMister[]) : [squadra];
   return { pin: tessera.pin, nome: squadra.mister || 'Mister', squadra, squadre };
+});
+
+/** Staff (non admin) che è anche mister, stesso PIN (0050): ruolo da staff, squadre da mister e profilo in uso ora.
+ *  Null per tutti gli altri. Serve all'intestazione per scegliere il profilo (/api/profilo) */
+export type DoppioRuolo = { ruolo: Ruolo; squadre: string; attivo: 'staff' | 'mister' };
+export const getDoppioRuolo = cache(async (): Promise<DoppioRuolo | null> => {
+  const account = await getAccount();
+  if (!account || account.ruolo === 'admin') return null;
+  const mister = await getMister();
+  if (!mister) return null;
+  return { ruolo: account.ruolo, squadre: mister.squadre.map((t) => (t.category || t.name || '').split(' - ')[0]).join(', '), attivo: (await getProfilo()) ? 'staff' : 'mister' };
 });

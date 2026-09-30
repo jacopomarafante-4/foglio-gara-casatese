@@ -115,6 +115,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   anche staff (stesso nome, `chiaveNome`), se no quello che ha già in un'altra squadra, e va su tutte le sue righe; rigenerare il PIN
   di uno staff (`/api/staff`) aggiorna anche le sue righe da mister. Preparatori dei portieri: in Squadra → Rosa delle altre squadre
   segnano solo i portieri (`coach_portiere`, `segnaPortiere`).
+  Doppio ruolo: in alto nell'intestazione "Direttore | Mister Under 15" (`getDoppioRuolo()` in `lib/mister.ts`, `/api/profilo?usa=`):
+  con "mister" il cookie `acm_profilo` fa sì che `getProfilo()` (lib/auth.ts) restituisca null → per l'app e per il Portale (`modoMister`
+  in core.js, passando da `/portale/#squadra=PIN`) è un mister e basta; `getAccount()` = l'account vero. Accesso e uscita tornano allo staff.
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile
   d'ambiente, anche su Vercel) con PIN e ora dell'accesso, httpOnly, di sessione, massimo `ORE_ACCESSO` ore (`lib/tessera.ts`).
   La crea `accedi` col PIN di un mister (e la toglie a ogni altro PIN), la toglie `esci` e `/esci` (uscita dal Portale). Il proxy

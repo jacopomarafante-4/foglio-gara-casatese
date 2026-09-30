@@ -464,7 +464,9 @@ async function initStore(){
     secureMode = await detectSecure();
     let session = null;
     try{ session = (await supabaseClient.auth.getSession()).data.session; }catch(e){}
-    if(IN_APP_UNICA){ supaSession = session; await loadStaffRole(session); }
+    /* doppio ruolo (0050): lo staff ha scelto di usare l'app come mister → qui si lavora col PIN, come un mister */
+    const modoMister = IN_APP_UNICA && /(?:^|; )acm_profilo=mister(?:;|$)/.test(document.cookie);
+    if(IN_APP_UNICA && !modoMister){ supaSession = session; await loadStaffRole(session); }
     /* direttore che è anche mister: le sue squadre (dalla tessera, lato server) */
     if(IN_APP_UNICA && isDirettore()){ try{ const r = await fetch('/api/portale/mister', { credentials: 'same-origin' }); if(r.ok) squadreMister = (await r.json()).squadre || []; }catch(e){} }
     /* Famiglia: pagina del solo ragazzo (famiglia.js) */
@@ -472,7 +474,7 @@ async function initStore(){
     if(pinFam && !(sessionOk(session) && !isSegreteria())){ if(await famigliaLogin(pinFam)) return; }
     /* Segreteria: niente documenti del Portale, solo l'area Segreteria (pagina /segreteria dell'app, NELL_APP) */
     if(isSegreteria() && sessionOk(session)){ teamsLoaded = true; tab = 'tesserati'; render(); return; }
-    if(sessionOk(session) || !secureMode){
+    if((sessionOk(session) && !modoMister) || !secureMode){
       try{ db = makeSupabaseDb(supabaseClient); }catch(e){ db = null; }
     } else {
       const pin = teamPinFromUrl();
