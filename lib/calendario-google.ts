@@ -54,7 +54,9 @@ export async function partiteDaGoogle(g: Google): Promise<{ partite: DaGoogle[];
       const t = (e.summary ?? '').match(/^\s*(U\s*\d{2}|AdB)\s*-\s*(\d{4})(?:\/\d{2})?\s*-\s*(.+?)\s*$/i);
       if (!t || /allenament/i.test(e.summary ?? '')) continue;
       const d = dataOra(e.start?.dateTime ?? `${e.start?.date}T12:00:00`);
-      const desc = e.description ?? '', ora = inizio(desc), avversario = /^da trovare$/i.test(t[3]) ? 'Da trovare' : t[3];
+      // "2007-BESANA FORTITUDO" (annata dell'avversario attaccata al nome, nei calendari Juniores): resta solo il nome
+      const nomeAvv = t[3].replace(/^(?:19|20)\d{2}\s*[-/]\s*/, '');
+      const desc = e.description ?? '', ora = inizio(desc), avversario = /^da trovare$/i.test(nomeAvv) ? 'Da trovare' : nomeAvv;
       const doppione = `${t[2]}|${e.start?.dateTime ?? e.start?.date}|${avversario}|${desc}`;
       if (visti.has(doppione)) continue;
       visti.add(e.id); visti.add(doppione);
