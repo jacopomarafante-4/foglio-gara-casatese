@@ -43,7 +43,7 @@ const NELL_APP                         = {
   calendario: '/calendari/squadra', calendariotutte: '/calendari/tutte', avvisi: '/calendari/avvisi', home: '/inizio',
   rosa: '/squadra/rosa', allenamenti: '/squadra/presenze', mieiallenamenti: '/squadra/miei-allenamenti', test: '/squadra/test',
   statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
-  campi: '/squadra/campi',
+  campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
 };
 
 /** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */

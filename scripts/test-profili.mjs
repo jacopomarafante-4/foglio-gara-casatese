@@ -205,19 +205,24 @@ async function ui(browser, profilo, pin, opzioni = {}) {
     const s = testo.match(SOSPETTI); if (s) v.sospetto = s[0];
     if (await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2)) v.scorreDiLato = true;
     riga.viste.push(v);
-    /* poi il giro del Portale, dalle Convocazioni (ancora nel Portale); chi non ha la Squadra (organizzativo) torna nell'app */
+    /* poi il giro del Portale, dalla Formazione (ancora nel Portale); chi non ha la Squadra (organizzativo) torna nell'app */
     await pg.waitForTimeout(2000);
-    await pg.goto(BASE + '/portale/#/convocazioni');
+    await pg.goto(BASE + '/portale/#/formazione');
     await pg.waitForTimeout(4000);
     riga.arrivo = '/inizio → ' + pg.url().replace(BASE, '');
     if (!riga.arrivo.includes('/portale')) {
       /* tutte le sue aree sono nell'app (organizzativo): giro delle aree e delle loro schede */
-      const pagine = new Set();
+      /* aree e, pagina per pagina, le loro schede e sotto-schede (fino a 40 pagine) */
+      const pagine = new Set(), daVedere = [];
       const aree = await pg.$$eval('nav[aria-label="Aree del portale"] a', (x) => x.map((a) => a.getAttribute('href'))).catch(() => []);
-      for (const a of aree.filter((h) => h && !h.startsWith('/portale'))) {
-        await pg.goto(BASE + a); await pg.waitForTimeout(600);
-        const schede = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((e) => e.getAttribute('href'))).catch(() => []);
-        [new URL(pg.url()).pathname, ...schede].filter((h) => !h.startsWith('/portale')).forEach((h) => pagine.add(h));
+      aree.filter((h) => h && !h.startsWith('/portale')).forEach((h) => daVedere.push(h));
+      while (daVedere.length && pagine.size < 40) {
+        const h = daVedere.shift();
+        await pg.goto(BASE + h); await pg.waitForTimeout(600);
+        const qui = new URL(pg.url()).pathname; if (pagine.has(qui) || qui.startsWith('/portale') || qui === '/') continue;
+        pagine.add(qui);
+        const schede = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((e) => e.getAttribute('href').split('?')[0])).catch(() => []);
+        schede.filter((x) => !x.startsWith('/portale') && !pagine.has(x)).forEach((x) => daVedere.push(x));
       }
       for (const h of pagine) {
         await pg.goto(BASE + h); await pg.waitForTimeout(700);
@@ -268,8 +273,8 @@ async function ui(browser, profilo, pin, opzioni = {}) {
       const qui = new URL(pg.url()).pathname;
       const altre = await pg.$$eval('nav[aria-label^="Schede"] a[href^="/"]', (x) => x.map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('/portale'))).catch(() => []);
       for (const h of altre.filter((h) => h !== qui)) { await pg.goto(BASE + h); await controlla(); }
-      /* si torna al Portale dalle Convocazioni (Home, Rosa, Allenamento e Tabellini ora sono nell'app) */
-      await pg.goto(BASE + '/portale/#/convocazioni'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
+      /* si torna al Portale dalla Formazione (il resto della Squadra ora è nell'app) */
+      await pg.goto(BASE + '/portale/#/formazione'); await pg.waitForFunction(() => document.querySelector('#view')?.innerText.trim().length > 20, null, { timeout: 25000 }).catch(() => {});
       return true;
     };
     for (const a of aree) {

@@ -121,3 +121,15 @@ export async function impostaCampo(squadraId: string, campo: string, posizione: 
     return { nuovo: { ...reg, venues } };
   });
 }
+
+/** Foglio della partita (sheet/<squadra>): cambia solo i campi indicati, sulla versione più recente (Dati partita, Convocazioni) */
+export async function aggiornaFoglio(squadraId: string, campi: Record<string, unknown>): Promise<Esito> {
+  if (!squadraOk(squadraId)) return { ok: false, errore: 'Dati non validi.' };
+  return aggiorna(await chiEntra(), 'sheet/' + squadraId, (base) => ({ nuovo: { ...(base ?? {}), ...campi } }));
+}
+
+/** Dati partita → "Nuova partita": foglio svuotato (formazione, panchina, convocazioni, dati), restano i piazzati scelti */
+export async function svuotaFoglio(squadraId: string, vuoto: Record<string, unknown>): Promise<Esito> {
+  if (!squadraOk(squadraId)) return { ok: false, errore: 'Dati non validi.' };
+  return aggiorna(await chiEntra(), 'sheet/' + squadraId, (base) => ({ nuovo: { ...vuoto, selected: (base as { selected?: unknown } | null)?.selected ?? [] } }));
+}
