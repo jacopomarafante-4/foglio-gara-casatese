@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-/** Scheda dello Scouting, disegnata come le schede del Portale (.tab in public/portale/css/portale.css) */
-export function Scheda({ href, children }: { href: string; children: React.ReactNode }) {
-  const attiva = usePathname().startsWith(href);
+/** Scheda dello Scouting, disegnata come le schede del Portale (.tab in public/portale/css/portale.css).
+ *  Attiva sulla sua pagina (anche con ?squadra=…) o su una delle pagine in `attivaSu` */
+export function Scheda({ href, attivaSu, children }: { href: string; attivaSu?: string[]; children: React.ReactNode }) {
+  const percorso = usePathname();
+  const attiva = [href.split('?')[0], ...(attivaSu ?? [])].some((h) => percorso.startsWith(h));
   return (
     <Link
       href={href}

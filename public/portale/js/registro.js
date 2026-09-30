@@ -136,63 +136,7 @@ function scrollGridsToEnd(){
     w.scrollLeft = th ? th.offsetLeft + th.offsetWidth - w.clientWidth : w.scrollWidth;
   }));
 }
-function attCell(v){
-  if(v==='P') return `<td class="c-p" title="Presente">✓</td>`;
-  if(v==='A') return `<td class="c-a" title="Assente, motivo da indicare">✗</td>`;
-  if(ABS[v]) return `<td class="c-a c-${v}" title="Assente: ${ABS[v].l}">${ABS[v].s}</td>`;
-  return `<td class="c-0"></td>`;
-}
-function viewTrainings(){
-  const t = curTraining();
-  if(t) return trainingEditor(t);
-  const tr = S.reg.trainings.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const today = todayISO(), hasToday = tr.some(x => x.date===today);
-  const head = tr.map((t, i) => `<th ${i===tr.length-1?'data-focus':''}><button class="colbtn" data-opentr="${t.id}" title="Apri e modifica"><small>${weekday(t.date)}</small>${fmtDate(t.date).slice(0,5)}</button></th>`).join('');
-  const body = byName().map(p => {
-    const vals = tr.map(t => attOf(t, p.id));
-    const P = vals.filter(v=>v==='P').length, absNoInj = vals.filter(v => isAbs(v) && v!=='INF').length, pct = attPct(P, absNoInj);
-    return `<tr><th class="nm" scope="row">${isGk(p.id)?'🧤 ':''}${esc(p.name)}</th>${vals.map(attCell).join('')}
-      <td class="tot">${P}</td><td class="tot ${pct!=null&&pct<LOW_ATT?'lowc':''}">${pctTxt(pct)}</td></tr>`;
-  }).join('');
-  const foot = tr.map(t => `<td>${Object.values(t.att||{}).filter(v=>v==='P').length}</td>`).join('');
-  return `<div class="row regbar">
-      <button class="btn primary" data-act="tradd" data-date="${today}">${hasToday ? 'Apri l\'allenamento di oggi' : '+ Allenamento di oggi'}</button>
-      <span class="note">oppure</span><input type="date" id="newtrdate" value="${today}" aria-label="Data allenamento" style="width:auto"><button class="btn" data-act="tradd">Apri</button>
-    </div>
-    ${tr.length ? `<div class="tblwrap gridwrap"><table class="gtbl">
-      <thead><tr><th class="nm">Giocatore</th>${head}<th class="tot">Pres.</th><th class="tot">%</th></tr></thead>
-      <tbody>${body}</tbody>
-      <tfoot><tr><th class="nm">Presenti</th>${foot}<td class="tot"></td><td class="tot"></td></tr></tfoot>
-    </table></div>
-    <p class="note legend2">Tocca una data per modificarla · ✓ presente · assente per ${ABSENCES.map(a => `<b>${a.s}</b> ${a.l.toLowerCase()}`).join(' · ')} · ✗ motivo non indicato. Gli infortuni non abbassano la %.</p>`
-    : '<p class="empty">Nessun allenamento registrato.</p>'}`;
-}
-function trainingEditor(t){
-  const att = t.att ||= {};
-  const rows = byName().map(p => {
-    const v = attOf(t, p.id), abs = isAbs(v);
-    const reasons = abs ? `<div class="reasons" role="group" aria-label="Motivo assenza ${esc(p.name)}">${ABSENCES.map(a => `<button data-absid="${p.id}" data-reason="${a.k}" aria-pressed="${v===a.k}">${a.l}</button>`).join('')}</div>${v==='A' ? '<span class="need">Scegli il motivo</span>' : ''}` : '';
-    return `<div class="attrow ${v==='P'?'is-p':abs?'is-a':''}">
-      <div class="attmain"><div class="callname">${isGk(p.id)?'🧤 ':''}${esc(p.name)}</div>
-        <div class="seg pa" role="group" aria-label="Presenza ${esc(p.name)}">
-          <button data-attid="${p.id}" data-attstatus="P" aria-pressed="${v==='P'}">Presente</button>
-          <button data-attid="${p.id}" data-attstatus="A" aria-pressed="${abs}">Assente</button>
-        </div></div>
-      ${reasons}
-    </div>`;
-  }).join('');
-  const vals = S.players.map(p => attOf(t, p.id)), nP = vals.filter(v=>v==='P').length, nA = vals.filter(isAbs).length;
-  return `<div class="row regbar"><button class="btn small ghost" data-act="regback">← Tabella allenamenti</button></div>
-    <div class="edhead"><h3>Allenamento · ${weekday(t.date)} ${fmtDate(t.date)}</h3>
-      <div class="row"><span class="countchip" data-att="P"><b>${nP}</b> presenti</span><span class="countchip" data-att="A"><b>${nA}</b> assenti</span></div></div>
-    <div class="grid">
-      <div><label class="f" for="tr_date">Data</label><input id="tr_date" type="date" data-trf="date" value="${esc(t.date)}"></div>
-      <div><label class="f" for="tr_note">Note (facoltative)</label><input id="tr_note" data-trf="note" value="${esc(t.note||'')}" placeholder="Es. seduta atletica"></div>
-    </div>
-    <div class="row" style="justify-content:space-between;margin-top:14px"><button class="btn small" data-act="trallp">Tutti presenti</button><button class="btn small ghost danger" data-act="trdel">Elimina allenamento</button></div>
-    <div class="callist" style="margin-top:10px">${rows}</div>
-    <div class="row" style="margin-top:14px"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo a ogni tocco.</span></div>`;
-}
+/* Presenze allenamenti: nell'app dalla tappa 3 (/squadra/presenze, NELL_APP) */
 function viewGames(){
   const g = curGame();
   if(g) return isAdb() ? gameEditorAdb(g) : gameEditor(g);
@@ -354,34 +298,7 @@ function gameEditor(g){
     <div class="row" style="margin-top:14px;justify-content:space-between"><div class="row"><button class="btn primary" data-act="regback">Fatto</button><span class="note">Si salva da solo.</span></div>
       <button class="btn small ghost danger" data-act="gmdel">${cal && !cal.friendly ? 'Svuota dati partita' : 'Elimina partita'}</button></div>`;
 }
-function viewTests(){
-  const t = curTest();
-  if(t) return testEditor(t);
-  const list = S.reg.tests.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t => {
-    const n = Object.values(t.res||{}).filter(r => r.s!=null).length;
-    return `<div class="regrow"><div><b>${esc(t.name||'Test')}</b> · ${fmtDate(t.date)}</div>
-      <div class="row"><span class="countchip"><b>${n}</b> tempi</span><button class="btn small" data-opents="${t.id}">Apri</button></div></div>`;
-  }).join('');
-  return `<div class="row regbar"><button class="btn primary" data-act="tsadd">+ Nuovo test</button></div>
-    <p class="hint">Scrivi i tempi come 12:51 (minuti:secondi). Qualsiasi altra parola (es. "differenziato", "non svolto") resta come nota.</p>
-    <div class="reglist">${list || '<p class="empty">Nessun test registrato.</p>'}</div>`;
-}
-function testEditor(t){
-  const res = t.res ||= {};
-  const rows = byName().map(p => {
-    const r = res[p.id];
-    const v = r ? (r.s!=null ? `${Math.floor(r.s/60)}:${String(r.s%60).padStart(2,'0')}` : (r.note||'')) : '';
-    return `<div class="gmrow"><div class="callname">${esc(p.name)}</div><input data-tsr="${p.id}" value="${esc(v)}" placeholder="mm:ss" aria-label="Tempo ${esc(p.name)}" style="max-width:170px"></div>`;
-  }).join('');
-  return `<div class="row regbar"><button class="btn small ghost" data-act="regback">← Tutti i test</button></div>
-    <div class="grid">
-      <div><label class="f" for="ts_name">Test</label><input id="ts_name" data-tsf="name" value="${esc(t.name||'')}" list="testnames" placeholder="Es. 3 km"></div>
-      <div><label class="f" for="ts_date">Data</label><input id="ts_date" type="date" data-tsf="date" value="${esc(t.date)}"></div>
-    </div>
-    <datalist id="testnames">${[...new Set(['3 km','2 km','1 km', ...S.reg.tests.map(x=>x.name).filter(Boolean)])].map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
-    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn small ghost danger" data-act="tsdel">Elimina test</button></div>
-    <div class="callist" style="margin-top:10px">${rows}</div>`;
-}
+/* Test atletici: nell'app dalla tappa 3 (/squadra/test) */
 
 /* ---------- Scheda Statistiche ---------- */
 /* Squadra → Allenamento → Statistiche, Squadra → Partite → Statistiche e Tabellini */
@@ -396,34 +313,7 @@ function statHeader(title, kpis){
   </section>`;
 }
 const kpiBox = (v, l, sub='') => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
-function viewStatAllenamento(){
-  if(!S.players.length) return `<section class="panel"><h2>Statistiche allenamento</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
-  const {tr, rows, team} = computeStats();
-  const inj = rows.reduce((a,r) => a + r.c.INF, 0), absAll = rows.reduce((a,r) => a + r.absAll, 0);
-  const kpis = [
-    kpiBox(team.nT, 'Allenamenti', team.avgPresent!=null ? `media ${team.avgPresent.toFixed(1)} presenti` : ''),
-    kpiBox(pctTxt(team.avgPct), 'Presenza media'),
-    kpiBox(team.low, `Sotto il ${LOW_ATT*100}%`, team.low ? 'in rosso nella tabella' : ''),
-    kpiBox(absAll, 'Assenze', inj ? `di cui ${inj} per infortunio` : '')
-  ].join('');
-  const bar = v => v==null ? '<span class="note">—</span>' : `<span class="pbar ${v<LOW_ATT?'low':''}"><i style="width:${Math.round(v*100)}%"></i></span><b>${pctTxt(v)}</b>`;
-  const trRows = rows.slice().sort((a,b)=>(b.pct??-1)-(a.pct??-1)).map(r => `<tr class="${r.pct!=null&&r.pct<LOW_ATT?'low':''}">
-      <td class="nm">${esc(r.p.name)}</td><td>${r.c.P}</td>${ABSENCES.map(a => `<td>${r.c[a.k]||''}</td>`).join('')}<td>${r.c.A||''}</td><td class="pc">${bar(r.pct)}</td></tr>`).join('');
-  const {months, per} = monthlyAttendance();
-  const moRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${months.map(m => { const o = per.get(p.id)?.[m]; const v = o && o.tot ? o.P/o.tot : null; return `<td class="${v!=null&&v<LOW_ATT?'lowc':''}">${pctTxt(v)}</td>`; }).join('')}</tr>`).join('');
-  const tests = S.reg.tests.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const tsRows = byName().map(p => `<tr><td class="nm">${esc(p.name)}</td>${tests.map(t => `<td>${esc(testCell((t.res||{})[p.id]))||'<span class="note">—</span>'}</td>`).join('')}</tr>`).join('');
-  return statHeader('Statistiche allenamento', kpis) + `
-  <section class="panel">
-    <h3 class="convh3">Presenze per giocatore</h3>
-    ${tr.length ? `<div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th><th title="Presenze">Pres.</th>${ABSENCES.map(a => `<th title="Assenze: ${a.l}">${a.l.split(' ')[0]}</th>`).join('')}<th title="Assenze senza motivo indicato">N.i.</th><th>Presenza</th></tr></thead><tbody>${trRows}</tbody></table></div>
-      <p class="note" style="margin-top:6px">In rosso chi è sotto il ${LOW_ATT*100}% di presenze. Le assenze per infortunio non abbassano la percentuale. N.i. = assenza senza motivo indicato.</p>` : '<p class="empty">Nessun allenamento nel periodo.</p>'}
-  </section>
-  ${months.length > 1 ? `<section class="panel"><h3 class="convh3">Presenze per mese</h3>
-    <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${months.map(m=>`<th>${monthLabel(m)}</th>`).join('')}</tr></thead><tbody>${moRows}</tbody></table></div></section>` : ''}
-  ${tests.length ? `<section class="panel"><h3 class="convh3">Test atletici</h3>
-    <div class="tblwrap"><table class="stbl"><thead><tr><th class="nm">Giocatore</th>${tests.map(t=>`<th>${esc(t.name||'Test')}<br><span class="note">${fmtDate(t.date).slice(0,5)}</span></th>`).join('')}</tr></thead><tbody>${tsRows}</tbody></table></div></section>` : ''}`;
-}
+/* Statistiche allenamento: nell'app dalla tappa 3 (/squadra/statistiche-allenamento) */
 function viewStatPartite(){
   if(!S.players.length) return `<section class="panel"><h2>Statistiche partite</h2><p class="empty">Prima serve la rosa (Squadra → Rosa).</p></section>`;
   const {gm, rows, team} = computeStats();
@@ -492,7 +382,6 @@ document.addEventListener('click', e => {
     if(!g){ g = {id:uid('gm'), calId:m.id, date:m.date, opponent:m.opponent||'', home:!!m.home, comp:m.friendly?'Amichevole':'Campionato', dur:DEFAULT_DUR, og:'', pl:{}}; R.games.push(g); save('registro'); }
     openGameId = g.id; render(); window.scrollTo(0,0); return;
   }
-  if(t.dataset.opents){ openTestId = t.dataset.opents; render(); window.scrollTo(0,0); return; }
   if(t.dataset.gktoggle){ toggleGk(t.dataset.gktoggle); return; }
   if(t.dataset.frdel){
     const f = (R.friendlies||[]).find(x => x.id===t.dataset.frdel); if(!f) return;
@@ -500,13 +389,6 @@ document.addEventListener('click', e => {
     if(!confirm(`Eliminare l'amichevole${f.opponent?' con '+f.opponent:''} del ${fmtDate(f.date)}?${hasData?' Si cancellano anche minuti e gol segnati.':''}`)) return;
     R.friendlies = R.friendlies.filter(x => x!==f); R.games = R.games.filter(x => x.calId!==f.id); save('registro'); render(); return;
   }
-  if(t.dataset.attid){
-    const tr = curTraining(); if(!tr) return;
-    const pid = t.dataset.attid, cur = attOf(tr, pid);
-    tr.att[pid] = t.dataset.attstatus==='P' ? 'P' : (isAbs(cur) ? cur : 'A');
-    save('registro'); render(); return;
-  }
-  if(t.dataset.absid){ const tr = curTraining(); if(tr){ tr.att[t.dataset.absid] = t.dataset.reason; save('registro'); render(); } return; }
   if(t.dataset.gkgame){
     const g = curGame(); if(!g) return;
     const x = g.pl[t.dataset.gkgame] ||= {};
@@ -515,14 +397,6 @@ document.addEventListener('click', e => {
   }
   switch(act){
     case 'regback': openTrainingId = openGameId = openTestId = null; render(); break;
-    case 'tradd': {
-      const date = t.dataset.date || $('#newtrdate')?.value || todayISO();
-      const ex = R.trainings.find(x => x.date===date);
-      if(ex){ openTrainingId = ex.id; render(); window.scrollTo(0,0); break; }
-      const tr = {id:uid('tr'), date, note:'', att:Object.fromEntries(S.players.map(p => [p.id,'P']))};
-      R.trainings.push(tr); openTrainingId = tr.id; save('registro'); render(); window.scrollTo(0,0); break; }
-    case 'trallp': { const tr = curTraining(); if(tr){ S.players.forEach(p => tr.att[p.id]='P'); save('registro'); render(); } break; }
-    case 'trdel': { const tr = curTraining(); if(tr && confirm(`Eliminare l'allenamento del ${fmtDate(tr.date)}?`)){ R.trainings = R.trainings.filter(x=>x!==tr); openTrainingId = null; save('registro'); render(); } break; }
     case 'gmfromsheet': {
       const g = curGame(), s = S.sheet; if(!g) break;
       const dur = numOr0(g.dur) || DEFAULT_DUR;
@@ -540,15 +414,12 @@ document.addEventListener('click', e => {
       if(!confirm(fr ? `Eliminare l'amichevole del ${fmtDate(fr.date)} con minuti e gol?` : g.calId ? `Cancellare minuti e gol di questa partita?` : `Eliminare la partita del ${fmtDate(g.date)}?`)) break;
       if(fr) R.friendlies = R.friendlies.filter(f => f!==fr);
       R.games = R.games.filter(x=>x!==g); openGameId = null; save('registro'); render(); break; }
-    case 'tsadd': { const ts = {id:uid('ts'), date:todayISO(), name:'', res:{}}; R.tests.push(ts); openTestId = ts.id; save('registro'); render(); break; }
-    case 'tsdel': { const ts = curTest(); if(ts && confirm(`Eliminare il test "${ts.name||'Test'}" del ${fmtDate(ts.date)}?`)){ R.tests = R.tests.filter(x=>x!==ts); openTestId = null; save('registro'); render(); } break; }
     case 'statspdf': if(isAdmin()) downloadStatsPdf(); break;
   }
 });
 document.addEventListener('input', e => {
   const t = e.target;
   if(!curTeam) return;
-  if(t.dataset.trf){ const tr = curTraining(); if(tr){ tr[t.dataset.trf] = t.value; save('registro'); } return; }
   if(t.dataset.frid){
     const f = (S.reg.friendlies||[]).find(x => x.id===t.dataset.frid); if(!f) return;
     f[t.dataset.frf] = t.type==='checkbox' ? t.checked : (t.dataset.frf==='home' ? !!t.value : t.value);
@@ -568,14 +439,6 @@ document.addEventListener('input', e => {
     if(t.dataset.k==='min') delete x.pres;   // con i minuti scritti la presenza "senza minuti" non serve più
     t.closest('.gmrow2')?.classList.toggle('on', played(x));
     save('registro'); refreshScore(g); return;
-  }
-  if(t.dataset.tsf){ const ts = curTest(); if(ts){ ts[t.dataset.tsf] = t.value; save('registro'); } return; }
-  if(t.dataset.tsr){
-    const ts = curTest(); if(!ts) return;
-    const v = t.value.trim(), sec = parseTime(v);
-    if(!v) delete ts.res[t.dataset.tsr];
-    else ts.res[t.dataset.tsr] = sec!=null ? {s:sec} : {note:v};
-    save('registro'); return;
   }
 });
 /* aggiorna il risultato mentre si scrive, senza ridisegnare (il campo resta attivo) */

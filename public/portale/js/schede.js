@@ -158,13 +158,9 @@ function render(){
   else if(tab==='pdf'){ v.innerHTML = viewPdf(); buildPreview(); }
   else if(tab==='campi') v.innerHTML = viewCampi();
   else if(tab==='tabellini'){ v.innerHTML = viewTabellini(); scrollGridsToEnd(); }
-  else if(tab==='allenamenti'){ v.innerHTML = registroPage('Presenze allenamenti', viewTrainings()); scrollGridsToEnd(); }
-  else if(tab==='test') v.innerHTML = registroPage('Test atletici', viewTests());
-  else if(tab==='statallen') v.innerHTML = viewStatAllenamento();
   else if(tab==='statpartite'){ v.innerHTML = viewStatPartite(); scrollGridsToEnd(); }
   else if(tab==='segnala') v.innerHTML = viewSegnala();
   else if(tab==='giocatori') v.innerHTML = viewGiocatori();
-  else if(tab==='mieiallenamenti') v.innerHTML = viewMieiAllenamenti();
   // Direttori: si guarda soltanto (i campi non si scrivono; il resto lo blocca save())
   if(readOnly()){
     v.querySelectorAll('input:not([type=date]), textarea').forEach(el => {

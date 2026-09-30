@@ -43,13 +43,22 @@ function AvvisiSocieta({ avvisi }: { avvisi: Avviso[] }) {
 }
 
 export function HomeSquadra(p: {
-  squadra: { id: string; name: string; category: string; mister: string }; portale: string; oggi: string; weekend: string[]; adb: boolean;
+  squadra: { id: string; name: string; category: string; mister: string }; portale: string; squadraQs: string; oggi: string; weekend: string[]; adb: boolean;
   impegni: Impegno[]; portieri: Portieri | null; prossima: (Partita & { id: string }) | null; foglioPronto: boolean;
   allenamentoOggi: Allenamento | null; giocatori: string[]; daFare: DaFare[]; calendario: (Partita & { id: string })[];
   riepilogo: ReturnType<typeof riepilogo>; avvisi: Avviso[]; soloLettura: boolean;
 }) {
   const [attesa, setAttesa] = useState('');
-  const vai = (scheda: string) => window.location.assign(p.portale + scheda);
+  /* pagine della Squadra già nell'app: indirizzo con la squadra dello staff (squadraQs = "squadra=<id>" o "") */
+  const app = (path: string, q = '') => path + (q || p.squadraQs ? '?' + [q, p.squadraQs].filter(Boolean).join('&') : '');
+  const NELL_APP_SQUADRA: Record<string, (id?: string) => string> = {
+    allenamenti: (id) => app('/squadra/presenze', id ? 'allenamento=' + id : ''), rosa: () => app('/squadra/rosa'),
+    statallen: () => app('/squadra/statistiche-allenamento'),
+  };
+  const vai = (scheda: string) => {
+    const [k, id] = scheda.split('/');
+    window.location.assign(NELL_APP_SQUADRA[k] ? NELL_APP_SQUADRA[k](id) : p.portale + scheda);
+  };
   /* crea (se serve) e apre; i direttori sono in sola lettura: aprono soltanto */
   async function esegui(etichetta: string, azione: () => Promise<{ ok: boolean; errore?: string; valore?: string }>, poi: (id?: string) => string) {
     if (p.soloLettura) { vai(poi()); return; }
@@ -108,7 +117,7 @@ export function HomeSquadra(p: {
         <Scheda titolo="Da fare">
           <ul>
             {p.allenamentoOggi
-              ? <Voce href={p.portale + 'allenamenti/' + p.allenamentoOggi.id}>Presenze di oggi: <b>{presenti} presenti</b>, {assenti} assenti</Voce>
+              ? <Voce href={app('/squadra/presenze', 'allenamento=' + p.allenamentoOggi.id)}>Presenze di oggi: <b>{presenti} presenti</b>, {assenti} assenti</Voce>
               : <Voce primo onClick={() => esegui('Apro l’allenamento di oggi…', () => allenamentoDiOggi(p.squadra.id, p.oggi, p.giocatori), (id) => (id ? 'allenamenti/' + id : 'allenamenti'))}>
                   Segna le presenze dell’allenamento di oggi</Voce>}
             {p.daFare.slice(0, max).map((x, i) => <Voce key={i} onClick={() => apriDaFare(x)}>{x.testo}</Voce>)}
@@ -119,7 +128,7 @@ export function HomeSquadra(p: {
 
         <Scheda titolo="Riepilogo stagione">
           <div className="grid grid-cols-2 gap-2">
-            <a href={p.portale + 'statallen'} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
+            <a href={app('/squadra/statistiche-allenamento')} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
               <b className="font-display text-base">Allenamento</b>
               <span><b>{r.nT}</b> allenamenti</span><span><b>{pct(r.mediaPresenze)}</b> presenza media</span>
               <span><b>{r.sottoSoglia}</b> sotto il {SOGLIA_PRESENZE * 100}%</span><span className="mt-1 font-semibold text-blu">Statistiche ›</span>

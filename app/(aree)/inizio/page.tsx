@@ -76,7 +76,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
       )}
       <HomeSquadra
         squadra={{ id, name: squadra.name || '', category: squadra.category || '', mister: nomiMister(squadra) }}
-        portale={chi.mister ? '/portale/#/' : `/portale/#/s:${id}/`}
+        portale={chi.mister ? '/portale/#/' : `/portale/#/s:${id}/`} squadraQs={chi.mister ? '' : `squadra=${encodeURIComponent(id)}`}
         oggi={oggi} weekend={weekend} adb={adb}
         impegni={inOrdine(impegni.filter((m) => weekend.includes(m.date ?? '')))}
         portieri={prep?.portieri ?? null}
