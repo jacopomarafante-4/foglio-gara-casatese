@@ -78,7 +78,7 @@ export async function accedi(_prev: StatoAccesso, formData: FormData): Promise<S
     const tessera = await creaTessera(pin);
     if (tessera) biscotti.set(COOKIE_MISTER, tessera, opzioniCookieMister);
     // Arrivava da una di quelle pagine: si passa dal Portale (che tiene il PIN) con la sua scheda, e lui la riapre
-    const scheda = Object.entries(NELL_APP).find(([, percorso]) => percorso === next)?.[0];
+    const scheda = Object.entries(NELL_APP).find(([, percorso]) => percorso === next.split('?')[0])?.[0];
     return { vai: `/portale/#squadra=${encodeURIComponent(pin)}${scheda ? '/' + scheda : ''}` };
   }
   // PIN di una famiglia: il Portale apre la pagina del ragazzo (#famiglia=PIN)

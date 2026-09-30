@@ -53,7 +53,8 @@ export function HomeSquadra(p: {
   const app = (path: string, q = '') => path + (q || p.squadraQs ? '?' + [q, p.squadraQs].filter(Boolean).join('&') : '');
   const NELL_APP_SQUADRA: Record<string, (id?: string) => string> = {
     allenamenti: (id) => app('/squadra/presenze', id ? 'allenamento=' + id : ''), rosa: () => app('/squadra/rosa'),
-    statallen: () => app('/squadra/statistiche-allenamento'),
+    statallen: () => app('/squadra/statistiche-allenamento'), tabellini: (id) => app('/squadra/tabellini', id ? 'partita=' + id : ''),
+    statpartite: () => app('/squadra/statistiche-partite'),
   };
   const vai = (scheda: string) => {
     const [k, id] = scheda.split('/');
@@ -134,13 +135,13 @@ export function HomeSquadra(p: {
               <span><b>{r.sottoSoglia}</b> sotto il {SOGLIA_PRESENZE * 100}%</span><span className="mt-1 font-semibold text-blu">Statistiche ›</span>
             </a>
             {p.adb ? (
-              <a href={p.portale + 'tabellini'} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
+              <a href={app('/squadra/tabellini')} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
                 <b className="font-display text-base">Partite</b>
                 <span><b>{r.nG}</b> giocate</span><span><b>{r.presentiPerPartita == null ? '—' : r.presentiPerPartita.toFixed(1)}</b> presenti a partita</span>
                 <span className="mt-1 font-semibold text-blu">Tabellini ›</span>
               </a>
             ) : (
-              <a href={p.portale + 'statpartite'} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
+              <a href={app('/squadra/statistiche-partite')} className="flex flex-col gap-0.5 rounded-lg border border-linea p-2.5 text-sm hover:border-blu">
                 <b className="font-display text-base">Partite</b>
                 <span><b>{r.nG}</b> giocate{r.nNoti ? ` · ${r.v}V ${r.n}N ${r.p}P` : ''}</span>
                 <span><b>{r.nNoti ? `${r.gf}-${r.gs}` : '—'}</b> gol fatti-subiti</span>

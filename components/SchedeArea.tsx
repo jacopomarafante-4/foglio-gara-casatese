@@ -11,13 +11,16 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
   const squadraScelta = useSearchParams().get('squadra');
   if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
   if (percorso.startsWith('/squadra/')) {
-    // Rosa e Allenamento nell'app; Partite ancora nel Portale (per lo staff con la squadra aperta: #/s:<squadra>/…)
+    // Rosa e Allenamento nell'app; Partite in parte nel Portale (per lo staff con la squadra aperta: #/s:<squadra>/…)
     const portale = (scheda: string) => `/portale/#/${squadraScelta ? 's:' + squadraScelta + '/' : ''}${scheda}`;
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della squadra">
         <Scheda href={'/squadra/rosa' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Rosa</Scheda>
         <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/statistiche-allenamento', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
-        <a href={portale('convocazioni')} className={nelPortale}>Partite</a>
+        {/* Partite: si apre dalle Convocazioni (nel Portale); evidenziata anche sulle sue pagine già nell'app */}
+        <a href={portale('convocazioni')} aria-current={['/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi'].some((h) => percorso.startsWith(h)) ? 'page' : undefined}
+          className={['/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi'].some((h) => percorso.startsWith(h))
+            ? 'whitespace-nowrap border-b-[3px] border-blu px-3 pb-2.5 pt-2 font-display text-lg font-semibold text-inchiostro' : nelPortale}>Partite</a>
       </nav>
     );
   }

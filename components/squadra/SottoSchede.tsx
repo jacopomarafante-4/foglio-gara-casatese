@@ -16,3 +16,25 @@ export function SchedeAllenamento({ attiva, eta, conSquadra }: { attiva: string;
     </nav>
   );
 }
+
+/** Partite: Dati partita, Convocazioni, Formazione, Piazzati e Foglio gara ancora nel Portale (#/s:<squadra>/… per lo staff);
+ *  Tabellini, Statistiche e Campi nell'app. Attività di base: solo Convocazioni e Tabellini (SOLO_AGONISTICA del Portale) */
+export function SchedePartite({ attiva, adb, squadraId, staff, conSquadra }: { attiva: string; adb: boolean; squadraId: string; staff: boolean; conSquadra: (h: string) => string }) {
+  const portale = (t: string) => `/portale/#/${staff ? 's:' + squadraId + '/' : ''}${t}`;
+  const schede: [string, string, boolean][] = [
+    ...(adb ? [] : [[portale('partita'), 'Dati partita', false] as [string, string, boolean]]),
+    [portale('convocazioni'), 'Convocazioni', false],
+    ...(adb ? [] : [[portale('formazione'), 'Formazione', false], [portale('piazzati'), 'Piazzati', false], [portale('pdf'), 'Foglio gara', false]] as [string, string, boolean][]),
+    ['/squadra/tabellini', 'Tabellini', true],
+    ...(adb ? [] : [['/squadra/statistiche-partite', 'Statistiche', true], ['/squadra/campi', 'Campi', true]] as [string, string, boolean][]),
+  ];
+  return (
+    <nav className="-mt-2 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]" aria-label="Schede delle partite">
+      {schede.map(([h, l, app]) => {
+        const cls = `whitespace-nowrap rounded-full border px-3 py-1 text-sm font-semibold ${attiva === h ? 'border-blu bg-blu text-white' : 'border-linea bg-white text-inchiostro hover:border-blu'}`;
+        return app ? <Link key={h} href={conSquadra(h)} aria-current={attiva === h ? 'page' : undefined} className={cls}>{l}</Link>
+          : <a key={h} href={h} className={cls}>{l}</a>;
+      })}
+    </nav>
+  );
+}

@@ -133,3 +133,59 @@ export function presenzePerMese(reg: Registro, giocatori: { id: string }[]) {
   });
   return { mesi, per };
 }
+
+/* ---------- Partite: tabellini e statistiche ---------- */
+export const TIPI_GARA = ['Campionato', 'Amichevole', 'Coppa', 'Recupero', 'Torneo'];
+type CalId = Partita & { id: string; friendly?: boolean };
+/** Dati della partita: quelli del calendario hanno la precedenza (se il calendario cambia, il tabellino segue) */
+export function infoGara(g: Gara, calendario: CalId[]) {
+  const m = g.calId ? calendario.find((x) => x.id === g.calId) : undefined;
+  return m ? { date: m.date || '', opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Amichevole' : g.comp || 'Campionato', venue: m.venue || '', time: m.time || '', cal: m }
+    : { date: g.date || '', opponent: g.opponent || '', home: !!g.home, comp: g.comp || 'Amichevole', venue: '', time: '', cal: undefined };
+}
+export const inPortaGara = (g: Gara, pid: string, portieri: string[]) => { const x = (g.pl ?? {})[pid] ?? {}; return x.gk != null ? !!x.gk : portieri.includes(pid); };
+/** Colonne della tabella partite: partite del calendario fino a oggi + la prossima, più quelle fuori calendario, per data */
+export function colonnePartite(reg: Registro, calendario: CalId[], oggi: string) {
+  const cal = calendario.filter((m) => m.date).sort((a, b) => a.date!.localeCompare(b.date!));
+  const prossima = cal.find((m) => m.date! > oggi);
+  const col: { cal: CalId | null; gara: Gara | null }[] = cal.filter((m) => m.date! <= oggi || m === prossima)
+    .map((m) => ({ cal: m, gara: (reg.games ?? []).find((g) => g.calId === m.id) ?? null }));
+  (reg.games ?? []).filter((g) => !g.calId || !cal.some((m) => m.id === g.calId)).forEach((g) => col.push({ cal: null, gara: g }));
+  return col.sort((a, b) => (a.cal?.date || a.gara?.date || '').localeCompare(b.cal?.date || b.gara?.date || ''));
+}
+/** Attività di base: risultato tempo per tempo (g.tempi = [{noi, loro}]) */
+export type Tempo = { noi?: number | ''; loro?: number | '' };
+export function riepilogoTempi(tempi?: Tempo[]) {
+  const t = (tempi ?? []).filter((x) => x && x.noi !== '' && x.noi != null && x.loro !== '' && x.loro != null);
+  if (!t.length) return null;
+  const v = t.filter((x) => +x.noi! > +x.loro!).length, pa = t.filter((x) => +x.noi! === +x.loro!).length, pe = t.length - v - pa;
+  return { v, pa, pe, noi: t.reduce((a, x) => a + +x.noi!, 0), loro: t.reduce((a, x) => a + +x.loro!, 0) };
+}
+export const testoTempi = (r: NonNullable<ReturnType<typeof riepilogoTempi>>) =>
+  `${r.v} ${r.v === 1 ? 'vinto' : 'vinti'} · ${r.pa} pari · ${r.pe} ${r.pe === 1 ? 'perso' : 'persi'}, gol ${r.noi}–${r.loro}`;
+
+/** Statistiche delle partite giocate nel periodo (come computeStats del Portale: minuti, % sui disponibili, media, gol, subiti) */
+export function statistichePartite(reg: Registro, giocatori: { id: string; name: string }[], calendario: CalId[], periodo: string) {
+  const nel = (d?: string) => periodo === 'all' || (d || '').startsWith(periodo);
+  const portieri = reg.gk ?? [];
+  const gm = (reg.games ?? []).filter((g) => garaGiocata(g) && nel(infoGara(g, calendario).date))
+    .sort((a, b) => infoGara(a, calendario).date.localeCompare(infoGara(b, calendario).date));
+  const righe = giocatori.map((p) => {
+    let pres = 0, conMin = 0, min = 0, disp = 0, gol = 0, gc = 0, inPorta = 0;
+    gm.forEach((g) => {
+      const x = (g.pl ?? {})[p.id] ?? {}, m = num(x.min);
+      if (!g.nomin) disp += num(g.dur) || DURATA_PARTITA;
+      if (haGiocato(x)) { pres++; if (inPortaGara(g, p.id, portieri)) { inPorta++; gc += num(x.gc); } }
+      if (m > 0) { conMin++; min += m; }
+      gol += num(x.g);
+    });
+    return { p, pres, min, pctMin: disp ? min / disp : null, media: conMin ? min / conMin : null, gol, gc, inPorta };
+  });
+  const noti = gm.map((g) => risultato(g, portieri)).filter(Boolean) as { gf: number; ga: number }[];
+  return {
+    gm, righe, nNoti: noti.length,
+    v: noti.filter((s) => s.gf > s.ga).length, n: noti.filter((s) => s.gf === s.ga).length, p: noti.filter((s) => s.gf < s.ga).length,
+    gf: noti.reduce((a, s) => a + s.gf, 0), gs: noti.reduce((a, s) => a + s.ga, 0), inviolata: noti.filter((s) => s.ga === 0).length,
+    marcatori: righe.filter((r) => r.gol).length,
+  };
+}

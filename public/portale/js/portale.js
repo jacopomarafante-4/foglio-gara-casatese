@@ -68,6 +68,7 @@ const indirizzoApp = t => {
   if(!hashLocked && curTeam) q.set('squadra', curTeam);
   if(id && t === 'allenamenti') q.set('allenamento', id);   // #/allenamenti/<id> → allenamento da aprire
   if(id && t === 'test') q.set('test', id);
+  if(id && t === 'tabellini') q.set('partita', id);
   return NELL_APP[t] + (q.toString() ? '?' + q : '');
 };
 function goTab(t){
@@ -258,21 +259,7 @@ const inOrdine = ms => ms.slice().sort((a,b) => ((a.date||'')+(a.time||'').padSt
 const daGiocare = m => !m.date || m.date >= todayISO();
 /* Calendario (La mia squadra, Tutte le squadre, Avvisi): nell'app dalla tappa 3, /calendari/… (NELL_APP).
    Qui restano le righe e gli elenchi usati da Home e famiglie. */
-/* Squadra → Campi: posizione esatta dei campi per il link di Google Maps */
-function viewCampi(){
-  return viewVenues() || `<section class="panel"><h2>Campi</h2><p class="empty">Nessun campo: i campi arrivano dalle partite del calendario.</p></section>`;
-}
-
-function viewVenues(){
-  const vs = [...new Set(allCalendar().map(m => (m.venue||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'it'));
-  if(!vs.length) return '';
-  const n = vs.filter(v => venuePin(v)).length;
-  return `<section class="panel">
-    <h2>Campi · posizione per Google Maps</h2>
-    <p class="hint">Con la posizione esatta salvata, il link di convocazioni e foglio convocazione porta dritto al cancello. ${n} campi su ${vs.length} impostati.</p>
-    <div class="reglist">${vs.map(v => `<div class="regrow venuerow"><div><b>${esc(v)}</b><div><a class="mapslink" href="${esc(venueUrl(v))}" target="_blank" rel="noopener">📍 Prova il link</a></div>${pinBox(v)}</div></div>`).join('')}</div>
-  </section>`;
-}
+/* Campi: nell'app dalla tappa 3 (/squadra/campi) */
 
 /* ---------- Allenamento / Gara: pagine del registro ---------- */
 function registroPage(title, body, hint){
