@@ -2,14 +2,16 @@
 // Segnala un giocatore: mentre si scrivono annata e cognome, i giocatori già in lista con quel cognome
 // (anche scritto un po' diverso: accenti, apostrofi, spazi). "Valuta questo" apre subito la valutazione
 // con quello che si è già scritto (0032); se è un altro ragazzo si continua con la segnalazione.
+// Staff: cerca nella tabella dei giocatori. Mister (tessera, niente account): cerca in `elenco`, gli osservati della sua
+// annata già letti dal server con coach_giocatori, e la valutazione si apre su `valuta` (":id" = giocatore).
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { normalizza } from '@/lib/utili';
 
-type Trovato = { id: string; cognome: string | null; nome: string | null; annata: number; societa: { nome: string } | null };
+export type Trovato = { id: string; cognome: string | null; nome: string | null; annata: number; societa: { nome: string } | null };
 
-export function GiaInLista({ formId }: { formId: string }) {
+export function GiaInLista({ formId, elenco, valuta: percorso = '/giocatori/:id/valuta' }: { formId: string; elenco?: Trovato[]; valuta?: string }) {
   const [chiave, setChiave] = useState({ annata: '', cognome: '', nome: '' });
   const [trovati, setTrovati] = useState<Trovato[]>([]);
   const [chiuso, setChiuso] = useState('');
@@ -33,20 +35,20 @@ export function GiaInLista({ formId }: { formId: string }) {
     if (!chiave.annata || c.length < 3) return;
     let annullato = false;
     const t = setTimeout(async () => {
-      const { data } = await createClient().from('giocatori')
+      const data = elenco ? elenco.filter((g) => String(g.annata) === chiave.annata) : (await createClient().from('giocatori')
         .select('id, cognome, nome, annata, societa(nome)')
         .eq('annata', Number(chiave.annata)).eq('osservato', true)
-        .ilike('cognome', `${chiave.cognome.slice(0, 1)}%`).limit(300);
+        .ilike('cognome', `${chiave.cognome.slice(0, 1)}%`).limit(300)).data as unknown as Trovato[] | null;
       if (annullato) return;
       const n = normalizza(chiave.nome);
-      const simili = ((data as unknown as Trovato[]) ?? [])
+      const simili = (data ?? [])
         .filter((g) => normalizza(g.cognome ?? '').startsWith(c) || c.startsWith(normalizza(g.cognome ?? '')))
         // prima quelli con lo stesso nome
         .sort((a, b) => Number(!!n && normalizza(b.nome ?? '').startsWith(n)) - Number(!!n && normalizza(a.nome ?? '').startsWith(n)));
       setTrovati(simili.slice(0, 5));
     }, 700);   // aspetta una pausa nella scrittura prima di aprire la finestra
     return () => { annullato = true; clearTimeout(t); };
-  }, [chiave]);
+  }, [chiave, elenco]);
 
   const attivi = chiave.annata && normalizza(chiave.cognome).length >= 3 ? trovati : [];
   const firma = attivi.map((g) => g.id).join();
@@ -56,7 +58,7 @@ export function GiaInLista({ formId }: { formId: string }) {
     const form = document.getElementById(formId) as HTMLFormElement | null;
     const v = (n: string) => String((form?.elements.namedItem(n) as HTMLInputElement | null)?.value ?? '').trim();
     const q = new URLSearchParams({ gia: '1', nota: v('testo'), ...(v('contesto') ? { contesto: v('contesto') } : {}), ...(v('data') ? { data: v('data') } : {}) });
-    router.push(`/giocatori/${id}/valuta?${q}`);
+    router.push(`${percorso.replace(':id', id)}?${q}`);
   };
 
   // finestra sopra la pagina: "Vuoi valutare?"

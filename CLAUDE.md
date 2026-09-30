@@ -98,6 +98,10 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   Convocazioni (`/squadra/convocazioni`: agonistica con lo stato di ogni giocatore, attività di base da 1 a 4 partite, risposte delle
   famiglie con `risposteFamiglie()`, PDF `lib/pdf-convocazione.ts` con i link a Google Maps) salvano i campi del foglio con
   `aggiornaFoglio` (solo i campi cambiati, `useFoglio`), "Nuova partita" con `svuotaFoglio`; regole in `lib/foglio.ts`.
+  Scouting dei mister nell'app (`/scouting/segnala`, `/scouting/giocatori`, `/scouting/valuta/[id]`; solo mister con la tessera,
+  lo staff va al suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni
+  in `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
+  `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata (`GiaInLista elenco=…`), elenco `components/GiocatoriMister.tsx`.
   Nel Portale restano Formazione, Piazzati e Foglio gara (sotto-schede `SchedePartite`, `#/s:<squadra>/…` per lo staff). Elenco delle schede portate: `NELL_APP` in
   `lib/condivisi.ts` (lo usa anche il Portale).
 - Mister nelle pagine dell'app: **tessera** = cookie `acm_mister` cifrato (AES-GCM, chiave da `SEGRETO_SESSIONE`, solo variabile

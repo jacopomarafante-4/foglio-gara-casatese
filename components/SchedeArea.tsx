@@ -41,6 +41,15 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
       </nav>
     );
   }
+  if (percorso.startsWith('/scouting/')) {
+    // Scouting dei mister (tappa 3): Segnala e Giocatori della sua annata
+    return (
+      <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede dello scouting">
+        <Scheda href="/scouting/segnala">Segnala</Scheda>
+        <Scheda href="/scouting/giocatori" attivaSu={['/scouting/valuta']}>Giocatori</Scheda>
+      </nav>
+    );
+  }
   if (percorso.startsWith('/segreteria')) {
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della segreteria">

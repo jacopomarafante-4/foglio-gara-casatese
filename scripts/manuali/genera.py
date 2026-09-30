@@ -495,8 +495,8 @@ colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In al
 stato e ruolo. Ogni riga dice ruolo, società, quante segnalazioni e valutazioni ha, l'ultimo giudizio e, a destra, la media
 dei voti per area più recenti. Sotto il nome, in colonne, gli ultimi voti per area, dati in una segnalazione o in una vecchia valutazione (<b>TEC</b> tecnica, <b>MOT</b> motoria,
 <b>TAT</b> tattica, <b>MEN</b> mentale: blu i voti alti, oro il 3, arancione e rosso i bassi) e <b>SEGN</b>, quante
-segnalazioni ha. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni. I contatti delle famiglie
-non si vedono.</p>''', 'Segnala un giocatore')}
+segnalazioni ha. Tocca un nome per vedere le 4 aree come barre da 1 a 5 e le segnalazioni; col pulsante
+<span class="k">Valuta</span> lo valuti tu (stesso modulo della valutazione). I contatti delle famiglie non si vedono.</p>''', 'Segnala un giocatore')}
 </section>
 """
 
