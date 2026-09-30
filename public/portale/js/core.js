@@ -121,7 +121,7 @@ let squadraOrg = null;
 const isOrg = () => !!squadraOrg;
 const guardaAltra = () => !!squadraPropria && curTeam !== squadraPropria;
 /* Direttori: in sola lettura, tranne Società, Segreteria e calendario/eventi/avvisi (0020, 0031, 0034) */
-const readOnly = () => (isDirettore() && !['squadre','tesserati','calendario','calendariotutte','avvisi','comunicazione','archivio'].includes(tab)) || guardaAltra();
+const readOnly = () => (isDirettore() && !['tesserati','calendario','calendariotutte','avvisi','comunicazione','archivio'].includes(tab)) || guardaAltra();
 const isAdminSession = s => (s?.user?.email || '').toLowerCase() === ADMIN_EMAIL;
 const sessionOk = s => !!s && (!IN_APP_UNICA || (accessoRecente(loginTime(s)) && (isAdminSession(s) || staffRole === 'direttore' || staffRole === 'segreteria')));
 async function loadStaffRole(s){
@@ -168,11 +168,6 @@ const TEAM = () => S.teams.find(t => t.id === curTeam);
 const teamLabel = () => S.sheet.team || TEAM()?.name || 'Noi';
 const LOCK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function lockNote(t){ return `<div class="lock">${LOCK_ICON}<div>${t}</div></div>`; }
-/* PIN a 4 cifre mai usato: né di squadra né di un mister */
-function genPin(){
-  const usati = new Set(S.teams.flatMap(t => [t.code, ...(t.coaches||[]).map(c => c.code)]).filter(Boolean));
-  let p; do{ p = String(Math.floor(1000+Math.random()*9000)); }while(usati.has(p)); return p;
-}
 /* Mister di una squadra: "coaches": [{id, name, code}], un PIN personale ciascuno.
    Le squadre di prima avevano solo il testo "coach" ("Nome, Nome"): diventa l'elenco, senza PIN. */
 function withCoaches(t){
@@ -180,8 +175,6 @@ function withCoaches(t){
   return t;
 }
 const coachNames = t => (t?.coaches||[]).map(c => c.name).filter(Boolean).join(', ') || t?.coach || '';
-/* "coach" resta come testo riassuntivo per le parti che lo leggono ancora */
-function syncCoach(t){ t.coach = (t.coaches||[]).map(c => c.name).filter(Boolean).join(', '); }
 let tab = 'home', selectedPlayer = null, openSchemeId = null, selectedToken = null;
 /* boardMode: 'unico' = editor dei piazzati (piazzati.js), 'assign' = modello della società aperto da un mister */
 let boardMode = 'assign', drawTool = null, selectedDraw = null;
@@ -219,7 +212,7 @@ function payload(name){
 }
 function save(name){
   /* Sola lettura (direttori, tranne Società): niente salvataggio, si ricarica il dato vero e la modifica sparisce */
-  if((isDirettore() && !((name === 'teams' && tab === 'squadre') || name === 'calendar')) || guardaAltra()){
+  if((isDirettore() && name !== 'calendar') || guardaAltra()){   // Società → Squadre (shared/teams) è nell'app: /societa/squadre
     setStatus('Sola lettura: nessuna modifica');
     db?.doc(docPath(name)).get().then(snap => { applyDoc(name, snap.data()); render(); }).catch(() => {});
     return;

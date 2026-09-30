@@ -3,11 +3,13 @@
 // cambiato nel frattempo (Portale aperto altrove) si rilegge e si riprova, così due persone che toccano parti diverse non si
 // cancellano a vicenda. I permessi li decide il database: mister con la tessera → coach_leggi/coach_salva (col PIN),
 // admin e direttori → salva_doc (RLS).
+import { randomInt } from 'node:crypto';
 import { chiEntra, type Chi } from '@/lib/portale-dati';
 import { createClient } from '@/lib/supabase/server';
 import { applicaModifiche, type Modifica } from '@/lib/modifiche';
 import type { Partita } from '@/lib/programma';
 import type { Allenamento, Gara, Registro } from '@/lib/registro';
+import { applicaOpSquadre, senzaSpazi, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
 
 type Doc = Record<string, unknown>;
 type Esito<T = undefined> = { ok: boolean; errore?: string; valore?: T };
@@ -132,4 +134,31 @@ export async function aggiornaFoglio(squadraId: string, campi: Record<string, un
 export async function svuotaFoglio(squadraId: string, vuoto: Record<string, unknown>): Promise<Esito> {
   if (!squadraOk(squadraId)) return { ok: false, errore: 'Dati non validi.' };
   return aggiorna(await chiEntra(), 'sheet/' + squadraId, (base) => ({ nuovo: { ...vuoto, selected: (base as { selected?: unknown } | null)?.selected ?? [] } }));
+}
+
+/** Società → Squadre: un cambio su shared/teams (squadre, mister, PIN), solo admin e direttori (0020; il database lo ricontrolla).
+ *  I PIN dei mister: 4 cifre casuali, mai uguali a un PIN di squadra o di mister già usato. Restituisce le squadre salvate */
+export async function cambiaSquadre(op: OpSquadre): Promise<Esito<SquadraSocieta[]>> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin' && chi.profilo?.ruolo !== 'direttore') return { ok: false, errore: 'Solo admin e direttori.' };
+  const pinLibero = (usati: Set<string>) => { for (;;) { const p = String(randomInt(1000, 10000)); if (!usati.has(p)) return p; } };
+  return aggiorna(chi, 'shared/teams', (base) => {
+    const items = ((base?.items as SquadraSocieta[] | undefined) ?? []);
+    const nuove = applicaOpSquadre(items, senzaSpazi(op), pinLibero);
+    return nuove ? { nuovo: { ...base, items: nuove }, valore: nuove } : { nuovo: null, valore: items };
+  });
+}
+
+/** Società → Backup: tutti i documenti del Portale delle squadre in un file JSON (admin e direttori leggono tutto, 0011) */
+export async function esportaBackup(): Promise<Esito<string>> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin' && chi.profilo?.ruolo !== 'direttore') return { ok: false, errore: 'Solo admin e direttori.' };
+  const supabase = await createClient();
+  const { data: t } = await supabase.from('docs').select('data').eq('path', 'shared/teams').maybeSingle();
+  const ids = ((t?.data?.items ?? []) as { id: string }[]).map((x) => x.id);
+  const paths = ['shared/teams', 'shared/schemes', ...ids.flatMap((id) => ['roster/' + id, 'sheet/' + id, 'calendar/' + id, 'registro/' + id])];
+  const { data, error } = await supabase.from('docs').select('path, data').in('path', paths);
+  if (error) return { ok: false, errore: error.message };
+  const docs = Object.fromEntries((data ?? []).map((d) => [d.path, d.data]));
+  return { ok: true, valore: JSON.stringify({ exportedAt: new Date().toISOString(), docs }, null, 2) };
 }

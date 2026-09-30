@@ -291,23 +291,6 @@ function browserDownload(filename, blob){
   a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-async function exportBackup(){
-  if(!db){ setStatus('Backup non disponibile'); return; }
-  setStatus('Preparo il backup…');
-  try{
-    const paths = ['shared/teams', 'shared/schemes', ...S.teams.flatMap(t => ['roster/'+t.id, 'sheet/'+t.id, 'calendar/'+t.id, 'registro/'+t.id])];
-    const docs = {};
-    for(const p of paths){
-      const snap = await db.doc(p).get();
-      if(snap.exists) docs[p] = snap.data();
-    }
-    const blob = new Blob([JSON.stringify({exportedAt:new Date().toISOString(), docs}, null, 2)], {type:'application/json'});
-    const filename = 'foglio-gara-backup-' + new Date().toISOString().slice(0,10) + '.json';
-    if(downloads) await downloads.save({filename, data:blob});
-    else browserDownload(filename, blob);
-    setStatus('Backup pronto');
-  }catch(e){ setStatus('Backup non riuscito'); }
-}
 const imgPromises = {};
 function loadImg(src){
   if(!imgPromises[src]){

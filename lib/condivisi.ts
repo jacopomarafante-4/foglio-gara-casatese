@@ -44,6 +44,7 @@ export const NELL_APP: Record<string, string> = {
   statallen: '/squadra/statistiche-allenamento', tabellini: '/squadra/tabellini', statpartite: '/squadra/statistiche-partite',
   campi: '/squadra/campi', partita: '/squadra/partita', convocazioni: '/squadra/convocazioni',
   segnala: '/scouting/segnala', giocatori: '/scouting/giocatori',
+  squadre: '/societa/squadre',
 };
 
 /** Modelli degli avvisi e delle comunicazioni (Calendario → Avvisi nel Portale, Modulistica → Comunicazione nell'app) */

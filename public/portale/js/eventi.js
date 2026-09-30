@@ -14,26 +14,9 @@ document.addEventListener('click', e => {
   if(t.dataset.pickclose !== undefined){ impostaSlotPick(null); render(); return; }
   if(t.dataset.player !== undefined) return; // gestito dal drag
   const act = t.dataset.act;
-  const ADMIN_ONLY = ['teamadd','exportbackup','caladd'];
-  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.teamdel || t.dataset.teamcode || t.dataset.caldel || t.dataset.coachpin || t.dataset.coachdel || t.dataset.coachadd || t.dataset.teamcodeoff)) return;
-  if(t.dataset.teamgo){ impostaCurTeam(t.dataset.teamgo); impostaTab('rosa'); writeRoute(true); subscribeTeam(); return; }
-  if(t.dataset.teamas){ switchView('coach', t.dataset.teamas); return; }
-  /* Scout e direttori: account e PIN passano da /api/staff (admin e direttori) */
-  if(t.dataset.staffpin && isAdmin() && !readOnly()){ const x = staff.find(p => p.id===t.dataset.staffpin); if(x && (!x.pin || confirm(`Rigenerare il codice di ${x.nome||''} ${x.cognome||''}? Quello vecchio smette di funzionare.`))) staffAction({azione:'pin', id:x.id}); return; }
-  if(t.dataset.staffstato && isAdmin() && !readOnly()){
-    const x = staff.find(p => p.id===t.dataset.staffstato), riattiva = t.dataset.attivo==='1';
-    if(x && (riattiva || confirm(`Sospendere ${x.nome||''} ${x.cognome||''}? Non potrà più entrare finché non lo riattivi.`))) staffAction({azione:'stato', id:x.id, attivo:riattiva});
-    return; }
-  if(t.dataset.staffnew && isAdmin() && !readOnly()){ staffAdding[t.dataset.staffnew] = true; render(); $('#staffnew_'+t.dataset.staffnew)?.focus(); return; }
-  if(t.dataset.staffadd && isAdmin() && !readOnly()){ const inp = $('#staffnew_'+t.dataset.staffadd); const nome = (inp?.value||'').trim(); if(!nome){ inp?.focus(); return; } staffAction({azione:'crea', nome, ruolo:t.dataset.staffadd}); return; }
-  /* Mister e PIN personali (solo admin, controllato sopra) */
-  const coachOf = v => { const [tid, cid] = v.split(':'); const tm = S.teams.find(x => x.id===tid); return [tm, tm?.coaches?.find(c => c.id===cid)]; };
-  if(t.dataset.coachpin){ const [tm, c] = coachOf(t.dataset.coachpin); if(c){ c.code = genPin(); save('teams'); render(); } return; }
-  if(t.dataset.coachdel){ const [tm, c] = coachOf(t.dataset.coachdel); if(c){ tm.coaches = tm.coaches.filter(x => x !== c); syncCoach(tm); save('teams'); render(); } return; }
-  if(t.dataset.coachadd){ const tm = S.teams.find(x => x.id===t.dataset.coachadd); if(tm){ const c = {id:uid('m_'), name:'', code:''}; (tm.coaches ||= []).push(c); save('teams'); render(); $(`[data-coach="${tm.id}:${c.id}"]`)?.focus(); } return; }
-  if(t.dataset.teamcodeoff){ const tm = S.teams.find(x => x.id===t.dataset.teamcodeoff); if(tm && confirm('Disattivare il PIN di squadra? Chi lo usa ancora non potrà più entrare: servirà il PIN personale.')){ delete tm.code; save('teams'); render(); } return; }
-  if(t.dataset.teamcode){ const tm = S.teams.find(x=>x.id===t.dataset.teamcode); if(tm){ tm.code = genPin(); save('teams'); render(); } return; }
-  if(t.dataset.teamdel){ const tm = S.teams.find(x=>x.id===t.dataset.teamdel); if(tm && confirm(`Eliminare la squadra "${tm.name}"? Rosa e formazione non saranno più accessibili.`)){ S.teams = S.teams.filter(x=>x!==tm); save('teams'); if(curTeam===tm.id){ impostaCurTeam(S.teams[0]?.id||null); subscribeTeam(); } else render(); } return; }
+  const ADMIN_ONLY = ['caladd'];
+  if(!isAdmin() && (ADMIN_ONLY.includes(act) || t.dataset.pdel || t.dataset.up || t.dataset.down || t.dataset.caldel)) return;
+  /* Società → Squadre (squadre, mister, PIN, scout, direttori, segreteria, backup): nell'app dalla tappa 3, /societa/squadre */
   if(t.dataset.caldel){ S.calendar = S.calendar.filter(m=>m.id!==t.dataset.caldel); save('calendar'); render(); return; }
   /* Convocazioni dell'attività di base */
   if(t.dataset.clearSlot){ e.stopPropagation(); delete S.sheet.lineup[t.dataset.clearSlot]; save('sheet'); render(); return; }
@@ -49,14 +32,12 @@ document.addEventListener('click', e => {
   if(t.dataset.up || t.dataset.down){ const i=+(t.dataset.up??t.dataset.down), j=t.dataset.up!==undefined?i-1:i+1; if(j<0||j>=S.schemes.length) return; [S.schemes[i],S.schemes[j]]=[S.schemes[j],S.schemes[i]]; const order=S.schemes.map(q=>q.id); S.sheet.selected.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); save('schemes'); save('sheet'); render(); return; }
   const sc = schemaDa(openSchemeId);
   switch(act){
-    case 'teamadd': { const tm = {id:uid('t_'), name:'Nuova squadra', category:'', coach:'', code:'', coaches:[]}; S.teams.push(tm); save('teams'); if(!curTeam){ impostaCurTeam(tm.id); subscribeTeam(); } else render(); break; }
     case 'caladd': S.calendar.push({id:uid('m'), date:'', time:'', opponent:'', venue:'', home:false}); save('calendar'); render(); break;
     case 'back': impostaOpenSchemeId(null); impostaSelectedToken(null); impostaBoardMode('assign'); impostaDrawTool(null); impostaSelectedDraw(null); render(); break;
     case 'resetov': if(sc){ delete S.sheet.overrides[sc.id]; save('sheet'); render(); } break;
     case 'resetslotpos': S.sheet.slotPos = {}; save('sheet'); render(); break;
     case 'refresh': buildPreview(); break;
     case 'download': downloadPdf(); break;
-    case 'exportbackup': exportBackup(); break;
     case 'gatesubmit': {
       const val = ($('#gatepin')?.value || '').trim();
       if(secureMode){
@@ -78,17 +59,11 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && slotPick != null){ impostaSlotPick(null); render(); return; }
   if(e.key !== 'Enter' || !e.target) return;
   if(e.target.id === 'gatepin'){ e.preventDefault(); $('[data-act="gatesubmit"]')?.click(); }
-  else if(e.target.id?.startsWith('staffnew_')){ e.preventDefault(); $(`[data-staffadd="${e.target.id.slice(9)}"]`)?.click(); }
   else if(e.target.id === 'gateuser' || e.target.id === 'gatepass'){ e.preventDefault(); $('[data-act="adminlogin"]')?.click(); }
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.team || t.dataset.calid || t.dataset.coach || t.dataset.coachcat)) return;
-  /* Preparatori dei portieri: le categorie (Under) dei loro portieri, per Home e calendario */
-  if(t.dataset.coachcat){ const [tid, cid] = t.dataset.coachcat.split(':'); const c = S.teams.find(x => x.id===tid)?.coaches?.find(x => x.id===cid);
-    if(c){ c.eta = [...new Set((t.value.match(/\d{1,2}/g) || []).map(Number))]; save('teams'); } return; }
-  if(t.dataset.coach){ const [tid, cid] = t.dataset.coach.split(':'); const tm = S.teams.find(x => x.id===tid); const c = tm?.coaches?.find(x => x.id===cid); if(c){ c.name = t.value; syncCoach(tm); save('teams'); } return; }
-  if(t.dataset.team){ const tm = S.teams.find(x=>x.id===t.dataset.team); if(tm){ tm[t.dataset.tf] = t.value; save('teams'); if(t.dataset.tf==='name'){ const h = t.closest('.teamcard')?.querySelector('.hd strong'); if(h) h.textContent = t.value || 'Senza nome'; } } return; }
+  if(!isAdmin() && (t.dataset.pname || t.dataset.sc || t.dataset.tok || t.dataset.calid)) return;
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.value; save('calendar'); } return; }
   else if(t.dataset.sheet && t.tagName!=='SELECT'){
     S.sheet[t.dataset.sheet]=t.value;
@@ -96,14 +71,9 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('change', e => {
-  if(e.target.dataset.staffname && isAdmin() && !readOnly()){ const x = staff.find(p => p.id===e.target.dataset.staffname); const v = e.target.value.trim(); if(x && v && v !== [x.nome, x.cognome].filter(Boolean).join(' ')) staffAction({azione:'nome', id:x.id, nome:v}); return; }
   const t = e.target;
   if(t.dataset.asview){ const v = t.value; if(v==='admin') switchView('admin'); else switchView('coach', v.split(':')[1]); return; }
   if(t.dataset.curteam){ impostaCurTeam(t.value); impostaOpenSchemeId(null); subscribeTeam(); return; }
-  /* Società: squadre speciali (preparatori dei portieri, responsabile organizzativo) */
-  if(t.dataset.teamflag){ if(!isAdmin()) return; const [tid, flag] = t.dataset.teamflag.split(':'); const tm = S.teams.find(x => x.id===tid);
-    if(tm && ['vedeTutte','organizza'].includes(flag)){ if(t.checked) tm[flag] = true; else delete tm[flag]; save('teams'); render(); } return; }
-  if(t.dataset.team && t.dataset.tf==='name'){ render(); return; }
   if(!isAdmin() && (t.dataset.sc || (t.dataset.tok) || t.dataset.calid)) return;
   if(t.dataset.calid){ const m = S.calendar.find(x=>x.id===t.dataset.calid); if(m){ m[t.dataset.calf] = t.dataset.calf==='home' ? t.checked : t.value; save('calendar'); } return; }
   if(t.dataset.atok){

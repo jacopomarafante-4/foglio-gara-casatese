@@ -53,7 +53,9 @@ Niente accesso automatico: cookie di sessione e massimo `ORE_ACCESSO` ore dal lo
   "Scouting" di admin e dirigenti porta a `/home`.
 - App unica (tappa 3): le aree si portano nell'app Next una alla volta, nel gruppo `app/(aree)/` (layout che fa entrare admin,
   direttori e segreteria; ogni pagina controlla il suo ruolo; intestazione comune `components/Intestazione.tsx`). Fatte: Società →
-  Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
+  Squadre (`/societa/squadre`, admin e direttori: squadre, mister e PIN con `cambiaSquadre(op)` in `app/(aree)/docs-actions.ts`, regole
+  pure e PIN liberi in `lib/squadre-societa.ts`, prove in `tests/squadre-societa.test.mjs`; scout, direttori e segreteria via `/api/staff`;
+  backup con `esportaBackup`; componente `components/SquadreSocieta.tsx`), Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e Storico modifiche
   (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`; Segreteria → Tesserati (`/segreteria`, admin,
   direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e vede solo quest'area); tutta la
   Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`, copia nell'archivio con `archiviaPdf`):
