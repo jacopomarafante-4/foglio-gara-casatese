@@ -13,6 +13,7 @@ const AREE = [
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
   { k: 'societa', etichetta: 'Società', href: '/societa/squadre' },
+  { k: 'esercitazioni', etichetta: 'Esercitazioni', href: '/esercitazioni' },   // lavori in corso: per ora solo l'admin
 ];
 
 /** Come allowedAreas() del Portale: admin e direttori vedono tutte le aree, la segreteria solo la sua; i mister niente
@@ -25,12 +26,14 @@ export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: b
     : ruolo === 'mister' ? AREE.filter((a) => a.k !== 'segreteria' && a.k !== 'societa' && !(organizza && (a.k === 'squadra' || a.k === 'scouting')))
       .map((a) => (a.k === 'scouting' ? { ...a, href: '/scouting/segnala' } : a))
     : AREE;
-  const corrente = percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
+  // Esercitazioni: lavori in corso, per ora solo l'admin (anche il database le nasconde agli altri, 0052)
+  const visibili = aree.filter((a) => a.k !== 'esercitazioni' || ruolo === 'admin');
+  const corrente = percorso.startsWith('/esercitazioni') ? 'esercitazioni' : percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
     : percorso.startsWith('/modulistica') ? 'modulistica' : percorso.startsWith('/calendari/') ? 'calendario'
     : percorso.startsWith('/inizio') ? 'home' : percorso.startsWith('/squadra/') ? 'squadra' : 'scouting';
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
-      {aree.map((a) => {
+      {visibili.map((a) => {
         const attiva = a.k === corrente;
         return (
           <a
