@@ -30,7 +30,7 @@ export default async function PaginaSquadre() {
           squadra, gli scout lo Scouting.
         </p>
       </div>
-      <SquadreSocieta squadre={squadre} staff={staff} io={chi.profilo.id} />
+      <SquadreSocieta squadre={squadre} staff={staff} io={chi.profilo.id} admin={chi.profilo.ruolo === 'admin'} />
     </div>
   );
 }

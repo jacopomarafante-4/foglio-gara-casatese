@@ -58,7 +58,9 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   avvisi, moduli `FORMATIONS`, colori dei compiti, schemi di partenza `BASES`) in `lib/condivisi.ts`, UNA volta sola.
 - Società: Squadre (`/societa/squadre`, admin e direttori: squadre, mister e PIN con `cambiaSquadre(op)` in
   `app/(aree)/docs-actions.ts`, regole pure e PIN liberi in `lib/squadre-societa.ts`; scout, direttori e segreteria via `/api/staff`
-  (crea, pin, nome, stato: il codice è la password dell'account, salvato anche in `codici_accesso`); backup con `esportaBackup`;
+  (crea, pin, nome, stato: il codice è la password dell'account, salvato anche in `codici_accesso`); backup con `esportaBackup` e, solo admin,
+  "Ripristina da un backup" (`components/RipristinoBackup.tsx`, `confrontaBackup`/`ripristinaBackup` col file in FormData, regole in
+  `lib/ripristino.ts`: confronto scheda per scheda, si rimettono solo quelle scelte; le versioni di prima restano nello Storico modifiche);
   `components/SquadreSocieta.tsx`), Archivio documenti (`/societa/archivio`, admin e direttori; PDF da `/societa/archivio/[id]`) e
   Storico modifiche (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`.
 - Segreteria → Tesserati (`/segreteria`, admin, direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e

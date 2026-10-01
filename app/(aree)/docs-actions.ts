@@ -7,6 +7,7 @@ import { randomInt } from 'node:crypto';
 import { chiEntra } from '@/lib/portale-dati';
 import { createClient } from '@/lib/supabase/server';
 import { aggiorna } from '@/lib/aggiorna-doc';
+import { confronta, leggiBackup, type Confronto } from '@/lib/ripristino';
 import { applicaModifiche, type Modifica } from '@/lib/modifiche';
 import type { Partita } from '@/lib/programma';
 import type { Allenamento, Gara, Registro } from '@/lib/registro';
@@ -178,4 +179,45 @@ export async function ordinaModelli(ids: string[]): Promise<Esito> {
     items.sort((a, b) => (ids.indexOf(a.id) + 1 || 1e9) - (ids.indexOf(b.id) + 1 || 1e9));
     return { nuovo: { ...base, items } };
   });
+}
+
+/** Società → Backup → "Ripristina da un backup" (solo admin): confronto del file con le schede di oggi, senza scrivere nulla */
+export async function confrontaBackup(fd: FormData): Promise<Esito<{ exportedAt?: string; schede: Confronto[] }>> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin') return { ok: false, errore: 'Solo l\'admin ripristina un backup.' };
+  try {
+    const file = fd.get('file');
+    if (!(file instanceof Blob) || file.size > 20 * 1024 * 1024) return { ok: false, errore: 'Scegli il file di backup (.json, massimo 20 MB).' };
+    const backup = leggiBackup(await file.text());
+    const supabase = await createClient();
+    const oggi: Record<string, unknown> = {};
+    const paths = Object.keys(backup.docs);
+    for (let i = 0; i < paths.length; i += 60) {
+      const { data, error } = await supabase.from('docs').select('path, data').in('path', paths.slice(i, i + 60));
+      if (error) return { ok: false, errore: error.message };
+      for (const d of data ?? []) oggi[d.path] = d.data;
+    }
+    const squadre = ((oggi['shared/teams'] as { items?: { id: string; name?: string; category?: string }[] } | undefined)?.items
+      ?? (backup.docs['shared/teams'] as { items?: { id: string }[] } | undefined)?.items ?? []);
+    return { ok: true, valore: { exportedAt: backup.exportedAt, schede: confronta(backup, oggi, squadre) } };
+  } catch (e) { return { ok: false, errore: (e as Error).message }; }
+}
+
+/** Rimette le schede scelte come nel backup (solo admin). Le versioni di prima restano nello Storico modifiche (0048) */
+export async function ripristinaBackup(fd: FormData): Promise<Esito<number>> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin') return { ok: false, errore: 'Solo l\'admin ripristina un backup.' };
+  try {
+    const file = fd.get('file');
+    if (!(file instanceof Blob)) return { ok: false, errore: 'Scegli il file di backup.' };
+    const backup = leggiBackup(await file.text());
+    const scelte = JSON.parse(String(fd.get('schede') ?? '[]')) as string[];
+    let fatte = 0;
+    for (const path of scelte.filter((p) => p in backup.docs)) {
+      const r = await aggiorna(chi, path, () => ({ nuovo: backup.docs[path] as Record<string, unknown> }));
+      if (!r.ok) return { ok: false, errore: `${path}: ${r.errore}` };
+      fatte++;
+    }
+    return { ok: true, valore: fatte };
+  } catch (e) { return { ok: false, errore: (e as Error).message }; }
 }

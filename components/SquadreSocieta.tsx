@@ -5,6 +5,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cambiaSquadre, esportaBackup } from '@/app/(aree)/docs-actions';
+import { RipristinoBackup } from '@/components/RipristinoBackup';
 import { nuovoId } from '@/lib/calendario-portale';
 import { applicaOpSquadre, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
 import { Messaggio } from '@/components/calendario/salvataggio';
@@ -19,7 +20,7 @@ const PinBox = ({ pin, vuoto }: { pin?: string; vuoto: string }) => pin
   ? <span className="flex-none rounded-md bg-carta px-2 py-1 font-mono text-base font-bold tracking-widest" title="PIN personale">{pin}</span>
   : <span className="flex-none rounded-md border border-dashed border-linea px-2 py-1 text-xs text-grigio">{vuoto}</span>;
 
-export function SquadreSocieta({ squadre: iniziali, staff, io }: { squadre: SquadraSocieta[]; staff: PersonaStaff[]; io: string }) {
+export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false }: { squadre: SquadraSocieta[]; staff: PersonaStaff[]; io: string; admin?: boolean }) {
   const [squadre, setSquadre] = useState(iniziali);
   /* un PIN per persona (0050): il mister che usa il PIN personale di uno staff */
   const staffDi = (pin: string) => { const p = pin ? staff.find((x) => x.pin === pin) : undefined; return p ? GRUPPI.find((g) => g.ruolo === p.ruolo)?.titolo.toLowerCase() : ''; };
@@ -141,6 +142,7 @@ export function SquadreSocieta({ squadre: iniziali, staff, io }: { squadre: Squa
           a.click(); URL.revokeObjectURL(a.href);
           setMessaggio('Backup pronto');
         }}>Esporta backup</button>
+        {admin && <RipristinoBackup />}
       </section>
       <Messaggio testo={messaggio} />
     </div>
