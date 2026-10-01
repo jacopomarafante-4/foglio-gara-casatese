@@ -1,6 +1,7 @@
 // Calendario → Tutte le squadre (nell'app dalla tappa 3): partite da giocare di tutte le squadre ed eventi della società.
 // Lo vedono admin, direttori e tutti i mister; admin, direttori e organizzativo cambiano amichevoli, tornei ed eventi.
-// L'admin collega qui Google Calendar (PannelloGoogle); all'apertura si rilegge Google se sono passati 30 minuti.
+// L'admin collega qui Google Calendar (PannelloGoogle); all'apertura si rilegge Google se sono passati 30 minuti. Admin e direttori
+// importano qui i calendari ufficiali in PDF (ImportaUfficiale).
 import { redirect } from 'next/navigation';
 import { vedeTutto } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
@@ -9,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { statoGoogle } from '@/lib/google-collegato';
 import { CalendarioTutte } from '@/components/calendario/CalendarioTutte';
 import { PannelloGoogle } from '@/components/calendario/PannelloGoogle';
+import { ImportaUfficiale } from '@/components/calendario/ImportaUfficiale';
 
 export default async function TutteLeSquadre({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
   const chi = await chiEntra();
@@ -30,6 +32,7 @@ export default async function TutteLeSquadre({ searchParams }: { searchParams: P
         <PannelloGoogle collegabile={google.collegabile} collegato={google.collegato} pronto={google.pronto}
           account={google.riga?.account ?? null} avviso={(await searchParams).google} />
       )}
+      {chi.profilo && vedeTutto(chi.profilo.ruolo) && <ImportaUfficiale />}
       {errore && <p className="rounded-md bg-rosso/10 px-4 py-3 text-sm text-rosso">Calendari non disponibili: {errore}</p>}
       <CalendarioTutte squadre={squadre} eventi={eventi} mia={chi.mister?.squadra.id ?? null} oggi={oggiIso()}
         puoOrganizzare={puo} google={!!google?.pronto} />

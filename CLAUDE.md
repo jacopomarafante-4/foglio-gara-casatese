@@ -394,7 +394,18 @@ Import da file (Calendario → Tutte le squadre → "Importa da file", `componen
 organizzativo): ICS, CSV, Excel .xlsx letti nel browser (`lib/import-calendario.ts`, lettore xlsx senza librerie `lib/xlsx.ts`, prove in
 `tests/import-calendario.test.mjs` con `tests/dati/calendario-prova.xlsx`), anteprima con squadra e casa/trasferta, salvataggio con
 `modificaDoc`; `fonte` sulla voce = non si importa due volte. Solo amichevoli, tornei ed eventi (mai il campionato); niente invio a Google
-delle voci importate (spesso vengono da lì). PDF federali: ancora con gli script di `scripts/import-calendari/`.
+delle voci importate (spesso vengono da lì).
+Calendari ufficiali in PDF dall'app (Calendario → Tutte le squadre → "Importa calendario ufficiale (PDF)", `components/calendario/ImportaUfficiale.tsx`;
+admin e direttori): il PDF si legge sul server (`app/(aree)/calendari/ufficiale-actions.ts`: `anteprimaUfficiale`, poi `importaUfficiale`,
+tutte e due ricevono il file). `lib/leggi-pdf.ts` (unpdf: parole con la posizione, punti e date spezzate riattaccati, linee dritte
+DISEGNATE con le trasformazioni del PDF, niente ritagli) → `lib/calendario-pdf.ts` (stesse regole di leggi_pdf.py e prepara.py:
+colonne dai trattini, giornate, A./R., elenco campi dalla tabella coi bordi `campiDaTabella` (bordi lunghi, solo quelli che attraversano
+la riga) o dalle intestazioni, delegazioni con "|"; abbinamento nomi, data del fine settimana, ora del campo di casa;
+`indovinaCategoria` dal nome del file e dal testo) → `lib/importa-calendario-ufficiale.ts` (come importa.mjs e portale.mjs: gare
+"da calendario", confermate/variate non toccate, chiave di una partita già in archivio riusata se le società sono le stesse = niente
+doppioni; nostre partite nel `calendar/<squadra>` della categoria con `aggiorna` di `lib/aggiorna-doc.ts`). Confronto con Python su 25
+PDF: date, ore e campi uguali su 18.196 partite (`private/confronta-calendari.mjs`, `private/simula-import.mjs`); prove in
+`tests/calendario-pdf.test.mjs` (PDF finto fatto con jsPDF). Gli script di `scripts/import-calendari/` restano per i comunicati.
 Il percorso è escluso dal controllo login di `lib/supabase/sessione.ts` (controlla da solo chi chiama).
 
 Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--tutte] [--conferma]` le ricava da

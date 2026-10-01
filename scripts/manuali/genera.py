@@ -662,7 +662,8 @@ presenze basse), lo scouting della settimana e la stagione squadra per squadra; 
 <li>Se sei <b>anche mister</b>: entri col tuo PIN da direttore e in alto scegli <span class="k">Direttore</span> o
 <span class="k">Mister …</span>; da mister vedi e modifichi solo la tua squadra, come ogni mister</li>
 <li>Nello <b>Scouting</b>: segnalare, valutare, cambiare gli stati, gestire gare e squadre seguite,
-unire le schede doppie, segnarti su una gara ("Ci vado io")</li></ul></div>
+unire le schede doppie, segnarti su una gara ("Ci vado io")</li>
+<li>Importare un <b>calendario ufficiale</b> (PDF della LND o della delegazione) in Calendario → Tutte le squadre</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
 <li>Modificare rose, calendari, partite, convocazioni, formazioni, presenze, test e schemi delle squadre</li></ul></div>
 </div>
@@ -695,6 +696,13 @@ nello Scouting, cambiando lo stato; quelle sulle squadre comunicale all'amminist
 foglio gara, tabellini, statistiche, campi).</li>
 <li>La sezione <b>Da fare</b> in Home mostra cosa manca: tabellini da compilare, gol da inserire.</li></ol>
 <p><b>Anteprima</b>: con "Guarda l'app come" vedi esattamente cosa vede il mister di una squadra.</p>''', 'La Home di una squadra')}
+<h3>Calendario ufficiale (PDF)</h3>
+<p>In Calendario → Tutte le squadre tocca <span class="k">Importa calendario ufficiale (PDF)</span> e scegli il PDF del campionato
+(quello con le giornate e l'elenco dei campi). Controlla la <b>categoria</b> proposta (es. "Under 15 Provinciali Lecco"): dà il nome
+alle gare e sceglie la nostra squadra. L'anteprima mostra i gironi, quante gare sono nuove, le nostre partite e i nomi da
+controllare; poi <span class="k">Importa</span>. Le gare vanno nello Scouting e le nostre partite nel calendario della squadra, con
+data, ora e campo ufficiali. Le gare già confermate o variate da un comunicato non si toccano; reimportare lo stesso PDF non crea
+doppioni.</p>
 <h3>Società</h3>
 <p>Le schede delle <b>squadre</b> con i loro mister, poi <b>Scouting</b> (gli scout) e <b>Direttori</b>, ognuno con il suo PIN.
 Puoi aggiungere o togliere squadre e persone, cambiare i nomi, generare, rigenerare o disattivare i PIN e sospendere un account.
