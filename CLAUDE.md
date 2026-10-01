@@ -91,7 +91,8 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`eliminaGiocatore` toglie anche
   da formazione e panchina), ruolo anche il mister (`impostaRuolo`: registro.ruoli + registro.gk; da Under 13 in su ruoli completi,
   sotto portiere/movimento).
-  Allenamento: Presenze (`/squadra/presenze`, `?allenamento=<id>`), Test atletici (`/squadra/test`, solo Under 15, `?test=<id>`),
+  Allenamento: Presenze (`/squadra/presenze`, `?allenamento=<id>`; nella squadra dei preparatori portieri divisi per preparatore
+  secondo `coaches[].eta`, categoria del portiere dal nome nelle rose delle squadre, `lib/portieri.ts`), Test atletici (`/squadra/test`, solo Under 15, `?test=<id>`),
   Statistiche (`/squadra/statistiche-allenamento`, `?periodo=2026-09`), I miei allenamenti (lavori in corso). Regole in
   `lib/registro.ts` (`statisticheAllenamento`, `presenzePerMese`, `leggiTempo`).
   Partite: Dati partita (`/squadra/partita`) e Convocazioni (`/squadra/convocazioni`: agonistica con lo stato di ogni giocatore,

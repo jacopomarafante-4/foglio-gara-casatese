@@ -423,6 +423,10 @@ La <b>convocazione</b> si scarica invece dalla scheda Convocazioni.</p>
 (malattia, infortunio, scuola / studio, motivi familiari, ingiustificata). <span class="k">Tutti presenti</span> li segna tutti in un colpo.</li>
 <li>Se serve, una nota sulla seduta (solo tecnica).</li></ol>
 <p>Gli infortuni non abbassano la percentuale di presenza del ragazzo.</p>
+<p><b>Preparatori dei portieri</b>: nella vostra squadra i portieri sono divisi per preparatore, secondo le categorie che ognuno
+ha in Società ("Portieri di: Under"). Accanto al nome c'è la categoria (es. U15). Entrando vedete i vostri portieri:
+<span class="k">Tutti presenti</span> e un allenamento nuovo riguardano solo loro. <span class="k">Tutti i portieri</span> mostra
+tutti i gruppi; in "Altri portieri" chi non è in nessuna categoria o ha il nome scritto diverso nella rosa della sua squadra.</p>
 <h3>Test atletici (solo Under 15)</h3>
 <p><span class="k">+ Nuovo test</span>, poi i tempi di ognuno come <b>minuti:secondi</b> (es. 12:51). Una parola diversa
 (es. "non svolto") resta come nota.</p>
