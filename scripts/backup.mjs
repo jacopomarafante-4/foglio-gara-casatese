@@ -30,6 +30,8 @@ const TABELLE = [
   'squadre', 'distinte', 'distinte_giocatori',
   // Segreteria e famiglie (0031)
   'tesserati', 'tesserati_dati', 'risposte_convocazioni', 'documenti_tesserati',
+  // Esercitazioni (0052)
+  'esercizi',
   // Google Calendar collegato dall'app (0049, token cifrato)
   'google_collegamento',
 ];

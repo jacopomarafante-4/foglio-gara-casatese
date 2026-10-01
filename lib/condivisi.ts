@@ -20,6 +20,7 @@ export function calendarioDi(m: { home?: boolean | null; venue?: string | null; 
 /* ---------- Barra delle aree ---------- */
 /** Icone delle aree (tracciati SVG 24×24, contorno): uguali nella barra del Portale e in quella dello Scouting */
 export const ICONE_AREE: Record<string, string> = {
+  esercitazioni:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.5"/><path d="M7 9l2 2-2 2M15.5 9.5l2 2.5"/>',
   home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
   calendario:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/>',
   eventi:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6"/><path d="M7 14.5 8 20h3l-1-4.5"/>',

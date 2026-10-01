@@ -8,7 +8,7 @@ import type { Ruolo } from '@/lib/ruoli';
 export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
   const squadraScelta = useSearchParams().get('squadra');
-  if (percorso.startsWith('/inizio')) return null;   // la Home non ha schede
+  if (percorso.startsWith('/inizio') || percorso.startsWith('/esercitazioni')) return null;   // la Home e le Esercitazioni non hanno schede
   if (percorso.startsWith('/squadra/')) {
     // Rosa, Allenamento e Partite nell'app (le schede delle Partite ancora nel Portale sono nella barra della pagina)
     return (
