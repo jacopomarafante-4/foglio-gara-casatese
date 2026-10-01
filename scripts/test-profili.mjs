@@ -38,11 +38,23 @@ const cred = {
 // ---------- Identità temporanee ----------
 const temp = {};
 async function creaTemporanei() {
+  // Avanzi di una prova interrotta (rete caduta, Mac in pausa): via prima di ricominciare
+  await admin.from('tesserati').delete().eq('giocatore_id', 'test_automatico');
+  for (let p = 1; p < 20; p++) {
+    const { data } = await admin.auth.admin.listUsers({ page: p, perPage: 200 });
+    if (!data?.users?.length) break;
+    for (const u of data.users.filter((x) => /^test-automatico-.*@staff\.academy\.test$/.test(x.email || ''))) {
+      await admin.from('codici_accesso').delete().eq('profilo_id', u.id); await admin.auth.admin.deleteUser(u.id);
+    }
+  }
   // Organizzativo: un responsabile di prova nella squadra Organizzazione
-  const { data: d } = await admin.from('docs').select('data').eq('path', 'shared/teams').single();
+  const { data: d, error: eTeams } = await admin.from('docs').select('data').eq('path', 'shared/teams').single();
+  if (eTeams) throw new Error('squadre non lette: ' + eTeams.message);
   const org = d.data.items.find((t) => t.organizza);
+  if (!org) throw new Error('nessuna squadra Organizzazione');
+  org.coaches = (org.coaches ?? []).filter((c) => c.id !== 'm_test_auto');
   temp.orgPin = pinNuovo(6);
-  org.coaches = [...(org.coaches ?? []), { id: 'm_test_auto', name: 'Test Automatico', code: temp.orgPin }];
+  org.coaches = [...org.coaches, { id: 'm_test_auto', name: 'Test Automatico', code: temp.orgPin }];
   await admin.from('docs').update({ data: d.data, updated_at: new Date().toISOString() }).eq('path', 'shared/teams');
   // Segreteria: account personale di prova
   temp.segPin = pinNuovo(6);
@@ -54,7 +66,8 @@ async function creaTemporanei() {
   await admin.from('codici_accesso').insert({ profilo_id: temp.segUser, pin: temp.segPin, nota: 'Test automatico' });
   // Famiglia: un tesserato di prova (non è nella rosa) nella squadra U14
   temp.famPin = pinNuovo(8);
-  const { data: t } = await admin.from('tesserati').insert({ squadra_id: 't_u14', giocatore_id: 'test_automatico', nome_completo: 'Test Automatico', pin: temp.famPin }).select('id').single();
+  const { data: t, error: eFam } = await admin.from('tesserati').insert({ squadra_id: 't_u14', giocatore_id: 'test_automatico', nome_completo: 'Test Automatico', pin: temp.famPin }).select('id').single();
+  if (eFam) throw new Error('famiglia di prova non creata: ' + (eFam.code ?? '') + ' ' + eFam.message);
   temp.tess = t.id;
   await admin.from('tesserati_dati').insert({ tesserato_id: t.id, certificato_scadenza: '2026-10-10', quote: [{ rata: 'Rata di prova', importo: '1', pagata: false }] });
 }
