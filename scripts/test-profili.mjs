@@ -180,6 +180,7 @@ async function permessi() {
     const dir = await accedi(cred.direttore.profiles.email, cred.direttore.pin);
     if (dir) {
       await permesso('Direttore', 'legge il Portale', dir.from('docs').select('path').limit(3), (d) => d.length > 0);
+      await vietato('Direttore', 'legge le esercitazioni (per ora solo l\'admin)', dir.from('esercizi').select('id').limit(3));
       await permesso('Direttore', 'legge lo scouting', dir.from('giocatori').select('id').limit(3), (d) => d.length > 0);
       await permesso('Direttore', 'legge la segreteria', dir.from('tesserati').select('id').limit(3), (d) => d.length > 0);
       const r = await dir.from('docs').update({ updated_at: new Date().toISOString() }).eq('path', 'registro/t_u14').select('path');
