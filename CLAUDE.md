@@ -119,6 +119,12 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   `tests/import-tabella.test.mjs`): Rosa → "Importa da Excel o CSV" (admin, `components/squadra/ImportaRosa.tsx`: aggiunge solo i nuovi)
   e Segreteria → "Importa anagrafica" (`components/ImportaAnagrafica.tsx`, es. export di Golee: riga → giocatori delle rose con lo stesso
   nome, anche in più squadre; data di nascita, genitori, certificato, taglie; di norma solo nei campi vuoti, `unisciDati`).
+- Esercitazioni (0052, `/esercitazioni`, LAVORI IN CORSO: solo l'admin, area nascosta agli altri in `components/Aree.tsx` e tabella
+  `esercizi` con RLS `is_admin()`): eserciziario con scheda (tipo, fase e principio, obiettivo, categorie, formato, misure con Area per
+  Giocatore e fascia, serie/minuti/recupero, giorno del morfociclo, testi; regole in `lib/esercizi.ts`, dal documento metodologico
+  dell'utente in ~/Progetto ACM/ESERCIZIARIO), lavagna `components/esercizi/Lavagna.tsx` (giocatori, attrezzi, passaggio/corsa/dribbling,
+  zone; cambiando le misure tutto segue in proporzione), Duplica con "Nato da", salvataggio automatico (`app/(aree)/esercitazioni/actions.ts`).
+  Da fare (tappa 2): sedute in 4 fasi e PDF della seduta; poi l'apertura ai mister con una migrazione nuova.
 - Famiglie (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): `getFamiglia` → famiglia_get, azioni in
   `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti, famiglia_carica; foto ridotte nel browser), componenti in
   `components/famiglia/`.
