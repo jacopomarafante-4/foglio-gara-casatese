@@ -146,14 +146,9 @@ export function Tesserati({ squadre, iniziali, documenti, oggi }: {
       .catch(() => null);
     setMessaggio(fatto ? 'Foglio PIN pronto' : fatto === false ? 'Nessun PIN da stampare: generali prima' : 'Foglio PIN non creato: riprova');
   }
-  async function apriDocumento(id: string) {
-    const w = window.open('', '_blank');   // aperta subito: i telefoni bloccano le finestre aperte dopo un'attesa
-    const { data, error } = await supabase.rpc('documento_scarica', { p_id: id });
-    if (error || !data) { w?.close(); setMessaggio('Documento non aperto: riprova'); return; }
-    const bin = atob(data.base64), arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([arr], { type: data.mime }));
-    if (w) w.location.assign(url); else window.location.assign(url);
+  /* il file lo dà il server (app/(aree)/segreteria/documento/[id]), dopo il controllo del database */
+  function apriDocumento(id: string) {
+    window.open(`/segreteria/documento/${encodeURIComponent(id)}`, '_blank', 'noopener');
   }
   async function esitoDocumento(dc: DocumentoFamiglia, t: Riga, ok: boolean) {
     let nota: string | null = null;

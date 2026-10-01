@@ -147,7 +147,9 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
 - I contatti delle famiglie (quasi tutti minorenni) vanno in una tabella separata leggibile solo
   da admin e responsabile. Nessun dato non tecnico o sensibile nelle note.
 - La service role key si usa negli script in `scripts/` e, nell'app, SOLO in `app/api/staff/route.ts`
-  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è admin o direttore). Mai nel browser.
+  (via `lib/supabase/servizio.ts`, dopo aver verificato che chi chiama è admin o direttore) e in `lib/supabase/file.ts` (file dei
+  contenitori privati `archivio` e `documenti-famiglie`, 0051: SOLO dopo che una funzione del database ha controllato chi chiede e ha
+  dato il percorso: `archivio_registra`, `famiglia_registra`, `archivio_apri`, `documento_apri`). Mai nel browser.
 - Testi dell'interfaccia in italiano, frasi brevi, verbi chiari ("Salva report", non "Invia").
 - Mobile first: gli osservatori usano l'app dal telefono a bordo campo.
 
@@ -256,6 +258,12 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   `registro.js`), `intestazionePdf(doc, titolo, destra, categoria)` in `modulistica.js` (distinta, programma, comunicazione; pagine
   seguenti bianche con filo blu), fogli PIN (`lib/fogli-pin.ts`, in piccolo). Il foglio gara tiene la sua impaginazione ma su fondo
   bianco (niente fascia blu, riquadri bianchi con bordo, solo la sottile striscia blu-oro-rosso)
+- 0051: PDF dell'archivio e documenti delle famiglie nei contenitori privati di Supabase Storage (`archivio`, `documenti-famiglie`,
+  nessuna regola d'accesso: solo il server con `lib/supabase/file.ts`). Colonne `percorso` (i vecchi `dati`/`contenuto` ora vuoti):
+  `archiviaPdf` → `archivio_registra` + carica; famiglia `caricaDocumento` → `famiglia_registra` + carica (riga tolta se il file non
+  si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
+  dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
+  il backup sul Mac scarica anche i due contenitori.
 - 0048: `docs.versione` (sale a ogni modifica, trigger `docs_versione`) e `modificato_da` (`chi_salva()`: mister da `app.chi`, se no
   l'account). Salvataggio con controllo: `salva_doc(path, data, versione)` (admin/direttori, RLS) e `coach_salva(pin, path, data, versione)`,
   lettura `coach_leggi`; se la scheda è cambiata restituisce quella nuova e il Portale unisce (`unisci(base, mio, loro)` in

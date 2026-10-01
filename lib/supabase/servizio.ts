@@ -1,4 +1,5 @@
-// Client con la chiave di servizio (aggira la RLS): SOLO lato server e SOLO in
+// Client con la chiave di servizio (aggira la RLS): SOLO lato server e SOLO in lib/supabase/file.ts (file dei contenitori, dopo il
+// controllo nel database) e in
 // app/api/staff/route.ts, dopo aver verificato che chi chiama è l'admin.
 // Serve perché il PIN di scout e direttori è anche la password del loro account.
 import { createClient } from '@supabase/supabase-js';

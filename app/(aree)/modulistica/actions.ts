@@ -6,17 +6,25 @@ import { getProfilo } from '@/lib/auth';
 import { getMister } from '@/lib/mister';
 import { createClient } from '@/lib/supabase/server';
 import type { Distinta, Foglio } from '@/lib/distinta';
+import { annullaRiga, caricaFile } from '@/lib/supabase/file';
 
 export async function archiviaPdf(nome: string, tipo: string, file: string | Blob, squadraId: string | null) {
   const profilo = await getProfilo();
   const mister = profilo ? null : await getMister();
   if (!profilo && !mister) return;
   // un PDF grande (foglio gara con molte pagine) arriva come file: come testo lungo la server action lo rifiuta
-  const base64 = typeof file === 'string' ? file : Buffer.from(await file.arrayBuffer()).toString('base64');
+  const blob = typeof file === 'string' ? new Blob([Buffer.from(file, 'base64')], { type: 'application/pdf' }) : file;
   const supabase = await createClient();
-  await supabase.rpc('archivia_documento', {
-    p_pin: mister?.pin ?? null, p_nome: nome, p_tipo: tipo, p_squadra_id: mister ? null : squadraId, p_dati: base64,
-  });
+  const chi = { p_pin: mister?.pin ?? null, p_nome: nome, p_tipo: tipo, p_squadra_id: mister ? null : squadraId };
+  // 0051: il database controlla chi è e registra il documento; il file va nel contenitore "archivio"
+  const { data, error } = await supabase.rpc('archivio_registra', { ...chi, p_dimensione: blob.size });
+  if (!error && data?.percorso) {
+    try { await caricaFile('archivio', data.percorso, blob, 'application/pdf'); } catch { await annullaRiga('archivio_documenti', data.id); }
+    return;
+  }
+  if (error && !/archivio_registra|PGRST202|42883/.test(error.message + error.code)) return;   // non consentito: niente copia
+  // migrazione 0051 non ancora eseguita: come prima, il file nel database
+  await supabase.rpc('archivia_documento', { ...chi, p_dati: Buffer.from(await blob.arrayBuffer()).toString('base64') });
 }
 
 /** Distinta: scrive nel foglio della squadra (sheet/<squadra>) solo la distinta e la spunta della categoria, sulla versione

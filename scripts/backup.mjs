@@ -66,6 +66,21 @@ for (const a of (await db.from('gare_allegati').select('percorso')).data ?? []) 
   file++;
 }
 riepilogo['file distinte'] = file;
+// PDF dell'archivio e documenti delle famiglie spostati nei contenitori di file (0051): anche loro solo qui in private/
+for (const [tabella, contenitore] of [['archivio_documenti', 'archivio'], ['documenti_tesserati', 'documenti-famiglie']]) {
+  let n = 0;
+  const { data: righe, error } = await db.from(tabella).select('percorso').not('percorso', 'is', null);
+  if (error) { if (!/percorso/.test(error.message)) problemi++; continue; }   // senza la 0051 non ci sono ancora
+  for (const r of righe ?? []) {
+    const { data } = await db.storage.from(contenitore).download(r.percorso);
+    if (!data) { problemi++; continue; }
+    const dest = join(cartella, contenitore, r.percorso);
+    await mkdir(dirname(dest), { recursive: true });
+    await writeFile(dest, Buffer.from(await data.arrayBuffer()));
+    n++;
+  }
+  riepilogo[`file ${contenitore}`] = n;
+}
 await writeFile(join(cartella, '_riepilogo.json'), JSON.stringify({ quando: ora.toISOString(), problemi, righe: riepilogo }, null, 1));
 
 // Tiene solo gli ultimi TENERE backup
