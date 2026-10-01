@@ -133,7 +133,8 @@ in modo semplice e concreto; indica sempre in quale file va ogni modifica e i co
   Prima di usare API Next.js controlla la documentazione in `node_modules/next/dist/docs/`.
 - Supabase: database Postgres, login, storage. Client in `lib/supabase/` (`server.ts` per server, `client.ts` per browser).
 - Tailwind CSS v4: colori e font del club definiti in `app/globals.css` (`bg-blu`, `text-oro`, `font-display`…).
-- Pubblicazione: Vercel, variabili `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN`, `SEGRETO_SESSIONE`
+- Pubblicazione: Vercel, pagine preparate a Dublino (`vercel.json` → `regions: ["dub1"]`, accanto al database Supabase in Irlanda:
+  da Washington ogni domanda al database attraversava l'oceano, pagine 2-3 volte più lente), variabili `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `PIN_ADMIN`, `SEGRETO_SESSIONE`
   (tessera dei mister, almeno 32 caratteri casuali).
 - Server Actions per i form (vedi `app/auth/actions.ts`), `useActionState` nei componenti client.
 

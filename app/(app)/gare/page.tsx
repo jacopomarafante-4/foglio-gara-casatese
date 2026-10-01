@@ -4,6 +4,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
+import { StaffGare } from '@/components/AffidaGara';
 import { Avviso } from '@/components/Avviso';
 import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
@@ -34,8 +35,8 @@ export default async function Gare({
     squadreSeguite(supabase),
     supabase
       .from('giocatori')
-      // `*`: la colonna categoria esiste solo dalla migrazione 0013
-      .select('*')
+      // solo i campi che servono per dire chi gioca in quale gara (GiocatoreInGara)
+      .select('id, cognome, nome, descrizione, annata, categoria, societa_id, stato')
       .not('societa_id', 'is', null)
       .eq('osservato', true)
       .not('stato', 'in', '(inserito,da_non_inserire)'),
@@ -154,16 +155,16 @@ export default async function Gare({
           )}
         </div>
       ) : (
-        [...perGiorno].map(([giorno, lista]) => (
+        <StaffGare staff={staff ?? []}>{[...perGiorno].map(([giorno, lista]) => (
           <section key={giorno}>
             <h2 className="mb-3 font-display text-2xl font-bold first-letter:uppercase">{giorno}</h2>
             <div className="space-y-3">
               {lista.map((g) => (
-                <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff} />
+                <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff ? 'pagina' : undefined} />
               ))}
             </div>
           </section>
-        ))
+        ))}</StaffGare>
       )}
 
       {gestisce(profilo.ruolo) && (

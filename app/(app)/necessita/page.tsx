@@ -1,6 +1,7 @@
 // Necessità dello scouting (0036): che giocatori cerca la società. Le scrivono admin e direttori, le leggono anche
 // gli scout. Sotto ogni richiesta, i giocatori già in archivio (osservati, non dell'Academy, né inseriti né scartati)
 // che rientrano nei parametri: annate, ruolo, piede. Chi ha ruolo o piede non indicato sta a parte, "da verificare".
+// Nell'elenco i primi MOSTRATI di ogni richiesta (pagina leggera da telefono); ?n=<id> apre una richiesta con tutti i giocatori e la modifica.
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -8,7 +9,7 @@ import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { annateDisponibili, GIUDIZI, PIEDI, RUOLI_CAMPO, type Giudizio, type Piede, type RuoloCampo, type StatoGiocatore } from '@/lib/tipi';
 import { categoriaDaAnnata } from '@/lib/categorie';
-import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
+import { NOSTRA_SOCIETA } from '@/lib/societa';
 import { dataBreve } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -40,6 +41,8 @@ const COLORE_GIUDIZIO: Record<Giudizio, string> = {
   da_prendere: 'bg-blu text-white', da_rivedere: 'bg-oro/30 text-inchiostro', non_a_livello: 'bg-rosso/15 text-rosso',
 };
 const PESO_GIUDIZIO: Record<string, number> = { da_prendere: 0, da_rivedere: 1, nessuno: 2, non_a_livello: 3 };
+/** Giocatori mostrati per richiesta nell'elenco (tutti aprendo la richiesta) */
+const MOSTRATI = 8;
 
 const ultima = (g: Giocatore) => [...g.valutazioni].sort((a, b) => b.data.localeCompare(a.data))[0];
 /* media dei voti per area dell'ultima segnalazione o valutazione che ne ha (0043) */
@@ -132,32 +135,42 @@ function ModuloNecessita({ n }: { n?: Necessita }) {
   );
 }
 
-export default async function PaginaNecessita({ searchParams }: { searchParams: Promise<{ ok?: string; errore?: string; chiuse?: string }> }) {
+export default async function PaginaNecessita({ searchParams }: { searchParams: Promise<{ ok?: string; errore?: string; chiuse?: string; n?: string }> }) {
   const profilo = (await getProfilo())!;
   if (!puoSegnalare(profilo.ruolo)) redirect('/home');
-  const { ok, errore, chiuse } = await searchParams;
+  const { ok, errore, chiuse, n: aperta } = await searchParams;
   const direttore = gestisce(profilo.ruolo);
   const supabase = await createClient();
 
-  const { data: nd, error } = await supabase.from('necessita').select('*').order('created_at', { ascending: false });
+  // richieste e id della nostra società insieme (prima si leggevano tutte le 500 società per trovarlo)
+  const [{ data: nd, error }, { data: nostra }] = await Promise.all([
+    supabase.from('necessita').select('*').order('created_at', { ascending: false }),
+    supabase.from('societa').select('id').eq('nome', NOSTRA_SOCIETA).maybeSingle(),
+  ]);
   const tutte = (nd as Necessita[] | null) ?? [];
   const PESO = { alta: 0, media: 1, bassa: 2 };
   const aperte = tutte.filter((n) => n.aperta).sort((a, b) => PESO[a.priorita] - PESO[b.priorita]);
   const chiuseL = tutte.filter((n) => !n.aperta);
-  const mostra = chiuse ? chiuseL : aperte;
+  const una = aperta ? tutte.find((x) => x.id === aperta) : undefined;
+  const mostra = una ? [una] : chiuse ? chiuseL : aperte;
 
   // Un'unica lettura dei giocatori per tutte le annate richieste
   let giocatori: Giocatore[] = [];
   if (mostra.length) {
     const min = Math.min(...mostra.map((n) => n.annata_da)), max = Math.max(...mostra.map((n) => n.annata_a));
-    const academy = idNostraSocieta(await elencoSocieta(supabase));
+    const academy = nostra?.id ?? null;
     const { data } = await supabase.from('giocatori')
       .select('id, cognome, nome, descrizione, annata, ruolo, piede, stato, societa_id, societa(nome), segnalazioni(data, tecnica, motoria, tattica, mentale), valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))')
       .eq('osservato', true).gte('annata', min).lte('annata', max)
       .not('stato', 'in', '(inserito,da_non_inserire)');
     giocatori = ((data as unknown as Giocatore[]) ?? []).filter((g) => !academy || g.societa_id !== academy);
   }
-  const contatto = await conContatto(supabase, giocatori.map((g) => g.id));   // 0037: solo sì/no
+  // il segno del contatto (0037, solo sì/no) serve solo per i giocatori mostrati
+  const elenchi = mostra.map((n) => {
+    const c = candidati(n, giocatori);
+    return { n, ...c, visti: una ? c.sicuri : c.sicuri.slice(0, MOSTRATI) };
+  });
+  const contatto = await conContatto(supabase, [...new Set(elenchi.flatMap((e) => [...e.visti, ...(una ? e.daVerificare : [])].map((g) => g.id)))]);
 
   return (
     <div className="space-y-6">
@@ -167,14 +180,16 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
           <p className="mt-1 text-grigio">Che giocatori cerca la società. Sotto ogni richiesta, quelli già in archivio che rientrano.</p>
         </div>
         <div className="flex gap-2 text-sm">
-          <Link href="/necessita" className={`rounded-full px-3 py-1.5 font-semibold ${!chiuse ? 'bg-blu text-white' : 'border border-linea'}`}>Aperte ({aperte.length})</Link>
-          <Link href="/necessita?chiuse=1" className={`rounded-full px-3 py-1.5 font-semibold ${chiuse ? 'bg-blu text-white' : 'border border-linea'}`}>Chiuse ({chiuseL.length})</Link>
+          <Link href="/necessita" className={`rounded-full px-3 py-1.5 font-semibold ${!chiuse && !una ? 'bg-blu text-white' : 'border border-linea'}`}>Aperte ({aperte.length})</Link>
+          <Link href="/necessita?chiuse=1" className={`rounded-full px-3 py-1.5 font-semibold ${chiuse && !una ? 'bg-blu text-white' : 'border border-linea'}`}>Chiuse ({chiuseL.length})</Link>
         </div>
       </section>
 
       <Avviso ok={ok} errore={errore ?? (error ? 'Pagina non ancora attiva: serve la migrazione 0036.' : undefined)} />
 
-      {direttore && !chiuse && (
+      {una && <Link href={una.aperta ? '/necessita' : '/necessita?chiuse=1'} className="text-sm font-semibold text-blu">‹ Tutte le necessità</Link>}
+      {aperta && !una && <p className="text-grigio">Questa necessità non c&apos;è più.</p>}
+      {direttore && !chiuse && !una && (
         <details className="rounded-xl border border-linea bg-white p-4" open={!aperte.length}>
           <summary className="cursor-pointer font-display text-xl font-bold">+ Nuova necessità</summary>
           <ModuloNecessita />
@@ -183,8 +198,7 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
 
       {!mostra.length && <p className="text-grigio">{chiuse ? 'Nessuna necessità chiusa.' : 'Nessuna necessità aperta.'}</p>}
 
-      {mostra.map((n) => {
-        const { sicuri, daVerificare } = candidati(n, giocatori);
+      {elenchi.map(({ n, sicuri, daVerificare, visti }) => {
         return (
           <section key={n.id} className="rounded-xl border border-linea bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -205,9 +219,14 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
               Già in archivio: {sicuri.length} {sicuri.length === 1 ? 'giocatore' : 'giocatori'}
             </h3>
             {sicuri.length
-              ? <ul className="divide-y divide-linea">{sicuri.map((g) => <RigaGiocatore key={g.id} g={g} contatto={contatto.has(g.id)} />)}</ul>
+              ? <ul className="divide-y divide-linea">{visti.map((g) => <RigaGiocatore key={g.id} g={g} contatto={contatto.has(g.id)} />)}</ul>
               : <p className="text-sm text-grigio">Ancora nessuno: da cercare sui campi.</p>}
-            {daVerificare.length > 0 && (
+            {!una && (sicuri.length > visti.length || daVerificare.length > 0 || direttore) && (
+              <Link href={`/necessita?n=${n.id}`} className="mt-2 inline-block text-sm font-semibold text-blu">
+                {sicuri.length > visti.length ? `Vedi tutti (${sicuri.length})` : 'Apri'}{daVerificare.length ? ` · ${daVerificare.length} da verificare` : ''}{direttore ? ' · modifica' : ''} ›
+              </Link>
+            )}
+            {una && daVerificare.length > 0 && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-semibold text-blu">
                   Da verificare: {daVerificare.length} con {n.ruolo && n.piede ? 'ruolo o piede' : n.ruolo ? 'ruolo' : 'piede'} non indicato
@@ -216,7 +235,7 @@ export default async function PaginaNecessita({ searchParams }: { searchParams: 
               </details>
             )}
 
-            {direttore && (
+            {direttore && una && (
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-linea pt-3">
                 <details className="flex-1">
                   <summary className="cursor-pointer text-sm font-semibold text-blu">Modifica</summary>
