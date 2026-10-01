@@ -10,6 +10,8 @@ import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SchedeAllenamento } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
 import { ReportStatistiche } from '@/components/squadra/ReportStatistiche';
+import { ScaricaExcel } from '@/components/ScaricaExcel';
+import { fogliAllenamento, nomeFile } from '@/lib/esporta';
 import { oggiIso } from '@/lib/utili';
 
 const Numero = ({ v, l, sotto }: { v: React.ReactNode; l: string; sotto?: string }) => (
@@ -56,6 +58,8 @@ export default async function StatisticheAllenamento({ searchParams }: { searchP
             <Numero v={s.sottoSoglia} l={`Sotto il ${SOGLIA_PRESENZE * 100}%`} sotto={s.sottoSoglia ? 'in rosso nella tabella' : undefined} />
             <Numero v={s.assenze} l="Assenze" sotto={s.infortuni ? `di cui ${s.infortuni} per infortunio` : undefined} />
           </div>
+          <ScaricaExcel nome={nomeFile('Allenamenti', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
+            fogli={fogliAllenamento(reg, giocatori, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}
             reg={reg} calendario={[...cal, ...(reg.friendlies ?? []).map((f) => ({ ...f, friendly: true }))] as (Partita & { id: string })[]} periodo={periodo} oggi={oggiIso()} />}
 

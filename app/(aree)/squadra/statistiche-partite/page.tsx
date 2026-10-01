@@ -11,6 +11,8 @@ import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SchedePartite } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
 import { ReportStatistiche } from '@/components/squadra/ReportStatistiche';
+import { ScaricaExcel } from '@/components/ScaricaExcel';
+import { fogliPartite, nomeFile } from '@/lib/esporta';
 
 const Numero = ({ v, l, sotto }: { v: React.ReactNode; l: string; sotto?: string }) => (
   <div className="rounded-xl border border-linea bg-white p-3"><b className="block font-display text-3xl">{v}</b><span className="text-sm font-semibold">{l}</span>
@@ -47,6 +49,8 @@ export default async function StatistichePartite({ searchParams }: { searchParam
             <Numero v={s.marcatori} l="Marcatori diversi" />
             <Numero v={s.nNoti ? s.inviolata : '—'} l="Porta inviolata" />
           </div>
+          <ScaricaExcel nome={nomeFile('Partite', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
+            fogli={fogliPartite(reg, giocatori, calendario, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}
             reg={reg} calendario={calendario} periodo={periodo} oggi={oggiIso()} />}
           <section className="space-y-2">
