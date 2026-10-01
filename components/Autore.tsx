@@ -10,7 +10,7 @@ export function Autore({ f, piccolo = false }: { f: FirmaValutazione; piccolo?: 
     <span
       title={f.nome}
       aria-label={`Valutazione di ${f.nome}`}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${piccolo ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs'}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${piccolo ? 'h-7 w-7 text-[11px]' : 'h-8 w-8 text-xs'}`}
       style={f.mister ? { border: `2px solid ${c}`, color: c, background: '#fff' } : { background: c, color: '#fff' }}
     >
       {inizialiAutore(f.nome)}
@@ -32,7 +32,7 @@ export function Autori({ firme, max = 3 }: { firme: FirmaValutazione[]; max?: nu
 /** Le 3 caselle: iniziali di chi ha valutato, caselle vuote tratteggiate; a 3 su 3 diventano verdi */
 export function SlotValutazioni({ firme, piccolo = false }: { firme: FirmaValutazione[]; piccolo?: boolean }) {
   const completo = firme.length >= SOGLIA_VALUTAZIONI;
-  const dim = piccolo ? 'h-6 w-6 text-[10px]' : 'h-7 w-7 text-[11px]';
+  const dim = piccolo ? 'h-7 w-7 text-[11px]' : 'h-8 w-8 text-xs';
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1 rounded-full p-0.5 ${completo ? 'bg-verde/15 ring-2 ring-verde' : ''}`}

@@ -27,7 +27,7 @@ const btn = (primario = false) => `rounded-lg border px-3 py-1.5 text-sm font-se
 /** Due salvataggi (schemi e foglio della partita): si mostra quello in corso o andato male, se no "Salvato" */
 const statoSalvataggio = (...m: string[]) => m.find((x) => x === 'Salvataggio…') || m.find((x) => x.startsWith('Non')) || m.find(Boolean) || '';
 const Lato = ({ side }: { side: string }) => (
-  <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${side === 'favore' ? 'bg-verde/15 text-verde' : 'bg-rosso/10 text-rosso'}`}>{side === 'favore' ? 'A favore' : 'A sfavore'}</span>
+  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${side === 'favore' ? 'bg-verde/15 text-verde' : 'bg-rosso/10 text-rosso'}`}>{side === 'favore' ? 'A favore' : 'A sfavore'}</span>
 );
 
 export function Piazzati({ squadraId, giocatori, iniziale, miei: mieiIniziali, modelli: modelliIniziali, puoSquadra, admin, autore, oggi, squadraNome, apri }: {

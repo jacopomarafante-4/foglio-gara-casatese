@@ -143,7 +143,7 @@ export function ProgrammaGare({ squadre, eventi, mia, dalIniziale, alIniziale }:
                       {propria && <span className="ml-1 font-sans text-xs font-semibold text-grigio">· la tua squadra</span>}
                     </p>
                     <p className="text-sm text-grigio">
-                      {m.evento && <span className="mr-1 rounded-full bg-[#6B3FA0] px-2 py-px text-[11px] font-bold text-white">{m.tipo}</span>}
+                      {m.evento && <span className="mr-1 rounded-full bg-[#6B3FA0] px-2 py-px text-xs font-bold text-white">{m.tipo}</span>}
                       {note.filter(Boolean).join(' · ')}
                     </p>
                   </div>

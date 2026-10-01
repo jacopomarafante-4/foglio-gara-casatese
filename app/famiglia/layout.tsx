@@ -25,7 +25,7 @@ export default async function LayoutFamiglia({ children }: { children: React.Rea
                 <small className="mt-1 block font-sans text-[13px] font-medium text-white/80">{squadra?.category || ''}</small>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-wider text-blu">Famiglia</span>
+                <span className="rounded-full bg-white px-2.5 py-[3px] text-xs font-bold uppercase tracking-wider text-blu">Famiglia</span>
                 <span className="font-display text-lg font-semibold">{ragazzo?.nome || ''}</span>
                 <form action={esci}><button className="rounded-md px-2 py-1 text-[13px] font-medium text-white/85 hover:bg-white/10">Esci</button></form>
               </div>

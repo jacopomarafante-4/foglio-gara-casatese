@@ -63,12 +63,12 @@ export function StoricoValutazioni({ valutazioni, giocatoreId }: { valutazioni: 
                       </span>
                     ) : AREE.map((a) => (
                       <span key={a.chiave}>
-                        <small className="block text-[10px] font-semibold uppercase text-grigio">{a.nome.slice(0, 3)}</small>
+                        <small className="block text-[11px] font-semibold uppercase text-grigio">{a.nome.slice(0, 3)}</small>
                         <Voto ora={v[a.chiave]} prima={p?.[a.chiave]} />
                       </span>
                     ))}
                     <span>
-                      <small className="block text-[10px] font-semibold uppercase text-grigio">Media</small>
+                      <small className="block text-[11px] font-semibold uppercase text-grigio">Media</small>
                       <span className="font-display text-lg font-bold">{media(v)?.toFixed(1) ?? '–'}</span>
                     </span>
                   </span>

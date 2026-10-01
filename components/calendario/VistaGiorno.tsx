@@ -52,7 +52,7 @@ export function VistaGiorno({ ms, mia, dettaglio }: { ms: Impegno[]; mia: string
           style={{ height: (h1 - h0) * ORA, background: `repeating-linear-gradient(to bottom, var(--color-linea) 0 1px, transparent 1px ${ORA}px)` }}>
           <div className="relative">
             {Array.from({ length: h1 - h0 }, (_, k) => (
-              <span key={k} className={`absolute right-1 bg-white px-0.5 text-[11px] font-semibold text-grigio ${k ? '-translate-y-1/2' : ''}`} style={{ top: k * ORA }}>
+              <span key={k} className={`absolute right-1 bg-white px-0.5 text-xs font-semibold text-grigio ${k ? '-translate-y-1/2' : ''}`} style={{ top: k * ORA }}>
                 {String(h0 + k).padStart(2, '0')}:00
               </span>
             ))}
@@ -64,7 +64,7 @@ export function VistaGiorno({ ms, mia, dettaglio }: { ms: Impegno[]; mia: string
                 return (
                   <button key={chiave(m)} onClick={() => setAperta(sel ? null : chiave(m))}
                     title={`${m.time} ${m.evento ? m.opponent : siglaSquadra(m.team) + ' · ' + (m.opponent || '')}${m.venue ? ' · ' + m.venue : ''}`}
-                    className={`absolute ml-0.5 flex flex-col gap-px overflow-hidden rounded-md px-1.5 py-[3px] text-left text-[11px] leading-tight ${k === 'cernusco' ? 'text-[#2B2205]' : 'text-white'} ${sua ? 'z-[1] ring-2 ring-inchiostro' : ''} ${sel ? 'z-[2] outline-[3px] outline-offset-2 outline-dashed outline-inchiostro' : ''}`}
+                    className={`absolute ml-0.5 flex flex-col gap-px overflow-hidden rounded-md px-1.5 py-[3px] text-left text-xs leading-tight ${k === 'cernusco' ? 'text-[#2B2205]' : 'text-white'} ${sua ? 'z-[1] ring-2 ring-inchiostro' : ''} ${sel ? 'z-[2] outline-[3px] outline-offset-2 outline-dashed outline-inchiostro' : ''}`}
                     style={{ background: CALENDARI[k].colore, top: px(e.inizio), height: px(e.fine) - px(e.inizio) - 2, left: `calc(${e.corsia}/${e.corsie}*100%)`, width: `calc(100%/${e.corsie} - 3px)`,
                       backgroundImage: m.evento ? 'repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 6px,transparent 6px 12px)' : undefined }}>
                     <b className="text-xs">{m.evento ? '📣 ' + m.opponent : `${siglaSquadra(m.team)} · ${m.opponent || 'Avversario'}`}</b>

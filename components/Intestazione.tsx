@@ -30,7 +30,7 @@ export function Intestazione({ profilo, mister, doppio }: { profilo?: Profilo; m
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
-                className={`rounded-full px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-wider ${
+                className={`rounded-full px-2.5 py-[3px] text-xs font-bold uppercase tracking-wider ${
                   ruolo === 'admin' ? 'bg-oro text-inchiostro' : 'bg-white text-blu'
                 }`}
               >
@@ -39,7 +39,7 @@ export function Intestazione({ profilo, mister, doppio }: { profilo?: Profilo; m
               <span className="font-display text-lg font-semibold">{nome}</span>
               {doppio && (
                 /* doppio ruolo (stesso PIN, 0050): quale profilo usare adesso */
-                <span className="flex overflow-hidden rounded-full border border-white/40 text-[12px] font-semibold" role="group" aria-label="Profilo in uso">
+                <span className="flex overflow-hidden rounded-full border border-white/40 text-xs font-semibold" role="group" aria-label="Profilo in uso">
                   <a href="/api/profilo?usa=staff" aria-current={doppio.attivo === 'staff' ? 'true' : undefined}
                     className={`px-2.5 py-[3px] ${doppio.attivo === 'staff' ? 'bg-white text-blu' : 'text-white/85 hover:bg-white/10'}`}>{ETICHETTA_RUOLO[doppio.ruolo]}</a>
                   <a href="/api/profilo?usa=mister" aria-current={doppio.attivo === 'mister' ? 'true' : undefined}

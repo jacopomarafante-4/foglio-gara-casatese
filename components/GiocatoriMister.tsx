@@ -106,7 +106,7 @@ function Riga({ g, portieri }: { g: GiocatoreMister; portieri: boolean }) {
           </div>
           <div className={`flex size-12 flex-none flex-col items-center justify-center rounded-lg font-display text-lg font-bold leading-none ${
             media == null ? 'bg-linea/60 text-grigio' : TONO_VOTO[Math.round(media)]}`} title="Media dei voti per area (ultima segnalazione o valutazione)">
-            <small className="mb-0.5 font-sans text-[10px] font-semibold uppercase opacity-80">Media</small>{media == null ? '–' : media.toFixed(1)}
+            <small className="mb-0.5 font-sans text-[11px] font-semibold uppercase opacity-80">Media</small>{media == null ? '–' : media.toFixed(1)}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -114,12 +114,12 @@ function Riga({ g, portieri }: { g: GiocatoreMister; portieri: boolean }) {
             const v = voti?.[k];
             return (
               <span key={k} className={`flex w-11 flex-col items-center rounded-md py-0.5 text-xs ${typeof v === 'number' ? TONO_VOTO[v] : 'bg-linea/50 text-grigio'}`}>
-                <small className="text-[9px] font-semibold uppercase opacity-80">{NOMI_AREE[k].slice(0, 3)}</small><b>{v ?? '–'}</b>
+                <small className="text-[11px] font-semibold uppercase opacity-80">{NOMI_AREE[k].slice(0, 3)}</small><b>{v ?? '–'}</b>
               </span>
             );
           })}
           <span className="flex w-11 flex-col items-center rounded-md bg-linea/50 py-0.5 text-xs">
-            <small className="text-[9px] font-semibold uppercase text-grigio">Segn</small><b>{g.segnalazioni.length || '–'}</b>
+            <small className="text-[11px] font-semibold uppercase text-grigio">Segn</small><b>{g.segnalazioni.length || '–'}</b>
           </span>
           {ultima
             ? <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${TONO_GIUDIZIO[ultima.giudizio] ?? 'bg-linea'}`}>{GIUDIZI[ultima.giudizio as Giudizio] ?? ultima.giudizio}</span>
