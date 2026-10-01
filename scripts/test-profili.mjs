@@ -100,6 +100,9 @@ async function permessi() {
   await vietato('Anonimo', 'legge il collegamento con Google Calendar', a.rpc('google_leggi'));
   await vietato('Anonimo', 'legge i tesserati', a.from('tesserati').select('id').limit(3));
   await vietato('Anonimo', 'legge i documenti delle famiglie', a.from('documenti_tesserati').select('id').limit(3));
+  await vietato('Anonimo', 'apre un PDF dell\'archivio', a.rpc('archivio_apri', { p_id: '00000000-0000-0000-0000-000000000000' }));
+  await vietato('Anonimo', 'apre un documento di una famiglia', a.rpc('documento_apri', { p_id: '00000000-0000-0000-0000-000000000000' }));
+  await vietato('Anonimo', 'legge il contenitore dei documenti delle famiglie', a.storage.from('documenti-famiglie').list());
   await vietato('Anonimo', 'legge i PIN personali', a.from('codici_accesso').select('pin').limit(3));
 
   // Mister agonistica (U14)
