@@ -109,6 +109,9 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni in
   `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
   `components/ModuloValutazione.tsx`), "Già in lista" con l'elenco dell'annata, elenco `components/GiocatoriMister.tsx`.
+- Excel: "Scarica Excel" (`components/ScaricaExcel.tsx`) in Rosa, Statistiche allenamento e partite, Calendario → La mia squadra: fogli
+  costruiti nella pagina dagli stessi dati (permessi di chi guarda) con `lib/esporta.ts`, file creato nel browser da `lib/xlsx-scrivi.ts`
+  (zip senza compressione, intestazione in grassetto e bloccata, filtro; prove in `tests/xlsx-scrivi.test.mjs`, `tests/esporta.test.mjs`).
 - Famiglie (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): `getFamiglia` → famiglia_get, azioni in
   `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti, famiglia_carica; foto ridotte nel browser), componenti in
   `components/famiglia/`.

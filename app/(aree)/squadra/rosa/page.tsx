@@ -7,6 +7,9 @@ import { apriSquadra } from '@/lib/pagina-squadra';
 import { numeroPartita, type Foglio } from '@/lib/distinta';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { Rosa } from '@/components/squadra/Rosa';
+import { ScaricaExcel } from '@/components/ScaricaExcel';
+import { fogliRosa, nomeFile } from '@/lib/esporta';
+import { oggiIso } from '@/lib/utili';
 
 export default async function PaginaRosa({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {
   const { chi, squadre, squadra, eta, admin, soloLettura, soloPortieri } = await apriSquadra((await searchParams).squadra);
@@ -16,14 +19,16 @@ export default async function PaginaRosa({ searchParams }: { searchParams: Promi
   const giocatori = (docs['roster/' + id]?.players ?? []) as ({ id: string; name: string } & Record<string, unknown>)[];
   const reg = (docs['registro/' + id] ?? {}) as { ruoli?: Record<string, string>; gk?: string[] };
   const foglio = (docs['sheet/' + id] ?? {}) as Foglio;
+  const righe = giocatori.map((p) => ({ id: p.id, name: p.name, dati: p, numero: numeroPartita(foglio, p.id),
+    ruolo: reg.ruoli?.[p.id] || ((reg.gk ?? []).includes(p.id) ? 'portiere' : '') }));
 
   return (
     <div className="space-y-5">
       <h1 className="font-display text-4xl font-bold">Rosa · {squadra.name || squadra.category}</h1>
       <SceltaSquadra squadre={squadre} scelta={id} />
+      {righe.length > 0 && <ScaricaExcel nome={nomeFile('Rosa', squadra.category || squadra.name || '', oggiIso())} fogli={fogliRosa(righe)} />}
       <Rosa key={id} squadraId={id}
-        giocatori={giocatori.map((p) => ({ id: p.id, name: p.name, dati: p, numero: numeroPartita(foglio, p.id),
-          ruolo: reg.ruoli?.[p.id] || ((reg.gk ?? []).includes(p.id) ? 'portiere' : '') }))}
+        giocatori={righe}
         ruoliBase={eta < 13} admin={admin} soloLettura={soloLettura} soloPortieri={soloPortieri} />
     </div>
   );

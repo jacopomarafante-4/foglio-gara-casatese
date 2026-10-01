@@ -7,6 +7,8 @@ import { vedeTutto } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
 import { chiEntra, datiPreparatore, leggiDocs, squadreDelPortale } from '@/lib/portale-dati';
 import type { Evento, Partita, SquadraCal } from '@/lib/programma';
+import { ScaricaExcel } from '@/components/ScaricaExcel';
+import { fogliCalendario, nomeFile } from '@/lib/esporta';
 import { CalendarioSquadra } from '@/components/calendario/CalendarioSquadra';
 
 type Id = Partita & { id: string };
@@ -70,6 +72,8 @@ export default async function LaMiaSquadra({ searchParams }: { searchParams: Pro
         </form>
       )}
       {ruolo === 'direttore' && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
+      {(ufficiali.length > 0 || amichevoli.length > 0) && <ScaricaExcel nome={nomeFile('Calendario', squadra.category || squadra.name || '', oggi)}
+        fogli={fogliCalendario([...ufficiali, ...amichevoli.map((f) => ({ ...f, friendly: true }))] as Parameters<typeof fogliCalendario>[0])} />}
       <CalendarioSquadra key={id} squadra={squadra} nomeSquadra={nomeSquadra} ufficiali={ufficiali} amichevoli={amichevoli} giochiDi={giochiDi}
         eventi={eventi} oggi={oggi} puoAmichevoli={!!chi.mister || ruolo === 'admin'} puoUfficiali={ruolo === 'admin'} />
     </div>

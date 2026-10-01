@@ -288,6 +288,7 @@ mister = copertina('Manuale del mister', 'Portale squadre: preparare le partite,
 <li>Vedere la tua squadra: rosa, calendario, statistiche</li>
 <li>Preparare le partite: dati della gara, convocazioni, formazione, calci piazzati</li>
 <li>Scaricare il foglio gara e la convocazione in PDF</li>
+<li>Scaricare in Excel rosa, presenze, statistiche delle partite e calendario (<span class="k">Scarica Excel</span>)</li>
 <li>Segnare le presenze agli allenamenti e i test atletici</li>
 <li>Compilare i tabellini: minuti, gol, gol subiti, cartellini</li>
 <li>Aggiungere amichevoli al calendario</li>
@@ -655,7 +656,7 @@ l'amministratore. In <b>Società</b> e nello <b>Scouting</b> invece lavori come 
 scout, direttori e PIN; segnalazioni, valutazioni, stati, gare e schede doppie. Vedi anche i contatti delle famiglie.</div>
 <div class="si">
 <div class="col"><h3>Puoi</h3><ul class="ok">
-<li>Aprire il Portale di <b>tutte le squadre</b>: rosa, calendario, convocazioni, formazioni, presenze, statistiche</li>
+<li>Aprire il Portale di <b>tutte le squadre</b>: rosa, calendario, convocazioni, formazioni, presenze, statistiche (anche in Excel, <span class="k">Scarica Excel</span>)</li>
 <li>In <b>Società</b>: creare e togliere squadre, aggiungere mister, scout e direttori, generare e rigenerare i PIN</li>
 <li>Nella <b>Home</b>: il weekend di tutte le squadre, i risultati degli ultimi giorni, cosa c'è da sistemare (tabellini,
 presenze basse), lo scouting della settimana e la stagione squadra per squadra; <span class="k">Apri ›</span> per la Home di una squadra</li>
