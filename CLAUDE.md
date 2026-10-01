@@ -112,6 +112,11 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
 - Excel: "Scarica Excel" (`components/ScaricaExcel.tsx`) in Rosa, Statistiche allenamento e partite, Calendario → La mia squadra: fogli
   costruiti nella pagina dagli stessi dati (permessi di chi guarda) con `lib/esporta.ts`, file creato nel browser da `lib/xlsx-scrivi.ts`
   (zip senza compressione, intestazione in grassetto e bloccata, filtro; prove in `tests/xlsx-scrivi.test.mjs`, `tests/esporta.test.mjs`).
+- Importazioni da Excel/CSV con le colonne scelte da chi importa (`lib/import-tabella.ts`: lettura del file, intestazione sotto un titolo,
+  colonne indovinate dai sinonimi, nomi "Cognome Nome" in qualsiasi ordine; `components/ColonneImport.tsx`; prove in
+  `tests/import-tabella.test.mjs`): Rosa → "Importa da Excel o CSV" (admin, `components/squadra/ImportaRosa.tsx`: aggiunge solo i nuovi)
+  e Segreteria → "Importa anagrafica" (`components/ImportaAnagrafica.tsx`, es. export di Golee: riga → giocatori delle rose con lo stesso
+  nome, anche in più squadre; data di nascita, genitori, certificato, taglie; di norma solo nei campi vuoti, `unisciDati`).
 - Famiglie (`/famiglia`, `/famiglia/calendario`, `/anagrafica`, `/segreteria`): `getFamiglia` → famiglia_get, azioni in
   `app/famiglia/actions.ts` (famiglia_rispondi, famiglia_contatti, famiglia_carica; foto ridotte nel browser), componenti in
   `components/famiglia/`.
