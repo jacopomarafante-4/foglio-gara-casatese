@@ -7,10 +7,16 @@
   --color-rosso: #c41e3a;
   --color-oro: #d4af37;
   --color-inchiostro: #0e1a2b;
-  --color-grigio: #5b6b80;
+  --color-grigio: #4a596c;   /* testi secondari: più scuro di prima, si legge anche al sole a bordo campo */
   --color-linea: #d8dfe8;
   --color-carta: #f5f7fa;
   --color-verde: #2e7d4f;   /* solo per il campo, "presente" e "contatto presente" */
+
+  /* Leggibilità da telefono: testo piccolo 13 px (era 12), testo normale delle pagine 15 px (era 14) */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
 
   --font-sans: 'Barlow', system-ui, sans-serif;
   --font-display: 'Barlow Condensed', 'Barlow', sans-serif;
@@ -54,6 +60,12 @@ body {
 }
 .bottone:hover { background: var(--color-blu-scuro); }
 .bottone:disabled { opacity: 0.6; }
+
+/* Dita a bordo campo: da telefono (o tablet) tasti, tendine e schede alti almeno 40 px.
+   I tasti sottolineati sono link dentro il testo e restano come sono. */
+@media (pointer: coarse) {
+  button:not(.underline), select, nav a, [role="button"] { min-height: 2.5rem; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

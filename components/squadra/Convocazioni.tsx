@@ -32,7 +32,7 @@ const inOrdine = (ms: Cal[]) => ms.slice().sort((a, b) => ((a.date || '') + (a.t
 function RispostaFamiglia({ r }: { r?: { risposta: 'si' | 'no'; nota?: string } }) {
   if (!r) return null;
   return <span title={`Risposta della famiglia${r.nota ? ': ' + r.nota : ''}`}
-    className={`ml-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${r.risposta === 'si' ? 'bg-verde/15 text-verde' : 'bg-rosso/10 text-rosso'}`}>
+    className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${r.risposta === 'si' ? 'bg-verde/15 text-verde' : 'bg-rosso/10 text-rosso'}`}>
     famiglia: {r.risposta === 'si' ? 'ci sarà' : 'non ci sarà'}</span>;
 }
 function PartitaCalendario({ m, children }: { m: Cal; children?: React.ReactNode }) {

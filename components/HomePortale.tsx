@@ -54,7 +54,7 @@ const mese = (m: string) => ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'a
 /** Data in un riquadro: 9 / VEN */
 const DataBox = ({ d, casa }: { d?: string; casa?: boolean }) => (
   <span className={`flex w-11 flex-none flex-col items-center rounded-lg py-1 font-display text-lg font-bold leading-none ${casa ? 'bg-blu/10 text-blu' : 'bg-carta'}`}>
-    {d ? +d.slice(8, 10) : '–'}<small className="mt-0.5 font-sans text-[10px] font-semibold uppercase">{d ? giorno(d).slice(0, 3) : ''}</small>
+    {d ? +d.slice(8, 10) : '–'}<small className="mt-0.5 font-sans text-[11px] font-semibold uppercase">{d ? giorno(d).slice(0, 3) : ''}</small>
   </span>
 );
 /** Andamento delle presenze mese per mese: linea sottile con l'ultimo punto evidenziato */
@@ -183,7 +183,7 @@ export function HomeSquadra(p: {
                     <DataBox d={x.date} casa={x.home} />
                     <span className="min-w-0 flex-1"><b className="block truncate">{x.evento ? x.evento.titolo || 'Evento' : x.opponent}</b>
                       <span className="text-grigio">{[x.time, x.evento ? '' : x.home ? 'In casa' : 'Trasferta'].filter(Boolean).join(' · ')}</span></span>
-                    <span className={`flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${x.evento ? 'bg-carta text-grigio' : x.friendly ? 'bg-oro/20 text-inchiostro' : 'bg-blu/10 text-blu'}`}>
+                    <span className={`flex-none rounded-full px-2 py-0.5 text-xs font-bold ${x.evento ? 'bg-carta text-grigio' : x.friendly ? 'bg-oro/20 text-inchiostro' : 'bg-blu/10 text-blu'}`}>
                       {x.evento ? 'Evento' : x.friendly ? x.tipo || 'Amichevole' : 'Campionato'}</span>
                   </li>))}
               </ul>

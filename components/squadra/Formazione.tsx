@@ -89,7 +89,7 @@ export function Formazione({ squadraId, giocatori, iniziale, soloLettura, piazza
               <li key={slot} className="flex items-center gap-2 py-1.5 text-sm">
                 <b className="w-7 text-center font-display text-lg text-blu">{pid ? numero(pid) : '–'}</b>
                 {pid ? <><span className="min-w-0 flex-1 truncate font-semibold">{nome(pid)}</span>
-                  {pid === f.captain && <span className="rounded bg-oro px-1 text-[11px] font-bold">K</span>}{pid === f.vice && <span className="rounded bg-oro/50 px-1 text-[11px] font-bold">VK</span>}
+                  {pid === f.captain && <span className="rounded bg-oro px-1 text-xs font-bold">K</span>}{pid === f.vice && <span className="rounded bg-oro/50 px-1 text-xs font-bold">VK</span>}
                   {!soloLettura && <button className="px-1.5 text-lg text-grigio hover:text-rosso" aria-label={`Togli ${nome(pid)}`} onClick={() => salva(togli(f, slot))}>×</button>}</>
                   : <button type="button" className="flex-1 text-left text-grigio" onClick={() => !soloLettura && setScelta(slot)}>Posizione {slot} da assegnare</button>}
               </li>))}

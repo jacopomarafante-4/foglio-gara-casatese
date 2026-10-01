@@ -42,7 +42,7 @@ const BADGE = {
   manca: 'bg-rosso text-white border-rosso',
 };
 function Badge({ k, children }: { k: keyof typeof BADGE; children: React.ReactNode }) {
-  return <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${BADGE[k]}`}>{children}</span>;
+  return <span className={`rounded-full border px-2 py-0.5 text-xs font-bold ${BADGE[k]}`}>{children}</span>;
 }
 function Titoletto({ children }: { children: React.ReactNode }) {
   return <h4 className="mb-1.5 mt-4 font-display text-[13px] font-semibold uppercase tracking-wider text-grigio">{children}</h4>;

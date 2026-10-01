@@ -15,7 +15,7 @@ export function Legenda() {
 }
 
 const Etichetta = ({ children, scura = false, viola = false }: { children: React.ReactNode; scura?: boolean; viola?: boolean }) => (
-  <span className={`mr-1 inline-block rounded-full border px-[7px] py-px text-[11px] font-bold ${
+  <span className={`mr-1 inline-block rounded-full border px-[7px] py-px text-xs font-bold ${
     viola ? 'border-[#6B3FA0] bg-[#6B3FA0] text-white' : scura ? 'border-inchiostro bg-inchiostro text-white' : 'border-linea bg-carta text-inchiostro'}`}>{children}</span>
 );
 
