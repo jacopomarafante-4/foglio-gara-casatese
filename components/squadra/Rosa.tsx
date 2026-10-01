@@ -1,10 +1,11 @@
 'use client';
 // Squadra → Rosa: per il mister numero della partita, nome e ruolo (lo sceglie lui); per l'admin anche nome modificabile,
-// aggiunta (uno a uno o incollando un elenco) ed eliminazione. Da Under 13 in su ruoli completi, sotto portiere o movimento.
+// aggiunta (uno a uno, incollando un elenco o da un file Excel/CSV: ImportaRosa) ed eliminazione. Da Under 13 in su ruoli completi, sotto portiere o movimento.
 import { useState } from 'react';
 import { eliminaGiocatore, impostaRuolo, segnaPortiere } from '@/app/(aree)/docs-actions';
 import { nuovoId } from '@/lib/calendario-portale';
 import { Messaggio, useSalva } from '@/components/calendario/salvataggio';
+import { ImportaRosa } from './ImportaRosa';
 
 /* dati = il giocatore com'è nella rosa (con eventuali altri campi, che si conservano) */
 type Giocatore = { id: string; name: string; numero: string; ruolo: string; dati: Record<string, unknown> };
@@ -109,6 +110,7 @@ export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLet
             <textarea className="campo mt-2" rows={5} placeholder={'Alonge\nVascaneau\nBrancaccio'} value={elenco} onChange={(e) => setElenco(e.target.value)} />
             <button className="bottone mt-2" disabled={!elenco.trim()} onClick={() => { aggiungi(dallElenco()); setElenco(''); }}>Aggiungi all’elenco</button>
           </details>
+          <ImportaRosa esistenti={giocatori} onAggiungi={aggiungi} />
         </>
       )}
       <Messaggio testo={messaggio} />

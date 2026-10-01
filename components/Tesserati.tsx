@@ -6,6 +6,7 @@ import '@fontsource/barlow/700.css';
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { scaricaFogliPin } from '@/lib/fogli-pin';
+import { ImportaAnagrafica } from '@/components/ImportaAnagrafica';
 
 export type SquadraRosa = { id: string; name: string; category: string | null; players: { id: string; name: string }[] };
 type Quota = { rata?: string; importo?: string; scadenza?: string; pagata?: boolean };
@@ -192,6 +193,10 @@ export function Tesserati({ squadre, iniziali, documenti, oggi }: {
         </label>
         <button className={`${piccolo} border-blu text-blu hover:bg-blu/5`} onClick={() => fogli(tess)}>Stampa i PIN della squadra (PDF)</button>
       </div>
+      <ImportaAnagrafica squadre={squadre} lista={lista} onImportati={(nuovi) => setLista((l) => {
+        const dopo = nuovi.map(riga), ids = new Set(dopo.map((t) => t.id));
+        return [...l.filter((t) => !ids.has(t.id)), ...dopo];
+      })} />
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtri">
         {(Object.keys(FILTRI) as Filtro[]).map((k) => (
