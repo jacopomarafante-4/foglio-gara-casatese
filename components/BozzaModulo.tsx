@@ -2,7 +2,7 @@
 // Bozza di un modulo (segnalazione, valutazione) sul telefono: si salva mentre si scrive, si ritrova riaprendo la pagina e
 // non si perde premendo Salva senza rete (il modulo non parte e avvisa). Si cancella quando il salvataggio è riuscito: alla
 // pagina successiva, se non è tornata indietro con un errore. Si salvano solo i campi cambiati rispetto alla pagina appena aperta.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const PRE = 'acm_bozza:';
 const INVIATA = 'acm_bozza_inviata';
@@ -46,6 +46,8 @@ function ripristina(form: HTMLFormElement, v: Valori) {
 export function BozzaModulo({ formId, chiave }: { formId: string; chiave: string }) {
   const [ritrovata, setRitrovata] = useState(false);
   const [avviso, setAvviso] = useState('');
+  /** "Ricomincia da capo": niente più salvataggi (il tocco sul pulsante, che è nel modulo, ne farebbe partire uno) */
+  const fermo = useRef(false);
 
   useEffect(() => {
     const form = document.getElementById(formId) as HTMLFormElement | null;
@@ -56,6 +58,7 @@ export function BozzaModulo({ formId, chiave }: { formId: string; chiave: string
     const salvata = leggi(k);
     if (salvata && Object.keys(salvata).length) { ripristina(form, salvata); queueMicrotask(() => setRitrovata(true)); }
     const salvaOra = () => {
+      if (fermo.current) return;
       const ora = valori(form);
       const cambiati = Object.fromEntries(Object.entries(ora).filter(([n, x]) => x !== (iniziale[n] ?? '')));
       if (Object.keys(cambiati).length) metti(k, cambiati); else togli(k);
@@ -91,7 +94,7 @@ export function BozzaModulo({ formId, chiave }: { formId: string; chiave: string
       {ritrovata && (
         <p className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-l-4 border-oro bg-carta p-3 text-sm">
           <span><b>Bozza ritrovata:</b> quello che avevi scritto e non avevi ancora salvato.</span>
-          <button type="button" className="font-semibold text-blu underline" onClick={() => { togli(PRE + chiave); location.reload(); }}>
+          <button type="button" className="font-semibold text-blu underline" onClick={() => { fermo.current = true; togli(PRE + chiave); location.reload(); }}>
             Ricomincia da capo
           </button>
         </p>
