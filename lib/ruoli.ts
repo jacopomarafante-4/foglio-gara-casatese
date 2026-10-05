@@ -9,8 +9,10 @@ export type Profilo = {
   annate: number[];
   attivo: boolean;
   /** Direttore: solo queste squadre (id di shared/teams); null = tutte (come prima), [] = nessuna (es. solo Segreteria).
-   *  Non c'entra con Società, Scouting e Segreteria, sempre completi per i direttori (0053). */
+   *  Non c'entra con Società, Scouting e Segreteria (0053). */
   squadre: string[] | null;
+  /** Direttore: vede la Segreteria (0055, scelto dall'admin; default false). Admin e account segreteria vedono sempre. */
+  vedeSegreteria: boolean;
 };
 
 export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
@@ -53,9 +55,10 @@ export function gestisce(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore';
 }
 
-/** Stessa regola della funzione SQL public.gestisce_segreteria() (0031): tesserati, famiglie, quote */
-export function gestisceSegreteria(ruolo: Ruolo) {
-  return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'segreteria';
+/** Stessa regola della funzione SQL public.gestisce_segreteria() (0031, 0055): tesserati, famiglie, quote.
+ *  Un direttore solo se l'admin gli ha dato `vedeSegreteria`. */
+export function gestisceSegreteria(p: Pick<Profilo, 'ruolo' | 'vedeSegreteria'> | null | undefined) {
+  return p?.ruolo === 'admin' || p?.ruolo === 'segreteria' || (p?.ruolo === 'direttore' && p.vedeSegreteria);
 }
 
 /** Squadre che un direttore con squadre limitate (0053) vede nelle pagine della Squadra, Home e Modulistica (null = tutte,

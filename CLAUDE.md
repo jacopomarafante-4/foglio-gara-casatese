@@ -170,10 +170,15 @@ li modifica come l'admin**, 0018 e 0020),
 `profiles.squadre` (0053, solo `direttore`): `null` = tutte (come prima), altrimenti solo quegli id di `shared/teams`. Limita
 SOLO Squadra, Home della società e Modulistica (`lib/ruoli.ts` → `filtraSquadreDirettore()`, usata da `squadreDelPortale` in
 `lib/portale-dati.ts` e, a mano, nelle pagine che leggono `shared/teams` senza passare da lì: Home, Distinta, Comunicazione,
-Programma gare). Società → Squadre, Scouting, Segreteria e Calendario "Tutte le squadre" restano SEMPRE completi per ogni
-direttore. Le squadre si scelgono in Società → Squadre (admin, `impostaSquadreDirettore`/`imposta_squadre_direttore`); con `[]`
-(nessuna) l'area Squadra sparisce dalla barra (`components/Aree.tsx`, `nienteSquadre`). RLS: `direttore_vede_doc(path)` blocca
-la lettura di `roster|sheet|registro/<squadra>` non assegnate (`docs`, policy "direttori: sola lettura").
+Programma gare). Società → Squadre, Scouting e Calendario "Tutte le squadre" restano SEMPRE completi per ogni direttore
+(la Segreteria no, vedi sotto). Le squadre si scelgono in Società → Squadre (admin, `impostaSquadreDirettore`/
+`imposta_squadre_direttore`); con `[]` (nessuna) l'area Squadra sparisce dalla barra (`components/Aree.tsx`, `nienteSquadre`).
+RLS: `direttore_vede_doc(path)` blocca la lettura di `roster|sheet|registro/<squadra>` non assegnate (`docs`, policy
+"direttori: sola lettura"). Segreteria (0055): un direttore la vede SOLO se l'admin gli dà `profiles.vede_segreteria`
+(default false; admin e account `segreteria` la vedono sempre). `gestisceSegreteria(profilo)` in `lib/ruoli.ts` ↔ SQL
+`gestisce_segreteria()`; si sceglie in Società → Squadre (checkbox per ogni direttore, `impostaSegreteriaDirettore`/
+`imposta_segreteria_direttore`); senza il permesso l'area Segreteria sparisce dalla barra (`nienteSegreteria` in `Aree`)
+e `/segreteria` rimanda a `/home`.
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
@@ -279,6 +284,8 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0055: `profiles.vede_segreteria` (vedi ## Ruoli): un direttore vede l'area Segreteria solo se l'admin gliel'ha data (default
+  false); riscrive `gestisce_segreteria()`, aggiunge `imposta_segreteria_direttore(profilo, vede)` (solo admin)
 - 0053: `profiles.squadre` (vedi ## Ruoli) e preparatori dei portieri per categoria: `preparatore_puo(pin, squadra)` (la loro squadra
   sempre, le altre solo se l'età è tra `coaches[].eta`) usata da `coach_portiere` (riscritta) e dalle nuove `coach_presenza_portiere`
   (presenza a un allenamento) e `coach_tabellino_portiere` (minuti e gol subiti in una partita già creata dal mister). Nell'app:

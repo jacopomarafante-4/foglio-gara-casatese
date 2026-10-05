@@ -202,6 +202,16 @@ export async function impostaSquadreDirettore(profiloId: string, squadre: string
   return { ok: true };
 }
 
+/** Società → Squadre: chi tra i direttori vede la Segreteria (0055, solo admin; il database lo ricontrolla).
+ *  Admin e account segreteria la vedono sempre, indipendentemente da questo. */
+export async function impostaSegreteriaDirettore(profiloId: string, vede: boolean): Promise<Esito> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin') return { ok: false, errore: 'Solo l’admin sceglie chi vede la Segreteria.' };
+  const { error } = await (await createClient()).rpc('imposta_segreteria_direttore', { p_profilo: profiloId, p_vede: vede });
+  if (error) return { ok: false, errore: error.message };
+  return { ok: true };
+}
+
 /** Piazzati → modelli della società in un altro ordine (↑ ↓, solo admin; il database lo ricontrolla) */
 export async function ordinaModelli(ids: string[]): Promise<Esito> {
   const chi = await chiEntra();

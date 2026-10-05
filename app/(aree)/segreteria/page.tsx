@@ -11,7 +11,7 @@ import { Tesserati, type DocumentoFamiglia, type SquadraRosa, type Tesserato } f
 export default async function Segreteria() {
   const profilo = await getProfilo();
   if (!profilo) redirect('/inizio');   // mister con la tessera: qui non entra
-  if (!gestisceSegreteria(profilo.ruolo)) redirect('/home');
+  if (!gestisceSegreteria(profilo)) redirect('/home');
   const supabase = await createClient();
   const [rose, tess, docs] = await Promise.all([
     supabase.rpc('segreteria_rose'),

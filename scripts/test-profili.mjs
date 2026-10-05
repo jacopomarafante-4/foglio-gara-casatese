@@ -24,7 +24,7 @@ const esito = (profilo, prova, ok, dettaglio = '') => { R.permessi.push({ profil
 const { data: teamsDoc } = await admin.from('docs').select('data').eq('path', 'shared/teams').single();
 const squadre = teamsDoc.data.items;
 const pinDi = (id) => { const t = squadre.find((x) => x.id === id); return (t?.coaches ?? []).find((c) => c.code)?.code || t?.code || null; };
-const { data: codici } = await admin.from('codici_accesso').select('pin, profilo_id, profiles!inner(ruolo, attivo, email, cognome, squadre)');
+const { data: codici } = await admin.from('codici_accesso').select('pin, profilo_id, profiles!inner(ruolo, attivo, email, cognome, squadre, vede_segreteria)');
 const personale = (ruolo) => (codici ?? []).find((c) => c.profiles.ruolo === ruolo && c.profiles.attivo);
 // un direttore con squadre limitate (0053, se c'è): per provare che legge solo le sue
 const direttoreLimitato = (codici ?? []).find((c) => c.profiles.ruolo === 'direttore' && c.profiles.attivo && Array.isArray(c.profiles.squadre));
@@ -206,9 +206,14 @@ async function permessi() {
       const fuori = squadre.find((t) => !t.organizza && !t.vedeTutte && !sue.includes(t.id));
       if (fuori) await vietato('Direttore (squadre limitate)', `legge la rosa di una squadra non sua (${fuori.id})`, dir.from('docs').select('data').eq('path', 'roster/' + fuori.id));
       if (sue[0]) await permesso('Direttore (squadre limitate)', 'legge la rosa di una sua squadra', dir.from('docs').select('data').eq('path', 'roster/' + sue[0]), (d) => d.length >= 0);
-      // Società, Scouting e Segreteria restano sempre completi
+      // Società e Scouting restano sempre completi; la Segreteria dipende da vede_segreteria (0055)
       await permesso('Direttore (squadre limitate)', "legge l'elenco squadre (Società)", dir.from('docs').select('path').eq('path', 'shared/teams'), (d) => d.length === 1);
       await permesso('Direttore (squadre limitate)', 'legge lo scouting', dir.from('giocatori').select('id').limit(3), (d) => d.length > 0);
+      if (direttoreLimitato.profiles.vede_segreteria) {
+        await permesso('Direttore (squadre limitate)', 'vede_segreteria=true: legge la segreteria', dir.from('tesserati').select('id').limit(3), (d) => d.length >= 0);
+      } else {
+        await vietato('Direttore (squadre limitate)', 'vede_segreteria=false: legge la segreteria (deve essere vietato)', dir.from('tesserati').select('id').limit(3));
+      }
     } else esito('Direttore (squadre limitate)', 'entra col PIN personale', false);
   }
   if (cred.scout) {
