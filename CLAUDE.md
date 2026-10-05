@@ -349,8 +349,9 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   (`firma()`, `Autori`) nell'elenco Giocatori, nelle Necessità e nella scheda (medie e storico, con "Elimina" per admin, direttori e
   autore); nel Portale `autoreTondo()`
 - 0038: `calendari_squadre()` (admin, direttori, scout): squadre del Portale (senza organizzazione e preparatori) con le sole
-  partite (data, ora, avversario, casa, campo, tipo). Pagina Scouting `/calendario`: tutte le annate, colori come `calDi()` del Portale,
-  periodo (weekend, 2 settimane, stagione) e squadra
+  partite (data, ora, avversario, casa, campo, tipo). Tutte le annate, colori come `calDi()` del Portale, periodo (weekend, 2
+  settimane, stagione) e squadra: dal 0057 è la scheda "Calendario squadre" dentro `/gare` (`CalendarioSquadre`), non più una
+  pagina a sé (`/calendario` resta solo come rimando per i link vecchi)
 - 0037: `con_contatto(ids)`: quali giocatori (visibili a chi chiama) hanno un contatto con telefono o email, solo sì/no, anche per
   gli scout; `conContatto()` in `lib/contatti.ts`, segno verde `components/ContattoFlag.tsx` (elenco Giocatori, scheda, Necessità)
 - 0036: `necessita` (titolo, `annata_da`–`annata_a`, `ruolo`, `piede`, `priorita` alta/media/bassa, `note`, `aperta`): le leggono
