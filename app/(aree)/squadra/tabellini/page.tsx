@@ -11,7 +11,7 @@ import { Tabellini } from '@/components/squadra/Tabellini';
 
 export default async function PaginaTabellini({ searchParams }: { searchParams: Promise<{ squadra?: string; partita?: string }> }) {
   const q = await searchParams;
-  const { chi, squadre, squadra, eta, soloLettura, conSquadra } = await apriSquadra(q.squadra);
+  const { chi, squadre, squadra, eta, soloLettura, soloPortieriScrivibile, conSquadra } = await apriSquadra(q.squadra);
   if (!squadra) return <p className="text-grigio">Nessuna squadra.</p>;
   const id = squadra.id, adb = eta <= 13;
   const docs = await leggiDocs(chi, ['roster/' + id, 'registro/' + id, 'calendar/' + id, 'sheet/' + id]);
@@ -43,7 +43,8 @@ export default async function PaginaTabellini({ searchParams }: { searchParams: 
           )}
           <p className="text-grigio">{adb ? 'Per ogni partita chi era presente. Tocca una partita per segnarlo.' : 'Minuti, gol e gol subiti di ogni partita. Tocca una partita per compilarla.'}</p>
           <Tabellini key={id} squadraId={id} nomeSquadra={foglio.team || squadra.name || 'Noi'} giocatori={giocatori} portieri={reg.gk ?? []}
-            calendario={calendario} gare={reg.games ?? []} foglio={foglio} adb={adb} oggi={oggiIso()} aperto={q.partita ?? null} soloLettura={soloLettura} />
+            calendario={calendario} gare={reg.games ?? []} foglio={foglio} adb={adb} oggi={oggiIso()} aperto={q.partita ?? null} soloLettura={soloLettura}
+            soloPortieriScrivibile={!adb && soloPortieriScrivibile} />
         </>
       )}
     </div>

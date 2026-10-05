@@ -8,6 +8,9 @@ export type Profilo = {
   ruolo: Ruolo;
   annate: number[];
   attivo: boolean;
+  /** Direttore: solo queste squadre (id di shared/teams); null = tutte (come prima), [] = nessuna (es. solo Segreteria).
+   *  Non c'entra con Società, Scouting e Segreteria, sempre completi per i direttori (0053). */
+  squadre: string[] | null;
 };
 
 export const ETICHETTA_RUOLO: Record<Ruolo, string> = {
@@ -53,4 +56,12 @@ export function gestisce(ruolo: Ruolo) {
 /** Stessa regola della funzione SQL public.gestisce_segreteria() (0031): tesserati, famiglie, quote */
 export function gestisceSegreteria(ruolo: Ruolo) {
   return ruolo === 'admin' || ruolo === 'direttore' || ruolo === 'segreteria';
+}
+
+/** Squadre che un direttore con squadre limitate (0053) vede nelle pagine della Squadra, Home e Modulistica (null = tutte,
+ *  come ogni altro ruolo). Società, Scouting, Segreteria e Calendario "Tutte le squadre" restano completi per tutti i direttori. */
+export function filtraSquadreDirettore<T extends { id: string }>(p: Pick<Profilo, 'ruolo' | 'squadre'> | null | undefined, lista: T[]): T[] {
+  if (p?.ruolo !== 'direttore' || p.squadre === null) return lista;
+  const assegnate = p.squadre;
+  return lista.filter((t) => assegnate.includes(t.id));
 }

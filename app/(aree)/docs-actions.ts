@@ -83,6 +83,28 @@ export async function segnaPortiere(squadraId: string, pid: string, portiere: bo
   return error ? { ok: false, errore: error.message } : { ok: true };
 }
 
+/** Allenamento → Presenze, preparatore su un'altra squadra (0053): presenza di un SUO portiere ('' = toglie).
+ *  Il database (coach_presenza_portiere) ricontrolla che sia tra le sue categorie e che il giocatore sia un portiere. */
+export async function segnaPresenzaPortiere(squadraId: string, allenamentoId: string, pid: string, valore: string): Promise<Esito> {
+  if (!squadraOk(squadraId) || !allenamentoId || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
+  const chi = await chiEntra();
+  if (!chi.mister?.squadra.vedeTutte) return { ok: false, errore: 'Solo i preparatori dei portieri.' };
+  const { error } = await (await createClient()).rpc('coach_presenza_portiere',
+    { p_pin: chi.mister.pin, p_squadra: squadraId, p_allenamento: allenamentoId, p_giocatore: pid, p_valore: valore });
+  return error ? { ok: false, errore: error.message } : { ok: true };
+}
+
+/** Partite → Tabellini, preparatore su un'altra squadra (0053): minuti e gol subiti di un SUO portiere in una partita già
+ *  creata dal mister. Il database (coach_tabellino_portiere) ricontrolla categoria e ruolo. */
+export async function segnaTabellinoPortiere(squadraId: string, garaId: string, pid: string, min: number | null, gc: number | null): Promise<Esito> {
+  if (!squadraOk(squadraId) || !garaId || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
+  const chi = await chiEntra();
+  if (!chi.mister?.squadra.vedeTutte) return { ok: false, errore: 'Solo i preparatori dei portieri.' };
+  const { error } = await (await createClient()).rpc('coach_tabellino_portiere',
+    { p_pin: chi.mister.pin, p_squadra: squadraId, p_gara: garaId, p_giocatore: pid, p_min: min, p_gc: gc });
+  return error ? { ok: false, errore: error.message } : { ok: true };
+}
+
 /** Rosa → elimina un giocatore (solo admin): dalla rosa e da formazione e panchina del foglio della squadra */
 export async function eliminaGiocatore(squadraId: string, pid: string): Promise<Esito> {
   if (!squadraOk(squadraId) || !/^[\w-]+$/.test(pid)) return { ok: false, errore: 'Dati non validi.' };
@@ -168,6 +190,16 @@ export async function esportaBackup(): Promise<Esito<string>> {
   if (error) return { ok: false, errore: error.message };
   const docs = Object.fromEntries((data ?? []).map((d) => [d.path, d.data]));
   return { ok: true, valore: JSON.stringify({ exportedAt: new Date().toISOString(), docs }, null, 2) };
+}
+
+/** Società → Squadre: le squadre di un direttore (0053, solo admin; il database lo ricontrolla con imposta_squadre_direttore).
+ *  null = tutte (come prima); [] = nessuna (es. un direttore che segue solo la Segreteria) */
+export async function impostaSquadreDirettore(profiloId: string, squadre: string[] | null): Promise<Esito> {
+  const chi = await chiEntra();
+  if (chi.profilo?.ruolo !== 'admin') return { ok: false, errore: 'Solo l’admin sceglie le squadre dei direttori.' };
+  const { error } = await (await createClient()).rpc('imposta_squadre_direttore', { p_profilo: profiloId, p_squadre: squadre });
+  if (error) return { ok: false, errore: error.message };
+  return { ok: true };
 }
 
 /** Piazzati → modelli della società in un altro ordine (↑ ↓, solo admin; il database lo ricontrolla) */

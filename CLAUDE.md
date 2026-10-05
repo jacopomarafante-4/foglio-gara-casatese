@@ -166,6 +166,13 @@ li modifica come l'admin**, 0018 e 0020),
 `scout`, `mister` (tipo `public.ruolo`, tabella `profiles`). In `lib/ruoli.ts`: `vedeTutto()` = leggere tutto
 (admin, direttori), `gestisce()` = modificare stati, gare, dati di tutti nello Scouting (admin e direttori, SQL `vede_tutto()`),
 `puoSegnalare()` = admin, direttori e scout.
+`profiles.squadre` (0053, solo `direttore`): `null` = tutte (come prima), altrimenti solo quegli id di `shared/teams`. Limita
+SOLO Squadra, Home della società e Modulistica (`lib/ruoli.ts` → `filtraSquadreDirettore()`, usata da `squadreDelPortale` in
+`lib/portale-dati.ts` e, a mano, nelle pagine che leggono `shared/teams` senza passare da lì: Home, Distinta, Comunicazione,
+Programma gare). Società → Squadre, Scouting, Segreteria e Calendario "Tutte le squadre" restano SEMPRE completi per ogni
+direttore. Le squadre si scelgono in Società → Squadre (admin, `impostaSquadreDirettore`/`imposta_squadre_direttore`); con `[]`
+(nessuna) l'area Squadra sparisce dalla barra (`components/Aree.tsx`, `nienteSquadre`). RLS: `direttore_vede_doc(path)` blocca
+la lettura di `roster|sheet|registro/<squadra>` non assegnate (`docs`, policy "direttori: sola lettura").
 Solo admin/direttore/scout accedono a Scouting Hub (`puoAccedere()` in `lib/ruoli.ts`,
 controllato in `app/(app)/layout.tsx`); `pannelloIniziale()` sceglie dove si arriva dopo il PIN.
 I mister non hanno account personali: entrano nel Portale col PIN della squadra. `direttore` = ex "responsabile" (vede tutto, gestisce stati e gare),
@@ -271,6 +278,13 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0053: `profiles.squadre` (vedi ## Ruoli) e preparatori dei portieri per categoria: `preparatore_puo(pin, squadra)` (la loro squadra
+  sempre, le altre solo se l'età è tra `coaches[].eta`) usata da `coach_portiere` (riscritta) e dalle nuove `coach_presenza_portiere`
+  (presenza a un allenamento) e `coach_tabellino_portiere` (minuti e gol subiti in una partita già creata dal mister). Nell'app:
+  `lib/pagina-squadra.ts` calcola `soloPortieriScrivibile` (preparatore su un'altra squadra DELLE SUE categorie, confronto per nome in
+  `coaches[]` come in `datiPreparatore`); `segnaPresenzaPortiere`/`segnaTabellinoPortiere` in `app/(aree)/docs-actions.ts` chiamano le
+  due funzioni col PIN; `Presenze.tsx` e `Tabellini.tsx` abilitano solo le righe/celle dei portieri quando è vero (min e gol subiti,
+  mai i gol fatti né "in porta in questa partita", che restano al mister).
 - 0048: `docs.versione` (sale a ogni modifica, trigger `docs_versione`) e `modificato_da` (`chi_salva()`: mister da `app.chi`, se no
   l'account). Salvataggio con controllo: `salva_doc(path, data, versione)` (admin/direttori, RLS) e `coach_salva(pin, path, data, versione)`,
   lettura `coach_leggi`; se la scheda è cambiata restituisce quella nuova e il Portale unisce (`unisci(base, mio, loro)` in

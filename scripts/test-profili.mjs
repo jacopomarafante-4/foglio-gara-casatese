@@ -24,8 +24,10 @@ const esito = (profilo, prova, ok, dettaglio = '') => { R.permessi.push({ profil
 const { data: teamsDoc } = await admin.from('docs').select('data').eq('path', 'shared/teams').single();
 const squadre = teamsDoc.data.items;
 const pinDi = (id) => { const t = squadre.find((x) => x.id === id); return (t?.coaches ?? []).find((c) => c.code)?.code || t?.code || null; };
-const { data: codici } = await admin.from('codici_accesso').select('pin, profilo_id, profiles!inner(ruolo, attivo, email)');
+const { data: codici } = await admin.from('codici_accesso').select('pin, profilo_id, profiles!inner(ruolo, attivo, email, cognome, squadre)');
 const personale = (ruolo) => (codici ?? []).find((c) => c.profiles.ruolo === ruolo && c.profiles.attivo);
+// un direttore con squadre limitate (0053, se c'è): per provare che legge solo le sue
+const direttoreLimitato = (codici ?? []).find((c) => c.profiles.ruolo === 'direttore' && c.profiles.attivo && Array.isArray(c.profiles.squadre));
 const tuttiPin = new Set([...(codici ?? []).map((c) => c.pin), ...squadre.flatMap((t) => [t.code, ...(t.coaches ?? []).map((c) => c.code)]).filter(Boolean)]);
 const { data: tpin } = await admin.from('tesserati').select('pin'); (tpin ?? []).forEach((x) => x.pin && tuttiPin.add(x.pin));
 const pinNuovo = (cifre) => { for (;;) { const p = String(randomInt(10 ** (cifre - 1), 10 ** cifre)); if (!tuttiPin.has(p)) { tuttiPin.add(p); return p; } } };
@@ -138,6 +140,13 @@ async function permessi() {
     await permesso('Preparatore', 'legge la rosa U14 (sola lettura)', a.rpc('coach_get', { p_pin: q, p_path: 'roster/t_u14' }));
     await vietato('Preparatore', 'scrive il registro U14', a.rpc('coach_set', { p_pin: q, p_path: 'registro/t_u14', p_data: await stesso('registro/t_u14') ?? {} }));
     await permesso('Preparatore', 'portieri di tutte le annate', a.rpc('coach_giocatori', { p_pin: q }), (d) => Array.isArray(d) && d.every((g) => g.ruolo === 'portiere'));
+    // 0053: opera (segna i portieri, presenze, tabellini) solo nelle squadre delle SUE categorie
+    const etaMio = squadre.find((t) => t.vedeTutte)?.coaches?.find((c) => c.code === q)?.eta ?? [];
+    const etaDi = (id) => Number((squadre.find((t) => t.id === id)?.category ?? '').match(/under\s*(\d+)/i)?.[1]);
+    const suaCategoria = squadre.find((t) => !t.organizza && !t.vedeTutte && etaMio.includes(etaDi(t.id)));
+    const altraCategoria = squadre.find((t) => !t.organizza && !t.vedeTutte && !etaMio.includes(etaDi(t.id)));
+    if (suaCategoria) { const r = await admin.rpc('preparatore_puo', { p_pin: q, p_team: suaCategoria.id }); esito('Preparatore', `opera su una squadra DELLA SUA categoria (${suaCategoria.category ?? suaCategoria.id})`, r.data === true, r.error?.message ?? String(r.data)); }
+    if (altraCategoria) { const r = await admin.rpc('preparatore_puo', { p_pin: q, p_team: altraCategoria.id }); esito('Preparatore', `opera su una squadra NON sua (deve essere vietato, ${altraCategoria.category ?? altraCategoria.id})`, r.data === false, r.error?.message ?? String(r.data)); }
   }
   // Organizzativo (di prova)
   {
@@ -189,6 +198,18 @@ async function permessi() {
       const g = await dir.rpc('google_salva', { p_token_cifrato: null, p_account: null, p_calendari: null });
       esito('Direttore', 'cambia il collegamento con Google Calendar (deve essere vietato)', !!g.error, g.error?.message ?? 'permesso');
     } else esito('Direttore', 'entra col PIN personale', false);
+  }
+  if (direttoreLimitato) {
+    const dir = await accedi(direttoreLimitato.profiles.email, direttoreLimitato.pin);
+    if (dir) {
+      const sue = direttoreLimitato.profiles.squadre ?? [];
+      const fuori = squadre.find((t) => !t.organizza && !t.vedeTutte && !sue.includes(t.id));
+      if (fuori) await vietato('Direttore (squadre limitate)', `legge la rosa di una squadra non sua (${fuori.id})`, dir.from('docs').select('data').eq('path', 'roster/' + fuori.id));
+      if (sue[0]) await permesso('Direttore (squadre limitate)', 'legge la rosa di una sua squadra', dir.from('docs').select('data').eq('path', 'roster/' + sue[0]), (d) => d.length >= 0);
+      // Società, Scouting e Segreteria restano sempre completi
+      await permesso('Direttore (squadre limitate)', "legge l'elenco squadre (Società)", dir.from('docs').select('path').eq('path', 'shared/teams'), (d) => d.length === 1);
+      await permesso('Direttore (squadre limitate)', 'legge lo scouting', dir.from('giocatori').select('id').limit(3), (d) => d.length > 0);
+    } else esito('Direttore (squadre limitate)', 'entra col PIN personale', false);
   }
   if (cred.scout) {
     const sc = await accedi(cred.scout.profiles.email, cred.scout.pin);

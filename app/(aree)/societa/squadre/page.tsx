@@ -14,7 +14,7 @@ export default async function PaginaSquadre() {
   const supabase = await createClient();
   const [{ data: doc }, { data: persone }, { data: codici }] = await Promise.all([
     supabase.from('docs').select('data').eq('path', 'shared/teams').maybeSingle(),
-    supabase.from('profiles').select('id, nome, cognome, ruolo, attivo').in('ruolo', ['scout', 'direttore', 'segreteria']).order('cognome'),
+    supabase.from('profiles').select('id, nome, cognome, ruolo, attivo, squadre').in('ruolo', ['scout', 'direttore', 'segreteria']).order('cognome'),
     supabase.from('codici_accesso').select('profilo_id, pin'),
   ]);
   const squadre = ((doc?.data?.items ?? []) as Record<string, unknown>[]).map(conMister) as SquadraSocieta[];
@@ -30,7 +30,8 @@ export default async function PaginaSquadre() {
           squadra, gli scout lo Scouting.
         </p>
       </div>
-      <SquadreSocieta squadre={squadre} staff={staff} io={chi.profilo.id} admin={chi.profilo.ruolo === 'admin'} />
+      <SquadreSocieta squadre={squadre} staff={staff} io={chi.profilo.id} admin={chi.profilo.ruolo === 'admin'}
+        squadreElenco={squadre.filter((t) => !t.organizza && !t.vedeTutte).map((t) => ({ id: t.id, nome: t.category || t.name || t.id }))} />
     </div>
   );
 }

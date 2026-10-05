@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import { istanteTraOre, oggiIso } from '@/lib/utili';
 import { createClient } from '@/lib/supabase/server';
-import { calendariTutti, chiEntra, datiPreparatore, leggiDocs, risposteFamiglie, squadreDelPortale } from '@/lib/portale-dati';
+import { calendariTutti, chiEntra, datiPreparatore, filtraSquadre, leggiDocs, risposteFamiglie, squadreDelPortale } from '@/lib/portale-dati';
 import { eventoCome, etaSquadra, settimanaDi, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
 import { inOrdine } from '@/lib/calendario-portale';
 import { daFare, riepilogo, type Registro } from '@/lib/registro';
@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
       supabase.from('necessita').select('id', { count: 'exact', head: true }).eq('aperta', true),
     ]);
     const doc = (path: string) => docsTutti?.find((d) => d.path === path)?.data as Record<string, unknown> | undefined;
-    const squadreSoc = ((doc('shared/teams')?.items ?? []) as SquadraCal[]).filter((t) => !t.organizza && !t.vedeTutte);
+    const squadreSoc = filtraSquadre(chi, ((doc('shared/teams')?.items ?? []) as SquadraCal[]).filter((t) => !t.organizza && !t.vedeTutte));
     const righe: RigaSocieta[] = squadreSoc.map((t) => {
       const reg = (doc('registro/' + t.id) ?? {}) as Registro;
       const giocatori = ((doc('roster/' + t.id)?.players ?? []) as { id: string }[]);

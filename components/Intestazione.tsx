@@ -52,7 +52,7 @@ export function Intestazione({ profilo, mister, doppio }: { profilo?: Profilo; m
             </div>
           </div>
         </div>
-        <Aree ruolo={ruolo} organizza={organizza} />
+        <Aree ruolo={ruolo} organizza={organizza} nienteSquadre={profilo?.ruolo === 'direttore' && profilo.squadre?.length === 0} />
       </header>
       <Striscia />
       <SchedeArea ruolo={ruolo} segnala={puoSegnalare(ruolo)} organizza={organizza} />

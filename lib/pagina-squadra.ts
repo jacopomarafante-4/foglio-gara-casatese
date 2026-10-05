@@ -15,14 +15,19 @@ export async function apriSquadra(scelta?: string) {
   const { squadre, squadra } = await squadraDellaPagina(chi, scelta);
   // direttore che è anche mister (0050): nelle sue squadre scrive come un mister
   const mie = new Set((chi.misterDi?.squadre ?? []).map((t) => t.id));
-  // preparatore dei portieri sulla squadra di un altro: sola lettura, ma segna i portieri (coach_portiere)
+  // preparatore dei portieri sulla squadra di un altro: sola lettura, ma segna i portieri (coach_portiere, 0050) nelle squadre
+  // delle sue categorie (coaches[].eta, come datiPreparatore in lib/portale-dati.ts; il database lo ricontrolla, 0053)
   const altraDelPreparatore = !!chi.mister?.squadra.vedeTutte && !!squadra && squadra.id !== chi.mister.squadra.id;
+  const etaPrep = (chi.mister?.squadra.coaches ?? []).find((c) => c.name && c.name === chi.mister?.nome)?.eta;
+  const entroCategorie = !Array.isArray(etaPrep) || !etaPrep.length || (!!squadra && etaPrep.includes(etaSquadra(squadra)));
   const conParametro = !!chi.profilo || !!chi.mister?.squadra.vedeTutte;
   return {
     chi, squadre, squadra, eta: squadra ? etaSquadra(squadra) : 99,
     admin: chi.profilo?.ruolo === 'admin',
     soloLettura: (chi.profilo?.ruolo === 'direttore' && !(squadra && mie.has(squadra.id))) || altraDelPreparatore,
     soloPortieri: altraDelPreparatore,
+    /** preparatore su un'altra squadra DELLE SUE CATEGORIE: può segnare presenze e tabellini dei portieri */
+    soloPortieriScrivibile: altraDelPreparatore && entroCategorie,
     /* mister di più squadre: la scelta passa da /api/squadra (cookie) */
     sceltaPerMister: !!chi.mister && !chi.mister.squadra.vedeTutte,
     /* ?squadra= da aggiungere ai link tra le pagine (staff e preparatori) */

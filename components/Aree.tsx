@@ -18,8 +18,9 @@ const AREE = [
 
 /** Come allowedAreas() del Portale: admin e direttori vedono tutte le aree, la segreteria solo la sua; i mister niente
  *  Segreteria né Società, e il loro Scouting è /scouting (Segnala, Giocatori della loro annata); l'organizzativo niente Squadra né
- *  Scouting. Gli scout hanno solo lo Scouting, quindi niente barra */
-export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: boolean }) {
+ *  Scouting. Gli scout hanno solo lo Scouting, quindi niente barra.
+ *  `nienteSquadre` = direttore con squadre assegnate (0053) ma nessuna (es. chi segue solo la Segreteria): niente area Squadra. */
+export function Aree({ ruolo, organizza = false, nienteSquadre = false }: { ruolo: Ruolo; organizza?: boolean; nienteSquadre?: boolean }) {
   const percorso = usePathname();
   if (ruolo === 'scout') return null;
   const aree = ruolo === 'segreteria' ? AREE.filter((a) => a.k === 'segreteria')
@@ -27,7 +28,7 @@ export function Aree({ ruolo, organizza = false }: { ruolo: Ruolo; organizza?: b
       .map((a) => (a.k === 'scouting' ? { ...a, href: '/scouting/segnala' } : a))
     : AREE;
   // Esercitazioni: lavori in corso, per ora solo l'admin (anche il database le nasconde agli altri, 0052)
-  const visibili = aree.filter((a) => a.k !== 'esercitazioni' || ruolo === 'admin');
+  const visibili = aree.filter((a) => (a.k !== 'esercitazioni' || ruolo === 'admin') && (a.k !== 'squadra' || !nienteSquadre));
   const corrente = percorso.startsWith('/esercitazioni') ? 'esercitazioni' : percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
     : percorso.startsWith('/modulistica') ? 'modulistica' : percorso.startsWith('/calendari/') ? 'calendario'
     : percorso.startsWith('/inizio') ? 'home' : percorso.startsWith('/squadra/') ? 'squadra' : 'scouting';

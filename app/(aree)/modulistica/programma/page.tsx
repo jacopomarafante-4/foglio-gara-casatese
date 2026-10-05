@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';
 import { getMister } from '@/lib/mister';
-import { vedeTutto } from '@/lib/ruoli';
+import { filtraSquadreDirettore, vedeTutto } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
 import { settimanaDi } from '@/lib/programma';
 import { calendariTutti } from '@/lib/portale-dati';
@@ -15,7 +15,8 @@ export default async function Programma() {
   if (profilo && !vedeTutto(profilo.ruolo)) redirect(profilo.ruolo === 'segreteria' ? '/segreteria' : '/home');
   if (!profilo && !mister) redirect('/');
 
-  const { squadre, eventi, errore } = await calendariTutti({ profilo, mister });
+  const { squadre: tutte, eventi, errore } = await calendariTutti({ profilo, mister });
+  const squadre = filtraSquadreDirettore(profilo, tutte);
   const { dal, al } = settimanaDi(oggiIso());
 
   return (
