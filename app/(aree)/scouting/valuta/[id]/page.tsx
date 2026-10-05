@@ -24,7 +24,7 @@ export default async function ValutaMister({ params, searchParams }: {
       <h1 className="mt-2 font-display text-4xl font-bold">Valutazione</h1>
       <p className="text-grigio">{[nome, annata, societa].filter(Boolean).join(' – ')}</p>
       <ModuloValutazione action={valutaMister} nascosti={{ id, nome, annata }} titolo={nome} gia={!!q.gia} errore={q.errore}
-        contesto={q.contesto} data={q.data} nota={q.nota} />
+        ruolo={g?.ruolo} annata={Number(annata) || null} contesto={q.contesto} data={q.data} nota={q.nota} />
     </div>
   );
 }

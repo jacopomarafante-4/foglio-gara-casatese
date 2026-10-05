@@ -590,8 +590,10 @@ contatto della famiglia, anche se non lo vedi: chiedilo a un direttore invece di
 <h2>5. Valutare ed eventi</h2>
 {fig('s-valuta', '''<h3>Valutazione</h3><ol class="passi">
 <li>Dalla scheda tocca <span class="k">Valuta</span>.</li>
-<li><b>1 · Partita e ruolo</b>: partita o occasione, data e <b>ruolo preciso</b> dall'elenco (portiere, difensore centrale, terzino,
-esterno di centrocampo, mediano, mezzala, trequartista, ala, punta): aggiorna anche il ruolo nella scheda del giocatore.</li>
+<li><b>1 · Partita e ruolo</b>: partita o occasione, data e ruolo, che cambia con l'età: fino ai <b>Pulcini</b> solo portiere o
+di movimento; <b>Esordienti</b> (Under 12-13) portiere o la linea (prima, seconda, terza: obbligatoria); dall'<b>Under 14</b> il
+<b>ruolo preciso</b> dall'elenco (portiere, difensore centrale, terzino, esterno di centrocampo, mediano, mezzala, trequartista, ala,
+punta). Aggiorna anche il ruolo nella scheda del giocatore.</li>
 <li><b>2–6 · Le 5 aree</b>, voti da 1 a 5 tutti facoltativi (vota solo quello che hai visto): <b>Tecnica</b> (guida della palla, ricezione, trasmissione, calciata, colpo di testa), <b>Tattica</b> (marcamento, smarcamento,
 contrasto, dribbling), <b>Fisico</b> (velocità, accelerazione, agilità, reattività), <b>Mentale</b> (spunti, estro e coraggio; concentrazione,
 motivazione), <b>Extra</b> (famiglia, potenziale, livello attuale).</li>

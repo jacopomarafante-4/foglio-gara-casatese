@@ -16,7 +16,7 @@ export default async function Programma() {
   if (!profilo && !mister) redirect('/');
 
   const { squadre: conTutte, eventi, errore } = await calendariTutti({ profilo, mister });
-  // mister normale (non organizzativo né preparatore dei portieri): solo le sue squadre, non tutte (0056)
+  // mister normale (non organizzativo né preparatore dei portieri): solo le sue squadre, non tutte
   const tutte = mister ? squadreProgrammaMister(mister.squadra, mister.squadre, conTutte) : conTutte;
   const squadre = filtraSquadreDirettore(profilo, tutte);
   const { dal, al } = settimanaDi(oggiIso());

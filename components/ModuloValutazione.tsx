@@ -1,6 +1,7 @@
 // Modulo di valutazione, uguale per lo Scouting (/giocatori/[id]/valuta) e per i mister (/scouting/valuta/[id]):
 // Partita e ruolo · le 5 aree del dettaglio · Giudizio. Cambia solo dove si salva (`action`) e i campi nascosti.
-import { DETTAGLI_VALUTAZIONE, GIUDIZI, GRUPPI_VALUTAZIONE, RUOLI_PRECISI } from '@/lib/tipi';
+import { DETTAGLI_VALUTAZIONE, GIUDIZI, GRUPPI_VALUTAZIONE, LINEE, RUOLI_PRECISI } from '@/lib/tipi';
+import { domandaRuolo } from '@/lib/categorie';
 import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
@@ -13,7 +14,7 @@ const TONI_GIUDIZIO: Record<string, string> = {
 };
 
 export function ModuloValutazione({
-  action, nascosti, titolo, gia, errore, ruoloPreciso, contesto, data, nota,
+  action, nascosti, titolo, gia, errore, ruoloPreciso, ruolo, annata, contesto, data, nota,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   /** campi nascosti (id del giocatore e, per i mister, nome e annata da rimostrare se c'è un errore) */
@@ -23,10 +24,14 @@ export function ModuloValutazione({
   gia?: boolean;
   errore?: string;
   ruoloPreciso?: string | null;
+  /** ruolo in scheda (portiere, linea o movimento) e annata: la domanda sul ruolo cambia con l'età (0056, domandaRuolo) */
+  ruolo?: string | null;
+  annata?: number | null;
   contesto?: string;
   data?: string;
   nota?: string;
 }) {
+  const domanda = domandaRuolo(annata);
   return (
     <form action={action} className="mt-6 space-y-4">
       <Avviso errore={errore} />
@@ -47,12 +52,30 @@ export function ModuloValutazione({
             <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />
           </Etichetta>
         </div>
-        <Etichetta testo="Ruolo preciso" aiuto="Aggiorna anche il ruolo nella scheda del giocatore.">
-          <select name="ruolo_preciso" className="campo" defaultValue={ruoloPreciso ?? ''}>
-            <option value="">Non so / non l’ho capito</option>
-            {Object.entries(RUOLI_PRECISI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}
-          </select>
-        </Etichetta>
+        {domanda === 'preciso' ? (
+          <Etichetta testo="Ruolo preciso" aiuto="Aggiorna anche il ruolo nella scheda del giocatore.">
+            <select name="ruolo_preciso" className="campo" defaultValue={ruoloPreciso ?? ''}>
+              <option value="">Non so / non l’ho capito</option>
+              {Object.entries(RUOLI_PRECISI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}
+            </select>
+          </Etichetta>
+        ) : domanda === 'linea' ? (
+          <Etichetta testo="Ruolo *" aiuto="Esordienti: portiere o la linea in cui gioca. Aggiorna anche la scheda del giocatore.">
+            <select name="ruolo_campo" className="campo" required defaultValue={ruolo && ruolo !== 'movimento' ? ruolo : ''}>
+              <option value="" disabled>Scegli</option>
+              <option value="portiere">Portiere</option>
+              {LINEE.map(([v, e, dove]) => <option key={v} value={v}>{e} ({dove})</option>)}
+            </select>
+          </Etichetta>
+        ) : (
+          <Etichetta testo="Ruolo" aiuto="Fino ai Pulcini basta sapere se è portiere o di movimento.">
+            <select name="ruolo_campo" className="campo" defaultValue={ruolo === 'portiere' ? 'portiere' : ruolo ? 'movimento' : ''}>
+              <option value="">Non so / non l’ho capito</option>
+              <option value="portiere">Portiere</option>
+              <option value="movimento">Di movimento</option>
+            </select>
+          </Etichetta>
+        )}
       </Sezione>
 
       <p className="px-1 text-sm text-grigio">

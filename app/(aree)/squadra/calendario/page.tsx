@@ -1,4 +1,4 @@
-// Squadra → Calendario (0059: prima "Calendario → La mia squadra", spostata qui perché l'area Calendario a sé restava
+// Squadra → Calendario (prima "Calendario → La mia squadra", spostata qui perché l'area Calendario a sé restava
 // doppia con le pagine della Squadra). Mister: la sua squadra (calendario ufficiale, amichevoli del registro, eventi della
 // squadra); preparatori dei portieri: le partite delle categorie dei loro portieri (coaches[].eta) con i portieri e la
 // convocazione; admin e direttori: la squadra scelta (?squadra=), i direttori in sola lettura.

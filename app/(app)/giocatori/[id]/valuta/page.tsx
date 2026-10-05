@@ -22,7 +22,7 @@ export default async function Valuta({
   const supabase = await createClient();
   const { data: g } = await supabase
     .from('giocatori')
-    .select('id, cognome, nome, descrizione, annata, ruolo_preciso')
+    .select('id, cognome, nome, descrizione, annata, ruolo, ruolo_preciso')
     .eq('id', id)
     .maybeSingle();
   if (!g) notFound();
@@ -36,7 +36,7 @@ export default async function Valuta({
       <p className="text-grigio">{titolo} – {g.annata}</p>
 
       <ModuloValutazione action={salvaValutazione} nascosti={{ id: g.id }} titolo={titolo ?? ''} gia={!!gia} errore={errore}
-        ruoloPreciso={g.ruolo_preciso} contesto={contesto} data={data} nota={nota} />
+        ruoloPreciso={g.ruolo_preciso} ruolo={g.ruolo} annata={g.annata} contesto={contesto} data={data} nota={nota} />
     </div>
   );
 }

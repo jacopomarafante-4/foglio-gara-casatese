@@ -19,7 +19,7 @@ const etichetta = 'mb-1 block text-sm font-semibold text-grigio';
 
 export function Avvisi({ avvisi: iniziali, squadre, autore: autoreIniziale, oggi, bozzaIniziale, puoPubblicare = true, soloMiaSquadra = false }: {
   avvisi: Avviso[]; squadre: SquadraCal[]; autore: string; oggi: string; bozzaIniziale: Bozza | null;
-  /** admin, direttori, organizzativo: pubblicano nell'app. Un mister normale (soloMiaSquadra) solo il PDF (0060, era Comunicazione) */
+  /** admin, direttori, organizzativo: pubblicano nell'app. Un mister normale (soloMiaSquadra) solo il PDF (era Comunicazione) */
   puoPubblicare?: boolean; soloMiaSquadra?: boolean;
 }) {
   const [avvisi, setAvvisi] = useState(iniziali);

@@ -22,7 +22,7 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
     );
   }
   if (percorso.startsWith('/calendari/')) {
-    // "La mia squadra" è dentro Squadra → Calendario (0059). Qui restano Tutte le squadre, Avvisi (admin, direttori, organizzativo)
+    // "La mia squadra" è dentro Squadra → Calendario. Qui restano Tutte le squadre, Avvisi (admin, direttori, organizzativo)
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede del calendario">
         <Scheda href="/calendari/tutte">Tutte le squadre</Scheda>

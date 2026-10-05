@@ -107,6 +107,7 @@ export async function salvaValutazione(formData: FormData) {
     ...voti,
     giudizio,
     ruolo_preciso: valoreValido(RUOLI_PRECISI, formData.get('ruolo_preciso')),   // 0046: un trigger aggiorna anche la scheda
+    ruolo_campo: valoreValido(RUOLI_CAMPO, formData.get('ruolo_campo')),   // 0056: i più piccoli (portiere, movimento, linea)
     contesto: testo(formData, 'contesto'),
     commento: testoLungo(formData, 'commento'),
     ...(data ? { data } : {}),

@@ -42,7 +42,7 @@ export async function valutaMister(formData: FormData) {
   if (!mister) redirect('/');
   const id = campo(formData, 'id');
   const dati: Record<string, string | null> = {
-    giudizio: campo(formData, 'giudizio'), ruolo_preciso: campo(formData, 'ruolo_preciso'),
+    giudizio: campo(formData, 'giudizio'), ruolo_preciso: campo(formData, 'ruolo_preciso'), ruolo_campo: campo(formData, 'ruolo_campo'),
     contesto: testo(formData, 'contesto'), commento: testoLungo(formData, 'commento'), data: testo(formData, 'data'),
     ...Object.fromEntries(DETTAGLI_VALUTAZIONE.map((d) => [d.chiave, campo(formData, d.chiave)])),
   };

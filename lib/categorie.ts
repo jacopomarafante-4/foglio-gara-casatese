@@ -22,6 +22,15 @@ export function categoriaDaAnnata(annata: number, fine = fineStagione()) {
   return `${nome} - ${annata}`;
 }
 
+/** Domanda sul ruolo nella valutazione (0056): fino ai Pulcini (età 11) portiere o di movimento, Esordienti (12-13) portiere o
+ *  la linea, dall'Under 14 il ruolo preciso. Annata sconosciuta: il ruolo preciso, come prima */
+export type DomandaRuolo = 'movimento' | 'linea' | 'preciso';
+export function domandaRuolo(annata: number | null | undefined, fine = fineStagione()): DomandaRuolo {
+  if (!annata) return 'preciso';
+  const eta = fine - annata;
+  return eta <= 11 ? 'movimento' : eta <= 13 ? 'linea' : 'preciso';
+}
+
 type Intervallo = { min: number; max: number };
 
 /** Età sportive ammesse da un testo di categoria ("U14", "Under 15 Regionali", "Giovanissimi",
