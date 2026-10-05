@@ -21,6 +21,14 @@ export type Evento = {
 };
 export type Impegno = Partita & { team?: SquadraCal; evento?: Evento; luogo?: string };
 
+/** Squadre viste in Programma gare da un mister normale (0056): solo le sue, non tutte come oggi. L'organizzativo e i
+ *  preparatori dei portieri (vedeTutte) continuano a vedere tutte le squadre. */
+export function squadreProgrammaMister(squadra: { organizza?: boolean; vedeTutte?: boolean }, mie: { id: string }[], tutte: SquadraCal[]): SquadraCal[] {
+  if (squadra.organizza || squadra.vedeTutte) return tutte;
+  const sue = new Set(mie.map((t) => t.id));
+  return tutte.filter((t) => sue.has(t.id));
+}
+
 const LUOGHI_EVENTO: Record<string, string> = { merate: 'Campo di Merate', cernusco: 'Campo di Cernusco', altro: 'Altrove' };
 const GIORNI = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 

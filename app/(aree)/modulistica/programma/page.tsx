@@ -5,7 +5,7 @@ import { getProfilo } from '@/lib/auth';
 import { getMister } from '@/lib/mister';
 import { filtraSquadreDirettore, vedeTutto } from '@/lib/ruoli';
 import { oggiIso } from '@/lib/utili';
-import { settimanaDi } from '@/lib/programma';
+import { settimanaDi, squadreProgrammaMister } from '@/lib/programma';
 import { calendariTutti } from '@/lib/portale-dati';
 import { ProgrammaGare } from '@/components/ProgrammaGare';
 
@@ -15,7 +15,9 @@ export default async function Programma() {
   if (profilo && !vedeTutto(profilo.ruolo)) redirect(profilo.ruolo === 'segreteria' ? '/segreteria' : '/home');
   if (!profilo && !mister) redirect('/');
 
-  const { squadre: tutte, eventi, errore } = await calendariTutti({ profilo, mister });
+  const { squadre: conTutte, eventi, errore } = await calendariTutti({ profilo, mister });
+  // mister normale (non organizzativo né preparatore dei portieri): solo le sue squadre, non tutte (0056)
+  const tutte = mister ? squadreProgrammaMister(mister.squadra, mister.squadre, conTutte) : conTutte;
   const squadre = filtraSquadreDirettore(profilo, tutte);
   const { dal, al } = settimanaDi(oggiIso());
 
