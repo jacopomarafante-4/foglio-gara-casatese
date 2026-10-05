@@ -499,6 +499,21 @@ NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_K
 conteggi e tipo del problema (frasi fisse, mai testo delle pagine: registri pubblici), esce con errore se qualcosa non va.
 Un profilo che fallisce si riprova una volta (riga "↻ riprovato"): conta il secondo giro.
 
+## Lavoro senza rete (bordo campo)
+Salvataggio automatico (`useSalva` in `components/calendario/salvataggio.tsx`: presenze, tabellini, test, rosa, calendario,
+avvisi, piazzati): ogni modifica va PRIMA sul telefono (`lib/coda-offline.ts`, localStorage `acm_coda`, voce per voce per id)
+e poi al server con `modificaDoc`; senza rete resta lì ("Senza rete: salvato sul telefono…") e la manda `InviaInSospeso`
+(nell'intestazione: all'apertura, al ritorno della rete, ogni minuto; striscia oro con quante modifiche aspettano). Ogni voce
+ricorda di chi è (id dell'account o nome + squadre del mister, mai il PIN): su un telefono condiviso non si mandano quelle
+dell'altro; dopo 7 giorni si buttano. Accesso scaduto o intoppi del server: restano e ripartono; rifiuti per permessi
+(`rifiutoDefinitivo`): tolte. Moduli di segnalazione e valutazione: `components/BozzaModulo.tsx` salva la bozza mentre si
+scrive (solo i campi cambiati), la rimette riaprendo la pagina ("Bozza ritrovata" · "Ricomincia da capo"), blocca Salva
+senza rete (prima che parta l'azione, fase di cattura) e cancella la bozza alla pagina dopo un invio riuscito (non se si torna
+con `?errore=` o si ricarica la stessa pagina). I voti a pulsanti (`SceltaRapida`) si rimettono con l'evento `ripristina`.
+Prova nel browser: `private/prova-senza-rete.mjs` (rete staccata e riattaccata, tocca una presenza e la rimette com'era).
+Non coperti (si salvano subito come prima): foglio della partita (`aggiornaFoglio`), Società → Squadre, presenze/tabellini
+dei preparatori sulle altre squadre, PDF.
+
 ## Avviso errori in produzione (Sentry)
 Ogni errore del sito in produzione (server e browser) va a Sentry (sentry.io, organizzazione `jacopo-marafante`, progetto
 `javascript-nextjs`) e manda un'email. `NEXT_PUBLIC_SENTRY_DSN` (pubblico, va bene nel browser) e `SENTRY_AUTH_TOKEN`

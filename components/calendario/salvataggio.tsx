@@ -1,25 +1,26 @@
 'use client';
-// Salvataggio delle modifiche del calendario: si mostrano subito e si mandano al server dopo un attimo (mentre si scrive),
-// voce per voce (modificaDoc). Più modifiche allo stesso documento nell'attesa partono insieme.
+// Salvataggio delle modifiche (presenze, tabellini, calendario, avvisi…): si mostrano subito, si scrivono sul telefono
+// (lib/coda-offline.ts) e si mandano al server dopo un attimo (mentre si scrive), voce per voce (modificaDoc). Senza rete
+// restano sul telefono e partono da sole quando torna (InviaInSospeso).
 import { useRef, useState } from 'react';
-import { modificaDoc } from '@/app/(aree)/docs-actions';
 import type { Modifica } from '@/lib/modifiche';
+import { accoda, invia } from '@/lib/coda-offline';
+
+export const SENZA_RETE = 'Senza rete: salvato sul telefono, parte da solo quando torna la rete';
 
 export function useSalva() {
   const [messaggio, setMessaggio] = useState('');
   const timer = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const pendenti = useRef<Record<string, Map<string, Modifica>>>({});
 
   /** Mette in coda le modifiche di un documento; `attesa` 0 = subito (aggiunte ed eliminazioni) */
   function salva(path: string, modifiche: Modifica[], attesa = 700) {
-    const coda = (pendenti.current[path] ??= new Map());
-    modifiche.forEach((m) => coda.set(`${m.lista}|${m.id}`, m));
+    accoda(path, modifiche);
     setMessaggio('Salvataggio…');
     clearTimeout(timer.current[path]);
     timer.current[path] = setTimeout(async () => {
-      const tutte = [...(pendenti.current[path]?.values() ?? [])]; delete pendenti.current[path];
-      const r = await modificaDoc(path, tutte).catch(() => ({ ok: false, errore: 'rete assente' }));
-      setMessaggio(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) { setMessaggio(SENZA_RETE); return; }
+      const r = await invia(path);
+      setMessaggio(!r.rete ? SENZA_RETE : r.errore ? `Non salvato: ${r.errore}` : 'Salvato');
     }, attesa);
   }
   return { salva, messaggio, setMessaggio };

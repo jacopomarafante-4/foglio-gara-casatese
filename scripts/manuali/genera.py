@@ -241,7 +241,8 @@ note solo tecniche · <span class="k">Esci</span> sui dispositivi condivisi · e
 <tr><td>"Troppi PIN sbagliati: riprova tra qualche minuto"</td><td>Protezione contro chi prova PIN a caso. Aspetta qualche minuto e riprova.</td></tr>
 <tr><td>Mi chiede di nuovo il PIN</td><td>Normale: succede dopo 6 ore, se hai chiuso il browser, o se hai toccato Esci.</td></tr>
 <tr><td>Vedo la versione vecchia o qualcosa non si muove</td><td>Ricarica la pagina (trascina giù sul telefono, o il tasto ricarica del browser).</td></tr>
-<tr><td>Resta scritto "Salvataggio…"</td><td>Controlla la connessione; quando torna, la modifica si salva. Non chiudere finché non vedi "Salvato".</td></tr>
+<tr><td>"Senza rete: salvato sul telefono" (o la striscia gialla in alto)</td><td>Nessun problema: presenze, tabellini e le altre modifiche restano sul telefono e partono da sole quando torna la rete, anche se chiudi e riapri l'app. Non serve rifarle.</td></tr>
+<tr><td>Senza rete premo Salva su una segnalazione o valutazione</td><td>Il modulo non parte e avvisa: quello che hai scritto è salvato sul telefono ("Bozza ritrovata" se riapri la pagina). Premi di nuovo Salva quando torna la rete.</td></tr>
 <tr><td>Non vedo un'area o un pulsante</td><td>Probabilmente il tuo ruolo non lo prevede (vedi il capitolo 2 e il manuale del tuo ruolo).</td></tr>
 </table>
 </section>
