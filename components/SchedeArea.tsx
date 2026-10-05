@@ -17,16 +17,16 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
         <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/statistiche-allenamento', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
         <Scheda href={'/squadra/convocazioni' + (squadraScelta ? '?squadra=' + squadraScelta : '')}
           attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi']}>Partite</Scheda>
+        <Scheda href={'/squadra/calendario' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Calendario</Scheda>
       </nav>
     );
   }
   if (percorso.startsWith('/calendari/')) {
-    // La mia squadra (non per l'organizzativo), Tutte le squadre, Avvisi (admin, direttori, organizzativo)
+    // "La mia squadra" è dentro Squadra → Calendario (0059). Qui restano Tutte le squadre, Avvisi (admin, direttori, organizzativo)
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede del calendario">
-        {!organizza && <Scheda href="/calendari/squadra">La mia squadra</Scheda>}
         <Scheda href="/calendari/tutte">Tutte le squadre</Scheda>
-        {(organizza || ruolo === 'admin' || ruolo === 'direttore') && <Scheda href="/calendari/avvisi">Avvisi</Scheda>}
+        <Scheda href="/calendari/avvisi">Avvisi</Scheda>
       </nav>
     );
   }
@@ -36,7 +36,6 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della modulistica">
         {!organizza && <Scheda href="/modulistica/distinta">Distinta</Scheda>}
         <Scheda href="/modulistica/programma">Programma gare</Scheda>
-        <Scheda href="/modulistica/comunicazione">Comunicazione</Scheda>
       </nav>
     );
   }

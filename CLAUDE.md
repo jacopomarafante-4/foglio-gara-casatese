@@ -69,18 +69,18 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; `salvaDistinta` salva solo `distinta` e
   `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`;
   un mister normale vede e stampa SOLO le sue squadre, non tutte: `squadreProgrammaMister()`, 0056; l'organizzativo e i preparatori
-  dei portieri, come prima, tutte),
-  Comunicazione (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO`, PDF `lib/pdf-comunicazione.ts`). Impaginazione comune in
-  `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`). Ogni PDF scaricato lascia una copia nell'Archivio:
+  dei portieri, come prima, tutte). Comunicazione è stata tolta (0060): stesso PDF, dentro Calendario → Avvisi.
+  Impaginazione comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`). Ogni PDF scaricato lascia una copia nell'Archivio:
   `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo base64 (un testo di oltre ~1 MB la server action lo
   rifiuta: "Maximum array nesting exceeded"); così anche `caricaDocumento` delle famiglie.
-- Calendario (`/calendari/…`, non `/calendario`, che è la pagina dello Scouting): La mia squadra (`squadra`: mister, preparatori con i
-  portieri e la convocazione, admin e direttori con `?squadra=`, direttori in sola lettura; amichevoli del mister in
-  `registro/<squadra>.friendlies`, partite ufficiali solo admin in `calendar/<squadra>`), Tutte le squadre (`tutte`: vista
+- Calendario (`/calendari/…`, non `/calendario`, che è la pagina dello Scouting): Tutte le squadre (`tutte`: vista
   Giorno/Elenco, admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra ed eventi, Google con
-  `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`, admin, direttori, organizzativo; `?evento=id` = bozza
-  per un evento). Componenti in `components/calendario/`, regole pure in `lib/calendario-portale.ts`, dati in `lib/portale-dati.ts`
-  (`calendariTutti`).
+  `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`: admin, direttori e organizzativo pubblicano
+  nell'app (`shared/avvisi`) e stampano il PDF; un mister normale vede la stessa pagina ma solo per il PDF su carta intestata,
+  squadra già scelta, senza pubblicare — `puoPubblicare`/`soloMiaSquadra` in `components/calendario/Avvisi.tsx`, 0060, prima
+  era Modulistica → Comunicazione; `?evento=id` = bozza per un evento). "La mia squadra" si è spostata dentro Squadra →
+  Calendario (0059, vedi sotto): qui restava doppia con le pagine della Squadra. Componenti in `components/calendario/`,
+  regole pure in `lib/calendario-portale.ts`, dati in `lib/portale-dati.ts` (`calendariTutti`).
 - Home (`/inizio`; `/home` è la Home dello Scouting), stile A (colori del club su fondo chiaro): mister (prossima partita in grande con
   risposte delle famiglie e link al campo, avvisi, da fare, prossimi impegni, ultimo risultato coi marcatori, stagione e presenze mese
   per mese: calcoli in `lib/home.ts`, prove in `tests/home.test.mjs`; regole in `lib/registro.ts`); admin e direttori senza
@@ -110,6 +110,9 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   Campi (`/squadra/campi`, posizione del cancello con `impostaCampo`, `lib/campi.ts`). Attività di base (da Under 13 in giù): solo
   Convocazioni e Tabellini. Report PDF delle statistiche (admin e direttori): `lib/report-statistiche.ts`. Disegno dei PDF a pagina
   intera su tela: `lib/tela.ts` (T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta).
+  Calendario (`/squadra/calendario`, 0059; prima "Calendario → La mia squadra", spostata qui perché restava doppia con le pagine
+  della Squadra): calendario ufficiale, amichevoli del registro, eventi della squadra, Scarica Excel; preparatori dei portieri:
+  le partite delle categorie dei loro portieri con la convocazione (`datiPreparatore`). Usa `apriSquadra()` come le altre pagine.
 - Scouting dei mister (`/scouting/segnala`, `/scouting/giocatori`, `/scouting/valuta/[id]`; solo mister con la tessera, lo staff va al
   suo Scouting): `coach_segnala`, `coach_valuta`, `coach_giocatori`, `coach_societa` (`lib/scouting-mister.ts`, azioni in
   `app/(aree)/scouting/actions.ts`); moduli in comune con lo Scouting (`components/ModuloSegnalazione.tsx`,
