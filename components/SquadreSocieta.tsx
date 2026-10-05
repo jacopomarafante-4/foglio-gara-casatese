@@ -4,13 +4,13 @@
 // Le modifiche si vedono subito e partono al server una per una; i nomi mentre si scrivono (dopo una pausa).
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { cambiaSquadre, esportaBackup, impostaSquadreDirettore } from '@/app/(aree)/docs-actions';
+import { cambiaSquadre, esportaBackup, impostaSegreteriaDirettore, impostaSquadreDirettore } from '@/app/(aree)/docs-actions';
 import { RipristinoBackup } from '@/components/RipristinoBackup';
 import { nuovoId } from '@/lib/calendario-portale';
 import { applicaOpSquadre, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
 import { Messaggio } from '@/components/calendario/salvataggio';
 
-export type PersonaStaff = { id: string; nome: string | null; cognome: string | null; ruolo: string; attivo: boolean; pin: string; squadre?: string[] | null };
+export type PersonaStaff = { id: string; nome: string | null; cognome: string | null; ruolo: string; attivo: boolean; pin: string; squadre?: string[] | null; vedeSegreteria?: boolean };
 
 const piccolo = 'rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-60';
 const chiaro = `${piccolo} border-linea bg-white hover:border-blu`;
@@ -131,7 +131,7 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
       <button type="button" className={pieno} onClick={() => fai({ tipo: 'aggiungiSquadra', id: nuovoId('t_') })}>Aggiungi squadra</button>
 
       {/* si ridisegna quando arrivano i dati nuovi dal server (router.refresh dopo ogni cambio) */}
-      <Staff key={staff.map((p) => [p.id, p.nome, p.cognome, p.attivo, p.pin, (p.squadre ?? []).join(',')].join()).join('|')}
+      <Staff key={staff.map((p) => [p.id, p.nome, p.cognome, p.attivo, p.pin, (p.squadre ?? []).join(','), p.vedeSegreteria].join()).join('|')}
         staff={staff} io={io} squadreElenco={squadreElenco} />
 
       <section className="rounded-xl border border-linea bg-white p-4">
@@ -171,6 +171,12 @@ function Staff({ staff, io, squadreElenco }: { staff: PersonaStaff[]; io: string
   async function cambiaSquadreDirettore(id: string, squadre: string[] | null) {
     setSquadreMsg('Salvataggio…');
     const r = await impostaSquadreDirettore(id, squadre).catch(() => ({ ok: false, errore: 'rete assente' }));
+    setSquadreMsg(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
+    router.refresh();
+  }
+  async function cambiaSegreteriaDirettore(id: string, vede: boolean) {
+    setSquadreMsg('Salvataggio…');
+    const r = await impostaSegreteriaDirettore(id, vede).catch(() => ({ ok: false, errore: 'rete assente' }));
     setSquadreMsg(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
     router.refresh();
   }
@@ -241,6 +247,13 @@ function Staff({ staff, io, squadreElenco }: { staff: PersonaStaff[]; io: string
                       </div>
                       <p className="mt-1 text-xs text-grigio">Società, Scouting e Segreteria restano sempre completi; questo limita solo Squadra, Home e Modulistica.</p>
                     </details>
+                  )}
+                  {g.ruolo === 'direttore' && (
+                    <label className="mt-1.5 flex items-center gap-2 text-sm text-grigio">
+                      <input type="checkbox" className="size-5" checked={!!p.vedeSegreteria}
+                        onChange={(e) => cambiaSegreteriaDirettore(p.id, e.target.checked)} />
+                      Vede la Segreteria (tesserati, famiglie, iscrizioni e quote)
+                    </label>
                   )}
                 </li>
               ))}

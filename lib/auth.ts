@@ -17,7 +17,7 @@ export const getAccount = cache(async (): Promise<Profilo | null> => {
 
   const { data } = await supabase
     .from('profiles')
-    .select('id, email, nome, cognome, ruolo, annate, attivo, squadre')
+    .select('id, email, nome, cognome, ruolo, annate, attivo, squadre, vedeSegreteria:vede_segreteria')
     .eq('id', user.id)
     .single();
 

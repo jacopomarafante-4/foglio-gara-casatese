@@ -14,7 +14,7 @@ export default async function PaginaSquadre() {
   const supabase = await createClient();
   const [{ data: doc }, { data: persone }, { data: codici }] = await Promise.all([
     supabase.from('docs').select('data').eq('path', 'shared/teams').maybeSingle(),
-    supabase.from('profiles').select('id, nome, cognome, ruolo, attivo, squadre').in('ruolo', ['scout', 'direttore', 'segreteria']).order('cognome'),
+    supabase.from('profiles').select('id, nome, cognome, ruolo, attivo, squadre, vedeSegreteria:vede_segreteria').in('ruolo', ['scout', 'direttore', 'segreteria']).order('cognome'),
     supabase.from('codici_accesso').select('profilo_id, pin'),
   ]);
   const squadre = ((doc?.data?.items ?? []) as Record<string, unknown>[]).map(conMister) as SquadraSocieta[];
