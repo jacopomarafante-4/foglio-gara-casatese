@@ -21,7 +21,7 @@ export type Evento = {
 };
 export type Impegno = Partita & { team?: SquadraCal; evento?: Evento; luogo?: string };
 
-/** Squadre viste in Programma gare da un mister normale (0056): solo le sue, non tutte come oggi. L'organizzativo e i
+/** Squadre viste in Programma gare da un mister normale: solo le sue, non tutte come oggi. L'organizzativo e i
  *  preparatori dei portieri (vedeTutte) continuano a vedere tutte le squadre. */
 export function squadreProgrammaMister(squadra: { organizza?: boolean; vedeTutte?: boolean }, mie: { id: string }[], tutte: SquadraCal[]): SquadraCal[] {
   if (squadra.organizza || squadra.vedeTutte) return tutte;

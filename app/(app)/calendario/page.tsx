@@ -1,4 +1,4 @@
-// Calendario delle squadre, unito a Gare in un unico pannello (0057): questo indirizzo resta per i link già in giro
+// Calendario delle squadre, unito a Gare in un unico pannello: questo indirizzo resta per i link già in giro
 // (es. salvati nel browser) e rimanda alla scheda "Calendario squadre" dentro /gare.
 import { redirect } from 'next/navigation';
 

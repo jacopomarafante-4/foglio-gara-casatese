@@ -1,4 +1,4 @@
-// Avviso errori in produzione (0058): cattura gli errori del browser e li manda a Sentry (sentry.io), un'email appena
+// Avviso errori in produzione: cattura gli errori del browser e li manda a Sentry (sentry.io), un'email appena
 // ne arriva uno nuovo. NEXT_PUBLIC_SENTRY_DSN su Vercel (prod+preview); senza non fa niente (nessun errore, solo silenzio).
 import * as Sentry from '@sentry/nextjs';
 

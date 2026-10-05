@@ -1,4 +1,4 @@
-// La mia squadra, spostata dentro Squadra → Calendario (0059): questo indirizzo resta per i link già in giro.
+// La mia squadra, spostata dentro Squadra → Calendario: questo indirizzo resta per i link già in giro.
 import { redirect } from 'next/navigation';
 
 export default async function LaMiaSquadraRedirect({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {

@@ -1,4 +1,4 @@
-// Calendario delle nostre squadre nello Scouting (0038, poi unito a Gare in un unico pannello, 0057): tutte le annate,
+// Calendario delle nostre squadre nello Scouting (0038, poi unito a Gare in un unico pannello): tutte le annate,
 // con i colori del Portale (Merate blu, Cernusco oro, Trasferta rosso). Si legge con calendari_squadre().
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';

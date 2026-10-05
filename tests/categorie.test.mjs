@@ -1,7 +1,7 @@
 // Categorie ed età sportiva (lib/categorie.ts): età sportiva = anno di fine stagione − annata; la stagione parte a luglio.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fineStagione, categoriaDaAnnata, etaDaCategoria, giocaInGara } from '@/lib/categorie';
+import { fineStagione, categoriaDaAnnata, etaDaCategoria, giocaInGara, domandaRuolo } from '@/lib/categorie';
 
 test('la stagione cambia a luglio', () => {
   assert.equal(fineStagione(new Date('2026-06-30T12:00:00Z')), 2026);
@@ -29,4 +29,13 @@ test('un giocatore gioca una gara solo della sua squadra e della sua età', () =
   assert.equal(giocaInGara({ annata: 2012, categoria: null, societa_id: 'noi' }, gara, 2027), false, 'fuori età');
   assert.equal(giocaInGara({ annata: 2013, categoria: null, societa_id: 'altri' }, gara, 2027), false, 'altra società');
   assert.equal(giocaInGara({ annata: 2012, categoria: 'Under 14', societa_id: 'noi' }, gara, 2027), true, 'gioca sotto età');
+});
+
+test('domanda sul ruolo nella valutazione per età (stagione 2026/27)', () => {
+  assert.equal(domandaRuolo(2016, 2027), 'movimento');   // Pulcini
+  assert.equal(domandaRuolo(2019, 2027), 'movimento');   // Primi calci
+  assert.equal(domandaRuolo(2015, 2027), 'linea');       // Esordienti 1° anno (U12)
+  assert.equal(domandaRuolo(2014, 2027), 'linea');       // U13
+  assert.equal(domandaRuolo(2013, 2027), 'preciso');     // U14
+  assert.equal(domandaRuolo(null, 2027), 'preciso');
 });

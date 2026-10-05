@@ -7,7 +7,7 @@ import { ICONE_AREE } from '@/lib/condivisi';
 
 const AREE = [
   { k: 'home', etichetta: 'Home', href: '/inizio' },
-  { k: 'calendario', etichetta: 'Calendario', href: '/calendari/tutte' },   // "La mia squadra" è dentro Squadra (0059)
+  { k: 'calendario', etichetta: 'Calendario', href: '/calendari/tutte' },   // "La mia squadra" è dentro Squadra
   { k: 'squadra', etichetta: 'Squadra', href: '/squadra/rosa' },
   { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/distinta' },   // l'organizzativo (senza distinta) va al Programma
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },

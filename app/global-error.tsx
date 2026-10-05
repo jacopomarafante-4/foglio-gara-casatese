@@ -1,5 +1,5 @@
 'use client';
-// Confine di errore di tutta l'app (0058): se qualcosa va storto nel layout stesso (raro: di norma basta error.tsx di
+// Confine di errore di tutta l'app: se qualcosa va storto nel layout stesso (raro: di norma basta error.tsx di
 // ogni pagina), Next mostra questo al posto di una pagina bianca, e l'errore arriva comunque a Sentry (instrumentation.ts
 // lo cattura già per gli altri casi; qui serve mandarlo a mano perché siamo fuori dal layout normale).
 import { useEffect } from 'react';

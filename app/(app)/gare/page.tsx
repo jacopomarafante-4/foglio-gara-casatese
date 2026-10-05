@@ -23,7 +23,7 @@ export default async function Gare({
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
-  // Gare e Calendario in un unico pannello (0057): due schede interne, "Calendario" solo per chi vedeva già /calendario
+  // Gare e Calendario in un unico pannello: due schede interne, "Calendario" solo per chi vedeva già /calendario
   const vista = filtri.vista === 'calendario' && puoSegnalare(profilo.ruolo) ? 'calendario' : 'gare';
   const schede = puoSegnalare(profilo.ruolo) && (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Vista">

@@ -68,8 +68,8 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
 - Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
   `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; `salvaDistinta` salva solo `distinta` e
   `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`;
-  un mister normale vede e stampa SOLO le sue squadre, non tutte: `squadreProgrammaMister()`, 0056; l'organizzativo e i preparatori
-  dei portieri, come prima, tutte). Comunicazione è stata tolta (0060): stesso PDF, dentro Calendario → Avvisi.
+  un mister normale vede e stampa SOLO le sue squadre, non tutte: `squadreProgrammaMister()`; l'organizzativo e i preparatori
+  dei portieri, come prima, tutte). Comunicazione è stata tolta: stesso PDF, dentro Calendario → Avvisi.
   Impaginazione comune in `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`). Ogni PDF scaricato lascia una copia nell'Archivio:
   `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo base64 (un testo di oltre ~1 MB la server action lo
   rifiuta: "Maximum array nesting exceeded"); così anche `caricaDocumento` delle famiglie.
@@ -77,9 +77,9 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   Giorno/Elenco, admin, direttori e organizzativo cambiano amichevoli e tornei di ogni squadra ed eventi, Google con
   `/api/calendario-google`, che riconosce anche la tessera), Avvisi (`avvisi`: admin, direttori e organizzativo pubblicano
   nell'app (`shared/avvisi`) e stampano il PDF; un mister normale vede la stessa pagina ma solo per il PDF su carta intestata,
-  squadra già scelta, senza pubblicare — `puoPubblicare`/`soloMiaSquadra` in `components/calendario/Avvisi.tsx`, 0060, prima
+  squadra già scelta, senza pubblicare — `puoPubblicare`/`soloMiaSquadra` in `components/calendario/Avvisi.tsx`, prima
   era Modulistica → Comunicazione; `?evento=id` = bozza per un evento). "La mia squadra" si è spostata dentro Squadra →
-  Calendario (0059, vedi sotto): qui restava doppia con le pagine della Squadra. Componenti in `components/calendario/`,
+  Calendario (vedi sotto): qui restava doppia con le pagine della Squadra. Componenti in `components/calendario/`,
   regole pure in `lib/calendario-portale.ts`, dati in `lib/portale-dati.ts` (`calendariTutti`).
 - Home (`/inizio`; `/home` è la Home dello Scouting), stile A (colori del club su fondo chiaro): mister (prossima partita in grande con
   risposte delle famiglie e link al campo, avvisi, da fare, prossimi impegni, ultimo risultato coi marcatori, stagione e presenze mese
@@ -110,7 +110,7 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   Campi (`/squadra/campi`, posizione del cancello con `impostaCampo`, `lib/campi.ts`). Attività di base (da Under 13 in giù): solo
   Convocazioni e Tabellini. Report PDF delle statistiche (admin e direttori): `lib/report-statistiche.ts`. Disegno dei PDF a pagina
   intera su tela: `lib/tela.ts` (T, righeTesto, testoInRiquadro, tabella, intestazioneSocieta).
-  Calendario (`/squadra/calendario`, 0059; prima "Calendario → La mia squadra", spostata qui perché restava doppia con le pagine
+  Calendario (`/squadra/calendario`; prima "Calendario → La mia squadra", spostata qui perché restava doppia con le pagine
   della Squadra): calendario ufficiale, amichevoli del registro, eventi della squadra, Scarica Excel; preparatori dei portieri:
   le partite delle categorie dei loro portieri con la convocazione (`datiPreparatore`). Usa `apriSquadra()` come le altre pagine.
 - Scouting dei mister (`/scouting/segnala`, `/scouting/giocatori`, `/scouting/valuta/[id]`; solo mister con la tessera, lo staff va al
@@ -289,6 +289,11 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0056: valutazione, la domanda sul ruolo cambia con l'età (`domandaRuolo()` in `lib/categorie.ts`, età sportiva): fino ai
+  Pulcini (età ≤ 11) portiere o di movimento, Esordienti (12-13) portiere o la linea (obbligatoria), dall'Under 14 il ruolo preciso
+  come prima. `valutazioni.ruolo_campo` per le prime due; il trigger `ruolo_da_valutazione` aggiorna `giocatori.ruolo` ("di
+  movimento" non cancella una linea già nota) e toglie un `ruolo_preciso` non più coerente; `coach_valuta` riscritta.
+  `components/ModuloValutazione.tsx` riceve `annata` e `ruolo`
 - 0055: `profiles.vede_segreteria` (vedi ## Ruoli): un direttore vede l'area Segreteria solo se l'admin gliel'ha data (default
   false); riscrive `gestisce_segreteria()`, aggiunge `imposta_segreteria_direttore(profilo, vede)` (solo admin)
 - 0053: `profiles.squadre` (vedi ## Ruoli) e preparatori dei portieri per categoria: `preparatore_puo(pin, squadra)` (la loro squadra
@@ -353,7 +358,7 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   autore); nel Portale `autoreTondo()`
 - 0038: `calendari_squadre()` (admin, direttori, scout): squadre del Portale (senza organizzazione e preparatori) con le sole
   partite (data, ora, avversario, casa, campo, tipo). Tutte le annate, colori come `calDi()` del Portale, periodo (weekend, 2
-  settimane, stagione) e squadra: dal 0057 è la scheda "Calendario squadre" dentro `/gare` (`CalendarioSquadre`), non più una
+  settimane, stagione) e squadra: ora è la scheda "Calendario squadre" dentro `/gare` (`CalendarioSquadre`), non più una
   pagina a sé (`/calendario` resta solo come rimando per i link vecchi)
 - 0037: `con_contatto(ids)`: quali giocatori (visibili a chi chiama) hanno un contatto con telefono o email, solo sì/no, anche per
   gli scout; `conContatto()` in `lib/contatti.ts`, segno verde `components/ContattoFlag.tsx` (elenco Giocatori, scheda, Necessità)
@@ -494,7 +499,7 @@ NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_K
 conteggi e tipo del problema (frasi fisse, mai testo delle pagine: registri pubblici), esce con errore se qualcosa non va.
 Un profilo che fallisce si riprova una volta (riga "↻ riprovato"): conta il secondo giro.
 
-## Avviso errori in produzione (Sentry, 0058)
+## Avviso errori in produzione (Sentry)
 Ogni errore del sito in produzione (server e browser) va a Sentry (sentry.io, organizzazione `jacopo-marafante`, progetto
 `javascript-nextjs`) e manda un'email. `NEXT_PUBLIC_SENTRY_DSN` (pubblico, va bene nel browser) e `SENTRY_AUTH_TOKEN`
 (solo per caricare i source maps alla pubblicazione, mai nel browser) su Vercel (prod+preview) e in `.env.local`; senza

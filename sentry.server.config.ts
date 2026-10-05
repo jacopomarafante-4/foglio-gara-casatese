@@ -1,4 +1,4 @@
-// Avviso errori in produzione (0058): lato server (Server Actions, Route Handler, pagine). Vedi instrumentation-client.ts.
+// Avviso errori in produzione: lato server (Server Actions, Route Handler, pagine). Vedi instrumentation-client.ts.
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({

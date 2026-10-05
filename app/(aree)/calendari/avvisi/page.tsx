@@ -1,5 +1,5 @@
 // Calendario → Avvisi (nell'app dalla tappa 3): pubblicano nell'app (shared/avvisi) admin, direttori e responsabile
-// organizzativo; un mister normale usa la stessa pagina solo per il PDF su carta intestata (0060: era Modulistica →
+// organizzativo; un mister normale usa la stessa pagina solo per il PDF su carta intestata (era Modulistica →
 // Comunicazione, tolta: stesso PDF, lib/pdf-comunicazione.ts), con la sua squadra già scelta e senza pubblicare.
 // ?evento=<id>: bozza pronta per un evento della società ("Scrivi un avviso per questo evento" in Tutte le squadre).
 import { redirect } from 'next/navigation';
