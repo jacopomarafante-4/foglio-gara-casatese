@@ -69,8 +69,7 @@ export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo
     <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede dello scouting">
       <Scheda href="/home">Home</Scheda>
       <Scheda href="/giocatori">Giocatori</Scheda>
-      <Scheda href="/gare">Gare</Scheda>
-      {segnala && <Scheda href="/calendario">Calendario</Scheda>}
+      <Scheda href="/gare" attivaSu={['/calendario']}>Gare</Scheda>
       {segnala && <Scheda href="/necessita">Necessità</Scheda>}
       {segnala && <Scheda href="/segnala">Segnala</Scheda>}
       <Scheda href="/profilo">Attività</Scheda>

@@ -6,6 +6,7 @@ import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreS
 import { GaraCard } from '@/components/GaraCard';
 import { StaffGare } from '@/components/AffidaGara';
 import { Avviso } from '@/components/Avviso';
+import { CalendarioSquadre } from '@/components/scouting/CalendarioSquadre';
 import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
 
@@ -13,14 +14,32 @@ const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14'];
 const LIMITE = 1000;
 /** Tolleranza sul limite di km (le distanze sono in linea d'aria) */
 const TOLLERANZA = 1.1;
+const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-semibold ${attiva ? 'bg-blu text-white' : 'border border-linea bg-white'}`;
 
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ km?: string; periodo?: string; tutte?: string; categoria?: string; ok?: string; errore?: string }>;
+  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; tutte?: string; categoria?: string; ok?: string; errore?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
+  // Gare e Calendario in un unico pannello (0057): due schede interne, "Calendario" solo per chi vedeva già /calendario
+  const vista = filtri.vista === 'calendario' && puoSegnalare(profilo.ruolo) ? 'calendario' : 'gare';
+  const schede = puoSegnalare(profilo.ruolo) && (
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Vista">
+      <Link href="/gare" className={chipVista(vista === 'gare')}>Gare da vedere</Link>
+      <Link href={`/gare?vista=calendario`} className={chipVista(vista === 'calendario')}>Calendario squadre</Link>
+    </div>
+  );
+  if (vista === 'calendario') {
+    return (
+      <div className="space-y-5">
+        <h1 className="font-display text-4xl font-bold">Gare</h1>
+        {schede}
+        <CalendarioSquadre squadra={filtri.squadra} periodo={filtri.periodo} />
+      </div>
+    );
+  }
   const supabase = await createClient();
 
   const km = Math.max(1, Number(filtri.km) || 25);
@@ -104,6 +123,7 @@ export default async function Gare({
           <Link href="/gare/nuova" className="bottone">Aggiungi partita</Link>
         )}
       </div>
+      {schede}
 
       <Avviso ok={filtri.ok} errore={filtri.errore} />
 
