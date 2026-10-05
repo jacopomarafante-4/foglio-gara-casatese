@@ -2,7 +2,7 @@
 // mister con la tessera → funzioni coach_* col PIN; admin, direttori → tabella docs (RLS). Solo sul server.
 import { getProfilo } from '@/lib/auth';
 import { getMister, type Mister } from '@/lib/mister';
-import type { Profilo } from '@/lib/ruoli';
+import { filtraSquadreDirettore, type Profilo } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { etaSquadra, type Evento, type Impegno, type Partita, type SquadraCal } from '@/lib/programma';
 import type { FoglioConvocazioni } from '@/lib/calendario-portale';
@@ -39,10 +39,17 @@ export async function leggiDocs(chi: Chi, paths: string[]): Promise<Record<strin
   return out;
 }
 
-/** Squadre del Portale viste da chi è entrato (per il mister le dà coach_get: tutte per organizzativo e preparatori, se no la sua) */
+/** Filtra un elenco di squadre secondo le squadre assegnate a un direttore (lib/ruoli.ts, 0053); con gli altri ruoli non tocca nulla */
+export function filtraSquadre<T extends { id: string }>(chi: Chi, lista: T[]): T[] {
+  return filtraSquadreDirettore(chi.profilo, lista);
+}
+
+/** Squadre del Portale viste da chi è entrato (per il mister le dà coach_get: tutte per organizzativo e preparatori, se no la sua).
+ *  Per un direttore con squadre limitate (0053), solo le sue. */
 export async function squadreDelPortale(chi: Chi) {
   const d = (await leggiDocs(chi, ['shared/teams']))['shared/teams'];
-  return ((d?.items ?? []) as { id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean; coaches?: { name?: string; eta?: number[] }[] }[]);
+  const tutte = ((d?.items ?? []) as { id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean; coaches?: { name?: string; eta?: number[] }[] }[]);
+  return filtraSquadre(chi, tutte);
 }
 
 /** Calendari di tutte le squadre ed eventi della società. Mister: coach_calendari (nome, categoria e partite di tutte) più

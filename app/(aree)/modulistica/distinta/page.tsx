@@ -4,7 +4,7 @@
 import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';
 import { getMister } from '@/lib/mister';
-import { vedeTutto } from '@/lib/ruoli';
+import { filtraSquadreDirettore, vedeTutto } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { distintaNuova, nomiMister, type Foglio } from '@/lib/distinta';
 import { DistintaForm } from '@/components/DistintaForm';
@@ -32,7 +32,7 @@ export default async function PaginaDistinta({ searchParams }: { searchParams: P
     giocatori = ro.data?.players ?? [];
   } else {
     const { data: t } = await supabase.from('docs').select('data').eq('path', 'shared/teams').maybeSingle();
-    squadre = ((t?.data?.items ?? []) as Squadra[]).filter((x) => !x.organizza && !x.vedeTutte);
+    squadre = filtraSquadreDirettore(profilo, ((t?.data?.items ?? []) as Squadra[]).filter((x) => !x.organizza && !x.vedeTutte));
     const { squadra: scelta } = await searchParams;
     squadra = squadre.find((x) => x.id === scelta) ?? squadre[0];
     if (squadra) {

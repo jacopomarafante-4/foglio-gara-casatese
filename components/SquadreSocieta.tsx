@@ -4,13 +4,13 @@
 // Le modifiche si vedono subito e partono al server una per una; i nomi mentre si scrivono (dopo una pausa).
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { cambiaSquadre, esportaBackup } from '@/app/(aree)/docs-actions';
+import { cambiaSquadre, esportaBackup, impostaSquadreDirettore } from '@/app/(aree)/docs-actions';
 import { RipristinoBackup } from '@/components/RipristinoBackup';
 import { nuovoId } from '@/lib/calendario-portale';
 import { applicaOpSquadre, type OpSquadre, type SquadraSocieta } from '@/lib/squadre-societa';
 import { Messaggio } from '@/components/calendario/salvataggio';
 
-export type PersonaStaff = { id: string; nome: string | null; cognome: string | null; ruolo: string; attivo: boolean; pin: string };
+export type PersonaStaff = { id: string; nome: string | null; cognome: string | null; ruolo: string; attivo: boolean; pin: string; squadre?: string[] | null };
 
 const piccolo = 'rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-60';
 const chiaro = `${piccolo} border-linea bg-white hover:border-blu`;
@@ -20,7 +20,11 @@ const PinBox = ({ pin, vuoto }: { pin?: string; vuoto: string }) => pin
   ? <span className="flex-none rounded-md bg-carta px-2 py-1 font-mono text-base font-bold tracking-widest" title="PIN personale">{pin}</span>
   : <span className="flex-none rounded-md border border-dashed border-linea px-2 py-1 text-xs text-grigio">{vuoto}</span>;
 
-export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false }: { squadre: SquadraSocieta[]; staff: PersonaStaff[]; io: string; admin?: boolean }) {
+export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, squadreElenco = [] }: {
+  squadre: SquadraSocieta[]; staff: PersonaStaff[]; io: string; admin?: boolean;
+  /** Elenco per le squadre di competenza di un direttore (id + nome da mostrare), senza Organizzazione né Preparatori */
+  squadreElenco?: { id: string; nome: string }[];
+}) {
   const [squadre, setSquadre] = useState(iniziali);
   /* un PIN per persona (0050): il mister che usa il PIN personale di uno staff */
   const staffDi = (pin: string) => { const p = pin ? staff.find((x) => x.pin === pin) : undefined; return p ? GRUPPI.find((g) => g.ruolo === p.ruolo)?.titolo.toLowerCase() : ''; };
@@ -127,7 +131,8 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false }: 
       <button type="button" className={pieno} onClick={() => fai({ tipo: 'aggiungiSquadra', id: nuovoId('t_') })}>Aggiungi squadra</button>
 
       {/* si ridisegna quando arrivano i dati nuovi dal server (router.refresh dopo ogni cambio) */}
-      <Staff key={staff.map((p) => [p.id, p.nome, p.cognome, p.attivo, p.pin].join()).join('|')} staff={staff} io={io} />
+      <Staff key={staff.map((p) => [p.id, p.nome, p.cognome, p.attivo, p.pin, (p.squadre ?? []).join(',')].join()).join('|')}
+        staff={staff} io={io} squadreElenco={squadreElenco} />
 
       <section className="rounded-xl border border-linea bg-white p-4">
         <h2 className="font-display text-2xl font-bold">Backup</h2>
@@ -156,11 +161,19 @@ const GRUPPI = [
   { ruolo: 'segreteria', titolo: 'Segreteria', sotto: 'tesserati, famiglie, iscrizioni e quote', chi: 'addetto di segreteria' },
 ];
 
-function Staff({ staff, io }: { staff: PersonaStaff[]; io: string }) {
+function Staff({ staff, io, squadreElenco }: { staff: PersonaStaff[]; io: string; squadreElenco: { id: string; nome: string }[] }) {
   const router = useRouter();
   const [occupato, setOccupato] = useState(false);
   const [errore, setErrore] = useState('');
   const [nuovo, setNuovo] = useState<Record<string, string | undefined>>({});
+  const [squadreMsg, setSquadreMsg] = useState('');
+
+  async function cambiaSquadreDirettore(id: string, squadre: string[] | null) {
+    setSquadreMsg('Salvataggio…');
+    const r = await impostaSquadreDirettore(id, squadre).catch(() => ({ ok: false, errore: 'rete assente' }));
+    setSquadreMsg(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
+    router.refresh();
+  }
 
   async function azione(body: Record<string, unknown>) {
     setOccupato(true); setErrore('');
@@ -177,6 +190,7 @@ function Staff({ staff, io }: { staff: PersonaStaff[]; io: string }) {
   return (
     <>
       {errore && <p role="alert" className="rounded-lg border border-rosso bg-rosso/10 p-3 font-semibold text-rosso">{errore}</p>}
+      {squadreMsg && <p role="status" className="text-sm text-grigio">{squadreMsg}</p>}
       {GRUPPI.map((g) => {
         const persone = staff.filter((p) => p.ruolo === g.ruolo);
         return (
@@ -188,23 +202,45 @@ function Staff({ staff, io }: { staff: PersonaStaff[]; io: string }) {
             {persone.length === 0 && <p className="mt-2 text-sm text-grigio">Nessun {g.chi}: aggiungilo e genera il suo PIN.</p>}
             <ul className="mt-2 divide-y divide-linea">
               {persone.map((p) => (
-                <li key={p.id} className={`flex items-center gap-2 py-2 ${p.attivo ? '' : 'opacity-60'}`}>
-                  <input className="campo min-w-0 flex-1 py-2" defaultValue={nomeDi(p)} placeholder="Nome e cognome" aria-label="Nome" disabled={occupato}
-                    onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== nomeDi(p)) azione({ azione: 'nome', id: p.id, nome: v }); }} />
-                  <PinBox pin={p.attivo ? p.pin : ''} vuoto={p.attivo ? 'Senza PIN' : 'Sospeso'} />
-                  {p.attivo ? (
-                    <>
-                      <button type="button" className={p.pin ? chiaro : pieno} disabled={occupato}
-                        onClick={() => (!p.pin || confirm(`Rigenerare il codice di ${nomeDi(p)}? Quello vecchio smette di funzionare.`)) && azione({ azione: 'pin', id: p.id })}>
-                        {p.pin ? 'Rigenera' : 'Genera PIN'}
-                      </button>
-                      {p.id !== io && (
-                        <button type="button" className={croce} disabled={occupato} aria-label={`Sospendi ${nomeDi(p)}`} title="Sospendi l'accesso"
-                          onClick={() => confirm(`Sospendere ${nomeDi(p)}? Non potrà più entrare finché non lo riattivi.`) && azione({ azione: 'stato', id: p.id, attivo: false })}>×</button>
-                      )}
-                    </>
-                  ) : (
-                    <button type="button" className={chiaro} disabled={occupato} onClick={() => azione({ azione: 'stato', id: p.id, attivo: true })}>Riattiva</button>
+                <li key={p.id} className={`py-2 ${p.attivo ? '' : 'opacity-60'}`}>
+                  <div className="flex items-center gap-2">
+                    <input className="campo min-w-0 flex-1 py-2" defaultValue={nomeDi(p)} placeholder="Nome e cognome" aria-label="Nome" disabled={occupato}
+                      onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== nomeDi(p)) azione({ azione: 'nome', id: p.id, nome: v }); }} />
+                    <PinBox pin={p.attivo ? p.pin : ''} vuoto={p.attivo ? 'Senza PIN' : 'Sospeso'} />
+                    {p.attivo ? (
+                      <>
+                        <button type="button" className={p.pin ? chiaro : pieno} disabled={occupato}
+                          onClick={() => (!p.pin || confirm(`Rigenerare il codice di ${nomeDi(p)}? Quello vecchio smette di funzionare.`)) && azione({ azione: 'pin', id: p.id })}>
+                          {p.pin ? 'Rigenera' : 'Genera PIN'}
+                        </button>
+                        {p.id !== io && (
+                          <button type="button" className={croce} disabled={occupato} aria-label={`Sospendi ${nomeDi(p)}`} title="Sospendi l'accesso"
+                            onClick={() => confirm(`Sospendere ${nomeDi(p)}? Non potrà più entrare finché non lo riattivi.`) && azione({ azione: 'stato', id: p.id, attivo: false })}>×</button>
+                        )}
+                      </>
+                    ) : (
+                      <button type="button" className={chiaro} disabled={occupato} onClick={() => azione({ azione: 'stato', id: p.id, attivo: true })}>Riattiva</button>
+                    )}
+                  </div>
+                  {g.ruolo === 'direttore' && squadreElenco.length > 0 && (
+                    <details className="mt-1.5">
+                      <summary className="cursor-pointer text-sm text-grigio">
+                        Squadre di competenza: {p.squadre === null || p.squadre === undefined ? 'tutte' : p.squadre.length ? p.squadre.length : 'nessuna (solo Segreteria, Società e Scouting)'}
+                      </summary>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <button type="button" aria-pressed={p.squadre == null} onClick={() => cambiaSquadreDirettore(p.id, null)}
+                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${p.squadre == null ? 'border-blu bg-blu text-white' : 'border-linea bg-white'}`}>Tutte</button>
+                        {squadreElenco.map((t) => {
+                          const scelta = !!p.squadre?.includes(t.id);
+                          return (
+                            <button key={t.id} type="button" aria-pressed={scelta}
+                              onClick={() => cambiaSquadreDirettore(p.id, (p.squadre ?? []).includes(t.id) ? (p.squadre ?? []).filter((x) => x !== t.id) : [...(p.squadre ?? []), t.id])}
+                              className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${scelta ? 'border-blu bg-blu text-white' : 'border-linea bg-white'}`}>{t.nome}</button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-1 text-xs text-grigio">Società, Scouting e Segreteria restano sempre completi; questo limita solo Squadra, Home e Modulistica.</p>
+                    </details>
                   )}
                 </li>
               ))}

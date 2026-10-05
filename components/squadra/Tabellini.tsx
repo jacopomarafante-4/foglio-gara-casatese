@@ -4,6 +4,7 @@
 // minuti, gol, gol subiti del portiere, autogol, durata; attività di base: presenti e risultato a tempi (3–5). Si salva da solo
 // nel registro (registro/<squadra>.games, amichevoli in .friendlies); direttori in sola lettura.
 import { useEffect, useRef, useState } from 'react';
+import { segnaTabellinoPortiere } from '@/app/(aree)/docs-actions';
 import {
   DURATA_PARTITA, TIPI_GARA, colonnePartite, garaGiocata, haGiocato, infoGara, inPortaGara, pctTesto, riepilogoTempi, risultato, testoTempi,
   type Gara, type Giocata, type Tempo,
@@ -18,14 +19,16 @@ const num = (v: unknown) => +(v as number) || 0;
 const piccolo = 'rounded-lg border px-3 py-1.5 text-sm font-semibold';
 const etichetta = 'mb-1 block text-sm font-semibold text-grigio';
 
-export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calendario: cal0, gare: gare0, foglio, adb, oggi, aperto: aperto0, soloLettura }: {
+export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calendario: cal0, gare: gare0, foglio, adb, oggi, aperto: aperto0, soloLettura, soloPortieriScrivibile = false }: {
   squadraId: string; nomeSquadra: string; giocatori: { id: string; name: string }[]; portieri: string[]; calendario: Cal[]; gare: GaraAdb[];
   foglio: { date?: string; opponent?: string; lineup?: Record<string, string>; bench?: string[] }; adb: boolean; oggi: string; aperto: string | null; soloLettura: boolean;
+  /** preparatore dei portieri su un'altra squadra DELLE SUE CATEGORIE: minuti e gol subiti dei soli portieri (non in attività di base) */
+  soloPortieriScrivibile?: boolean;
 }) {
   const [gare, setGare] = useState(gare0);
   const [calendario, setCalendario] = useState(cal0);
   const [aperto, setAperto] = useState(aperto0);
-  const { salva, messaggio } = useSalva();
+  const { salva, messaggio, setMessaggio } = useSalva();
   const tabella = useRef<HTMLDivElement>(null);
   const path = 'registro/' + squadraId;
   const g = gare.find((x) => x.id === aperto) ?? null;
@@ -147,6 +150,14 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
       if ('min' in campi) delete x.pres;   // con i minuti scritti la presenza "senza minuti" non serve più
       salvaGara({ ...g, pl: { ...pl, [pid]: x } });
     };
+    /* preparatore su un'altra squadra: solo minuti e gol subiti DEI SUOI portieri (coach_tabellino_portiere; i gol fatti e
+       "in porta in questa partita" restano al mister) */
+    async function segnaMinGcPortiere(pid: string, min: number | null, gc: number | null) {
+      setGare((l) => l.map((y) => (y.id !== g!.id ? y : { ...y, pl: { ...(y.pl ?? {}), [pid]: { ...(y.pl?.[pid] ?? {}), min: min ?? '', gc: gc ?? '', gk: true } } })));
+      setMessaggio('Salvataggio…');
+      const r = await segnaTabellinoPortiere(squadraId, g!.id, pid, min, gc).catch(() => ({ ok: false, errore: 'rete assente' }));
+      setMessaggio(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
+    }
     const numero = (v: string) => (v === '' ? '' : Math.max(0, +v || 0));
     const campoGara = (l: string, k: 'date' | 'opponent', tipo = 'text') => (
       <label><span className={etichetta}>{l}</span><input type={tipo} className="campo" readOnly={soloLettura} value={String(g[k] ?? '')} onChange={(e) => salvaGara({ ...g, [k]: e.target.value })} /></label>
@@ -175,6 +186,7 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
           <div className="rounded-xl border border-linea bg-white px-4 py-2 text-center"><span className="block text-xs font-semibold text-grigio">Risultato</span>
             <b className="block font-display text-3xl">{sc ? `${sc.gf} - ${sc.ga}` : '– -'}</b><small className="text-grigio">calcolato dai gol</small></div>
         </div>
+        {soloPortieriScrivibile && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">🧤 Qui scrivi solo minuti e gol subiti dei tuoi portieri.</p>}
         <div className="grid grid-cols-2 gap-2">
           <label><span className={etichetta}>Durata partita (minuti)</span><input type="number" inputMode="numeric" className="campo" readOnly={soloLettura} value={String(g.dur ?? DURATA_PARTITA)} onChange={(e) => salvaGara({ ...g, dur: e.target.value })} /></label>
           <label><span className={etichetta}>Autogol a favore</span><input type="number" inputMode="numeric" min={0} placeholder="0" className="campo" readOnly={soloLettura} value={String(g.og ?? '')} onChange={(e) => salvaGara({ ...g, og: e.target.value })} /></label>
@@ -194,11 +206,21 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
         <ul className="space-y-1.5">
           {ordinati.map((p) => {
             const x = pl[p.id] ?? {}, gk = inPortaGara(g, p.id, portieri), on = haGiocato(x);
+            /* min e gc: il preparatore può scriverli sui SUOI portieri (coach_tabellino_portiere), anche fuori dalla sua squadra */
+            const puoScrivereGk = soloPortieriScrivibile && gk && portieri.includes(p.id);
             const casella = (l: string, k: 'min' | 'g' | 'gc', max: number, ph: string) => (
               <label className="text-center text-xs font-semibold text-grigio">{l}
-                <input type="number" inputMode="numeric" min={0} max={max} placeholder={ph} readOnly={soloLettura}
+                <input type="number" inputMode="numeric" min={0} max={max} placeholder={ph} readOnly={soloLettura && !(puoScrivereGk && k !== 'g')}
                   className="mt-0.5 block w-16 rounded-lg border border-linea px-1 py-1.5 text-center text-base text-inchiostro" value={String(x[k] ?? '')}
-                  onChange={(e) => cambiaGioc(p.id, { [k]: numero(e.target.value) })} />
+                  onChange={(e) => {
+                    const v = numero(e.target.value);
+                    if (!soloLettura) return cambiaGioc(p.id, { [k]: v });
+                    if (puoScrivereGk && (k === 'min' || k === 'gc')) {
+                      const altra = k === 'min' ? 'gc' : 'min', valoreAltra = x[altra] === '' || x[altra] == null ? null : num(x[altra]);
+                      const questo = v === '' ? null : v;
+                      segnaMinGcPortiere(p.id, k === 'min' ? questo : valoreAltra, k === 'gc' ? questo : valoreAltra);
+                    }
+                  }} />
               </label>
             );
             return (

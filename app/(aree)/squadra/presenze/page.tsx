@@ -12,7 +12,7 @@ import { Presenze } from '@/components/squadra/Presenze';
 
 export default async function PaginaPresenze({ searchParams }: { searchParams: Promise<{ squadra?: string; allenamento?: string }> }) {
   const q = await searchParams;
-  const { chi, squadre, squadra, eta, soloLettura, conSquadra } = await apriSquadra(q.squadra);
+  const { chi, squadre, squadra, eta, soloLettura, soloPortieriScrivibile, conSquadra } = await apriSquadra(q.squadra);
   if (!squadra) return <p className="text-grigio">Nessuna squadra.</p>;
   const id = squadra.id;
   const docs = await leggiDocs(chi, ['roster/' + id, 'registro/' + id]);
@@ -41,7 +41,8 @@ export default async function PaginaPresenze({ searchParams }: { searchParams: P
       {giocatori.length === 0
         ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima serve la rosa (Squadra → Rosa).</p>
         : <Presenze key={id} squadraId={id} giocatori={giocatori} allenamenti={reg.trainings ?? []} aperto={q.allenamento ?? null}
-            oggi={oggiIso()} soloLettura={soloLettura} gruppi={gruppi} etaDi={etaDi} gruppoIniziale={gruppoIniziale} />}
+            oggi={oggiIso()} soloLettura={soloLettura} soloPortieriScrivibile={soloPortieriScrivibile}
+            gruppi={gruppi} etaDi={etaDi} gruppoIniziale={gruppoIniziale} />}
     </div>
   );
 }

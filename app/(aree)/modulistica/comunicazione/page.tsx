@@ -4,7 +4,7 @@
 import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';
 import { getMister } from '@/lib/mister';
-import { vedeTutto } from '@/lib/ruoli';
+import { filtraSquadreDirettore, vedeTutto } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { oggiIso } from '@/lib/utili';
 import { ComunicazioneForm } from '@/components/ComunicazioneForm';
@@ -25,7 +25,8 @@ export default async function PaginaComunicazione() {
     const { data } = mister
       ? await supabase.rpc('coach_get', { p_pin: mister.pin, p_path: 'shared/teams' })
       : await supabase.from('docs').select('data').eq('path', 'shared/teams').maybeSingle().then((r) => ({ data: r.data?.data }));
-    categorie = [...new Set(((data?.items ?? []) as Squadra[]).filter((t) => !t.organizza && !t.vedeTutte).map((t) => t.category).filter(Boolean))] as string[];
+    const tutte = ((data?.items ?? []) as (Squadra & { id: string })[]).filter((t) => !t.organizza && !t.vedeTutte);
+    categorie = [...new Set(filtraSquadreDirettore(profilo, tutte).map((t) => t.category).filter(Boolean))] as string[];
   }
 
   return (

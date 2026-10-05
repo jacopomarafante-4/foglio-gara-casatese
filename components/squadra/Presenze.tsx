@@ -5,6 +5,7 @@
 // Squadra dei preparatori dei portieri (`gruppi`): portieri divisi per preparatore; scelto un preparatore si vedono e si segnano
 // solo i suoi (un allenamento nuovo li mette presenti, gli altri restano vuoti e non contano).
 import { useEffect, useRef, useState } from 'react';
+import { segnaPresenzaPortiere } from '@/app/(aree)/docs-actions';
 import { MOTIVI, SOGLIA_PRESENZE, assente, pctTesto, percentuale, presenzaDi, type Allenamento } from '@/lib/registro';
 import { fmtData, giorno } from '@/lib/programma';
 import { nuovoId } from '@/lib/calendario-portale';
@@ -22,8 +23,10 @@ function Cella({ v }: { v: string }) {
   return <td />;
 }
 
-export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: apertoIniziale, oggi, soloLettura, gruppi, etaDi, gruppoIniziale }: {
+export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: apertoIniziale, oggi, soloLettura, soloPortieriScrivibile = false, gruppi, etaDi, gruppoIniziale }: {
   squadraId: string; giocatori: Giocatore[]; allenamenti: Allenamento[]; aperto: string | null; oggi: string; soloLettura: boolean;
+  /** preparatore dei portieri su un'altra squadra DELLE SUE CATEGORIE: può segnare la presenza dei soli portieri */
+  soloPortieriScrivibile?: boolean;
   gruppi?: GruppoPortieri[]; etaDi?: Record<string, number>; gruppoIniziale?: string;
 }) {
   const [filtro, setFiltro] = useState(gruppoIniziale ?? 'tutti');
@@ -45,7 +48,7 @@ export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: aper
   const [elenco, setElenco] = useState(allenamenti);
   const [aperto, setAperto] = useState<string | null>(apertoIniziale);
   const [nuovaData, setNuovaData] = useState(oggi);
-  const { salva, messaggio } = useSalva();
+  const { salva, messaggio, setMessaggio } = useSalva();
   const tabella = useRef<HTMLDivElement>(null);
   const path = 'registro/' + squadraId;
   const ordinati = elenco.slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -85,6 +88,15 @@ export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: aper
     const vals = giocatori.map((p) => presenzaDi(t, p.id));
     const tuttiPresenti = { ...(t.att ?? {}), ...Object.fromEntries(giocatori.map((p) => [p.id, 'P'])) };
     const segna = (pid: string, v: string) => cambia({ ...t, att: { ...(t.att ?? {}), [pid]: v } });
+    /* preparatore su un'altra squadra: solo i SUOI portieri, con l'azione dedicata (coach_presenza_portiere) */
+    async function segnaPortiere(pid: string, v: string) {
+      setElenco((l) => l.map((x) => (x.id === t!.id ? { ...x, att: { ...(x.att ?? {}), [pid]: v } } : x)));
+      setMessaggio('Salvataggio…');
+      const r = await segnaPresenzaPortiere(squadraId, t!.id, pid, v).catch(() => ({ ok: false, errore: 'rete assente' }));
+      setMessaggio(r.ok ? 'Salvato' : `Non salvato: ${r.errore ?? 'riprova'}`);
+    }
+    const puoScrivere = (p: Giocatore) => !soloLettura || (soloPortieriScrivibile && p.gk);
+    const segnaRiga = (p: Giocatore, v: string) => (soloLettura ? segnaPortiere(p.id, v) : segna(p.id, v));
     return (
       <div className="space-y-3">
         <button className={`${piccolo} border-linea bg-white hover:border-blu`} onClick={() => apri(null)}>← Tabella allenamenti</button>
@@ -95,7 +107,8 @@ export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: aper
             <span className="rounded-full bg-rosso/10 px-3 py-1"><b>{vals.filter(assente).length}</b> assenti</span>
           </div>
         </div>
-        {soloLettura && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
+        {soloPortieriScrivibile ? <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">🧤 Qui segni solo la presenza dei tuoi portieri.</p>
+          : soloLettura && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
         {sceltaGruppo}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label><span className="mb-1 block text-sm font-semibold text-grigio">Data</span>
@@ -117,16 +130,16 @@ export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: aper
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-semibold">{p.gk && '🧤 '}{p.name}{cat(p.id)}</span>
                   <div className="inline-flex overflow-hidden rounded-lg border border-linea" role="group" aria-label={`Presenza ${p.name}`}>
-                    <button disabled={soloLettura} aria-pressed={v === 'P'} onClick={() => segna(p.id, 'P')}
+                    <button disabled={!puoScrivere(p)} aria-pressed={v === 'P'} onClick={() => segnaRiga(p, 'P')}
                       className={`px-3 py-1.5 text-sm font-semibold ${v === 'P' ? 'bg-verde text-white' : 'bg-white'}`}>Presente</button>
-                    <button disabled={soloLettura} aria-pressed={ass} onClick={() => segna(p.id, ass ? v : 'A')}
+                    <button disabled={!puoScrivere(p)} aria-pressed={ass} onClick={() => segnaRiga(p, ass ? v : 'A')}
                       className={`px-3 py-1.5 text-sm font-semibold ${ass ? 'bg-rosso text-white' : 'bg-white'}`}>Assente</button>
                   </div>
                 </div>
                 {ass && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label={`Motivo assenza ${p.name}`}>
                     {MOTIVI.map((m) => (
-                      <button key={m.k} disabled={soloLettura} aria-pressed={v === m.k} onClick={() => segna(p.id, m.k)}
+                      <button key={m.k} disabled={!puoScrivere(p)} aria-pressed={v === m.k} onClick={() => segnaRiga(p, m.k)}
                         className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${v === m.k ? 'border-inchiostro bg-inchiostro text-white' : 'border-linea bg-white'}`}>{m.l}</button>
                     ))}
                     {v === 'A' && <span className="text-xs font-bold text-rosso">Scegli il motivo</span>}
