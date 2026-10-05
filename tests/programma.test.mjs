@@ -1,7 +1,7 @@
 // Programma gare (lib/programma.ts) e tessera del mister (lib/tessera.ts)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { impegniDelPeriodo, ordineProgramma, settimanaDi, eventoCome, calendario } from '@/lib/programma';
+import { impegniDelPeriodo, ordineProgramma, settimanaDi, eventoCome, calendario, squadreProgrammaMister } from '@/lib/programma';
 import { creaTessera, leggiTessera } from '@/lib/tessera';
 
 const U14 = { id: 't_u14', category: 'Under 14', matches: [
@@ -133,4 +133,15 @@ test('partite: statistiche, colonne dei tabellini, tempi e campi', () => {
   assert.equal(leggiCoordinate('https://maps.google.com/?q=45.69,9.40'), '45.690000,9.400000');
   assert.equal(campoPerRicerca('C.S. Comunale Campo 2 - Cernusco Lombardone (LC)'), 'Centro Sportivo Comunale, Cernusco Lombardone');
   assert.match(linkCampo({ 'campo x': { ll: '45.1,9.2' } }, 'Campo X'), /destination=45\.1,9\.2/);
+});
+
+test('Programma gare, squadreProgrammaMister (0056): un mister normale vede solo le sue squadre', () => {
+  const tutte = [U14, U17, { id: 't_u15', category: 'Under 15', matches: [] }];
+  assert.deepEqual(squadreProgrammaMister({}, [{ id: 't_u14' }], tutte), [U14]);
+  assert.deepEqual(squadreProgrammaMister({}, [{ id: 't_u14' }, { id: 't_u15' }], tutte), [U14, tutte[2]]);
+});
+test('Programma gare, squadreProgrammaMister: organizzativo e preparatori vedono tutte', () => {
+  const tutte = [U14, U17];
+  assert.deepEqual(squadreProgrammaMister({ organizza: true }, [{ id: 't_org' }], tutte), tutte);
+  assert.deepEqual(squadreProgrammaMister({ vedeTutte: true }, [{ id: 't_nt2m1iv' }], tutte), tutte);
 });

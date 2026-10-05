@@ -67,7 +67,9 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   vede solo quest'area).
 - Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
   `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; `salvaDistinta` salva solo `distinta` e
-  `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`),
+  `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`;
+  un mister normale vede e stampa SOLO le sue squadre, non tutte: `squadreProgrammaMister()`, 0056; l'organizzativo e i preparatori
+  dei portieri, come prima, tutte),
   Comunicazione (`/modulistica/comunicazione`, modelli `MODELLI_AVVISO`, PDF `lib/pdf-comunicazione.ts`). Impaginazione comune in
   `lib/pdf-moduli.ts` (prove in `tests/pdf-moduli.test.mjs`). Ogni PDF scaricato lascia una copia nell'Archivio:
   `archiviaPdf(nome, tipo, blob, squadra)` riceve il file (Blob), non il testo base64 (un testo di oltre ~1 MB la server action lo
