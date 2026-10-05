@@ -7,6 +7,7 @@ import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { SceltaRapida } from '@/components/SceltaRapida';
 import { BarraSalva, RigaVoto, Sezione } from '@/components/Sezione';
+import { BozzaModulo } from '@/components/BozzaModulo';
 
 const TONI_IMPRESSIONE = { positiva: 'border-blu bg-blu text-white', da_rivedere: 'border-oro bg-oro text-inchiostro', negativa: 'border-rosso bg-rosso text-white' };
 
@@ -29,6 +30,7 @@ export function ModuloSegnalazione({
   return (
     <form id={formId} action={action} className="mt-6 space-y-4">
       <Avviso errore={errore} ok={ok} />
+      <BozzaModulo formId={formId} chiave={giocatoreId ? `${formId}:${giocatoreId}` : formId} />
 
       {giocatoreId ? (
         <input type="hidden" name="giocatore_id" value={giocatoreId} />

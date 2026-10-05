@@ -1,7 +1,7 @@
 'use client';
 // Domande facoltative di segnalazione e valutazione: pulsanti grandi da telefono, si tocca per scegliere e di nuovo per togliere
 // (niente pulsante "–"). Il valore va nel form con un campo nascosto: vuoto = non risposto.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SCALA: [string, string][] = [1, 2, 3, 4, 5].map((n) => [String(n), String(n)]);
 
@@ -21,9 +21,17 @@ export function SceltaRapida({
   stretta?: boolean;
 }) {
   const [valore, setValore] = useState('');
+  const campo = useRef<HTMLInputElement>(null);
+  // bozza ritrovata (components/BozzaModulo.tsx): il valore arriva sul campo nascosto
+  useEffect(() => {
+    const el = campo.current;
+    const ripristina = (e: Event) => setValore(String((e as CustomEvent).detail ?? ''));
+    el?.addEventListener('ripristina', ripristina);
+    return () => el?.removeEventListener('ripristina', ripristina);
+  }, []);
   return (
     <div role="radiogroup" aria-label={etichetta} className={`flex ${stretta ? 'gap-1' : 'gap-1.5'}`}>
-      <input type="hidden" name={nome} value={valore} />
+      <input ref={campo} type="hidden" name={nome} value={valore} />
       {voci.map(([v, e]) => {
         const scelto = valore === v;
         return (

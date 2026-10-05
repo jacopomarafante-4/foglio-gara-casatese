@@ -6,6 +6,7 @@ import { Striscia } from '@/components/Striscia';
 import { Aree } from '@/components/Aree';
 import { SchedeArea } from '@/components/SchedeArea';
 import { NomeArea } from '@/components/NomeArea';
+import { InviaInSospeso } from '@/components/InviaInSospeso';
 
 /** Intestazione di tutte le pagine dell'app, con la barra delle aree
  *  e le schede dell'area aperta. La usano i layout dello Scouting, app/(app), e delle altre aree, app/(aree).
@@ -56,6 +57,8 @@ export function Intestazione({ profilo, mister, doppio }: { profilo?: Profilo; m
           nienteSegreteria={profilo?.ruolo === 'direttore' && !profilo.vedeSegreteria} />
       </header>
       <Striscia />
+      {/* modifiche fatte senza rete: di chi sono (account o mister della squadra, mai il PIN) */}
+      <InviaInSospeso chi={profilo ? profilo.id : `m:${mister?.nome ?? ''}:${(mister?.squadre ?? []).map((t) => t.id).sort().join(',')}`} />
       <SchedeArea ruolo={ruolo} segnala={puoSegnalare(ruolo)} organizza={organizza} />
     </div>
   );

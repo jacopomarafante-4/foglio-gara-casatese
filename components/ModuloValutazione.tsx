@@ -6,6 +6,7 @@ import { oggiIso } from '@/lib/utili';
 import { Avviso } from '@/components/Avviso';
 import { Etichetta } from '@/components/Etichetta';
 import { BarraSalva, RigaVoto, Sezione } from '@/components/Sezione';
+import { BozzaModulo } from '@/components/BozzaModulo';
 
 const TONI_GIUDIZIO: Record<string, string> = {
   da_prendere: 'peer-checked:border-blu peer-checked:bg-blu peer-checked:text-white',
@@ -33,8 +34,9 @@ export function ModuloValutazione({
 }) {
   const domanda = domandaRuolo(annata);
   return (
-    <form action={action} className="mt-6 space-y-4">
+    <form id={`valuta-${nascosti.id}`} action={action} className="mt-6 space-y-4">
       <Avviso errore={errore} />
+      <BozzaModulo formId={`valuta-${nascosti.id}`} chiave={`valuta:${nascosti.id}`} />
       {gia && (
         <p className="rounded-xl border-l-4 border-oro bg-carta p-4 text-sm">
           <b>{titolo} è già in lista.</b> Invece di una nuova segnalazione, compila la valutazione: quello che avevi scritto è già
