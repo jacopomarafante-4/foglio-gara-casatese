@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
-// Intestazioni di sicurezza su tutte le pagine. Il browser parla solo col sito e con Supabase (dati e file);
-// Google Calendar si chiama dal server, Google Maps sono solo link. Next ha bisogno degli script in linea ('unsafe-inline');
-// in sviluppo anche di 'unsafe-eval' (ricarica a caldo).
+// Intestazioni di sicurezza su tutte le pagine. Il browser parla solo col sito, con Supabase (dati e file) e con Sentry
+// (avviso errori, 0058); Google Calendar si chiama dal server, Google Maps sono solo link. Next ha bisogno degli script
+// in linea ('unsafe-inline'); in sviluppo anche di 'unsafe-eval' (ricarica a caldo).
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseWs = supabase.replace(/^https:/, 'wss:');
+const sentry = (process.env.NEXT_PUBLIC_SENTRY_DSN ?? '').match(/@([^/]+)/)?.[1];
 const sviluppo = process.env.NODE_ENV !== 'production';
 const CSP = [
   "default-src 'self'",
@@ -12,7 +14,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${supabase} ${supabaseWs}`.trim(),
+  `connect-src 'self' ${supabase} ${supabaseWs} ${sentry ? `https://${sentry}` : ''}`.trim(),
   "frame-src 'self' blob:",
   "worker-src 'self' blob:",
   "object-src 'none'",
@@ -47,4 +49,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Avviso errori in produzione (0058): carica i source maps a ogni pubblicazione (silent: niente log in più nella build),
+// solo con SENTRY_AUTH_TOKEN (su Vercel; in locale senza non carica niente, la build funziona lo stesso).
+export default withSentryConfig(nextConfig, {
+  org: 'jacopo-marafante',
+  project: 'javascript-nextjs',
+  silent: true,
+  widenClientFileUpload: true,
+});

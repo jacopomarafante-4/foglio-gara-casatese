@@ -491,6 +491,18 @@ NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_K
 conteggi e tipo del problema (frasi fisse, mai testo delle pagine: registri pubblici), esce con errore se qualcosa non va.
 Un profilo che fallisce si riprova una volta (riga "↻ riprovato"): conta il secondo giro.
 
+## Avviso errori in produzione (Sentry, 0058)
+Ogni errore del sito in produzione (server e browser) va a Sentry (sentry.io, organizzazione `jacopo-marafante`, progetto
+`javascript-nextjs`) e manda un'email. `NEXT_PUBLIC_SENTRY_DSN` (pubblico, va bene nel browser) e `SENTRY_AUTH_TOKEN`
+(solo per caricare i source maps alla pubblicazione, mai nel browser) su Vercel (prod+preview) e in `.env.local`; senza
+`NEXT_PUBLIC_SENTRY_DSN` Sentry resta spento (`enabled: false`), niente errori né rallentamenti.
+File: `instrumentation-client.ts` (browser), `sentry.server.config.ts` e `sentry.edge.config.ts` (server e `proxy.ts`,
+caricati da `instrumentation.ts` secondo `NEXT_RUNTIME`), `app/global-error.tsx` (se va in errore l'intero layout, raro:
+manda l'errore a mano, gli altri casi li cattura da sé `instrumentation.ts` con `onRequestError`). `next.config.ts` avvolge
+la configurazione con `withSentryConfig` (da `@sentry/nextjs/config`, non da `@sentry/nextjs`) per caricare i source maps a
+ogni build; il dominio di Sentry (ricavato dal DSN) è aggiunto al `connect-src` della CSP, altrimenti il browser non
+potrebbe mandargli gli errori. Solo errori (`tracesSampleRate: 0`, niente tracing delle prestazioni: non serve qui).
+
 ## Backup
 `npm run backup` (scripts/backup.mjs) → `private/backup/` (`_riepilogo.json` con `problemi`). Attività di macOS (LaunchAgent
 `it.academycasatese.backup`, ogni giorno alle 9:00 e all'accensione) → `scripts/avvia-controllo-backup.sh` (trova Node da solo) →
