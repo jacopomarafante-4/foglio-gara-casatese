@@ -2,12 +2,15 @@
 // Squadra → Allenamento → Presenze (come viewTrainings/trainingEditor del Portale). Tabella: una colonna per allenamento
 // (la più recente in vista), ✓ presente, lettera = motivo dell'assenza, ✗ motivo da indicare; presenze e % per giocatore
 // (gli infortuni non abbassano la %). Toccando una data si apre la scheda: presente/assente, motivo, data, note.
+// Squadra dei preparatori dei portieri (`gruppi`): portieri divisi per preparatore; scelto un preparatore si vedono e si segnano
+// solo i suoi (un allenamento nuovo li mette presenti, gli altri restano vuoti e non contano).
 import { useEffect, useRef, useState } from 'react';
 import { segnaPresenzaPortiere } from '@/app/(aree)/docs-actions';
 import { MOTIVI, SOGLIA_PRESENZE, assente, pctTesto, percentuale, presenzaDi, type Allenamento } from '@/lib/registro';
 import { fmtData, giorno } from '@/lib/programma';
 import { nuovoId } from '@/lib/calendario-portale';
 import { Messaggio, useSalva } from '@/components/calendario/salvataggio';
+import type { GruppoPortieri } from '@/lib/portieri';
 
 type Giocatore = { id: string; name: string; gk: boolean };
 const MOTIVO = Object.fromEntries(MOTIVI.map((m) => [m.k, m]));
@@ -20,11 +23,28 @@ function Cella({ v }: { v: string }) {
   return <td />;
 }
 
-export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniziale, oggi, soloLettura, soloPortieriScrivibile = false }: {
+export function Presenze({ squadraId, giocatori: rosa, allenamenti, aperto: apertoIniziale, oggi, soloLettura, soloPortieriScrivibile = false, gruppi, etaDi, gruppoIniziale }: {
   squadraId: string; giocatori: Giocatore[]; allenamenti: Allenamento[]; aperto: string | null; oggi: string; soloLettura: boolean;
   /** preparatore dei portieri su un'altra squadra DELLE SUE CATEGORIE: può segnare la presenza dei soli portieri */
   soloPortieriScrivibile?: boolean;
+  gruppi?: GruppoPortieri[]; etaDi?: Record<string, number>; gruppoIniziale?: string;
 }) {
+  const [filtro, setFiltro] = useState(gruppoIniziale ?? 'tutti');
+  const gruppo = gruppi?.find((g) => g.chiave === filtro);
+  const perId = new Map(rosa.map((p) => [p.id, p]));
+  const giocatori = gruppo ? gruppo.ids.map((id) => perId.get(id)!).filter(Boolean) : rosa;
+  /* tabella: con "Tutti" una sezione per gruppo; un portiere può comparire in due gruppi */
+  const sezioni = gruppi && !gruppo ? gruppi.map((g) => ({ g, righe: g.ids.map((id) => perId.get(id)!).filter(Boolean) }))
+    : [{ g: null as GruppoPortieri | null, righe: giocatori }];
+  const cat = (id: string) => etaDi?.[id] != null && <span className="ml-1 rounded bg-carta px-1 text-xs font-bold text-grigio">U{etaDi[id]}</span>;
+  const sceltaGruppo = gruppi && gruppi.length > 0 && (
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label="Portieri di">
+      {[{ chiave: 'tutti', titolo: 'Tutti i portieri' }, ...gruppi].map((g) => (
+        <button key={g.chiave} aria-pressed={filtro === g.chiave} onClick={() => setFiltro(g.chiave)}
+          className={`rounded-full border px-3 py-1 text-sm font-semibold ${filtro === g.chiave ? 'border-blu bg-blu text-white' : 'border-linea bg-white hover:border-blu'}`}>{g.titolo}</button>
+      ))}
+    </div>
+  );
   const [elenco, setElenco] = useState(allenamenti);
   const [aperto, setAperto] = useState<string | null>(apertoIniziale);
   const [nuovaData, setNuovaData] = useState(oggi);
@@ -66,6 +86,7 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
   /* ---------- scheda di un allenamento ---------- */
   if (t) {
     const vals = giocatori.map((p) => presenzaDi(t, p.id));
+    const tuttiPresenti = { ...(t.att ?? {}), ...Object.fromEntries(giocatori.map((p) => [p.id, 'P'])) };
     const segna = (pid: string, v: string) => cambia({ ...t, att: { ...(t.att ?? {}), [pid]: v } });
     /* preparatore su un'altra squadra: solo i SUOI portieri, con l'azione dedicata (coach_presenza_portiere) */
     async function segnaPortiere(pid: string, v: string) {
@@ -88,6 +109,7 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
         </div>
         {soloPortieriScrivibile ? <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">🧤 Qui segni solo la presenza dei tuoi portieri.</p>
           : soloLettura && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
+        {sceltaGruppo}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label><span className="mb-1 block text-sm font-semibold text-grigio">Data</span>
             <input type="date" className="campo" value={t.date} readOnly={soloLettura} onChange={(e) => e.target.value && cambia({ ...t, date: e.target.value })} /></label>
@@ -96,7 +118,7 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
         </div>
         {!soloLettura && (
           <div className="flex justify-between gap-2">
-            <button className={`${piccolo} border-linea bg-white hover:border-blu`} onClick={() => cambia({ ...t, att: Object.fromEntries(giocatori.map((p) => [p.id, 'P'])) })}>Tutti presenti</button>
+            <button className={`${piccolo} border-linea bg-white hover:border-blu`} onClick={() => cambia({ ...t, att: tuttiPresenti })}>Tutti presenti</button>
             <button className={`${piccolo} border-transparent text-rosso hover:bg-rosso/5`} onClick={() => elimina(t)}>Elimina allenamento</button>
           </div>
         )}
@@ -106,7 +128,7 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
             return (
               <li key={p.id} className={`rounded-xl border bg-white p-2.5 ${v === 'P' ? 'border-verde/40' : ass ? 'border-rosso/40' : 'border-linea'}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold">{p.gk && '🧤 '}{p.name}</span>
+                  <span className="font-semibold">{p.gk && '🧤 '}{p.name}{cat(p.id)}</span>
                   <div className="inline-flex overflow-hidden rounded-lg border border-linea" role="group" aria-label={`Presenza ${p.name}`}>
                     <button disabled={!puoScrivere(p)} aria-pressed={v === 'P'} onClick={() => segnaRiga(p, 'P')}
                       className={`px-3 py-1.5 text-sm font-semibold ${v === 'P' ? 'bg-verde text-white' : 'bg-white'}`}>Presente</button>
@@ -138,8 +160,22 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
 
   /* ---------- tabella ---------- */
   const oggiC = elenco.some((x) => x.date === oggi);
+  const visibili = new Set(giocatori.map((p) => p.id));
+  const riga = (p: Giocatore, k: string) => {
+    const vals = ordinati.map((x) => presenzaDi(x, p.id));
+    const P = vals.filter((v) => v === 'P').length, pct = percentuale(P, vals.filter((v) => assente(v) && v !== 'INF').length);
+    return (
+      <tr key={k}>
+        <th scope="row" className="sticky left-0 z-[1] max-w-48 truncate bg-white px-2 py-1.5 text-left font-semibold">{p.gk && '🧤 '}{p.name}{cat(p.id)}</th>
+        {vals.map((v, i) => <Cella key={i} v={v} />)}
+        <td className="px-2 text-center font-semibold">{P}</td>
+        <td className={`px-2 text-center font-semibold ${pct != null && pct < SOGLIA_PRESENZE ? 'text-rosso' : ''}`}>{pctTesto(pct)}</td>
+      </tr>
+    );
+  };
   return (
     <div className="space-y-3">
+      {sceltaGruppo}
       {!soloLettura && (
         <div className="flex flex-wrap items-center gap-2">
           <button className="bottone" onClick={() => apriData(oggi)}>{oggiC ? 'Apri l’allenamento di oggi' : '+ Allenamento di oggi'}</button>
@@ -165,24 +201,21 @@ export function Presenze({ squadraId, giocatori, allenamenti, aperto: apertoIniz
                   <th className="px-2">Pres.</th><th className="px-2">%</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-linea">
-                {giocatori.map((p) => {
-                  const vals = ordinati.map((x) => presenzaDi(x, p.id));
-                  const P = vals.filter((v) => v === 'P').length, pct = percentuale(P, vals.filter((v) => assente(v) && v !== 'INF').length);
-                  return (
-                    <tr key={p.id}>
-                      <th scope="row" className="sticky left-0 z-[1] max-w-40 truncate bg-white px-2 py-1.5 text-left font-semibold">{p.gk && '🧤 '}{p.name}</th>
-                      {vals.map((v, i) => <Cella key={i} v={v} />)}
-                      <td className="px-2 text-center font-semibold">{P}</td>
-                      <td className={`px-2 text-center font-semibold ${pct != null && pct < SOGLIA_PRESENZE ? 'text-rosso' : ''}`}>{pctTesto(pct)}</td>
+              {sezioni.map(({ g, righe }) => (
+                <tbody key={g?.chiave ?? 'tutti'} className="divide-y divide-linea">
+                  {g && (
+                    <tr className="bg-carta">
+                      <th scope="rowgroup" className="sticky left-0 z-[1] bg-carta px-2 py-1.5 text-left text-xs font-bold uppercase tracking-wider text-blu">{g.titolo}</th>
+                      <td colSpan={ordinati.length + 2} />
                     </tr>
-                  );
-                })}
-              </tbody>
+                  )}
+                  {righe.map((p) => riga(p, (g?.chiave ?? '') + p.id))}
+                </tbody>
+              ))}
               <tfoot className="border-t border-linea">
                 <tr>
                   <th className="sticky left-0 z-[1] bg-white px-2 py-1.5 text-left">Presenti</th>
-                  {ordinati.map((x) => <td key={x.id} className="text-center">{Object.values(x.att ?? {}).filter((v) => v === 'P').length}</td>)}
+                  {ordinati.map((x) => <td key={x.id} className="text-center">{Object.entries(x.att ?? {}).filter(([id, v]) => v === 'P' && visibili.has(id)).length}</td>)}
                   <td /><td />
                 </tr>
               </tfoot>
