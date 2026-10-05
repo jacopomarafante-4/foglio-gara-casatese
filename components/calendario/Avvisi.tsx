@@ -17,11 +17,14 @@ type Bozza = { modello: string; squadre: string[]; titolo: string; testo: string
 const vuota: Bozza = { modello: 'libero', squadre: [], titolo: '', testo: '' };
 const etichetta = 'mb-1 block text-sm font-semibold text-grigio';
 
-export function Avvisi({ avvisi: iniziali, squadre, autore, oggi, bozzaIniziale }: {
+export function Avvisi({ avvisi: iniziali, squadre, autore: autoreIniziale, oggi, bozzaIniziale, puoPubblicare = true, soloMiaSquadra = false }: {
   avvisi: Avviso[]; squadre: SquadraCal[]; autore: string; oggi: string; bozzaIniziale: Bozza | null;
+  /** admin, direttori, organizzativo: pubblicano nell'app. Un mister normale (soloMiaSquadra) solo il PDF (0060, era Comunicazione) */
+  puoPubblicare?: boolean; soloMiaSquadra?: boolean;
 }) {
   const [avvisi, setAvvisi] = useState(iniziali);
   const [b, setB] = useState<Bozza>(bozzaIniziale ?? vuota);
+  const [autore, setAutore] = useState(autoreIniziale);
   const { salva, messaggio, setMessaggio } = useSalva();
   const elenco = avvisi.slice().sort((x, y) => (y.data || '').localeCompare(x.data || ''));
 
@@ -55,21 +58,24 @@ export function Avvisi({ avvisi: iniziali, squadre, autore, oggi, bozzaIniziale 
   return (
     <div className="space-y-6">
       <section className="space-y-3 rounded-xl border border-linea bg-white p-4">
-        <h2 className="font-display text-2xl font-bold">Nuovo avviso</h2>
+        <h2 className="font-display text-2xl font-bold">{puoPubblicare ? 'Nuovo avviso' : 'Scrivi una comunicazione'}</h2>
         <p className="max-w-prose text-sm text-grigio">
-          Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. “Pubblica” lo mette nell’app: nella Home dei
-          mister e delle famiglie delle squadre scelte. “Scarica come PDF” lo prepara su carta intestata (anche senza pubblicarlo).
+          {puoPubblicare
+            ? 'Scegli le squadre (nessuna = tutta la società) e un modello, completa il testo. “Pubblica” lo mette nell’app: nella Home dei mister e delle famiglie delle squadre scelte. “Scarica come PDF” lo prepara su carta intestata (anche senza pubblicarlo).'
+            : 'Un modello, completa il testo: “Scarica come PDF” lo prepara su carta intestata, da stampare o allegare (non si pubblica nell’app).'}
         </p>
-        <div>
-          <p className={etichetta}>Squadre</p>
-          <div className="flex flex-wrap gap-1.5">
-            {squadre.map((t) => {
-              const on = b.squadre.includes(t.id);
-              return <button key={t.id} aria-pressed={on} onClick={() => setB({ ...b, squadre: on ? b.squadre.filter((x) => x !== t.id) : [...b.squadre, t.id] })}
-                className={`rounded-full border px-3 py-1 text-sm font-semibold ${on ? 'border-blu bg-blu text-white' : 'border-linea bg-white hover:border-blu'}`}>{siglaSquadra(t)}</button>;
-            })}
+        {puoPubblicare && !soloMiaSquadra && (
+          <div>
+            <p className={etichetta}>Squadre</p>
+            <div className="flex flex-wrap gap-1.5">
+              {squadre.map((t) => {
+                const on = b.squadre.includes(t.id);
+                return <button key={t.id} aria-pressed={on} onClick={() => setB({ ...b, squadre: on ? b.squadre.filter((x) => x !== t.id) : [...b.squadre, t.id] })}
+                  className={`rounded-full border px-3 py-1 text-sm font-semibold ${on ? 'border-blu bg-blu text-white' : 'border-linea bg-white hover:border-blu'}`}>{siglaSquadra(t)}</button>;
+              })}
+            </div>
           </div>
-        </div>
+        )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label><span className={etichetta}>Modello</span>
             <select className="campo" value={b.modello} onChange={(e) => {
@@ -82,27 +88,34 @@ export function Avvisi({ avvisi: iniziali, squadre, autore, oggi, bozzaIniziale 
         </div>
         <label className="block"><span className={etichetta}>Testo</span>
           <textarea className="campo" rows={6} placeholder="Scrivi l'avviso. Le parti tra [ ] vanno completate." value={b.testo} onChange={(e) => setB({ ...b, testo: e.target.value })} /></label>
+        {!puoPubblicare && (
+          <label className="block sm:max-w-xs"><span className={etichetta}>Firma</span>
+            <input className="campo" placeholder="Es. Il mister" value={autore} onChange={(e) => setAutore(e.target.value)} /></label>
+        )}
         <div className="flex flex-wrap gap-2">
-          <button className="bottone" disabled={!b.testo.trim()} onClick={pubblica}>Pubblica avviso</button>
-          <button className="rounded-lg border border-linea bg-white px-4 py-2 font-semibold hover:border-blu" onClick={() => pdf({ ...b, data: oggi, autore: autore || 'La società' })}>Scarica come PDF</button>
+          {puoPubblicare && <button className="bottone" disabled={!b.testo.trim()} onClick={pubblica}>Pubblica avviso</button>}
+          <button className={puoPubblicare ? 'rounded-lg border border-linea bg-white px-4 py-2 font-semibold hover:border-blu' : 'bottone'}
+            disabled={!b.testo.trim()} onClick={() => pdf({ ...b, data: oggi, autore: autore || 'La società' })}>Scarica come PDF</button>
         </div>
       </section>
 
-      <section className="space-y-2">
-        <h2 className="font-display text-2xl font-bold">Avvisi pubblicati</h2>
-        {elenco.length === 0 && <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessun avviso.</p>}
-        {elenco.map((a) => (
-          <div key={a.id} className="rounded-xl border border-l-4 border-linea border-l-[#6B3FA0] bg-white p-3">
-            <p className="text-sm text-grigio">{[fmtData(a.data), squadreTesto(a.squadre, squadre), a.autore].filter(Boolean).join(' · ')}</p>
-            {a.titolo && <b className="mt-0.5 block">{a.titolo}</b>}
-            <p className="whitespace-pre-line">{a.testo}</p>
-            <div className="mt-2 flex gap-2">
-              <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={() => pdf(a)}>Scarica PDF</button>
-              <button className="rounded-lg px-3 py-1.5 text-sm font-semibold text-rosso hover:bg-rosso/5" onClick={() => elimina(a)}>Elimina</button>
+      {puoPubblicare && (
+        <section className="space-y-2">
+          <h2 className="font-display text-2xl font-bold">Avvisi pubblicati</h2>
+          {elenco.length === 0 && <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessun avviso.</p>}
+          {elenco.map((a) => (
+            <div key={a.id} className="rounded-xl border border-l-4 border-linea border-l-[#6B3FA0] bg-white p-3">
+              <p className="text-sm text-grigio">{[fmtData(a.data), squadreTesto(a.squadre, squadre), a.autore].filter(Boolean).join(' · ')}</p>
+              {a.titolo && <b className="mt-0.5 block">{a.titolo}</b>}
+              <p className="whitespace-pre-line">{a.testo}</p>
+              <div className="mt-2 flex gap-2">
+                <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={() => pdf(a)}>Scarica PDF</button>
+                <button className="rounded-lg px-3 py-1.5 text-sm font-semibold text-rosso hover:bg-rosso/5" onClick={() => elimina(a)}>Elimina</button>
+              </div>
             </div>
-          </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      )}
       <Messaggio testo={messaggio} />
     </div>
   );

@@ -135,7 +135,7 @@ export function HomeSquadra(p: {
                   </li>))}
               </ul></>
             ) : <p className="text-sm text-grigio">Nessuna partita delle tue categorie questo weekend.</p>}
-            <a className={`${bottone()} mt-3 inline-block`} href="/calendari/squadra">Calendario</a>
+            <a className={`${bottone()} mt-3 inline-block`} href="/squadra/calendario">Calendario</a>
           </Card>
         ) : (
           <Card titolo="Prossima partita" bordo="#003da5" className="md:col-span-2"
@@ -154,7 +154,7 @@ export function HomeSquadra(p: {
                   {p.linkCampo && <a className={bottone()} href={p.linkCampo} target="_blank" rel="noopener">Campo</a>}
                 </div>
               </>
-            ) : <p className="text-sm text-grigio">Nessuna partita in calendario. <a className="font-semibold text-blu" href="/calendari/squadra">Apri il calendario</a></p>}
+            ) : <p className="text-sm text-grigio">Nessuna partita in calendario. <a className="font-semibold text-blu" href="/squadra/calendario">Apri il calendario</a></p>}
           </Card>
         )}
 
@@ -188,7 +188,7 @@ export function HomeSquadra(p: {
                   </li>))}
               </ul>
             ) : <p className="text-sm text-grigio">Niente altro nelle prossime tre settimane.</p>}
-            <a className="mt-2 inline-block text-sm font-semibold text-blu" href="/calendari/squadra">Calendario completo ›</a>
+            <a className="mt-2 inline-block text-sm font-semibold text-blu" href="/squadra/calendario">Calendario completo ›</a>
           </Card>
         )}
 

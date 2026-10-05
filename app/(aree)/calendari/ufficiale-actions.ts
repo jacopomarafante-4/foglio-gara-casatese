@@ -96,7 +96,7 @@ export async function importaUfficiale(fd: FormData): Promise<Esito<Importato>> 
         squadre.push({ nome: [t.name, t.category].filter(Boolean).join(' · '), ...conti, ...(r.ok ? {} : { errore: r.errore }) });
       }
     }
-    revalidatePath('/calendari/tutte'); revalidatePath('/calendari/squadra'); revalidatePath('/inizio');
+    revalidatePath('/calendari/tutte'); revalidatePath('/squadra/calendario'); revalidatePath('/inizio');
     return { ok: true, valore: { scritte, bloccate: riepilogo.bloccate, nuove: riepilogo.nuove.length, collegate: riepilogo.collegate, squadre } };
   } catch (e) { return { ok: false, errore: (e as Error).message }; }
 }
