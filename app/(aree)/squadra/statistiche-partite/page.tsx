@@ -7,6 +7,7 @@ import { apriSquadra } from '@/lib/pagina-squadra';
 import { oggiIso } from '@/lib/utili';
 import type { Partita } from '@/lib/programma';
 import { mesiDelRegistro, pctTesto, statistichePartite, type Registro, type Test } from '@/lib/registro';
+import { tar, tmr } from '@/lib/statistiche';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SchedePartite } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
@@ -49,6 +50,14 @@ export default async function StatistichePartite({ searchParams }: { searchParam
             <Numero v={s.marcatori} l="Marcatori diversi" />
             <Numero v={s.nNoti ? s.inviolata : '—'} l="Porta inviolata" />
           </div>
+          <section className="space-y-2">
+            <h2 className="font-display text-2xl font-bold">KPI della stagione</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Numero v={tar(reg.trainings ?? [], giocatori) ?? '—'} l="TAR" sotto="% presenze allenamenti" />
+              <Numero v={tmr(reg.trainings ?? [], reg.games) ?? '—'} l="TMR" sotto="allenamenti per partita" />
+              <Numero v={s.gm.length ? s.righe.reduce((n, r) => n + r.min, 0) : '—'} l="Minuti totali" sotto={s.gm.length ? `media ${s.righe.length > 0 ? Math.round(s.righe.reduce((n, r) => n + r.min, 0) / s.righe.length) : 0}' per giocatore` : 'nessuna partita'} />
+            </div>
+          </section>
           <ScaricaExcel nome={nomeFile('Partite', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
             fogli={fogliPartite(reg, giocatori, calendario, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}
