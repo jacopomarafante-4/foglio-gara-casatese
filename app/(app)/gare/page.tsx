@@ -10,7 +10,7 @@ import { CalendarioSquadre } from '@/components/scouting/CalendarioSquadre';
 import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
 
-const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14'];
+const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14', 'Under 13', 'Under 11', 'Under 9'];
 const LIMITE = 1000;
 /** Tolleranza sul limite di km (le distanze sono in linea d'aria) */
 const TOLLERANZA = 1.1;
@@ -19,7 +19,7 @@ const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-se
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; tutte?: string; categoria?: string; ok?: string; errore?: string }>;
+  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; tutte?: string; categoria?: string; adb?: string; ok?: string; errore?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
@@ -45,8 +45,16 @@ export default async function Gare({
   const km = Math.max(1, Number(filtri.km) || 25);
   const giorni = filtri.periodo === 'tutte' ? null : 7;
   const soloSeguite = filtri.tutte !== '1';
+  const mostraAdb = filtri.adb === '1';
 
   const categoria = CATEGORIE.includes(filtri.categoria ?? '') ? filtri.categoria! : '';
+
+  // Leggi gare ADB se richieste
+  let gareAdb: Array<{ id: string; category: string; category_name: string; girone: string; opponent: string; home_team: string; away_team: string; notes: string }> = [];
+  if (mostraAdb) {
+    const { data: adbDoc } = await supabase.from('docs').select('data').eq('path', 'shared/calendari-adb').single();
+    gareAdb = (adbDoc?.data?.items ?? []).filter((g: any) => !categoria || g.category.includes(categoria));
+  }
 
   // Prima le società che interessano: squadre seguite e società dei giocatori segnalati ancora aperti.
   // Con i calendari le gare sono migliaia: si caricano solo quelle che servono.
@@ -108,13 +116,15 @@ export default async function Gare({
   }
   const scoperte = gare.filter((g) => (g.seguite.length > 0 || g.giocatori.length > 0) && g.osservatori.length === 0).length;
 
+  const totalGare = gare.length + gareAdb.length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-4xl font-bold">Gare da vedere</h1>
           <p className="text-grigio">
-            {gare.length} gare
+            {totalGare} gare {mostraAdb && gareAdb.length > 0 && `(${gare.length} agonistica + ${gareAdb.length} ADB)`}
             {tutteLeGare.length === LIMITE && ' (le prime mille: restringi i filtri)'}
             {scoperte > 0 && <> – <strong className="text-inchiostro">{scoperte} senza osservatore</strong></>}
           </p>
@@ -156,6 +166,10 @@ export default async function Gare({
             ))}
           </select>
         </label>
+        <label className="flex items-center gap-2 h-12">
+          <input type="checkbox" name="adb" value="1" defaultChecked={mostraAdb} />
+          <span className="text-xs text-grigio">Includi ADB</span>
+        </label>
         <button className="bottone col-span-2 h-12 px-6 sm:col-span-4 lg:col-span-1">Aggiorna</button>
       </form>
       <p className="-mt-3 text-xs text-grigio">
@@ -164,7 +178,7 @@ export default async function Gare({
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}
 
-      {gare.length === 0 ? (
+      {gare.length === 0 && gareAdb.length === 0 ? (
         <div className="rounded-xl border border-dashed border-linea p-10 text-center text-grigio">
           Nessuna gara con questi filtri.
           {puoSegnalare(profilo.ruolo) && (
@@ -175,16 +189,36 @@ export default async function Gare({
           )}
         </div>
       ) : (
-        <StaffGare staff={staff ?? []}>{[...perGiorno].map(([giorno, lista]) => (
-          <section key={giorno}>
-            <h2 className="mb-3 font-display text-2xl font-bold first-letter:uppercase">{giorno}</h2>
-            <div className="space-y-3">
-              {lista.map((g) => (
-                <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff ? 'pagina' : undefined} />
-              ))}
-            </div>
-          </section>
-        ))}</StaffGare>
+        <>
+          {gare.length > 0 && (
+            <StaffGare staff={staff ?? []}>{[...perGiorno].map(([giorno, lista]) => (
+              <section key={giorno}>
+                <h2 className="mb-3 font-display text-2xl font-bold first-letter:uppercase">{giorno}</h2>
+                <div className="space-y-3">
+                  {lista.map((g) => (
+                    <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff ? 'pagina' : undefined} />
+                  ))}
+                </div>
+              </section>
+            ))}</StaffGare>
+          )}
+          {mostraAdb && gareAdb.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="font-display text-2xl font-bold">Attività di base</h2>
+              <div className="space-y-2">
+                {gareAdb.map((g) => (
+                  <div key={g.id} className="flex items-center justify-between gap-3 rounded-lg border border-linea bg-white p-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{g.opponent}</p>
+                      <p className="text-xs text-grigio">{g.category_name} • Girone {g.girone}</p>
+                    </div>
+                    <span className="flex-none rounded-full bg-blu/10 px-2 py-1 text-xs font-semibold text-blu">{g.category}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {gestisce(profilo.ruolo) && (
