@@ -22,7 +22,6 @@ const Etichetta = ({ children, scura = false, viola = false }: { children: React
 function statoUfficiale(m: Impegno) {
   if (m.stato === 'confermata') return `Confermata${m.comunicato ? ' · ' + m.comunicato : ''}`;
   if (m.stato === 'variata') return `Variata${m.comunicato ? ' · ' + m.comunicato : ''}`;
-  if (m.stato === 'calendario') return 'Da calendario';
   return '';
 }
 

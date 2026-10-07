@@ -13,7 +13,7 @@ import { istanteTraOre } from '@/lib/utili';
 
 const ANNATA_MIN = 2008, ANNATA_MAX = 2021;
 const LIMITE = 5000;
-const MOSTRA = 80;
+const MOSTRA = 40;
 /** Tolleranza sul limite di km (le distanze sono in linea d'aria) */
 const TOLLERANZA = 1.1;
 const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-semibold ${attiva ? 'bg-blu text-white' : 'border border-linea bg-white'}`;
