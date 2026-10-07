@@ -1,4 +1,4 @@
-// Modulistica → Distinta (nell'app dalla tappa 3): per tornei e amichevoli omologate, dal foglio della squadra
+// Squadra → Partite → Distinta (indirizzo /modulistica/distinta): per tornei e amichevoli omologate, dal foglio della squadra
 // (sheet/<squadra>.distinta) e dalla rosa. Mister (tessera del PIN): la sua squadra, con coach_leggi/coach_get.
 // Admin e direttori: la squadra scelta (?squadra=), i direttori in sola lettura. L'organizzativo non ha la distinta.
 import { redirect } from 'next/navigation';
@@ -8,6 +8,7 @@ import { filtraSquadreDirettore, vedeTutto } from '@/lib/ruoli';
 import { createClient } from '@/lib/supabase/server';
 import { distintaNuova, nomiMister, type Foglio } from '@/lib/distinta';
 import { DistintaForm } from '@/components/DistintaForm';
+import { SchedePartite } from '@/components/squadra/SottoSchede';
 
 type Squadra = { id: string; name?: string; category?: string; organizza?: boolean; vedeTutte?: boolean; coaches?: { name?: string }[]; coach?: string };
 type Giocatore = { id: string; name: string };
@@ -47,6 +48,8 @@ export default async function PaginaDistinta({ searchParams }: { searchParams: P
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-4xl font-bold">Distinta</h1>
+        <div className="mt-4"><SchedePartite attiva="/modulistica/distinta" adb={false}
+          conSquadra={(h) => (profilo && squadra ? `${h}${h.includes('?') ? '&' : '?'}squadra=${encodeURIComponent(squadra.id)}` : h)} /></div>
         <p className="mt-1 max-w-prose text-grigio">
           Per tornei e amichevoli omologate. Scegli i giocatori e completa i dati; quello che lasci vuoto resta da scrivere a penna sul foglio.
         </p>

@@ -8,7 +8,7 @@ import { oggiIso } from '@/lib/utili';
 import type { Partita } from '@/lib/programma';
 import { mesiDelRegistro, pctTesto, statistichePartite, type Registro, type Test } from '@/lib/registro';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
-import { SchedePartite } from '@/components/squadra/SottoSchede';
+import { SchedeStatistiche } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
 import { ReportStatistiche } from '@/components/squadra/ReportStatistiche';
 import { ScaricaExcel } from '@/components/ScaricaExcel';
@@ -37,8 +37,8 @@ export default async function StatistichePartite({ searchParams }: { searchParam
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Statistiche partite · {squadra.category || squadra.name}</h1>
-      <SchedePartite attiva="/squadra/statistiche-partite" adb={false} squadraId={id} staff={!!chi.profilo} conSquadra={conSquadra} />
+      <h1 className="font-display text-4xl font-bold">Statistiche partite</h1>
+      <SchedeStatistiche attiva="/squadra/statistiche-partite" adb={false} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0 ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima serve la rosa (Squadra → Rosa).</p> : (
         <>
@@ -49,8 +49,6 @@ export default async function StatistichePartite({ searchParams }: { searchParam
             <Numero v={s.marcatori} l="Marcatori diversi" />
             <Numero v={s.nNoti ? s.inviolata : '—'} l="Porta inviolata" />
           </div>
-          <p className="text-sm text-grigio">Presenza media nel tempo, assenze per motivo, minuti e coppie di gioco:{' '}
-            <Link className="font-semibold text-blu" href={conSquadra('/squadra/dashboard')}>Dashboard della squadra ›</Link></p>
           <ScaricaExcel nome={nomeFile('Partite', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
             fogli={fogliPartite(reg, giocatori, calendario, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}

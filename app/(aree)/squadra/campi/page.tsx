@@ -19,7 +19,7 @@ export default async function PaginaCampi({ searchParams }: { searchParams: Prom
   const campi = [...new Set(partite.map((m) => (m.venue || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Campi · posizione per Google Maps</h1>
+      <h1 className="font-display text-4xl font-bold">Campi</h1>
       <SchedePartite attiva="/squadra/campi" adb={false} squadraId={id} staff={!!chi.profilo} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       <CampiSquadra key={id} squadraId={id} campi={campi} posizioni={reg.venues ?? {}} soloLettura={soloLettura} />

@@ -35,7 +35,7 @@ export default async function PaginaPresenze({ searchParams }: { searchParams: P
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Presenze allenamenti · {squadra.name || squadra.category}</h1>
+      <h1 className="font-display text-4xl font-bold">Presenze</h1>
       <SchedeAllenamento attiva="/squadra/presenze" eta={eta} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0

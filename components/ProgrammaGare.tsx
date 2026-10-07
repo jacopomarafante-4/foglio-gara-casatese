@@ -1,5 +1,5 @@
 'use client';
-// Modulistica → Programma gare: periodo dal–al, squadre da scegliere (nessuna = tutte), elenco per giorno colorato col
+// Calendario → Programma gare: periodo dal–al, squadre da scegliere (nessuna = tutte), elenco per giorno colorato col
 // calendario (Merate, Cernusco, Trasferta) e PDF su carta intestata ordinato per categoria. Il PDF si scarica e se ne
 // lascia una copia nell'Archivio documenti (archiviaPdf).
 import '@fontsource/barlow/700.css';

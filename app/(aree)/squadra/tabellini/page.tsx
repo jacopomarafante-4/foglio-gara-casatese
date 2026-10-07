@@ -27,7 +27,7 @@ export default async function PaginaTabellini({ searchParams }: { searchParams: 
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">{adb ? 'Tabellini e statistiche' : 'Tabellini'} · {squadra.category || squadra.name}</h1>
+      <h1 className="font-display text-4xl font-bold">{adb ? 'Tabellini e statistiche' : 'Tabellini'}</h1>
       <SchedePartite attiva="/squadra/tabellini" adb={adb} squadraId={id} staff={!!chi.profilo} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0 ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima serve la rosa (Squadra → Rosa).</p> : (

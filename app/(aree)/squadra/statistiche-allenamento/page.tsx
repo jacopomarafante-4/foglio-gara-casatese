@@ -1,6 +1,5 @@
 // Squadra → Allenamento → Statistiche (nell'app dalla tappa 3), come viewStatAllenamento del Portale: numeri della squadra,
 // presenze per giocatore (per motivo di assenza), per mese e tempi dei test, nel periodo scelto (stagione o mese).
-import Link from 'next/link';
 import { leggiDocs } from '@/lib/portale-dati';
 import { apriSquadra } from '@/lib/pagina-squadra';
 import type { Partita } from '@/lib/programma';
@@ -8,7 +7,7 @@ import { MOTIVI, SOGLIA_PRESENZE, mesiDelRegistro, pctTesto, presenzePerMese, st
 import { meseDi } from '@/lib/calendario-portale';
 import { fmtData } from '@/lib/programma';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
-import { SchedeAllenamento } from '@/components/squadra/SottoSchede';
+import { SchedeStatistiche } from '@/components/squadra/SottoSchede';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
 import { ReportStatistiche } from '@/components/squadra/ReportStatistiche';
 import { ScaricaExcel } from '@/components/ScaricaExcel';
@@ -47,8 +46,8 @@ export default async function StatisticheAllenamento({ searchParams }: { searchP
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Statistiche allenamento · {squadra.name || squadra.category}</h1>
-      <SchedeAllenamento attiva="/squadra/statistiche-allenamento" eta={eta} conSquadra={conSquadra} />
+      <h1 className="font-display text-4xl font-bold">Statistiche allenamento</h1>
+      <SchedeStatistiche attiva="/squadra/statistiche-allenamento" adb={eta <= 13} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0 ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima serve la rosa (Squadra → Rosa).</p> : (
         <>
@@ -59,8 +58,6 @@ export default async function StatisticheAllenamento({ searchParams }: { searchP
             <Numero v={s.sottoSoglia} l={`Sotto il ${SOGLIA_PRESENZE * 100}%`} sotto={s.sottoSoglia ? 'in rosso nella tabella' : undefined} />
             <Numero v={s.assenze} l="Assenze" sotto={s.infortuni ? `di cui ${s.infortuni} per infortunio` : undefined} />
           </div>
-          <p className="text-sm text-grigio">Presenza media nel tempo, assenze per motivo, minuti e coppie di gioco:{' '}
-            <Link className="font-semibold text-blu" href={conSquadra('/squadra/dashboard')}>Dashboard della squadra ›</Link></p>
           <ScaricaExcel nome={nomeFile('Allenamenti', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
             fogli={fogliAllenamento(reg, giocatori, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}

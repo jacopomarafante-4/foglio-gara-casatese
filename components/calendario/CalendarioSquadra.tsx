@@ -99,18 +99,16 @@ export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amich
 
   return (
     <div className="space-y-3">
-      <Legenda />
-      <p className="max-w-prose text-grigio">
-        Tutte le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua etichetta.{' '}
-        {puoUfficiali ? 'Tocca “Modifica” per cambiarne una.' : puoAmichevoli ? 'Le amichevoli che aggiungi tu si cambiano da “Modifica amichevole”.' : ''}
-        {' '}Le partite già giocate sono nello storico, in fondo.
-      </p>
-      {prossime.length ? <ElencoMesi ms={prossime} riga={riga} />
-        : <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna partita da giocare.</p>}
       <div className="flex flex-wrap gap-2">
         {puoAmichevoli && <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={() => aggiungi('am')}>+ Aggiungi amichevole</button>}
         {puoUfficiali && <button className="rounded-lg px-3 py-1.5 text-sm font-semibold text-blu hover:bg-blu/5" onClick={() => aggiungi('uff')}>+ Partita ufficiale</button>}
       </div>
+      <p className="max-w-prose text-sm text-grigio">
+        Le partite da giocare fino a fine stagione{puoUfficiali ? '; “Modifica” per cambiarne una' : puoAmichevoli ? '; le tue amichevoli si cambiano da “Modifica amichevole”' : ''}. Quelle giocate sono nello storico, in fondo.
+      </p>
+      <Legenda />
+      {prossime.length ? <ElencoMesi ms={prossime} riga={riga} />
+        : <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna partita da giocare.</p>}
       {giocate.length > 0 && (
         <details className="border-t border-linea pt-3">
           <summary className="cursor-pointer font-display text-lg font-semibold">Storico · {giocate.length} {giocate.length === 1 ? 'partita giocata' : 'partite giocate'}</summary>

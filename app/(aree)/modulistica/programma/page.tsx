@@ -1,4 +1,4 @@
-// Modulistica → Programma gare (nell'app dalla tappa 3): partite di tutte le squadre ed eventi della società in un periodo,
+// Calendario → Programma gare (indirizzo /modulistica/programma) (nell'app dalla tappa 3): partite di tutte le squadre ed eventi della società in un periodo,
 // da consultare o stampare in PDF. Dati da calendariTutti() (lib/portale-dati.ts), con i permessi di chi è entrato.
 import { redirect } from 'next/navigation';
 import { getProfilo } from '@/lib/auth';

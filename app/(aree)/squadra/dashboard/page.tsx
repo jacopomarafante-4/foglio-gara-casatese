@@ -8,6 +8,7 @@ import { SOGLIA_PRESENZE, mesiDelRegistro, pctTesto, type Registro } from '@/lib
 import { dashboard, SIGLE } from '@/lib/statistiche';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
+import { SchedeStatistiche } from '@/components/squadra/SottoSchede';
 import { Barre, Ciambella, Linea, Riquadro } from '@/components/squadra/Grafici';
 
 const Sezione = ({ titolo, spiegazione, children }: { titolo: string; spiegazione?: string; children: React.ReactNode }) => (
@@ -43,7 +44,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Dashboard · {squadra.category || squadra.name}</h1>
+      <h1 className="font-display text-4xl font-bold">Dashboard</h1>
+      <SchedeStatistiche attiva="/squadra/dashboard" adb={adb} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0 ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima serve la rosa (Squadra → Rosa).</p> : (
         <>
