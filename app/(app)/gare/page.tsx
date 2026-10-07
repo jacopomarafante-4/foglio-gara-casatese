@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/servizio';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
@@ -49,10 +50,11 @@ export default async function Gare({
 
   const categoria = CATEGORIE.includes(filtri.categoria ?? '') ? filtri.categoria! : '';
 
-  // Leggi gare ADB se richieste
+  // Leggi gare ADB se richieste (con service role per evitare RLS)
   let gareAdb: Array<{ id: string; category: string; category_name: string; girone: string; opponent: string; home_team: string; away_team: string; notes: string }> = [];
   if (mostraAdb) {
-    const { data: adbDoc } = await supabase.from('docs').select('data').eq('path', 'shared/calendari-adb').single();
+    const supabaseAdmin = createServiceClient();
+    const { data: adbDoc } = await supabaseAdmin.from('docs').select('data').eq('path', 'shared/calendari-adb').single();
     gareAdb = (adbDoc?.data?.items ?? []).filter((g: any) => !categoria || g.category.includes(categoria));
   }
 
