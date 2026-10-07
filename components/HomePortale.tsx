@@ -5,8 +5,8 @@
 import { useState } from 'react';
 import { CALENDARI, type Calendario } from '@/lib/condivisi';
 import { calendario as calDi, fmtData, giorno, type Evento, type Impegno, type Partita } from '@/lib/programma';
-import { SOGLIA_PRESENZE, assente, presenzaDi, type Allenamento, type DaFare, type Gara, type riepilogo } from '@/lib/registro';
-import { tar, tmr } from '@/lib/statistiche';
+import { SOGLIA_PRESENZE, assente, presenzaDi, type Allenamento, type DaFare, type riepilogo } from '@/lib/registro';
+import { SIGLE } from '@/lib/statistiche';
 import type { Portieri } from '@/lib/portale-dati';
 import type { Avviso } from '@/components/calendario/Avvisi';
 import { Legenda, RigaPartita } from '@/components/calendario/Righe';
@@ -79,8 +79,8 @@ export function HomeSquadra(p: {
   /* stile A */
   saluto: string; nomi: Record<string, string>; prossimi: Impegno[]; ultima: Risultato | null; andamento: { mese: string; pct: number }[];
   risposte: { si: number; no: number } | null; linkCampo: string; traQuanto: string;
-  /* KPI della stagione */
-  trainings?: Allenamento[]; games?: Gara[];
+  /* indicatori della dashboard (lib/statistiche.ts) */
+  kpi: { tar: number | null; tmr: number | null };
 }) {
   const [attesa, setAttesa] = useState('');
   /* pagine della Squadra già nell'app: indirizzo con la squadra dello staff (squadraQs = "squadra=<id>" o "") */
@@ -206,7 +206,7 @@ export function HomeSquadra(p: {
           </Card>
         )}
 
-        <div className="grid grid-cols-2 gap-3 md:col-span-2">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:col-span-2">
           <a href={app(p.adb ? '/squadra/tabellini' : '/squadra/statistiche-partite')} className="rounded-2xl border border-linea bg-white p-4 hover:border-blu">
             <h2 className="mb-1 font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Stagione</h2>
             {p.adb || !r.nNoti ? (
@@ -223,15 +223,18 @@ export function HomeSquadra(p: {
             <p className="text-sm text-grigio">{primoMese && ultimoMese ? `${mese(primoMese.mese)} ${pct(primoMese.pct)} → ${mese(ultimoMese.mese)} ${pct(ultimoMese.pct)}` : `${r.nT} allenamenti`}
               {r.sottoSoglia ? ` · ${r.sottoSoglia} sotto il ${SOGLIA_PRESENZE * 100}%` : ''}</p>
           </a>
-          {p.trainings && p.games && (
-            <a href={app('/squadra/statistiche-partite')} className="rounded-2xl border border-linea bg-white p-4 hover:border-blu">
-              <h2 className="mb-1 font-display text-[13px] font-bold uppercase tracking-wider text-grigio">KPI</h2>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><p className="font-display text-2xl font-bold text-blu">{tar(p.trainings, p.giocatori.map((id) => ({ id }))) ?? '—'}</p><p className="text-grigio">TAR</p></div>
-                <div><p className="font-display text-2xl font-bold text-blu">{tmr(p.trainings, p.games) ?? '—'}</p><p className="text-grigio">TMR</p></div>
-              </div>
-            </a>
-          )}
+          <a href={app('/squadra/dashboard')} className="col-span-2 rounded-2xl border border-linea bg-white p-4 hover:border-blu sm:col-span-1">
+            <h2 className="mb-1 flex justify-between font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Dashboard<span aria-hidden>›</span></h2>
+            <dl className="space-y-2 text-sm">
+              {([['TAR', pct(p.kpi.tar)], ['TMR', p.kpi.tmr == null ? '—' : p.kpi.tmr.toFixed(1)]] as const).map(([k, v]) => (
+                <div key={k}>
+                  <dt className="flex items-baseline justify-between gap-2"><span><b className="font-display text-blu">{k}</b> {SIGLE[k].nome}</span>
+                    <b className="font-display text-2xl text-blu">{v}</b></dt>
+                  <dd className="text-grigio">{SIGLE[k].spiegazione}</dd>
+                </div>
+              ))}
+            </dl>
+          </a>
         </div>
       </div>
       {attesa && <p role="status" className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full bg-inchiostro px-4 py-2 text-sm font-semibold text-white shadow-lg">{attesa}</p>}

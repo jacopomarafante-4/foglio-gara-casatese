@@ -1,10 +1,10 @@
 // Squadra → Allenamento → Statistiche (nell'app dalla tappa 3), come viewStatAllenamento del Portale: numeri della squadra,
 // presenze per giocatore (per motivo di assenza), per mese e tempi dei test, nel periodo scelto (stagione o mese).
+import Link from 'next/link';
 import { leggiDocs } from '@/lib/portale-dati';
 import { apriSquadra } from '@/lib/pagina-squadra';
 import type { Partita } from '@/lib/programma';
 import { MOTIVI, SOGLIA_PRESENZE, mesiDelRegistro, pctTesto, presenzePerMese, statisticheAllenamento, tempoCella, type Registro, type Test } from '@/lib/registro';
-import { tar, tmr } from '@/lib/statistiche';
 import { meseDi } from '@/lib/calendario-portale';
 import { fmtData } from '@/lib/programma';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
@@ -59,14 +59,8 @@ export default async function StatisticheAllenamento({ searchParams }: { searchP
             <Numero v={s.sottoSoglia} l={`Sotto il ${SOGLIA_PRESENZE * 100}%`} sotto={s.sottoSoglia ? 'in rosso nella tabella' : undefined} />
             <Numero v={s.assenze} l="Assenze" sotto={s.infortuni ? `di cui ${s.infortuni} per infortunio` : undefined} />
           </div>
-          <section className="space-y-2">
-            <h2 className="font-display text-2xl font-bold">KPI della stagione</h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              <Numero v={tar(s.tr, giocatori) ?? '—'} l="TAR" sotto="% presenze allenamenti" />
-              <Numero v={tmr(s.tr, reg.games) ?? '—'} l="TMR" sotto="allenamenti per partita" />
-              <Numero v={s.tr.length} l="Sedute completate" sotto={s.presentiMedi != null ? `media ${s.presentiMedi.toFixed(0)} presenti` : undefined} />
-            </div>
-          </section>
+          <p className="text-sm text-grigio">Presenza media nel tempo, assenze per motivo, minuti e coppie di gioco:{' '}
+            <Link className="font-semibold text-blu" href={conSquadra('/squadra/dashboard')}>Dashboard della squadra ›</Link></p>
           <ScaricaExcel nome={nomeFile('Allenamenti', squadra.category || squadra.name || '', periodo === 'all' ? oggiIso() : periodo)}
             fogli={fogliAllenamento(reg, giocatori, periodo)} />
           {!!chi.profilo && <ReportStatistiche squadraId={id} squadra={{ name: squadra.name || '', category: squadra.category || '' }} giocatori={giocatori}
