@@ -12,7 +12,7 @@ export default async function CalendarioFamiglia() {
     .filter((m) => !m.date || m.date >= oggi));
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Calendario · {f.squadra?.category || ''}</h1>
+      <h1 className="font-display text-4xl font-bold">Calendario</h1>
       <Legenda />
       {ms.length ? <ElencoMesi ms={ms} riga={(m) => <RigaPartita m={m} tutte={false} conData nomeSquadra={f.squadra?.category || 'Academy'} squadre={[]} />} />
         : <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna partita in programma.</p>}
