@@ -627,8 +627,9 @@ indicato: se li vedi, completali. Se nessuno rientra, è lì che serve cercare s
 {fig('s-gare', '''<ul>
 <li>Le gare dei prossimi giorni, dalla più vicina, con la <b>distanza</b> da metà strada tra Merate e Cernusco Lombardone
 (in linea d'aria, con il 10% di tolleranza sul limite di km).</li>
-<li><b>Filtri</b>: entro quanti km, periodo (7 giorni o tutte), gare "Da seguire" (squadre seguite o con giocatori
-segnalati) oppure "Tutte", categoria.</li>
+<li><b>Filtri</b>: entro quanti km, periodo (7 giorni o tutte), <b>AdB</b> (Esordienti, Pulcini, Primi calci, Piccoli amici)
+e/o <b>Agonistica</b> (dall'Under 14), <b>anno di nascita</b> (dal 2008 al 2021: le gare della categoria in cui gioca quell'annata).
+Le squadre seguite e i giocatori segnalati restano evidenziati dentro ogni gara.</li>
 <li><b>Aggiungi partita</b>: una partita vista (anche fuori calendario: tornei, amichevoli, Esordienti, Pulcini) con le
 <b>foto o i PDF delle distinte</b> e i <b>giocatori visti</b>, tutto in una pagina. Se la partita è già nei calendari si usa
 quella. Le distinte restano private: le vedono admin, direttori e chi le ha caricate (📎 sulla gara).</li>

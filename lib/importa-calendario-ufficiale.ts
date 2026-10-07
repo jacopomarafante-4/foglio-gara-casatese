@@ -79,9 +79,15 @@ export function collega(club: Map<string, Club>, esistenti: Societa[]) {
   const perChiave = new Map<string, Societa>();
   for (const s of esistenti) for (const n of [s.nome, ...(s.alias ?? [])]) { const k = pulito(n); if (k && !perChiave.has(k)) perChiave.set(k, s); }
   const collegate: [string, Club, Societa][] = [], nuove: [string, Club][] = [];
+  // nome tagliato dal PDF ("ACADEMY CASATESE MERA"): inizio di una sola società in archivio
+  const tagliato = (k: string) => {
+    if (k.length < 10) return undefined;
+    const trovate = new Set([...perChiave].filter(([x]) => x.startsWith(k)).map(([, s]) => s));
+    return trovate.size === 1 ? [...trovate][0] : undefined;
+  };
   for (const [k, c] of club) {
     const s = NOMI_FISSI[k] ? esistenti.find((x) => x.nome === NOMI_FISSI[k])
-      : perChiave.get(k) ?? [...c.alias].map((n) => perChiave.get(pulito(n))).find(Boolean);
+      : perChiave.get(k) ?? [...c.alias].map((n) => perChiave.get(pulito(n))).find(Boolean) ?? tagliato(k);
     if (s) { collegate.push([k, c, s]); c.nome = s.nome; } else nuove.push([k, c]);
   }
   return { collegate, nuove };

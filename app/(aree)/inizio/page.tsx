@@ -131,6 +131,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         ultima={risultati(reg, calendario)[0] ?? null} andamento={presenzePerMeseSquadra(reg, giocatori)}
         risposte={prossima ? contaRisposte(await risposteFamiglie(chi, id).catch(() => ({})), giocatori, prossima) : null}
         linkCampo={prossima ? linkLuogo((reg as Registro & { venues?: Campi }).venues, prossima) : ''} traQuanto={traQuanto(oggi, prossima?.date)}
+        trainings={reg.trainings} games={reg.games}
       />
     </div>
   );

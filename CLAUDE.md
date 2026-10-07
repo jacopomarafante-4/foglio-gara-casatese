@@ -464,6 +464,11 @@ la riga) o dalle intestazioni, delegazioni con "|"; abbinamento nomi, data del f
 doppioni; nostre partite nel `calendar/<squadra>` della categoria con `aggiorna` di `lib/aggiorna-doc.ts`). Confronto con Python su 25
 PDF: date, ore e campi uguali su 18.196 partite (`private/confronta-calendari.mjs`, `private/simula-import.mjs`); prove in
 `tests/calendario-pdf.test.mjs` (PDF finto fatto con jsPDF). Gli script di `scripts/import-calendari/` restano per i comunicati.
+Calendari dell'attività di base (Esordienti…Piccoli amici, per lo Scouting): `scripts/import-calendari/adb.mjs [cartella] [--conferma]`
+(con `--import ./tests/registra.mjs`), PDF delle delegazioni in `private/calendari-adb/`; un PDF con più categorie (Monza) si divide per
+intestazione, categoria con le annate ("Pulcini 10 anni Monza - 2016": il filtro "Anno di nascita" di `/gare` la legge con `etaDaCategoria`).
+Gironi anche numerati; nomi tagliati dal PDF collegati alla società che iniziano così (`collega`); `ALIAS` nello script per gli altri.
+Importati 07/10/2026: Monza (C.U. 15) e Lecco (C.U. 15), 3272 partite.
 Il percorso è escluso dal controllo login di `lib/supabase/sessione.ts` (controlla da solo chi chiama).
 
 Coordinate dei campi (distanze nel pannello Gare): `scripts/geocodifica-campi.mjs [--tutte] [--conferma]` le ricava da
