@@ -11,7 +11,9 @@ import { inOrdine } from '@/lib/calendario-portale';
 import { daFare, riepilogo, type Registro } from '@/lib/registro';
 import { nomiMister } from '@/lib/distinta';
 import type { Avviso } from '@/components/calendario/Avvisi';
-import { HomeOrganizzazione, HomeSocieta, HomeSquadra, type RigaSocieta } from '@/components/HomePortale';
+import { HomeOrganizzazione, HomeSquadra } from '@/components/HomePortale';
+import { DashboardSocieta, type RisultatoDash, type SquadraDash } from '@/components/DashboardSocieta';
+import type { StatoGiocatore } from '@/lib/tipi';
 import { contaRisposte, presenzePerMeseSquadra, risultati, saluto, stagioneSquadra, traQuanto } from '@/lib/home';
 import { linkLuogo, type Campi } from '@/lib/campi';
 import { dashboard } from '@/lib/statistiche';
@@ -32,35 +34,49 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const ora = +new Intl.DateTimeFormat('it-IT', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Rome' }).format(new Date(istanteTraOre(0)));
   const { squadra: sceltaSquadra } = await searchParams;
 
-  /* ---------- admin e direttori: la società intera (con ?squadra= la Home di una squadra) ---------- */
+  /* ---------- admin e direttori: la dashboard della società (con ?squadra= la Home di una squadra) ---------- */
   if (chi.profilo && !sceltaSquadra) {
     const supabase = await createClient();
-    const [{ data: docsTutti }, segn, inc, nec] = await Promise.all([
+    const [{ data: docsTutti }, segn, val, stati, inc, nec] = await Promise.all([
       supabase.from('docs').select('path, data').or('path.eq.shared/teams,path.eq.shared/eventi,path.eq.shared/avvisi,path.like.calendar/%,path.like.registro/%,path.like.roster/%'),
-      supabase.from('segnalazioni').select('id', { count: 'exact', head: true }).gte('created_at', istanteTraOre(-24 * 7)),
+      supabase.from('segnalazioni').select('created_at').gte('created_at', istanteTraOre(-24 * 7 * 8)),
+      supabase.from('valutazioni').select('id', { count: 'exact', head: true }).gte('created_at', istanteTraOre(-24 * 30)),
+      supabase.from('giocatori').select('stato').eq('osservato', true),
       supabase.from('incarichi').select('id', { count: 'exact', head: true }).eq('fatto', false),
       supabase.from('necessita').select('id', { count: 'exact', head: true }).eq('aperta', true),
     ]);
     const doc = (path: string) => docsTutti?.find((d) => d.path === path)?.data as Record<string, unknown> | undefined;
     const squadreSoc = filtraSquadre(chi, ((doc('shared/teams')?.items ?? []) as SquadraCal[]).filter((t) => !t.organizza && !t.vedeTutte));
-    const righe: RigaSocieta[] = squadreSoc.map((t) => {
+    const sigla = (c?: string) => (c || '').split(' - ')[0].replace('Under ', 'U');
+    const impegni: Impegno[] = [], recenti: RisultatoDash[] = [];
+    const squadreDash: SquadraDash[] = squadreSoc.map((t) => {
       const reg = (doc('registro/' + t.id) ?? {}) as Registro;
       const giocatori = ((doc('roster/' + t.id)?.players ?? []) as { id: string }[]);
       const cal: Id[] = [...((doc('calendar/' + t.id)?.matches ?? []) as Id[]), ...(reg.friendlies ?? []).map((f) => ({ ...f, friendly: true }))];
       const adbT = etaSquadra(t) <= 13;
       const fare = daFare(reg, cal, oggi, adbT, giocatori.length > 0);
+      const st = stagioneSquadra(reg, giocatori, cal);
+      impegni.push(...cal.filter((m) => weekend.includes(m.date ?? '')).map((m) => ({ ...m, team: { ...t, matches: [] } })));
+      recenti.push(...risultati(reg, cal).filter((x) => x.data >= piu(-10)).map((x) => ({ id: x.id, sigla: sigla(t.category), data: x.data, avversario: x.avversario, casa: x.casa, gf: x.gf, ga: x.ga })));
       return {
-        squadra: { id: t.id, name: t.name, category: t.category }, adb: adbT, stagione: stagioneSquadra(reg, giocatori, cal),
-        risultati: risultati(reg, cal).filter((x) => x.data >= piu(-10)),
-        weekend: cal.filter((m) => weekend.includes(m.date ?? '')).map((m) => ({ ...m, team: { ...t, matches: [] } })),
-        tabelliniMancanti: fare.filter((x) => x.tipo === 'tabellino' || x.tipo === 'gol').length,
+        id: t.id, sigla: sigla(t.category) || t.name || '?', categoria: t.category || t.name || '', adb: adbT, rosa: giocatori.length, allenamenti: st.allenamenti,
+        presenza: st.presenze, andamento: presenzePerMeseSquadra(reg, giocatori), giocate: st.giocate, v: st.v, n: st.n, p: st.p, gf: st.gf, gs: st.gs,
+        conRisultato: st.conRisultato, sottoSoglia: st.sottoSoglia, tabelliniMancanti: fare.filter((x) => x.tipo === 'tabellino' || x.tipo === 'gol').length,
       };
     });
     const eventi = ((doc('shared/eventi')?.items ?? []) as Evento[]);
-    return <HomeSocieta saluto={saluto(ora)} nome={chi.profilo.nome || ''} oggi={oggi} weekend={weekend} righe={righe}
-      eventiWeekend={eventi.filter((e) => weekend.includes(e.data ?? '')).map(eventoCome)}
+    impegni.push(...eventi.filter((e) => weekend.includes(e.data ?? '')).map(eventoCome));
+    impegni.sort((a, b) => ((a.date ?? '') + (a.time ?? '')).localeCompare((b.date ?? '') + (b.time ?? '')));
+    recenti.sort((a, b) => b.data.localeCompare(a.data));
+    /* segnalazioni per settimana, dalla più vecchia (8 settimane fino a oggi) */
+    const adesso = Date.parse(istanteTraOre(0));
+    const settimane = Array.from({ length: 8 }, (_, i) => ({ da: new Date(adesso - (8 - i) * 7 * 864e5).toISOString().slice(0, 10), n: 0 }));
+    for (const x of segn.data ?? []) { const i = 7 - Math.floor((adesso - Date.parse(x.created_at)) / (7 * 864e5)); if (i >= 0 && i < 8) settimane[i].n++; }
+    const perStato: Partial<Record<StatoGiocatore, number>> = {};
+    for (const g of stati.data ?? []) perStato[g.stato as StatoGiocatore] = (perStato[g.stato as StatoGiocatore] ?? 0) + 1;
+    return <DashboardSocieta saluto={saluto(ora)} nome={chi.profilo.nome || ''} oggi={oggi} weekend={weekend} squadre={squadreDash} impegni={impegni} recenti={recenti}
       avvisi={((doc('shared/avvisi')?.items ?? []) as Avviso[]).filter((a) => (a.data || '') >= daQuando).sort((x, y) => (y.data || '').localeCompare(x.data || '')).slice(0, 3)}
-      scouting={{ segnalazioni: segn.count ?? 0, incarichi: inc.count ?? 0, necessita: nec.count ?? 0 }} />;
+      scouting={{ settimane, perStato, valutazioni30: val.count ?? 0, incarichi: inc.count ?? 0, necessita: nec.count ?? 0 }} />;
   }
 
   /* ---------- organizzativo ---------- */

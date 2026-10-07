@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
     if (r.azione === 'partita') {
       const team = squadre.find((t) => t.id === r.squadra), p = r.partita;
-      if (!team || !p?.friendly || p.garaId) return errore('Solo amichevoli e tornei di una squadra vanno su Google.');
+      if (!team || !p?.friendly || p.garaId) return errore('Solo le partite non di campionato e i tornei vanno su Google.');
       const cal = calendarioPartita(p);
       if (p.gcal && p.gcalCal && p.gcalCal !== cal) { await cancellaEvento(g, p.gcalCal, p.gcal); p.gcal = undefined; }
       const dati = { titolo: titoloPartita(team, p), data: p.date!, inizio: p.time || undefined, minuti: etaSquadra(team) <= 10 ? 60 : 90,

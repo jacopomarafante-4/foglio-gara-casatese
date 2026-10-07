@@ -135,13 +135,13 @@ export function presenzePerMese(reg: Registro, giocatori: { id: string }[]) {
 }
 
 /* ---------- Partite: tabellini e statistiche ---------- */
-export const TIPI_GARA = ['Campionato', 'Amichevole', 'Coppa', 'Recupero', 'Torneo'];
+export const TIPI_GARA = ['Campionato', 'Partita', 'Coppa', 'Recupero', 'Torneo'];
 type CalId = Partita & { id: string; friendly?: boolean };
 /** Dati della partita: quelli del calendario hanno la precedenza (se il calendario cambia, il tabellino segue) */
 export function infoGara(g: Gara, calendario: CalId[]) {
   const m = g.calId ? calendario.find((x) => x.id === g.calId) : undefined;
-  return m ? { date: m.date || '', opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Amichevole' : g.comp || 'Campionato', venue: m.venue || '', time: m.time || '', cal: m }
-    : { date: g.date || '', opponent: g.opponent || '', home: !!g.home, comp: g.comp || 'Amichevole', venue: '', time: '', cal: undefined };
+  return m ? { date: m.date || '', opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Partita' : g.comp || 'Campionato', venue: m.venue || '', time: m.time || '', cal: m }
+    : { date: g.date || '', opponent: g.opponent || '', home: !!g.home, comp: g.comp || 'Partita', venue: '', time: '', cal: undefined };
 }
 export const inPortaGara = (g: Gara, pid: string, portieri: string[]) => { const x = (g.pl ?? {})[pid] ?? {}; return x.gk != null ? !!x.gk : portieri.includes(pid); };
 /** Colonne della tabella partite: partite del calendario fino a oggi + la prossima, più quelle fuori calendario, per data */

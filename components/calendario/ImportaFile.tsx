@@ -71,7 +71,7 @@ export function ImportaFile({ squadre, eventi, oggi }: { squadre: SquadraCal[]; 
         const t = valide.find((x) => x.id === r.dove)!;
         const prima = t.matches.find((m) => m.fonte === r.chiave);
         const m: Partita = { ...(prima ?? {}), id: prima?.id ?? nuovoId('f'), date: r.data, time: r.ora, opponent: r.avversario, home: r.casaScelta,
-          venue: r.campo, friendly: true, tipo: r.tipo === 'Torneo' ? 'Torneo' : 'Amichevole', note: r.note, fonte: r.chiave };
+          venue: r.campo, friendly: true, tipo: r.tipo === 'Torneo' ? 'Torneo' : 'Partita', note: r.note, fonte: r.chiave };
         const path = 'calendar/' + t.id;
         (perDoc.get(path) ?? perDoc.set(path, []).get(path)!).push({ lista: 'matches', id: m.id!, voce: m as Partita & { id: string } });
       }

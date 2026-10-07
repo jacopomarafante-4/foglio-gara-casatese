@@ -15,7 +15,7 @@ export type RigaImport = {
   casa: boolean | null;    // null = non detto
   campo: string;
   note: string;
-  tipo: 'Amichevole' | 'Torneo' | 'Evento';
+  tipo: 'Partita' | 'Torneo' | 'Evento';
 };
 
 const TORNEO = /torneo|quadrangolare|triangolare|\bcup\b|memorial|finali|trofeo/i;
@@ -37,7 +37,7 @@ export function leggiTitolo(titolo: string, data: string, categoria = ''): { eta
   if (eta === null && categoria) eta = etaCategoria({ category: categoria });
   resto = resto.replace(/^(vs\.?|contro|-)\s*/i, '').trim();
   const allenamento = /allenament/i.test(t);
-  return { eta: allenamento ? null : eta, avversario: resto || 'Da definire', tipo: eta === null ? 'Evento' : TORNEO.test(resto) ? 'Torneo' : 'Amichevole' };
+  return { eta: allenamento ? null : eta, avversario: resto || 'Da definire', tipo: eta === null ? 'Evento' : TORNEO.test(resto) ? 'Torneo' : 'Partita' };
 }
 
 /* ---------- ICS ---------- */
@@ -138,7 +138,7 @@ export function daTabella(tabella: string[][], dal = ''): RigaImport[] {
       avversario: letto.avversario, eta,
       casa: /^(casa|si|s|x|incasa|merate|cernusco)$/.test(dove) ? true : /^(trasferta|fuori|no|n)$/.test(dove) ? false : null,
       campo: v(r, 'campo'), note: senzaContatti(v(r, 'note')),
-      tipo: eta === null ? 'Evento' : /torneo/.test(tipoFile) || TORNEO.test(titolo) ? 'Torneo' : 'Amichevole',
+      tipo: eta === null ? 'Evento' : /torneo/.test(tipoFile) || TORNEO.test(titolo) ? 'Torneo' : 'Partita',
     });
   }
   return out;

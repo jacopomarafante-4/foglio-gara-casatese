@@ -48,7 +48,7 @@ export function ProgrammaGare({ squadre, eventi, mia, dalIniziale, alIniziale }:
       /* Ogni partita: partita e campo su al massimo 2 righe, che si adattano; l'altezza segue la cella più alta */
       const misura = (m: Impegno) => {
         const titolo = m.evento ? `${m.opponent} (${m.tipo})`
-          : (m.home ? `Academy - ${m.opponent || '?'}` : `${m.opponent || '?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Amichevole'}` : '');
+          : (m.home ? `Academy - ${m.opponent || '?'}` : `${m.opponent || '?'} - Academy`) + (m.friendly ? ` · ${m.tipo || 'Partita'}` : '');
         const campo = m.evento ? m.venue || '' : m.home ? `In casa · ${CALENDARI[calendario(m)].nome}${m.venue ? ' · ' + m.venue : ''}` : m.venue || 'Trasferta';
         const b1 = misuraBlocco(doc, titolo, cols[2][1] - 4, { size: 9.5, min: 8, maxRighe: 2 });
         const b2 = misuraBlocco(doc, campo, cols[3][1] - 4, { size: 8.5, min: 7, maxRighe: 2 });
@@ -126,7 +126,7 @@ export function ProgrammaGare({ squadre, eventi, mia, dalIniziale, alIniziale }:
             const cal = calendario(m), propria = !m.evento && m.team?.id === mia;
             const note = m.evento
               ? [m.venue, m.fine ? 'fino alle ' + m.fine : '', squadreTesto(m.evento.squadre), m.note]
-              : [m.home ? `In casa a ${CALENDARI[cal].nome}` : 'Trasferta', m.home ? '' : m.venue, m.friendly ? m.tipo || 'Amichevole' : '', m.note];
+              : [m.home ? `In casa a ${CALENDARI[cal].nome}` : 'Trasferta', m.home ? '' : m.venue, m.friendly ? m.tipo || 'Partita' : '', m.note];
             return (
               <li key={(m.id ?? '') + i}>
                 {testa && (

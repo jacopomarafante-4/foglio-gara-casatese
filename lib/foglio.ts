@@ -14,7 +14,7 @@ export type FoglioPartita = {
 
 export const STATI_CONVOCAZIONE = ['CON', 'NC', 'INF', 'SQL', 'ND'];
 export const ETICHETTE_STATO: Record<string, string> = { CON: 'Convocato', NC: 'Non convocato', INF: 'Infortunato', SQL: 'Squalificato', ND: 'Non disponibile' };
-export const TIPI_IMPEGNO = ['Campionato', 'Amichevole', 'Coppa', 'Recupero', 'Torneo'];
+export const TIPI_IMPEGNO = ['Campionato', 'Partita', 'Coppa', 'Recupero', 'Torneo'];
 export const MAX_PARTITE_ADB = 4;
 
 /** Foglio vuoto (come defaultSheet del Portale); "Nuova partita" tiene solo i piazzati scelti */
@@ -35,7 +35,7 @@ export const ritrovo = (s: FoglioPartita) => s.meetTime || menoSettantacinque(s.
 export const stessaPartitaFoglio = (s: FoglioPartita, m: Partita) => s.date === m.date && (s.opponent || '').trim().toLowerCase() === (m.opponent || '').trim().toLowerCase();
 /** "Usa questa": i dati della partita del calendario nel foglio */
 export const datiDaCalendario = (m: Partita & { ll?: string }) => ({ opponent: m.opponent || '', date: m.date || '', time: m.time || '', venue: m.venue || '',
-  address: m.address || '', venueLL: m.ll || '', home: !!m.home, convType: m.friendly ? 'Amichevole' : 'Campionato' });
+  address: m.address || '', venueLL: m.ll || '', home: !!m.home, convType: m.friendly ? 'Partita' : 'Campionato' });
 
 /** Campo di gioco della partita del foglio: sempre quello del calendario (con indirizzo e coordinate), se no quello del foglio */
 export function luogoPartita(s: FoglioPartita, calendario: (Partita & { ll?: string })[]) {

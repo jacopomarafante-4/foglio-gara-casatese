@@ -39,7 +39,7 @@ function PartitaCalendario({ m, children }: { m: Cal; children?: React.ReactNode
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 py-2">
       <span><b>{giorno(m.date)} {fmtData(m.date).slice(0, 5)}{m.time ? ' · ' + m.time : ''}</b> — {m.opponent || 'Avversario'}
-        <span className="text-sm text-grigio">{m.home ? ' · Casa' : ' · Trasferta'}{m.friendly ? ' · amichevole' : ''}{m.venue ? ' · ' + m.venue : ''}</span></span>
+        <span className="text-sm text-grigio">{m.home ? ' · Casa' : ' · Trasferta'}{m.friendly ? ' · partita' : ''}{m.venue ? ' · ' + m.venue : ''}</span></span>
       {children}
     </li>
   );
@@ -94,13 +94,13 @@ export function DatiPartita(p: Base) {
           <ul className="divide-y divide-linea">{wk.map((m) => (
             <PartitaCalendario key={m.id} m={m}>{stessaPartitaFoglio(foglio, m) ? <span className="text-sm font-semibold text-verde">✓ Nel foglio gara</span>
               : !p.soloLettura && <button className="bottone px-3 py-1.5 text-sm" onClick={() => cambia(datiDaCalendario(m), 0)}>Usa questa</button>}</PartitaCalendario>))}</ul>
-          <p className="text-sm text-grigio">Scegli la partita da preparare, oppure scrivi qui sotto i dati di un’altra partita (amichevole, recupero, ecc.).</p>
+          <p className="text-sm text-grigio">Scegli la partita da preparare, oppure scrivi qui sotto i dati di un’altra partita (torneo, recupero, ecc.).</p>
         </div>
       ) : prossima && (
         <div className="rounded-xl border border-linea bg-white p-3">
           <p className="text-sm text-grigio">Nessuna partita questo weekend · prossima in calendario</p>
           <ul><PartitaCalendario m={prossima}>{!p.soloLettura && <button className="bottone px-3 py-1.5 text-sm" onClick={() => cambia(datiDaCalendario(prossima), 0)}>Usa questa</button>}</PartitaCalendario></ul>
-          <p className="text-sm text-grigio">Oppure ignora e scrivi qui sotto i dati di un’altra partita (amichevole, recupero, ecc.).</p>
+          <p className="text-sm text-grigio">Oppure ignora e scrivi qui sotto i dati di un’altra partita (torneo, recupero, ecc.).</p>
         </div>
       )}
       <p className="text-sm text-grigio">Questi dati vanno nell’intestazione del foglio gara e della convocazione.</p>

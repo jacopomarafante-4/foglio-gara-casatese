@@ -45,12 +45,12 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
   function apriCal(m: Cal) {
     const c = gare.find((x) => x.calId === m.id); if (c) return apri(c.id);
     if (soloLettura) return;
-    const nuova: GaraAdb = { id: nuovoId('gm'), calId: m.id, date: m.date, opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Amichevole' : 'Campionato', dur: DURATA_PARTITA, og: '', pl: {} };
+    const nuova: GaraAdb = { id: nuovoId('gm'), calId: m.id, date: m.date, opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Partita' : 'Campionato', dur: DURATA_PARTITA, og: '', pl: {} };
     salvaGara(nuova, 0); apri(nuova.id);
   }
   function nuovaAmichevole() {
     const f: Cal = { id: nuovoId('am'), date: oggi, time: '', opponent: '', venue: '', home: true };
-    const nuova: GaraAdb = { id: nuovoId('gm'), calId: f.id, date: f.date, opponent: '', home: true, comp: 'Amichevole', dur: DURATA_PARTITA, og: '', pl: {} };
+    const nuova: GaraAdb = { id: nuovoId('gm'), calId: f.id, date: f.date, opponent: '', home: true, comp: 'Partita', dur: DURATA_PARTITA, og: '', pl: {} };
     setCalendario((l) => [...l, { ...f, friendly: true, daRegistro: true }]);
     setGare((l) => [...l, nuova]);
     salva(path, [{ lista: 'friendlies', id: f.id, voce: f }, { lista: 'games', id: nuova.id, voce: nuova }], 0);
@@ -64,7 +64,7 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
   }
   function elimina(x: GaraAdb) {
     const cal = x.calId ? calendario.find((m) => m.id === x.calId) : undefined, fr = cal?.daRegistro ? cal : undefined;
-    if (!confirm(fr ? `Eliminare l'amichevole del ${fmtData(fr.date)} con ${adb ? 'le presenze' : 'minuti e gol'}?` : x.calId ? `Cancellare ${adb ? 'le presenze' : 'minuti e gol'} di questa partita?` : `Eliminare la partita del ${fmtData(x.date)}?`)) return;
+    if (!confirm(fr ? `Eliminare la partita del ${fmtData(fr.date)} con ${adb ? 'le presenze' : 'minuti e gol'}?` : x.calId ? `Cancellare ${adb ? 'le presenze' : 'minuti e gol'} di questa partita?` : `Eliminare la partita del ${fmtData(x.date)}?`)) return;
     setGare((l) => l.filter((y) => y.id !== x.id));
     if (fr) setCalendario((l) => l.filter((m) => m.id !== fr.id));
     salva(path, [{ lista: 'games', id: x.id, voce: null }, ...(fr ? [{ lista: 'friendlies', id: fr.id, voce: null }] : [])], 0);
@@ -251,12 +251,12 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
     <div className="space-y-3">
       {!soloLettura && (
         <div className="flex flex-wrap items-center gap-2">
-          <button className={`${piccolo} border-linea bg-white hover:border-blu`} onClick={nuovaAmichevole}>+ Amichevole</button>
+          <button className={`${piccolo} border-linea bg-white hover:border-blu`} onClick={nuovaAmichevole}>+ Partita</button>
           <span className="text-sm text-grigio">finisce anche nel calendario della squadra</span>
         </div>
       )}
       {colonne.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna partita: le partite arrivano dal Calendario, oppure aggiungi un’amichevole.</p>
+        <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna partita: le partite arrivano dal Calendario, oppure aggiungi una partita.</p>
       ) : (
         <>
           <div ref={tabella} className="overflow-x-auto rounded-xl border border-linea bg-white">
@@ -271,7 +271,7 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
                     <th key={(gara?.id ?? cal!.id) + ci} className={`p-0 ${futura ? 'opacity-60' : ''}`}>
                       <button onClick={() => (gara ? apri(gara.id) : apriCal(cal!))} className="flex w-20 flex-col items-center px-1 py-1 leading-tight hover:bg-carta">
                         <small className="font-normal text-grigio">{fmtData(inf.date).slice(0, 5)}</small>
-                        <span className="w-full truncate">{inf.opponent || 'Amichevole'}</span>
+                        <span className="w-full truncate">{inf.opponent || 'Partita'}</span>
                         <em className="text-xs font-normal not-italic text-grigio">
                           {adb ? (futura ? 'prossima' : n ? `${n} presenti` : 'da segnare') : sc ? `${sc.gf}-${sc.ga}` : futura ? 'prossima' : inf.opponent ? (inf.home ? 'casa' : 'trasf.') : ''}
                           {tt && <><br />tempi {tt.v}-{tt.pa}-{tt.pe}</>}
@@ -307,7 +307,7 @@ export function Tabellini({ squadraId, nomeSquadra, giocatori, portieri, calenda
           </div>
           <p className="text-sm text-grigio">
             {adb ? 'Tocca una partita per segnare chi era presente. ✓ presente · – assente.'
-              : 'Le partite arrivano dal Calendario (campionato e amichevoli): tocca una partita per segnare minuti, gol e gol subiti dal portiere. ⚽ gol · 🧤 gol subiti (portiere).'}
+              : 'Le partite arrivano dal Calendario (campionato e altre partite): tocca una partita per segnare minuti, gol e gol subiti dal portiere. ⚽ gol · 🧤 gol subiti (portiere).'}
           </p>
         </>
       )}

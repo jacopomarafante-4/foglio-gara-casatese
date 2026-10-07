@@ -97,7 +97,7 @@ for (const e of eventi) {
     gcal: e.id, cal: e.cal, eta, annata: t[2], ufficiale: /Orario di gioco:/i.test(desc),
     date: inizioEvento.date, time: ora ?? (e.start.dateTime ? inizioEvento.time : ''),
     opponent: avversario, home: e.cal !== 'TRASFERTA', location: (e.location ?? '').trim(), note: nota(desc),
-    tipo: /torneo|quadrangolare|triangolare|cup|memorial|finali/i.test(avversario) ? 'Torneo' : 'Amichevole',
+    tipo: /torneo|quadrangolare|triangolare|cup|memorial|finali/i.test(avversario) ? 'Torneo' : 'Partita',
   });
 }
 console.log(`📅 ${eventi.length} eventi letti, ${partite.length} partite delle giovanili dal ${DAL}`);

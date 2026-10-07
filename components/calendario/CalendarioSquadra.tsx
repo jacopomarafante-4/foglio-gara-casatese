@@ -38,7 +38,7 @@ export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amich
   function elimina(tipo: 'uff' | 'am', m: Id) {
     if (tipo === 'am') {
       const giochi = giochiDi[m.id] ?? [];
-      if (!confirm(`Eliminare l'amichevole${m.opponent ? ' con ' + m.opponent : ''}?${giochi.length ? ' Si cancellano anche minuti e gol segnati.' : ''}`)) return;
+      if (!confirm(`Eliminare la partita${m.opponent ? ' con ' + m.opponent : ''}?${giochi.length ? ' Si cancellano anche minuti e gol segnati.' : ''}`)) return;
       setAmichevoli((l) => l.filter((x) => x.id !== m.id));
       salva(pathReg, [{ lista: 'friendlies', id: m.id, voce: null }, ...giochi.map((g) => ({ lista: 'games', id: g, voce: null }))], 0);
     } else {
@@ -89,8 +89,8 @@ export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amich
   const prossime = inOrdine([...tutte, ...eventi.map(eventoCome)].filter((m) => daGiocare(m, oggi)));
   const giocate = inOrdine(tutte.filter((m) => !daGiocare(m, oggi))).reverse();
   const modifica = (m: Impegno) => {
-    if (m.daRegistro && puoAmichevoli) return <ModificaPartita m={m} titolo="Modifica amichevole" aperta={aperta === m.id}
-      cambia={(c) => cambia('am', m.id!, c)} elimina={() => elimina('am', m as Id)} eliminaTesto="Elimina amichevole" />;
+    if (m.daRegistro && puoAmichevoli) return <ModificaPartita m={m} titolo="Modifica partita" aperta={aperta === m.id}
+      cambia={(c) => cambia('am', m.id!, c)} elimina={() => elimina('am', m as Id)} eliminaTesto="Elimina partita" />;
     if (!m.daRegistro && !m.evento && puoUfficiali) return <ModificaPartita m={m} titolo="Modifica" aperta={aperta === m.id}
       cambia={(c) => cambia('uff', m.id!, c)} elimina={() => elimina('uff', m as Id)} eliminaTesto="Elimina partita" />;
     return null;
@@ -100,11 +100,11 @@ export function CalendarioSquadra({ squadra, nomeSquadra, ufficiali: uff0, amich
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {puoAmichevoli && <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={() => aggiungi('am')}>+ Aggiungi amichevole</button>}
+        {puoAmichevoli && <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu" onClick={() => aggiungi('am')}>+ Aggiungi partita</button>}
         {puoUfficiali && <button className="rounded-lg px-3 py-1.5 text-sm font-semibold text-blu hover:bg-blu/5" onClick={() => aggiungi('uff')}>+ Partita ufficiale</button>}
       </div>
       <p className="max-w-prose text-sm text-grigio">
-        Le partite da giocare fino a fine stagione{puoUfficiali ? '; “Modifica” per cambiarne una' : puoAmichevoli ? '; le tue amichevoli si cambiano da “Modifica amichevole”' : ''}. Quelle giocate sono nello storico, in fondo.
+        Le partite da giocare fino a fine stagione{puoUfficiali ? '; “Modifica” per cambiarne una' : puoAmichevoli ? '; le partite che aggiungi tu si cambiano da “Modifica partita”' : ''}. Quelle giocate sono nello storico, in fondo.
       </p>
       <Legenda />
       {prossime.length ? <ElencoMesi ms={prossime} riga={riga} />

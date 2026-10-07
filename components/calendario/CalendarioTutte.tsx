@@ -57,14 +57,14 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
     if (!('gcal' in campi)) g.partita(teamId, nuova, (x) => cambiaPartita(teamId, id, x, 0));
   }
   function eliminaPartita(teamId: string, m: Partita) {
-    if (!confirm(`Eliminare l'amichevole con ${m.opponent || 'avversario'}?`)) return;
+    if (!confirm(`Eliminare la partita con ${m.opponent || 'avversario'}?`)) return;
     setSquadre((l) => l.map((x) => (x.id === teamId ? { ...x, matches: x.matches.filter((y) => y.id !== m.id) } : x)));
     salva('calendar/' + teamId, [{ lista: 'matches', id: m.id!, voce: null }], 0);
     g.cancella(m);
   }
   function aggiungiAmichevole() {
     const teamId = nuovaPer || perAmichevoli[0]?.id; if (!teamId) return;
-    const m = { id: nuovoId('m'), date: oggi, time: '', opponent: '', home: true, venue: '', friendly: true, tipo: 'Amichevole', note: '' };
+    const m = { id: nuovoId('m'), date: oggi, time: '', opponent: '', home: true, venue: '', friendly: true, tipo: 'Partita', note: '' };
     setSquadre((l) => l.map((x) => (x.id === teamId ? { ...x, matches: [...x.matches, m] } : x)));
     salva('calendar/' + teamId, [{ lista: 'matches', id: m.id, voce: m }], 0);
     setCategoria(teamId); setVista('elenco'); setAperta(`${teamId}|${m.id}`);
@@ -111,7 +111,7 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
     if (!m.team || m.garaId || !m.friendly || m.daRegistro) return null;
     const teamId = m.team.id;
     return <ModificaPartita m={m} titolo="Modifica" aperta={aperta === `${teamId}|${m.id}`}
-      cambia={(c) => cambiaPartita(teamId, m.id!, c)} elimina={() => eliminaPartita(teamId, m)} eliminaTesto="Elimina amichevole" />;
+      cambia={(c) => cambiaPartita(teamId, m.id!, c)} elimina={() => eliminaPartita(teamId, m)} eliminaTesto="Elimina partita" />;
   };
   const riga = (m: Impegno) => (
     <RigaPartita m={m} tutte conData mia={!!mia && m.team?.id === mia} squadre={squadre}>{modifica(m)}</RigaPartita>
@@ -142,7 +142,7 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
       {puoOrganizzare && (
         <div className="space-y-2 pt-2">
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm text-grigio" htmlFor="nuova_per">Nuova amichevole per</label>
+            <label className="text-sm text-grigio" htmlFor="nuova_per">Nuova partita per</label>
             <select id="nuova_per" className="campo w-auto" value={nuovaPer || perAmichevoli[0]?.id || ''} onChange={(e) => setNuovaPer(e.target.value)}>
               {perAmichevoli.map((t) => <option key={t.id} value={t.id}>{t.category || t.name}</option>)}
             </select>
@@ -155,7 +155,7 @@ export function CalendarioTutte({ squadre: iniziali, eventi: eventiIniziali, mia
               <button className="rounded-lg border border-linea bg-white px-3 py-1.5 text-sm font-semibold hover:border-blu disabled:opacity-60" disabled={googleInCorso} onClick={importaGoogle}>
                 {googleInCorso ? 'Leggo Google…' : '↻ Aggiorna da Google'}
               </button>
-              <span className="text-sm text-grigio">{googleEsito || 'Amichevoli, tornei ed eventi creati qui vanno anche su Google.'}</span>
+              <span className="text-sm text-grigio">{googleEsito || 'Partite, tornei ed eventi creati qui vanno anche su Google.'}</span>
             </div>
           ) : <p className="text-sm text-grigio">Collegamento con Google Calendar non ancora attivo.</p>}
         </div>
