@@ -9,6 +9,7 @@ import type { FoglioGara as Foglio } from '@/lib/pdf-foglio-gara';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SchedePartite } from '@/components/squadra/SottoSchede';
 import { FoglioGara } from '@/components/squadra/FoglioGara';
+import { AvvisoPartita } from '@/components/squadra/AvvisoPartita';
 
 export default async function PaginaFoglioGara({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {
   const { chi, squadre, squadra, eta, soloLettura, conSquadra } = await apriSquadra((await searchParams).squadra);
@@ -19,9 +20,10 @@ export default async function PaginaFoglioGara({ searchParams }: { searchParams:
   const schemi = [...(((docs['registro/' + id] as { schemi?: Schema[] } | null)?.schemi) ?? []), ...((docs['shared/schemes']?.items ?? []) as Schema[])];
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Foglio gara{d.foglio.opponent ? ` · ${d.foglio.opponent}` : ''}</h1>
+      <h1 className="font-display text-4xl font-bold">Foglio gara</h1>
       <SchedePartite attiva="/squadra/foglio-gara" adb={false} squadraId={id} staff={!!chi.profilo} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
+      <AvvisoPartita foglio={d.foglio} calendario={d.calendario} oggi={d.oggi} linkDati={conSquadra('/squadra/partita')} />
       <FoglioGara key={id} squadraId={id} foglio={d.foglio as Foglio} nomeSquadra={d.nomeSquadra} categoria={d.categoria} giocatori={d.giocatori}
         calendario={d.calendario} schemi={schemi} soloLettura={soloLettura}
         linkFormazione={conSquadra('/squadra/formazione')} linkPiazzati={conSquadra('/squadra/piazzati')} />

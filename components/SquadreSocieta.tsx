@@ -49,19 +49,24 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {squadre.length === 0 && <p className="rounded-xl border border-dashed border-linea p-6 text-center text-grigio">Nessuna squadra ancora.</p>}
       {squadre.map((t) => (
-        <section key={t.id} className="rounded-xl border border-linea bg-white p-4">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <h2 className="font-display text-2xl font-bold">
-              {t.category || t.name || 'Senza nome'}
-              {t.category && t.name && <span className="font-sans text-base font-normal text-grigio"> · {t.name}</span>}
-            </h2>
-            {!t.organizza && <a href={`/squadra/rosa?squadra=${encodeURIComponent(t.id)}`} className={chiaro}>Apri squadra</a>}
-          </div>
+        <details key={t.id} className="group rounded-xl border border-linea bg-white" open={!t.category && !t.name}>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+            <span className="min-w-0">
+              <b className="block font-display text-xl">{t.category || t.name || 'Senza nome'}</b>
+              <span className="block truncate text-sm text-grigio">
+                {t.coaches.length ? t.coaches.map((c) => c.name || 'senza nome').join(', ') : 'Nessun mister'}
+                {t.coaches.some((c) => !c.code) && <b className="text-rosso"> · PIN da generare</b>}
+              </span>
+            </span>
+            <span className="text-2xl text-grigio transition group-open:rotate-90" aria-hidden>›</span>
+          </summary>
+          <div className="border-t border-linea p-4">
+          {!t.organizza && <a href={`/squadra/rosa?squadra=${encodeURIComponent(t.id)}`} className={chiaro}>Apri squadra</a>}
 
-          <h3 className="mt-3 text-sm font-semibold uppercase tracking-wide text-grigio">Mister</h3>
+          <h3 className="mt-4 text-sm font-semibold uppercase tracking-wide text-grigio">Mister</h3>
           {t.coaches.length === 0 && <p className="text-sm text-grigio">Nessun mister: aggiungilo e genera il suo PIN.</p>}
           <ul className="divide-y divide-linea">
             {t.coaches.map((c) => (
@@ -124,7 +129,8 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
             <button type="button" className="mt-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-rosso hover:bg-rosso/5"
               onClick={() => confirm(`Eliminare la squadra "${t.category || t.name}"? Rosa e formazione non saranno più accessibili.`) && fai({ tipo: 'eliminaSquadra', id: t.id })}>Elimina squadra</button>
           </details>
-        </section>
+          </div>
+        </details>
       ))}
       <button type="button" className={pieno} onClick={() => fai({ tipo: 'aggiungiSquadra', id: nuovoId('t_') })}>Aggiungi squadra</button>
 

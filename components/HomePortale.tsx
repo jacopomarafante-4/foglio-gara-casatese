@@ -294,10 +294,13 @@ export function HomeSocieta(p: {
   const impegni = [...p.righe.flatMap((r) => r.weekend), ...p.eventiWeekend]
     .sort((a, b) => ((a.date ?? '') + (a.time ?? '')).localeCompare((b.date ?? '') + (b.time ?? '')));
   const recenti = p.righe.flatMap((r) => r.risultati.map((x) => ({ ...x, squadra: r.squadra }))).sort((a, b) => b.data.localeCompare(a.data));
-  const daSistemare = p.righe.flatMap((r) => [
-    ...(r.tabelliniMancanti ? [{ testo: `${r.tabelliniMancanti} tabellin${r.tabelliniMancanti === 1 ? 'o' : 'i'} o gol da completare`, href: `/squadra/tabellini?squadra=${r.squadra.id}`, r }] : []),
-    ...(r.stagione.sottoSoglia ? [{ testo: `${r.stagione.sottoSoglia} ragazz${r.stagione.sottoSoglia === 1 ? 'o' : 'i'} sotto il ${SOGLIA_PRESENZE * 100}% di presenze`, href: `/squadra/statistiche-allenamento?squadra=${r.squadra.id}`, r }] : []),
-  ]);
+  /* una riga per squadra: tabellini da completare e ragazzi sotto la soglia di presenze; il link va alla cosa da fare per prima */
+  const daSistemare = p.righe.filter((r) => r.tabelliniMancanti || r.stagione.sottoSoglia).map((r) => ({
+    r,
+    testo: [r.tabelliniMancanti && `${r.tabelliniMancanti} tabellin${r.tabelliniMancanti === 1 ? 'o' : 'i'} da completare`,
+      r.stagione.sottoSoglia && `${r.stagione.sottoSoglia} sotto il ${SOGLIA_PRESENZE * 100}% di presenze`].filter(Boolean).join(' · '),
+    href: r.tabelliniMancanti ? `/squadra/tabellini?squadra=${r.squadra.id}` : `/squadra/statistiche-allenamento?squadra=${r.squadra.id}`,
+  }));
   return (
     <div className="space-y-3">
       <div>

@@ -69,8 +69,8 @@ export function DatiPartita(p: Base) {
   const { foglio, setFoglio, cambia, messaggio, setMessaggio } = useFoglio(p.squadraId, p.foglio, p.soloLettura);
   const wk = inOrdine(p.calendario.filter((m) => p.weekend.includes(m.date || '')));
   const prossima = inOrdine(p.calendario.filter((m) => m.date && m.date >= p.oggi))[0];
-  const campo = (k: keyof FoglioPartita, l: string, tipo = 'text') => (
-    <label><span className={etichetta}>{l}</span><input type={tipo} className="campo" readOnly={p.soloLettura} value={String(foglio[k] ?? '')} onChange={(e) => cambia({ [k]: e.target.value })} /></label>
+  const campo = (k: keyof FoglioPartita, l: string, tipo = 'text', ph = '') => (
+    <label><span className={etichetta}>{l}</span><input type={tipo} className="campo" placeholder={ph} readOnly={p.soloLettura} value={String(foglio[k] ?? '')} onChange={(e) => cambia({ [k]: e.target.value })} /></label>
   );
   const giocatore = (k: 'captain' | 'vice', l: string) => (
     <label><span className={etichetta}>{l}</span>
@@ -105,9 +105,9 @@ export function DatiPartita(p: Base) {
       )}
       <p className="text-sm text-grigio">Questi dati vanno nell’intestazione del foglio gara e della convocazione.</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {campo('team', 'La nostra squadra (nel PDF)')}{campo('opponent', 'Avversario')}
+        {campo('team', 'Nome della squadra nel PDF', 'text', p.nomeSquadra)}{campo('opponent', 'Avversario')}
         {campo('date', 'Data', 'date')}{campo('time', 'Ora', 'time')}
-        {campo('venue', 'Campo')}{campo('category', 'Categoria')}
+        {campo('venue', 'Campo')}{campo('category', 'Categoria nel PDF', 'text', p.categoria)}
         {giocatore('captain', 'Capitano')}{giocatore('vice', 'Vice capitano')}
       </div>
       <label className="block"><span className={etichetta}>Note per la squadra</span>

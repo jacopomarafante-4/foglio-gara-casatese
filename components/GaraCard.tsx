@@ -26,7 +26,6 @@ export function GaraCard({
   const stato =
     gara.stato === 'confermata' ? { testo: `Confermata · ${gara.comunicato ?? 'comunicato'}`, classe: 'bg-blu/10 text-blu' }
     : gara.stato === 'variata' ? { testo: `Variata · ${gara.comunicato ?? 'comunicato'}`, classe: 'bg-oro/20 text-inchiostro' }
-    : gara.stato === 'calendario' ? { testo: 'Da calendario', classe: 'bg-carta text-grigio' }
     : null;
   const seguiteId = new Set(gara.seguite.map((s) => s.societa_id));
   const ciVado = gara.osservatori.some((o) => o.id === mioId);
@@ -35,9 +34,9 @@ export function GaraCard({
 
   return (
     <article
-      className={`flex gap-4 rounded-xl border bg-white p-4 ${scoperta ? 'border-oro' : 'border-linea'}`}
+      className={`flex gap-3 rounded-xl border bg-white p-3 sm:gap-4 sm:p-4 ${scoperta ? 'border-oro' : 'border-linea'}`}
     >
-      <div className="w-16 shrink-0 text-center">
+      <div className="w-14 shrink-0 text-center sm:w-16">
         {ora ? (
           <div className="font-display text-2xl font-bold leading-none">{ora}</div>
         ) : (
@@ -57,7 +56,7 @@ export function GaraCard({
           </span>
           {stato && <span className={`rounded px-1.5 py-0.5 text-xs font-semibold ${stato.classe}`}>{stato.testo}</span>}
         </p>
-        <h3 className="font-display text-xl font-bold leading-tight">
+        <h3 className="font-display text-lg font-bold leading-tight sm:text-xl">
           <Link href={`/gare/${gara.id}`} className="hover:underline" title="Apri la partita">
             <span className={gara.casa_id && seguiteId.has(gara.casa_id) ? 'text-blu' : ''}>{gara.casa_nome}</span>
             {' – '}
@@ -68,7 +67,7 @@ export function GaraCard({
         </h3>
 
         {(gara.campo || gara.indirizzo) && (
-          <p className="mt-1 text-sm text-grigio">
+          <p className="mt-1 truncate text-sm text-grigio">
             {gara.mappa ? (
               <a href={gara.mappa} target="_blank" rel="noreferrer" className="underline hover:text-blu">
                 {[gara.campo, gara.indirizzo].filter(Boolean).join(', ')}
