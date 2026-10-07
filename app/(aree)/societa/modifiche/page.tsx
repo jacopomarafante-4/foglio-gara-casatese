@@ -48,7 +48,7 @@ export default async function StoricoModifiche({ searchParams }: { searchParams:
       <div>
         <h1 className="font-display text-4xl font-bold">Storico modifiche</h1>
         <p className="mt-1 max-w-prose text-grigio">
-          Se una modifica nel Portale è sbagliata o è andata persa, qui ci sono le versioni precedenti di ogni scheda degli ultimi
+          Se una modifica nell’app è sbagliata o è andata persa, qui ci sono le versioni precedenti di ogni scheda degli ultimi
           30 giorni (al massimo una ogni 10 minuti). <b>Ripristina</b> rimette quella versione; quella di adesso resta nello storico,
           quindi si può tornare indietro.
         </p>

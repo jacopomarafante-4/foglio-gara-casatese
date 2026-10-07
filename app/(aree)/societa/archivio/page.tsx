@@ -39,7 +39,7 @@ export default async function Archivio({ searchParams }: { searchParams: Promise
       <div>
         <h1 className="font-display text-4xl font-bold">Archivio documenti</h1>
         <p className="mt-1 max-w-prose text-grigio">
-          Ogni PDF scaricato dal Portale (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia qui una copia,
+          Ogni PDF scaricato dall’app (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia qui una copia,
           con chi l’ha scaricato e quando. I fogli con i PIN delle famiglie non si archiviano.
         </p>
       </div>
