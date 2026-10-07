@@ -44,12 +44,12 @@ export function Aree({ ruolo, organizza = false, nienteSquadre = false, nienteSe
             key={a.k}
             href={a.href}
             aria-current={attiva ? 'page' : undefined}
-            className={`flex flex-none items-center gap-2 whitespace-nowrap rounded-md px-3 py-[7px] text-[15px] font-semibold max-sm:gap-1 max-sm:px-1.5 max-sm:text-[13px] ${
+            className={`flex flex-none items-center gap-2 whitespace-nowrap rounded-md px-3 py-[7px] text-[15px] font-semibold max-sm:min-w-0 max-sm:flex-1 max-sm:flex-col max-sm:gap-0.5 max-sm:px-0.5 max-sm:py-1.5 max-sm:text-[11px] ${
               attiva ? 'bg-white/15 text-white' : 'text-white/85 hover:bg-white/10'
             }`}
           >
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={attiva ? 2.3 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden
-              className="max-sm:size-[18px]" dangerouslySetInnerHTML={{ __html: ICONE_AREE[a.k] }} />
+              className="max-sm:size-5" dangerouslySetInnerHTML={{ __html: ICONE_AREE[a.k] }} />
             {a.etichetta}
           </a>
         );

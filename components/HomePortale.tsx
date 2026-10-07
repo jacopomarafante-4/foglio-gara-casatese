@@ -360,7 +360,9 @@ export function HomeSocieta(p: {
           ) : (
             <p className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-6 place-items-center rounded-full bg-verde/15 text-verde" aria-hidden>✓</span>Tabellini e presenze in ordine</p>
           )}
-          <h3 className="mb-1 mt-4 font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Scouting</h3>
+        </Card>
+
+        <Card titolo="Scouting">
           <div className="grid grid-cols-3 gap-2 text-center">
             {[['Segnalazioni', p.scouting.segnalazioni, 'ultimi 7 giorni', '/giocatori'], ['Incarichi', p.scouting.incarichi, 'aperti', '/home'], ['Necessità', p.scouting.necessita, 'aperte', '/necessita']].map(([t, n, sotto, href]) => (
               <a key={t as string} href={href as string} className="rounded-xl bg-carta p-2 hover:bg-blu/10">

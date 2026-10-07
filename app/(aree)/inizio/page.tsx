@@ -79,7 +79,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     squadre = (await squadreDelPortale(chi)).filter((t) => !t.organizza).map((t) => ({ ...t, matches: [] }));
     squadra = squadre.find((t) => t.id === sceltaSquadra) ?? squadre[0];
   }
-  if (!squadra) return <p className="text-grigio">Nessuna squadra. Creane una in Società → Squadre.</p>;
+  if (!squadra) return <p className="text-grigio">Nessuna squadra da mostrare.</p>;
   const id = squadra.id;
   const docs = await leggiDocs(chi, ['roster/' + id, 'registro/' + id, 'calendar/' + id, 'sheet/' + id, 'shared/eventi', 'shared/avvisi']);
   const giocatori = ((docs['roster/' + id]?.players ?? []) as { id: string; name: string }[]);

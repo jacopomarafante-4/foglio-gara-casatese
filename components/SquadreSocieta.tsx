@@ -58,11 +58,7 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
               {t.category || t.name || 'Senza nome'}
               {t.category && t.name && <span className="font-sans text-base font-normal text-grigio"> · {t.name}</span>}
             </h2>
-            <div className="flex items-center gap-2">
-              {!t.organizza && <a href={`/squadra/rosa?squadra=${encodeURIComponent(t.id)}`} className={chiaro}>Apri squadra</a>}
-              <button type="button" className={croce} aria-label={`Elimina ${t.category || t.name}`}
-                onClick={() => confirm(`Eliminare la squadra "${t.category || t.name}"? Rosa e formazione non saranno più accessibili.`) && fai({ tipo: 'eliminaSquadra', id: t.id })}>×</button>
-            </div>
+            {!t.organizza && <a href={`/squadra/rosa?squadra=${encodeURIComponent(t.id)}`} className={chiaro}>Apri squadra</a>}
           </div>
 
           <h3 className="mt-3 text-sm font-semibold uppercase tracking-wide text-grigio">Mister</h3>
@@ -70,8 +66,8 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
           <ul className="divide-y divide-linea">
             {t.coaches.map((c) => (
               <li key={c.id} className="py-2">
-                <div className="flex items-center gap-2">
-                  <input className="campo min-w-0 flex-1 py-2" value={c.name} placeholder="Nome e cognome" aria-label="Nome del mister"
+                <div className="flex flex-wrap items-center gap-2">
+                  <input className="campo min-w-0 basis-full py-2 sm:basis-0 sm:flex-1" value={c.name} placeholder="Nome e cognome" aria-label="Nome del mister"
                     onChange={(e) => fai({ tipo: 'nomeMister', id: t.id, mister: c.id, valore: e.target.value }, 700, `n:${c.id}`)} />
                   <PinBox pin={c.code} vuoto="Senza PIN" />
                   {staffDi(c.code) ? (
@@ -107,7 +103,7 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
           )}
 
           <details className="mt-3">
-            <summary className="cursor-pointer font-semibold text-blu">Nome e categoria</summary>
+            <summary className="cursor-pointer font-semibold text-blu">Nome, categoria, elimina</summary>
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-medium">Nome squadra
                 <input className="campo mt-1" value={t.name ?? ''} onChange={(e) => fai({ tipo: 'campo', id: t.id, campo: 'name', valore: e.target.value }, 700, `name:${t.id}`)} />
@@ -125,6 +121,8 @@ export function SquadreSocieta({ squadre: iniziali, staff, io, admin = false, sq
               <input type="checkbox" className="size-5" checked={!!t.organizza} onChange={(e) => fai({ tipo: 'flag', id: t.id, flag: 'organizza', valore: e.target.checked })} />
               Responsabile organizzativo: calendari di tutte le squadre, eventi e avvisi
             </label>
+            <button type="button" className="mt-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-rosso hover:bg-rosso/5"
+              onClick={() => confirm(`Eliminare la squadra "${t.category || t.name}"? Rosa e formazione non saranno più accessibili.`) && fai({ tipo: 'eliminaSquadra', id: t.id })}>Elimina squadra</button>
           </details>
         </section>
       ))}
