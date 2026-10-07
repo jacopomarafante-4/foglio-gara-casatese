@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '@/lib/supabase/servizio';
 import { getProfilo } from '@/lib/auth';
+import { etaDaCategoria, fineStagione } from '@/lib/categorie';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
 import { arricchisci, CENTRO_DISTANZE, giocatoriDellaGara, SELECT_GARA, squadreSeguite, type Gara, type GiocatoreInGara } from '@/lib/gare';
 import { GaraCard } from '@/components/GaraCard';
@@ -11,8 +11,8 @@ import { CalendarioSquadre } from '@/components/scouting/CalendarioSquadre';
 import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
 
-const CATEGORIE = ['Under 19', 'Under 17', 'Under 16', 'Under 15', 'Under 14', 'Under 13', 'Under 11', 'Under 9'];
-const LIMITE = 1000;
+const ANNATA_MIN = 2008, ANNATA_MAX = 2021;
+const LIMITE = 5000;
 /** Tolleranza sul limite di km (le distanze sono in linea d'aria) */
 const TOLLERANZA = 1.1;
 const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-semibold ${attiva ? 'bg-blu text-white' : 'border border-linea bg-white'}`;
@@ -20,7 +20,7 @@ const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-se
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; tutte?: string; categoria?: string; adb?: string; ok?: string; errore?: string }>;
+  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; adb?: string; ago?: string; annata?: string; ok?: string; errore?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
@@ -45,21 +45,14 @@ export default async function Gare({
 
   const km = Math.max(1, Number(filtri.km) || 25);
   const giorni = filtri.periodo === 'tutte' ? null : 7;
-  const soloSeguite = filtri.tutte !== '1';
-  const mostraAdb = filtri.adb === '1';
+  // nessuna spunta = tutte e due
+  const conAdb = filtri.adb === '1' || filtri.ago !== '1';
+  const conAgonistica = filtri.ago === '1' || filtri.adb !== '1';
+  const annataNum = Number((filtri.annata ?? '').trim());
+  const annata = Number.isInteger(annataNum) && annataNum >= ANNATA_MIN && annataNum <= ANNATA_MAX ? annataNum : null;
+  const annataErrata = !!(filtri.annata ?? '').trim() && !annata;
 
-  const categoria = CATEGORIE.includes(filtri.categoria ?? '') ? filtri.categoria! : '';
-
-  // Leggi gare ADB se richieste (con service role per evitare RLS)
-  let gareAdb: Array<{ id: string; category: string; category_name: string; girone: string; opponent: string; home_team: string; away_team: string; notes: string }> = [];
-  if (mostraAdb) {
-    const supabaseAdmin = createServiceClient();
-    const { data: adbDoc } = await supabaseAdmin.from('docs').select('data').eq('path', 'shared/calendari-adb').single();
-    gareAdb = (adbDoc?.data?.items ?? []).filter((g: any) => !categoria || g.category.includes(categoria));
-  }
-
-  // Prima le società che interessano: squadre seguite e società dei giocatori segnalati ancora aperti.
-  // Con i calendari le gare sono migliaia: si caricano solo quelle che servono.
+  // Squadre seguite e giocatori segnalati ancora aperti: servono per evidenziarli nelle gare
   const [seguite, { data: giocatoriData }] = await Promise.all([
     squadreSeguite(supabase),
     supabase
@@ -71,28 +64,34 @@ export default async function Gare({
       .not('stato', 'in', '(inserito,da_non_inserire)'),
   ]);
   const giocatori = (giocatoriData as GiocatoreInGara[] | null) ?? [];
-  const interessano = [...new Set([
-    ...seguite.filter((s) => s.attiva).map((s) => s.societa_id),
-    ...giocatori.map((g) => g.societa_id).filter((x): x is string => !!x),
-  ])];
 
   // Da 3 ore fa (gare appena iniziate) ai prossimi N giorni
-  let q = supabase.from('gare').select(SELECT_GARA).gte('data_ora', istanteTraOre(-3)).order('data_ora').limit(LIMITE);
-  if (giorni) q = q.lte('data_ora', istanteTraOre(giorni * 24));
-  if (categoria) q = q.ilike('categoria', `${categoria}%`);
-  if (soloSeguite) {
-    const elenco = interessano.join(',');
-    q = q.or(`casa_id.in.(${elenco}),trasferta_id.in.(${elenco})`);
+  // il database restituisce al massimo 1000 righe per volta: a blocchi, fino a LIMITE
+  const gareData: unknown[] = [];
+  let error: { message: string } | null = null;
+  for (let da = 0; da < LIMITE; da += 1000) {
+    let q = supabase.from('gare').select(SELECT_GARA).gte('data_ora', istanteTraOre(-3)).order('data_ora').order('id').range(da, da + 999);
+    if (giorni) q = q.lte('data_ora', istanteTraOre(giorni * 24));
+    const r = await q;
+    if (r.error) { error = r.error; break; }
+    gareData.push(...(r.data ?? []));
+    if ((r.data ?? []).length < 1000) break;
   }
-  const { data: gareData, error } = soloSeguite && !interessano.length ? { data: [], error: null } : await q;
 
   const sede = CENTRO_DISTANZE;
   const staff = gestisce(profilo.ruolo) ? await staffScouting(supabase) : undefined;
   const tutteLeGare = (gareData as unknown as Gara[]) ?? [];
+  const fine = fineStagione();
 
+  /** Età della categoria della gara: AdB fino a 13 anni (Esordienti), agonistica da 14; categoria non chiara = si tiene */
   const gare = tutteLeGare
+    .filter((g) => {
+      const eta = etaDaCategoria(g.categoria, fine);
+      if (!eta) return true;
+      if (eta.max <= 13 ? !conAdb : !conAgonistica) return false;
+      return !annata || (fine - annata >= eta.min && fine - annata <= eta.max);
+    })
     .map((g) => ({ ...arricchisci(g, sede, seguite), giocatori: giocatoriDellaGara(g, giocatori) }))
-    .filter((g) => !soloSeguite || g.seguite.length > 0 || g.giocatori.length > 0)
     .filter((g) => g.distanza === null || g.distanza <= km * TOLLERANZA);
 
   // Distinte caricate (foto/PDF): link temporanei, solo per chi può vederle (RLS)
@@ -118,16 +117,14 @@ export default async function Gare({
   }
   const scoperte = gare.filter((g) => (g.seguite.length > 0 || g.giocatori.length > 0) && g.osservatori.length === 0).length;
 
-  const totalGare = gare.length + gareAdb.length;
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-4xl font-bold">Gare da vedere</h1>
           <p className="text-grigio">
-            {totalGare} gare {mostraAdb && gareAdb.length > 0 && `(${gare.length} agonistica + ${gareAdb.length} ADB)`}
-            {tutteLeGare.length === LIMITE && ' (le prime mille: restringi i filtri)'}
+            {gare.length} gare
+            {tutteLeGare.length === LIMITE && ' (le prime 5000: restringi i filtri)'}
             {scoperte > 0 && <> – <strong className="text-inchiostro">{scoperte} senza osservatore</strong></>}
           </p>
         </div>
@@ -152,35 +149,30 @@ export default async function Gare({
             <option value="tutte">Tutte</option>
           </select>
         </label>
+        <fieldset className="block">
+          <legend className="mb-1 block text-xs text-grigio">Attività</legend>
+          <div className="flex h-12 items-center gap-4">
+            <label className="flex items-center gap-2 font-semibold">
+              <input type="checkbox" name="adb" value="1" defaultChecked={conAdb} className="size-5" />AdB
+            </label>
+            <label className="flex items-center gap-2 font-semibold">
+              <input type="checkbox" name="ago" value="1" defaultChecked={conAgonistica} className="size-5" />Agonistica
+            </label>
+          </div>
+        </fieldset>
         <label className="block">
-          <span className="mb-1 block text-xs text-grigio" title="Squadre seguite o con giocatori segnalati">Gare</span>
-          <select name="tutte" defaultValue={soloSeguite ? '' : '1'} className="campo h-12 py-0">
-            <option value="">Da seguire</option>
-            <option value="1">Tutte</option>
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs text-grigio">Categoria</span>
-          <select name="categoria" defaultValue={categoria} className="campo h-12 py-0">
-            <option value="">Tutte</option>
-            {CATEGORIE.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 h-12">
-          <input type="checkbox" name="adb" value="1" defaultChecked={mostraAdb} />
-          <span className="text-xs text-grigio">Includi ADB</span>
+          <span className="mb-1 block text-xs text-grigio">Anno di nascita</span>
+          <input type="text" name="annata" inputMode="numeric" pattern="20(0[89]|1\d|2[01])" maxLength={4}
+            placeholder={`${ANNATA_MIN}–${ANNATA_MAX}`} defaultValue={annata ?? filtri.annata ?? ''}
+            title={`Un anno dal ${ANNATA_MIN} al ${ANNATA_MAX}`} className="campo h-12 py-0" />
         </label>
         <button className="bottone col-span-2 h-12 px-6 sm:col-span-4 lg:col-span-1">Aggiorna</button>
       </form>
-      <p className="-mt-3 text-xs text-grigio">
-        “Da seguire” = gare delle squadre seguite o con giocatori segnalati.
-      </p>
+      {annataErrata && <p className="-mt-3 text-sm text-rosso">Anno di nascita dal {ANNATA_MIN} al {ANNATA_MAX}: filtro non applicato.</p>}
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}
 
-      {gare.length === 0 && gareAdb.length === 0 ? (
+      {gare.length === 0 ? (
         <div className="rounded-xl border border-dashed border-linea p-10 text-center text-grigio">
           Nessuna gara con questi filtri.
           {puoSegnalare(profilo.ruolo) && (
@@ -203,22 +195,6 @@ export default async function Gare({
                 </div>
               </section>
             ))}</StaffGare>
-          )}
-          {mostraAdb && gareAdb.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-display text-2xl font-bold">Attività di base</h2>
-              <div className="space-y-2">
-                {gareAdb.map((g) => (
-                  <div key={g.id} className="flex items-center justify-between gap-3 rounded-lg border border-linea bg-white p-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{g.opponent}</p>
-                      <p className="text-xs text-grigio">{g.category_name} • Girone {g.girone}</p>
-                    </div>
-                    <span className="flex-none rounded-full bg-blu/10 px-2 py-1 text-xs font-semibold text-blu">{g.category}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
           )}
         </>
       )}

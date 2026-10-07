@@ -81,7 +81,7 @@ export function leggiCalendario(p: Pagina, inizio: number): PartitaLetta[] {
 }
 
 export function gironeDi(p: Pagina) {
-  return p.righe.join('\n').match(/GIRONE[:\s]+([A-Z])\b/i)?.[1].toUpperCase() ?? null;
+  return p.righe.join('\n').match(/GIRONE[:\s]+([A-Z]|\d{1,2})\b/i)?.[1].toUpperCase() ?? null;
 }
 
 /** Elenco campi: nome società, codice campo, campo, indirizzo, ora, giorno */
