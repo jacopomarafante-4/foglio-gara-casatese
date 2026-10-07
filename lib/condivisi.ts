@@ -5,9 +5,10 @@
 /* ---------- Calendari della società ---------- */
 /** I tre calendari (come quelli Google della società), ognuno col suo colore */
 export const CALENDARI = {
-  merate: { nome: 'Merate', colore: '#003DA5' },
-  cernusco: { nome: 'Cernusco', colore: '#D4AF37' },
-  trasferta: { nome: 'Trasferta', colore: '#C41E3A' },
+  // stessi colori dei calendari Google della società (scelti dall'utente il 07/10/2026)
+  merate: { nome: 'Merate', colore: '#5FB3A7' },
+  cernusco: { nome: 'Cernusco', colore: '#F6A94F' },
+  trasferta: { nome: 'Trasferta', colore: '#98C26C' },
 } as const;
 export type Calendario = keyof typeof CALENDARI;
 

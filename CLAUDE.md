@@ -247,7 +247,7 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   indicativa dall'età) o Elenco. Gara → Partita elenca le partite della squadra nel weekend, ognuna con "Usa questa" (`data-usacal`).
   Regola delle date nel Portale: SEMPRE il calendario ufficiale, salvo le variazioni dei comunicati (già nelle gare):
   `portale.mjs [--squadra=<id>]` sovrascrive date e ore scritte a mano; Google non cambia mai le gare di campionato.
-  Colori dei tre calendari (`calDi()` in `portale.js`): Merate blu, Cernusco oro, Trasferta rosso.
+  Colori dei tre calendari (`CALENDARI` in `lib/condivisi.ts`, come in Google dal 07/10/2026): Merate verde acqua #5FB3A7, Cernusco arancione #F6A94F, Trasferta verde #98C26C.
   Comunicati settimanali: PDF in `private/comunicati/`, `comunicati.py` legge le tabelle "GARA VARIATA" e le regole
   "per tutto il campionato" (solo dati delle gare, mai nomi di persone) → `applica-comunicati.mjs [--conferma]`, poi
   `portale.mjs`. Confermata = gara tra la data del C.U. e la domenica dopo, non variata dal C.U. del suo ente

@@ -1,5 +1,5 @@
 // Calendario delle nostre squadre nello Scouting (0038, poi unito a Gare in un unico pannello): tutte le annate,
-// con i colori del Portale (Merate blu, Cernusco oro, Trasferta rosso). Si legge con calendari_squadre().
+// con i colori dei calendari (CALENDARI in lib/condivisi.ts). Si legge con calendari_squadre().
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { oggiIso } from '@/lib/utili';
@@ -96,7 +96,7 @@ export async function CalendarioSquadre({ squadra: scelta, periodo: p }: { squad
                     style={{ borderLeft: `5px solid ${cal.colore}` }}>
                     <div className="w-14 shrink-0">
                       <p className="font-display text-lg font-bold">{m.time ? m.time.padStart(5, '0') : 'ora ?'}</p>
-                      <p className="text-xs font-bold" style={{ color: cal.colore }}>{cal.nome}</p>
+                      <p className="text-xs font-bold" style={{ color: `color-mix(in srgb, ${cal.colore} 55%, black)` }}>{cal.nome}</p>
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold">

@@ -64,9 +64,9 @@ export function VistaGiorno({ ms, mia, dettaglio }: { ms: Impegno[]; mia: string
                 return (
                   <button key={chiave(m)} onClick={() => setAperta(sel ? null : chiave(m))}
                     title={`${m.time} ${m.evento ? m.opponent : siglaSquadra(m.team) + ' · ' + (m.opponent || '')}${m.venue ? ' · ' + m.venue : ''}`}
-                    className={`absolute ml-0.5 flex flex-col gap-px overflow-hidden rounded-md px-1.5 py-[3px] text-left text-xs leading-tight ${k === 'cernusco' ? 'text-[#2B2205]' : 'text-white'} ${sua ? 'z-[1] ring-2 ring-inchiostro' : ''} ${sel ? 'z-[2] outline-[3px] outline-offset-2 outline-dashed outline-inchiostro' : ''}`}
+                    className={`absolute ml-0.5 flex flex-col gap-px overflow-hidden rounded-md px-1.5 py-[3px] text-left text-xs leading-tight text-inchiostro ${sua ? 'z-[1] ring-2 ring-inchiostro' : ''} ${sel ? 'z-[2] outline-[3px] outline-offset-2 outline-dashed outline-inchiostro' : ''}`}
                     style={{ background: CALENDARI[k].colore, top: px(e.inizio), height: px(e.fine) - px(e.inizio) - 2, left: `calc(${e.corsia}/${e.corsie}*100%)`, width: `calc(100%/${e.corsie} - 3px)`,
-                      backgroundImage: m.evento ? 'repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 6px,transparent 6px 12px)' : undefined }}>
+                      backgroundImage: m.evento ? 'repeating-linear-gradient(135deg,rgba(255,255,255,.35) 0 6px,transparent 6px 12px)' : undefined }}>
                     <b className="text-xs">{m.evento ? '📣 ' + m.opponent : `${siglaSquadra(m.team)} · ${m.opponent || 'Avversario'}`}</b>
                     <span className="opacity-90">{(m.time || '').padStart(5, '0')}{k === 'trasferta' && m.venue ? ' · ' + m.venue : ''}</span>
                   </button>
