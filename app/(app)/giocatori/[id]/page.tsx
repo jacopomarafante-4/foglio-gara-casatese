@@ -246,30 +246,6 @@ export default async function SchedaGiocatore({
         />
       </section>
 
-      {/* Prossime gare della sua squadra (caricate nel pannello Gare) */}
-      <section className="rounded-xl border border-linea bg-white p-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <h2 className="font-display text-2xl font-bold">Prossime gare</h2>
-          <span className="text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
-        </div>
-        {!g.societa_id ? (
-          <p className="mt-3 text-grigio">Aggiungi la società (Carriera → Cambia società) per vedere le sue gare.</p>
-        ) : prossimeGare.length === 0 ? (
-          <p className="mt-3 text-grigio">Nessuna gara in programma della sua squadra. Le gare si caricano nel pannello Gare.</p>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {prossimeGare.map((x) => (
-              <div key={x.id}>
-                <p className="mb-1 text-sm font-semibold first-letter:uppercase">
-                  {new Date(x.data_ora).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' })}
-                </p>
-                <GaraCard gara={x} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
       <CarrieraGiocatore
         giocatoreId={g.id}
         attuale={g.societa?.nome ?? null}
@@ -540,6 +516,30 @@ export default async function SchedaGiocatore({
           )}
         </aside>
       </div>
+
+      {/* Prossime gare della sua squadra (caricate nel pannello Gare) */}
+      <section className="rounded-xl border border-linea bg-white p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <h2 className="font-display text-2xl font-bold">Prossime gare</h2>
+          <span className="text-sm text-grigio">{[g.societa?.nome, categoria].filter(Boolean).join(' · ')}</span>
+        </div>
+        {!g.societa_id ? (
+          <p className="mt-3 text-grigio">Aggiungi la società (Carriera → Cambia società) per vedere le sue gare.</p>
+        ) : prossimeGare.length === 0 ? (
+          <p className="mt-3 text-grigio">Nessuna gara in programma della sua squadra. Le gare si caricano nel pannello Gare.</p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {prossimeGare.map((x) => (
+              <div key={x.id}>
+                <p className="mb-1 text-sm font-semibold first-letter:uppercase">
+                  {new Date(x.data_ora).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                <GaraCard gara={x} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -6,9 +6,9 @@ import { daTabella, leggiCsv, leggiData, leggiIcs, leggiOra, leggiTitolo, senzaC
 import { leggiXlsx } from '@/lib/xlsx';
 
 test('titoli: categoria dall’annata o da "U14"/"Under 14", avversario, tipo', () => {
-  assert.deepEqual(leggiTitolo('U14 - 2013 - Lecco', '2026-10-12'), { eta: 14, avversario: 'Lecco', tipo: 'Amichevole' });
+  assert.deepEqual(leggiTitolo('U14 - 2013 - Lecco', '2026-10-12'), { eta: 14, avversario: 'Lecco', tipo: 'Partita' });
   assert.deepEqual(leggiTitolo('AdB - 2016 - Torneo di Natale', '2026-12-20'), { eta: 11, avversario: 'Torneo di Natale', tipo: 'Torneo' });
-  assert.deepEqual(leggiTitolo('Under 15 vs Merate', '2027-03-01'), { eta: 15, avversario: 'Merate', tipo: 'Amichevole' });
+  assert.deepEqual(leggiTitolo('Under 15 vs Merate', '2027-03-01'), { eta: 15, avversario: 'Merate', tipo: 'Partita' });
   assert.equal(leggiTitolo('Riunione genitori', '2026-10-01').tipo, 'Evento');
   assert.equal(leggiTitolo('U14 - 2013 - Allenamento', '2026-10-01').eta, null);
   // a gennaio la stagione è ancora quella che finisce quell'anno
@@ -24,7 +24,7 @@ test('ICS: righe spezzate, ora in UTC tradotta, eventi ripetuti e annullati scar
   const r = leggiIcs(ics);
   assert.equal(r.length, 2);
   assert.deepEqual({ ...r[0] }, { chiave: 'ics:abc@google.com', data: '2026-10-12', ora: '10:30', fine: '12:00', titolo: 'U14 - 2013 - Lecco',
-    avversario: 'Lecco', eta: 14, casa: null, campo: 'Campo, Lecco', note: 'Arbitro nostro', tipo: 'Amichevole' });
+    avversario: 'Lecco', eta: 14, casa: null, campo: 'Campo, Lecco', note: 'Arbitro nostro', tipo: 'Partita' });
   assert.equal(r[1].tipo, 'Evento'); assert.equal(r[1].ora, '');
   assert.equal(leggiIcs(ics, '2026-11-01').length, 1);   // solo da una data in poi
 });

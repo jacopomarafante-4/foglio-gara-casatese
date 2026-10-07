@@ -119,6 +119,10 @@ function Riga({ g, portieri }: { g: GiocatoreMister; portieri: boolean }) {
             );
           })}
           {g.segnalazioni.length > 0 && <span className="rounded-full bg-linea/50 px-2.5 py-1 text-xs font-semibold">{g.segnalazioni.length} {g.segnalazioni.length === 1 ? 'segnalazione' : 'segnalazioni'}</span>}
+          {[['Segnalato', g.segnalazioni], ['Valutato', g.valutazioni]].map(([t, xs]) => {
+            const d = (xs as { data: string }[]).map((x) => x.data).filter(Boolean).sort().at(-1);
+            return d ? <span key={t as string} className="text-xs text-grigio">{t as string} il {d.slice(8, 10)}/{d.slice(5, 7)}/{d.slice(2, 4)}</span> : null;
+          })}
           {ultima
             ? <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${TONO_GIUDIZIO[ultima.giudizio] ?? 'bg-linea'}`}>{GIUDIZI[ultima.giudizio as Giudizio] ?? ultima.giudizio}</span>
             : <span className="rounded-full border border-dashed border-linea px-2.5 py-1 text-xs font-semibold text-grigio">Da valutare</span>}

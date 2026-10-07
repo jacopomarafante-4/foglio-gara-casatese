@@ -46,7 +46,7 @@ export async function tabellinoDi(squadraId: string, m: Partita & { id: string }
     const reg = (base ?? {}) as Registro;
     const c = (reg.games ?? []).find((g) => g.calId === m.id);
     if (c) return { nuovo: null, valore: c.id };
-    const g: Gara = { id: idNuovo('gm'), calId: m.id, date: m.date, opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Amichevole' : 'Campionato', dur: 70, og: '', pl: {} };
+    const g: Gara = { id: idNuovo('gm'), calId: m.id, date: m.date, opponent: m.opponent || '', home: !!m.home, comp: m.friendly ? 'Partita' : 'Campionato', dur: 70, og: '', pl: {} };
     return { nuovo: { ...reg, games: [...(reg.games ?? []), g] }, valore: g.id };
   });
 }
@@ -58,7 +58,7 @@ export async function preparaGara(squadraId: string, m: Partita & { ll?: string 
     const s = (base ?? {}) as Doc & { date?: string; opponent?: string };
     if (s.date === m.date && (s.opponent || '').trim().toLowerCase() === (m.opponent || '').trim().toLowerCase()) return { nuovo: null };
     return { nuovo: { ...s, opponent: m.opponent || '', date: m.date || '', time: m.time || '', venue: m.venue || '', address: m.address || '',
-      venueLL: m.ll || '', home: !!m.home, convType: m.friendly ? 'Amichevole' : 'Campionato' } };
+      venueLL: m.ll || '', home: !!m.home, convType: m.friendly ? 'Partita' : 'Campionato' } };
   });
 }
 

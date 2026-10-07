@@ -93,6 +93,10 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   squadra per squadra), preparatori (weekend delle loro categorie con i portieri, `datiPreparatore`), organizzativo (weekend per
   calendario, eventi, avvisi), admin e direttori con `?squadra=`. I pulsanti verso la Squadra (`components/HomePortale.tsx`) prima
   creano quello che serve con `allenamentoDiOggi`, `tabellinoDi`, `preparaGara` (`app/(aree)/docs-actions.ts`) e poi aprono la pagina.
+- Home di admin e direttori (07/10/2026): dashboard della società `components/DashboardSocieta.tsx` (componente server; dati preparati in
+  `app/(aree)/inizio/page.tsx`): fascia blu con presenza media (linea mese per mese), partite, gol, segnalazioni per settimana; presenze per
+  squadra, risultati V/N/P, weekend per calendario, imbuto dello scouting per stato, ultimi risultati, da sistemare; ogni riquadro con la
+  sua spiegazione. "Amichevole" (interfaccia e dati: tipo, comp, convType) è diventato "Partita".
 - Squadra: pagine con `apriSquadra()` in `lib/pagina-squadra.ts` (chi entra, squadra, sola lettura dei direttori, `conSquadra()` per i
   link); scelta della squadra per lo staff `components/SceltaSquadra.tsx` (`?squadra=`); sotto-schede `components/squadra/SottoSchede.tsx`.
   Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`eliminaGiocatore` toglie anche

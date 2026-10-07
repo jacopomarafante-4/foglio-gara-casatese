@@ -64,7 +64,7 @@ export async function partiteDaGoogle(g: Google): Promise<{ partite: DaGoogle[];
       partite.push({ gcal: e.id, gcalCal: cal, eta: (m >= 7 ? a + 1 : a) - Number(t[2]), ufficiale: /Orario di gioco:/i.test(desc),
         date: d.date, time: ora ?? (e.start?.dateTime ? d.time : ''), opponent: avversario, home: cal !== 'TRASFERTA',
         location: (e.location ?? '').trim(), note: nota(desc),
-        tipo: /torneo|quadrangolare|triangolare|cup|memorial|finali/i.test(avversario) ? 'Torneo' : 'Amichevole' });
+        tipo: /torneo|quadrangolare|triangolare|cup|memorial|finali/i.test(avversario) ? 'Torneo' : 'Partita' });
     }
   }
   return { partite, eventi };

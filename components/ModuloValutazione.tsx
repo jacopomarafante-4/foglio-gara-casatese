@@ -48,7 +48,7 @@ export function ModuloValutazione({
       <Sezione n={1} titolo="Partita e ruolo">
         <div className="grid grid-cols-[1fr_auto] gap-3">
           <Etichetta testo="Partita o occasione">
-            <input name="contesto" className="campo" placeholder="Es. Open day, amichevole…" defaultValue={contesto ?? ''} />
+            <input name="contesto" className="campo" placeholder="Es. Open day, partita…" defaultValue={contesto ?? ''} />
           </Etichetta>
           <Etichetta testo="Data">
             <input type="date" name="data" defaultValue={data || oggiIso()} className="campo" />

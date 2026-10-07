@@ -104,7 +104,7 @@ export async function CalendarioSquadre({ squadra: scelta, periodo: p }: { squad
                         {m.home ? `Academy – ${m.opponent || 'Avversario'}` : `${m.opponent || 'Avversario'} – Academy`}
                       </p>
                       <p className="text-sm text-grigio">
-                        {[m.friendly ? (m.tipo || 'Amichevole') : 'Campionato', m.venue, m.address].filter(Boolean).join(' · ')}
+                        {[m.friendly ? (m.tipo || 'Partita') : 'Campionato', m.venue, m.address].filter(Boolean).join(' · ')}
                       </p>
                     </div>
                   </li>

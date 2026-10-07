@@ -268,9 +268,15 @@ export default async function Giocatori({
   });
 
   /* Segnalazione: prima impressione e voto globale (media dei voti per area delle segnalazioni) */
+  /* data dell'ultima segnalazione / valutazione: "12/09/26" */
+  const ultimaData = (xs: { data?: string | null }[] | null | undefined) => (xs ?? []).map((x) => x.data).filter((d): d is string => !!d).sort().at(-1);
+  const quando = (d?: string, cosa = '') => d ? <span className="whitespace-nowrap text-xs text-grigio" title={`${cosa} il ${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`}>{d.slice(8, 10)}/{d.slice(5, 7)}/{d.slice(2, 4)}</span> : null;
+  const valutazioni = (r: (typeof righe)[number]) => (
+    <span className="flex items-center gap-1.5">{colonnaValutazione(r)}{quando(ultimaData(r.g.valutazioni), 'Ultima valutazione')}</span>
+  );
   const segnalazione = (r: (typeof righe)[number]) => {
-    const i = impressioneDi(r.g), m = r.v.media;
-    if (!i && m === null) return <span className="text-grigio">–</span>;
+    const i = impressioneDi(r.g), m = r.v.media, d = ultimaData(r.g.segnalazioni);
+    if (!i && m === null && !d) return <span className="text-grigio">–</span>;
     return (
       <span className="flex items-center gap-1.5">
         {i && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORI_IMPRESSIONE[i]}`}>{IMPRESSIONI[i]}</span>}
@@ -279,6 +285,7 @@ export default async function Giocatori({
             {m.toFixed(1).replace('.', ',')}
           </span>
         )}
+        {quando(d, 'Ultima segnalazione')}
       </span>
     );
   };
@@ -464,7 +471,7 @@ export default async function Giocatori({
                       {cella(piedeDi(r.g) ? PIEDI_SIGLA[piedeDi(r.g)!] : <span className="text-grigio">–</span>, piedeDi(r.g) ? PIEDI_BREVI[piedeDi(r.g)!] : undefined)}
                       {cella(stato(r.g))}
                       {cella(segnalazione(r))}
-                      <td className="px-2 py-1.5">{colonnaValutazione(r)}</td>
+                      <td className="px-2 py-1.5">{valutazioni(r)}</td>
                       <td className="p-0">
                         <Link href={r.href} tabIndex={-1} title={`${r.squadra}\nProssima gara: ${r.testoGara}`} className="block px-2 py-1.5 leading-tight">
                           <span className="block truncate">{r.squadra}</span>
@@ -507,7 +514,7 @@ export default async function Giocatori({
                   <dt className="self-center text-grigio">Segnalazione</dt>
                   <dd>{segnalazione(r)}</dd>
                   <dt className="self-center text-grigio">Valutazioni</dt>
-                  <dd>{colonnaValutazione(r)}</dd>
+                  <dd>{valutazioni(r)}</dd>
                   <dt className="text-grigio">Squadra</dt>
                   <dd className="truncate">{r.squadra}</dd>
                   <dt className="text-grigio">Prossima gara</dt>

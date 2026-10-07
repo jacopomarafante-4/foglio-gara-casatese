@@ -45,7 +45,7 @@ export function RigaPartita({ m, tutte, conData, mia, nomeSquadra, squadre, chil
           {mia && tutte && <span className="ml-1 font-sans text-xs font-semibold text-grigio">· la tua squadra</span>}
         </p>
         <p className="text-sm text-grigio">
-          {m.evento ? <Etichetta viola>{m.tipo}</Etichetta> : conData && <Etichetta scura={!!m.friendly}>{m.friendly ? m.tipo || 'Amichevole' : 'Campionato'}</Etichetta>}
+          {m.evento ? <Etichetta viola>{m.tipo}</Etichetta> : conData && <Etichetta scura={!!m.friendly}>{m.friendly ? m.tipo || 'Partita' : 'Campionato'}</Etichetta>}
           {note.filter(Boolean).join(' · ')}
         </p>
         {stato && <p className={`text-sm text-grigio ${m.stato === 'variata' ? 'font-bold' : ''}`}>{stato}</p>}
