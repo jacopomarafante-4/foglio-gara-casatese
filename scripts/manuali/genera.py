@@ -204,9 +204,9 @@ Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 <span class="k">DIRETTORE</span>…), il tuo nome o la tua squadra, e <span class="k">Esci</span>.</li>
 <li><b>Barra delle aree</b>, sempre in alto: Home, Calendario, Squadra, Scouting, Società.
 Ognuno vede solo le aree che gli servono. Se non ci stanno tutte, la barra scorre di lato.</li>
-<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta. In <b>Squadra</b> ci sono tre sottopannelli
-(Rosa, Allenamento, Partite) e sotto, su una seconda riga, le loro schede (per esempio in Partite: Dati partita,
-Convocazioni, Formazione, Piazzati, Foglio gara, Tabellini, Statistiche, Campi).</li>
+<li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta. In <b>Squadra</b>: Rosa, Allenamento, Partite,
+Statistiche, Calendario; sotto, nella pagina, le loro schede (per esempio in Partite: Dati partita, Convocazioni, Formazione,
+Piazzati, Foglio gara, Distinta, Tabellini, Campi; in Statistiche: Dashboard, Allenamento, Partite).</li>
 <li>Il <b>logo</b> in alto riporta sempre alla Home.</li>
 </ul>''', 'La Home di un mister.')}
 </section>
@@ -431,8 +431,9 @@ tutti i gruppi; in "Altri portieri" chi non è in nessuna categoria o ha il nome
 <h3>Test atletici (solo Under 15)</h3>
 <p><span class="k">+ Nuovo test</span>, poi i tempi di ognuno come <b>minuti:secondi</b> (es. 12:51). Una parola diversa
 (es. "non svolto") resta come nota.</p>
-<h3>Statistiche</h3>
-<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%.</p>
+<h3>Statistiche (scheda Statistiche → Allenamento)</h3>
+<p>Percentuali di presenza per giocatore e per mese, risultati dei test. In rosso chi è sotto il 75%. La <b>Dashboard</b>
+(Squadra → Statistiche) riassume tutto con i grafici; sotto ogni sigla (TAR, TMR, SMM…) c'è la sua spiegazione.</p>
 <h3>I miei allenamenti 🚧</h3>
 <p>In arrivo: qui potrai preparare e ritrovare le tue sedute (esercizi, obiettivi, durata, materiale). Per ora la scheda
 mostra "Lavori in corso".</p>''', 'Presenze')}
@@ -440,29 +441,26 @@ mostra "Lavori in corso".</p>''', 'Presenze')}
 
 <section>
 <h2>8. Squadra → Partite: tabellini e statistiche</h2>
-<h3>Modulistica</h3>
-<p>Nell'area <b>Modulistica</b> (barra in alto) ci sono i moduli da stampare su carta intestata:</p><ul>
-<li><b>Distinta</b>, per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di
+<h3>Moduli da stampare</h3>
+<p>Su carta intestata:</p><ul>
+<li><b>Distinta</b> (Squadra → Partite → Distinta), per tornei e amichevoli omologate: tipo, manifestazione, data e luogo; spunta i giocatori (con numero, data di
 nascita e tessera: quello che lasci vuoto si scrive a penna), allenatore e dirigenti con il documento, note.
 <span class="k">Scarica distinta PDF</span> prepara il foglio con le righe per le firme.</li>
-<li><b>Programma gare</b>: scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi; il PDF è in ordine di <b>categoria</b> (dalla più grande) e, nella stessa categoria, di giorno e ora; con <span class="k">Scarica programma PDF</span> lo stampi.</li>
-<li><b>Comunicazione</b>: un modello (o testo libero), titolo, testo e firma; <span class="k">Scarica PDF</span>. L'intestazione è
-quella della convocazione; con <b>Mostra la categoria nell'intestazione</b> ci metti la categoria: il mister ha già la sua, i
-direttori la scelgono dall'elenco. Non si
-pubblica: per farla arrivare nell'app usa Calendario → Avvisi.</li></ul>
+<li><b>Programma gare</b> (Calendario → Programma gare): scegli il periodo (<b>dal</b>–<b>al</b>) e, se vuoi, le squadre; vedi partite ed eventi; il PDF è in ordine di <b>categoria</b> (dalla più grande) e, nella stessa categoria, di giorno e ora; con <span class="k">Scarica programma PDF</span> lo stampi.</li>
+<li><b>Comunicazione</b> (Calendario → Avvisi): un modello (o testo libero), titolo, testo e firma; <span class="k">Scarica PDF</span>.</li></ul>
 <p><b>Archivio</b>: ogni PDF che scarichi dal Portale (convocazioni, fogli gara, report, distinte, programmi, comunicazioni) ne lascia
 una copia in <b>Società → Archivio documenti</b>, con chi l'ha scaricato e quando. Lo vedono admin e direttori.</p>
 <p><b>Nessuna modifica persa.</b> Se due persone cambiano la stessa scheda nello stesso momento (per esempio il mister segna le
 presenze mentre un direttore aggiorna il calendario), il Portale unisce le due modifiche: restano tutte e due. Solo se cambiano
 proprio la stessa cosa vale l'ultima. In basso compare "Salvato, insieme alle modifiche di un altro".</p>
-<p>In Convocazioni, Distinta e Foglio gara la casella <b>Mostra la categoria nell'intestazione del PDF</b> decide se stampare la
+<p>In Convocazioni (accanto a <span class="k">Scarica convocazione PDF</span>), Distinta e Foglio gara la casella <b>Mostra la categoria nel PDF</b> decide se stampare la
 categoria (es. "Under 14 - Provinciale").</p>
 <h3>Tabellini</h3><ol class="passi">
 <li>Nella tabella dei tabellini tocca una partita.</li>
 <li>Segna chi ha giocato, i <b>minuti</b>, i <b>gol</b>, i cartellini, e i <b>gol subiti</b> dei portieri.</li>
 <li>Inserisci il risultato.</li></ol>
 <p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>
-<h3>Statistiche</h3>
+<h3>Statistiche (Squadra → Statistiche → Partite)</h3>
 <p>Partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti.</p>
 <h3>Campi</h3>
 <p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni

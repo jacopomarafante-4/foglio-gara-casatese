@@ -48,7 +48,7 @@ function CasellaCategoria({ foglio, cambia, soloLettura }: { foglio: FoglioParti
   return (
     <label className="flex items-center gap-2">
       <input type="checkbox" className="size-5" disabled={soloLettura} checked={!foglio.senzaCategoria} onChange={(e) => cambia({ senzaCategoria: !e.target.checked })} />
-      Mostra la categoria nell&apos;intestazione del PDF
+      Mostra la categoria nel PDF
     </label>
   );
 }
@@ -103,7 +103,7 @@ export function DatiPartita(p: Base) {
           <p className="text-sm text-grigio">Oppure ignora e scrivi qui sotto i dati di un’altra partita (amichevole, recupero, ecc.).</p>
         </div>
       )}
-      <p className="text-grigio">Questi dati finiscono nell’intestazione di ogni pagina del PDF. Il calendario delle partite è nell’area Calendario.</p>
+      <p className="text-sm text-grigio">Questi dati vanno nell’intestazione del foglio gara e della convocazione.</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {campo('team', 'La nostra squadra (nel PDF)')}{campo('opponent', 'Avversario')}
         {campo('date', 'Data', 'date')}{campo('time', 'Ora', 'time')}
@@ -129,18 +129,16 @@ export function Convocazioni(p: Base & { risposte: Risposte }) {
   const svuota = () => { if (confirm('Svuotare lo stato di tutti i giocatori e i dati del ritrovo per questa partita?')) cambia({ callup: {}, meetTime: '', meetAddress: '', convNotes: '', convType: 'Campionato' }, 0); };
   return (
     <div className="space-y-3">
-      <CasellaCategoria foglio={foglio} cambia={cambia} soloLettura={p.soloLettura} />
-      {prossima && !stessaPartitaFoglio(foglio, prossima) && (
-        <div className="rounded-xl border border-linea bg-white p-3">
-          <p className="text-sm text-grigio">Prossima in calendario</p>
-          <ul><PartitaCalendario m={prossima}>{!p.soloLettura && <button className="bottone px-3 py-1.5 text-sm" onClick={() => cambia(datiDaCalendario(prossima), 0)}>Usa questa</button>}</PartitaCalendario></ul>
-          <p className="text-sm text-grigio">Oppure ignora e compila tu i campi qui sotto per un’altra partita (amichevole, recupero, ecc.).</p>
-        </div>
-      )}
-      <p className="text-grigio">Questi dati finiscono nel foglio convocazione (PDF separato dal foglio gara), da mandare a giocatori e famiglie.</p>
-      <div className="rounded-xl border border-linea bg-white p-3">
+      <div className="rounded-xl border border-linea bg-white p-3" style={{ borderLeft: '5px solid var(--color-blu)' }}>
+        <p className="text-sm font-semibold text-grigio">Partita convocata</p>
         <b className="font-display text-lg">{foglio.home ? `${foglio.team || p.nomeSquadra} - ${foglio.opponent || 'Avversario'}` : `${foglio.opponent || 'Avversario'} - ${foglio.team || p.nomeSquadra}`}</b>
-        <p className="text-sm text-grigio">{[foglio.date && `${giorno(foglio.date)} ${fmtData(foglio.date)}`, foglio.time && 'ore ' + foglio.time].filter(Boolean).join(' · ') || 'Partita non indicata: scegli “Usa questa” o compila Dati partita.'}</p>
+        <p className="text-sm text-grigio">{[foglio.date && `${giorno(foglio.date)} ${fmtData(foglio.date)}`, foglio.time && 'ore ' + foglio.time].filter(Boolean).join(' · ') || 'Partita non indicata: scegli quella del calendario o compila Dati partita.'}</p>
+        {prossima && !stessaPartitaFoglio(foglio, prossima) && (
+          <div className="mt-2 border-t border-linea pt-2">
+            <p className="text-sm font-semibold text-rosso">Non è la prossima del calendario:</p>
+            <ul><PartitaCalendario m={prossima}>{!p.soloLettura && <button className="bottone px-3 py-1.5 text-sm" onClick={() => cambia(datiDaCalendario(prossima), 0)}>Usa questa</button>}</PartitaCalendario></ul>
+          </div>
+        )}
       </div>
 
       <Titolo>Impegno</Titolo>
@@ -179,9 +177,9 @@ export function Convocazioni(p: Base & { risposte: Risposte }) {
       <p className="text-sm text-grigio">Ordine alfabetico. Tocca lo stato per ciascun giocatore: <b>CON</b> convocato · <b>NC</b> non convocato · <b>INF</b> infortunato · <b>SQL</b> squalificato · <b>ND</b> non disponibile.</p>
       <ul className="space-y-1.5">
         {p.giocatori.map((g) => (
-          <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-linea bg-white p-2">
-            <span className="min-w-0 font-semibold">{g.name}<RispostaFamiglia r={p.risposte[`${g.id}|${chiave}`]} /></span>
-            <span className="inline-flex overflow-hidden rounded-lg border border-linea" role="group" aria-label={`Stato convocazione ${g.name}`}>
+          <li key={g.id} className="flex items-center justify-between gap-2 rounded-xl border border-linea bg-white p-2">
+            <span className="min-w-0 flex-1 font-semibold leading-tight">{g.name}<RispostaFamiglia r={p.risposte[`${g.id}|${chiave}`]} /></span>
+            <span className="inline-flex shrink-0 overflow-hidden rounded-lg border border-linea" role="group" aria-label={`Stato convocazione ${g.name}`}>
               {STATI_CONVOCAZIONE.map((st) => (
                 <button key={st} disabled={p.soloLettura} aria-pressed={callup[g.id] === st} title={ETICHETTE_STATO[st]}
                   onClick={() => cambia({ callup: { ...callup, [g.id]: callup[g.id] === st ? '' : st } })}
@@ -191,8 +189,9 @@ export function Convocazioni(p: Base & { risposte: Risposte }) {
           </li>
         ))}
       </ul>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <button className="bottone" onClick={usaPdf(p, foglio, false, setMessaggio)}>Scarica convocazione PDF</button>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-linea bg-white p-3">
+        <span className="flex flex-col gap-2"><button className="bottone" onClick={usaPdf(p, foglio, false, setMessaggio)}>Scarica convocazione PDF</button>
+          <CasellaCategoria foglio={foglio} cambia={cambia} soloLettura={p.soloLettura} /></span>
         {!p.soloLettura && <button className={`${piccolo} border-transparent text-rosso hover:bg-rosso/5`} onClick={svuota}>Svuota convocazioni</button>}
       </div>
       <Messaggio testo={messaggio} />
@@ -225,7 +224,6 @@ export function ConvocazioniAdb(p: Base & { risposte: Risposte }) {
   );
   return (
     <div className="space-y-3">
-      <CasellaCategoria foglio={foglio} cambia={cambia} soloLettura={p.soloLettura} />
       <p className="text-grigio">Attività di base: da 1 a {MAX_PARTITE_ADB} partite nella stessa convocazione, ognuna con i suoi convocati. Il PDF è un foglio orizzontale con una colonna per partita.</p>
       {wk.length > 0 && (
         <div className="rounded-xl border border-linea bg-white p-3">
@@ -290,8 +288,9 @@ export function ConvocazioniAdb(p: Base & { risposte: Risposte }) {
             }}>+ Aggiungi partita</button>
           : <span className="text-sm text-grigio">Massimo 4 partite.</span>)}
         {pp.length > 0 && (
-          <span className="flex gap-2">
+          <span className="flex flex-wrap items-center gap-2">
             <button className="bottone" onClick={usaPdf(p, foglio, true, setMessaggio)}>Scarica convocazione PDF</button>
+            <CasellaCategoria foglio={foglio} cambia={cambia} soloLettura={p.soloLettura} />
             {!p.soloLettura && <button className={`${piccolo} border-transparent text-rosso`} onClick={() => { if (confirm('Svuotare tutte le partite e i convocati?')) salvaPartite([], 0); }}>Svuota</button>}
           </span>
         )}

@@ -1,5 +1,5 @@
 'use client';
-// Modulistica → Distinta: dati della manifestazione, giocatori scelti (numero, nascita, tessera), allenatore e dirigenti,
+// Squadra → Partite → Distinta: dati della manifestazione, giocatori scelti (numero, nascita, tessera), allenatore e dirigenti,
 // note. Si salva da sola nel foglio della squadra (salvaDistinta, con un attimo di attesa mentre si scrive) e si scarica in
 // PDF, con una copia nell'Archivio documenti. I direttori la vedono e scaricano, ma non la cambiano.
 import '@fontsource/barlow/700.css';

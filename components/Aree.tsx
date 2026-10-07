@@ -9,7 +9,6 @@ const AREE = [
   { k: 'home', etichetta: 'Home', href: '/inizio' },
   { k: 'calendario', etichetta: 'Calendario', href: '/calendari/tutte' },   // "La mia squadra" è dentro Squadra
   { k: 'squadra', etichetta: 'Squadra', href: '/squadra/rosa' },
-  { k: 'modulistica', etichetta: 'Modulistica', href: '/modulistica/distinta' },   // l'organizzativo (senza distinta) va al Programma
   { k: 'segreteria', etichetta: 'Segreteria', href: '/segreteria' },
   { k: 'scouting', etichetta: 'Scouting', href: '/home' },
   { k: 'societa', etichetta: 'Società', href: '/societa/squadre' },
@@ -34,8 +33,8 @@ export function Aree({ ruolo, organizza = false, nienteSquadre = false, nienteSe
   const visibili = aree.filter((a) => (a.k !== 'esercitazioni' || ruolo === 'admin') && (a.k !== 'squadra' || !nienteSquadre)
     && (a.k !== 'segreteria' || !nienteSegreteria));
   const corrente = percorso.startsWith('/esercitazioni') ? 'esercitazioni' : percorso.startsWith('/societa') ? 'societa' : percorso.startsWith('/segreteria') ? 'segreteria'
-    : percorso.startsWith('/modulistica') ? 'modulistica' : percorso.startsWith('/calendari/') ? 'calendario'
-    : percorso.startsWith('/inizio') ? 'home' : percorso.startsWith('/squadra/') ? 'squadra' : 'scouting';
+    : percorso.startsWith('/modulistica/programma') || percorso.startsWith('/calendari/') ? 'calendario'
+    : percorso.startsWith('/inizio') ? 'home' : percorso.startsWith('/squadra/') || percorso.startsWith('/modulistica/') ? 'squadra' : 'scouting';
   return (
     <nav aria-label="Aree del portale" className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pb-2.5 [scrollbar-width:none]">
       {visibili.map((a) => {
@@ -45,7 +44,7 @@ export function Aree({ ruolo, organizza = false, nienteSquadre = false, nienteSe
             key={a.k}
             href={a.href}
             aria-current={attiva ? 'page' : undefined}
-            className={`flex flex-none items-center gap-2 whitespace-nowrap rounded-md px-3 py-[7px] text-[15px] font-semibold max-sm:gap-1.5 max-sm:px-2 max-sm:text-sm ${
+            className={`flex flex-none items-center gap-2 whitespace-nowrap rounded-md px-3 py-[7px] text-[15px] font-semibold max-sm:gap-1 max-sm:px-1.5 max-sm:text-[13px] ${
               attiva ? 'bg-white/15 text-white' : 'text-white/85 hover:bg-white/10'
             }`}
           >

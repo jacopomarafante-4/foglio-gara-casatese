@@ -13,7 +13,7 @@ export default async function PaginaDatiPartita({ searchParams }: { searchParams
   const d = await datiPartita(chi, squadra);
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Partita · {squadra.category || squadra.name}</h1>
+      <h1 className="font-display text-4xl font-bold">Dati partita</h1>
       <SchedePartite attiva="/squadra/partita" adb={false} squadraId={squadra.id} staff={!!chi.profilo} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={squadra.id} />
       <DatiPartita key={squadra.id} {...d} soloLettura={soloLettura} linkCampi={conSquadra('/squadra/campi')} />

@@ -44,7 +44,7 @@ export default async function CalendarioDellaSquadra({ searchParams }: { searchP
 
   return (
     <div className="space-y-5">
-      <h1 className="font-display text-4xl font-bold">Calendario · {squadra.category || squadra.name}</h1>
+      <h1 className="font-display text-4xl font-bold">Calendario</h1>
       <SceltaSquadra squadre={squadre} scelta={id} />
       {soloLettura && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
       {(ufficiali.length > 0 || amichevoli.length > 0) && <ScaricaExcel nome={nomeFile('Calendario', squadra.category || squadra.name || '', oggi)}

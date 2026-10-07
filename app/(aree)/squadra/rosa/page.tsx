@@ -24,7 +24,7 @@ export default async function PaginaRosa({ searchParams }: { searchParams: Promi
 
   return (
     <div className="space-y-5">
-      <h1 className="font-display text-4xl font-bold">Rosa · {squadra.name || squadra.category}</h1>
+      <h1 className="font-display text-4xl font-bold">Rosa</h1>
       <SceltaSquadra squadre={squadre} scelta={id} />
       {righe.length > 0 && <ScaricaExcel nome={nomeFile('Rosa', squadra.category || squadra.name || '', oggiIso())} fogli={fogliRosa(righe)} />}
       <Rosa key={id} squadraId={id}

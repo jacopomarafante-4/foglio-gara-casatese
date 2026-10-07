@@ -5,37 +5,29 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Scheda } from '@/components/Scheda';
 import type { Ruolo } from '@/lib/ruoli';
 
-export function SchedeArea({ ruolo, segnala, organizza = false }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
+export function SchedeArea({ ruolo, segnala }: { ruolo: Ruolo; segnala: boolean; organizza?: boolean }) {
   const percorso = usePathname();
   const squadraScelta = useSearchParams().get('squadra');
   if (percorso.startsWith('/inizio') || percorso.startsWith('/esercitazioni')) return null;   // la Home e le Esercitazioni non hanno schede
-  if (percorso.startsWith('/squadra/')) {
-    // Rosa, Allenamento e Partite nell'app (le schede delle Partite ancora nel Portale sono nella barra della pagina)
+  if (percorso.startsWith('/squadra/') || percorso.startsWith('/modulistica/distinta')) {
+    // Rosa, Allenamento, Partite (con la Distinta), Statistiche (Dashboard, allenamento, partite), Calendario della squadra
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della squadra">
         <Scheda href={'/squadra/rosa' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Rosa</Scheda>
-        <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/statistiche-allenamento', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
+        <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
         <Scheda href={'/squadra/convocazioni' + (squadraScelta ? '?squadra=' + squadraScelta : '')}
-          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/squadra/tabellini', '/squadra/statistiche-partite', '/squadra/campi']}>Partite</Scheda>
+          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/modulistica/distinta', '/squadra/tabellini', '/squadra/campi']}>Partite</Scheda>
+        <Scheda href={'/squadra/dashboard' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/statistiche-allenamento', '/squadra/statistiche-partite']}>Statistiche</Scheda>
         <Scheda href={'/squadra/calendario' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Calendario</Scheda>
-        <Scheda href={'/squadra/dashboard' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Dashboard</Scheda>
       </nav>
     );
   }
-  if (percorso.startsWith('/calendari/')) {
-    // "La mia squadra" è dentro Squadra → Calendario. Qui restano Tutte le squadre, Avvisi (admin, direttori, organizzativo)
+  if (percorso.startsWith('/calendari/') || percorso.startsWith('/modulistica/programma')) {
+    // "La mia squadra" è dentro Squadra → Calendario. Qui: Tutte le squadre, Avvisi, Programma gare (PDF delle gare dal–al)
     return (
       <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede del calendario">
         <Scheda href="/calendari/tutte">Tutte le squadre</Scheda>
         <Scheda href="/calendari/avvisi">Avvisi</Scheda>
-      </nav>
-    );
-  }
-  if (percorso.startsWith('/modulistica')) {
-    // Tutta nell'app (tappa 3); la Distinta non serve all'organizzativo
-    return (
-      <nav className="mx-auto flex max-w-[1000px] gap-1 overflow-x-auto px-3 pt-1.5 [scrollbar-width:none]" aria-label="Schede della modulistica">
-        {!organizza && <Scheda href="/modulistica/distinta">Distinta</Scheda>}
         <Scheda href="/modulistica/programma">Programma gare</Scheda>
       </nav>
     );

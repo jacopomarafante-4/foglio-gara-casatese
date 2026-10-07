@@ -15,7 +15,7 @@ export default async function PaginaConvocazioni({ searchParams }: { searchParam
   const props = { ...d, risposte, soloLettura, linkCampi: conSquadra('/squadra/campi') };
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Convocazioni · {squadra.category || squadra.name}</h1>
+      <h1 className="font-display text-4xl font-bold">Convocazioni</h1>
       <SchedePartite attiva="/squadra/convocazioni" adb={adb} squadraId={squadra.id} staff={!!chi.profilo} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={squadra.id} />
       {d.giocatori.length === 0 ? <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Prima inserisci la rosa (Squadra → Rosa).</p>

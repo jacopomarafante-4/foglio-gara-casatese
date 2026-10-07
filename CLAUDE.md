@@ -3,7 +3,7 @@
 # Academy Casatese Merate — contesto per Claude
 
 App web unica (Next.js, `app/`) del settore giovanile di calcio (Brianza):
-- **Squadre** (aree Home, Calendario, Modulistica, Squadra, Società, Segreteria; gruppo `app/(aree)/`): rosa, presenze, test,
+- **Squadre** (aree Home, Calendario, Squadra, Società, Segreteria; gruppo `app/(aree)/`): rosa, presenze, test,
   convocazioni, formazione, piazzati, foglio gara, tabellini, statistiche, campi. Per mister (PIN), admin, direttori, segreteria.
 - **Scouting Hub** (gruppo `app/(app)/`): segnalazioni dal campo, valutazioni, pipeline dei giocatori. Per scout, direttori, admin.
 - **Famiglie** (`app/famiglia/`): convocazioni con risposta, calendario, anagrafica, documenti per la segreteria (PIN della famiglia).
@@ -65,7 +65,12 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   Storico modifiche (`/societa/modifiche`, solo admin), azioni in `app/(aree)/societa/actions.ts`.
 - Segreteria → Tesserati (`/segreteria`, admin, direttori, segreteria: `gestisceSegreteria()`; la segreteria dopo il PIN arriva lì e
   vede solo quest'area).
-- Modulistica (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
+- Navigazione (07/10/2026, controllo UX): l'area Modulistica non c'è più. Squadra = Rosa · Allenamento · Partite · Statistiche ·
+  Calendario (`components/SchedeArea.tsx`); sottoschede nella pagina, che vanno a capo (`components/squadra/SottoSchede.tsx`:
+  `SchedeAllenamento`, `SchedePartite` con la Distinta, `SchedeStatistiche` = Dashboard, Allenamento, Partite). Gli indirizzi
+  `/modulistica/distinta` (area Squadra → Partite) e `/modulistica/programma` (area Calendario) restano; `Aree.tsx`, `NomeArea.tsx`
+  li assegnano all'area giusta. Titoli delle pagine brevi, senza il nome della squadra (è già nell'intestazione o nella scelta).
+- Moduli (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
   `?squadra=` per lo staff, direttori in sola lettura, niente per l'organizzativo; `salvaDistinta` salva solo `distinta` e
   `senzaCategoria`; regole `lib/distinta.ts`, PDF `lib/pdf-distinta.ts`), Programma gare (`/modulistica/programma`, `lib/programma.ts`;
   un mister normale vede e stampa SOLO le sue squadre, non tutte: `squadreProgrammaMister()`; l'organizzativo e i preparatori

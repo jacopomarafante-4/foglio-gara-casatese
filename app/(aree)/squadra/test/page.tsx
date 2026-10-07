@@ -19,7 +19,7 @@ export default async function PaginaTest({ searchParams }: { searchParams: Promi
   const giocatori = ((docs['roster/' + id]?.players ?? []) as { id: string; name: string }[]).slice().sort((a, b) => a.name.localeCompare(b.name, 'it'));
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-4xl font-bold">Test atletici · {squadra.name || squadra.category}</h1>
+      <h1 className="font-display text-4xl font-bold">Test atletici</h1>
       <SchedeAllenamento attiva="/squadra/test" eta={eta} conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {giocatori.length === 0

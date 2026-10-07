@@ -69,18 +69,17 @@ export function Rosa({ squadraId, giocatori: iniziali, ruoliBase, admin, soloLet
     </select>
   );
   const numero = (g: Giocatore) => (
-    <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold ${g.numero ? 'bg-blu text-white' : 'bg-carta text-grigio'}`}>{g.numero || '–'}</span>
+    <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold ${g.numero ? 'bg-blu text-white' : 'invisible'}`} title={g.numero ? 'Numero nella prossima partita (Formazione)' : undefined}>{g.numero || ''}</span>
   );
 
   return (
     <div className="space-y-4">
       <p className="max-w-prose text-grigio">
-        {admin ? 'Nome e ruolo: il numero di maglia lo assegni in Formazione, cambia partita per partita (titolari 1-11, panchina 12+). Il ruolo lo può scegliere anche il mister'
-          : 'Il numero è quello di questa partita (titolari 1-11, panchina 12+): lo decidi tu in Formazione. Scegli il ruolo di ogni giocatore: per i portieri potrai inserire i gol subiti nelle partite'}
-        {ruoliBase ? ' (in questa categoria: portiere o giocatore di movimento).' : '.'}
+        Scegli il ruolo di ogni giocatore{ruoliBase ? ' (in questa categoria: portiere o di movimento)' : ''}; per i portieri si segnano i gol subiti.
+        Il numero nel cerchio è quello della prossima partita: si cambia in Formazione.
       </p>
       {soloPortieri ? <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🧤 Rosa di un’altra squadra: qui segni solo chi è portiere. Lo vede anche il mister.</p>
-        : !admin && <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🔒 La rosa la inserisce la società. Per aggiungere o togliere un giocatore, scrivi all’amministratore.</p>}
+        : !admin && <p className="rounded-md bg-carta px-4 py-3 text-sm text-grigio">🔒 Giocatori aggiunti o tolti solo dalla società: scrivi all’amministratore.</p>}
 
       {giocatori.length === 0 ? (
         <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">

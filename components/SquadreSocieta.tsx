@@ -245,7 +245,7 @@ function Staff({ staff, io, squadreElenco }: { staff: PersonaStaff[]; io: string
                           );
                         })}
                       </div>
-                      <p className="mt-1 text-xs text-grigio">Società, Scouting e Segreteria restano sempre completi; questo limita solo Squadra, Home e Modulistica.</p>
+                      <p className="mt-1 text-xs text-grigio">Società, Scouting e Segreteria restano sempre completi; questo limita solo Squadra (con la Distinta), Home e Programma gare.</p>
                     </details>
                   )}
                   {g.ruolo === 'direttore' && (
