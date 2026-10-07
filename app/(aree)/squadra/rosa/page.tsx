@@ -13,7 +13,7 @@ import { oggiIso } from '@/lib/utili';
 
 export default async function PaginaRosa({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {
   const { chi, squadre, squadra, eta, admin, soloLettura, soloPortieri } = await apriSquadra((await searchParams).squadra);
-  if (!squadra) return <p className="text-grigio">Nessuna squadra. Creane una in Società → Squadre.</p>;
+  if (!squadra) return <p className="text-grigio">Nessuna squadra da mostrare.</p>;
   const id = squadra.id;
   const docs = await leggiDocs(chi, ['roster/' + id, 'registro/' + id, 'sheet/' + id]);
   const giocatori = (docs['roster/' + id]?.players ?? []) as ({ id: string; name: string } & Record<string, unknown>)[];

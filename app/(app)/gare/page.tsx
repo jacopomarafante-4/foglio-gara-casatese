@@ -13,6 +13,7 @@ import { istanteTraOre } from '@/lib/utili';
 
 const ANNATA_MIN = 2008, ANNATA_MAX = 2021;
 const LIMITE = 5000;
+const MOSTRA = 80;
 /** Tolleranza sul limite di km (le distanze sono in linea d'aria) */
 const TOLLERANZA = 1.1;
 const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-semibold ${attiva ? 'bg-blu text-white' : 'border border-linea bg-white'}`;
@@ -20,7 +21,7 @@ const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-se
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; adb?: string; ago?: string; annata?: string; ok?: string; errore?: string }>;
+  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; adb?: string; ago?: string; annata?: string; tutte?: string; ok?: string; errore?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
@@ -93,11 +94,18 @@ export default async function Gare({
     })
     .map((g) => ({ ...arricchisci(g, sede, seguite), giocatori: giocatoriDellaGara(g, giocatori) }))
     .filter((g) => g.distanza === null || g.distanza <= km * TOLLERANZA);
+  /* Al massimo MOSTRA gare (con AdB sono migliaia): prima quelle con giocatori segnalati o squadre seguite, poi le più vicine
+     nel tempo; "Mostra tutte" toglie il limite */
+  const interessa = (g: (typeof gare)[number]) => g.seguite.length > 0 || g.giocatori.length > 0;
+  const mostrate = filtri.tutte === '1' ? gare
+    : [...gare.filter(interessa), ...gare.filter((g) => !interessa(g))].slice(0, MOSTRA).sort((x, y) => x.data_ora.localeCompare(y.data_ora));
+  const nascoste = gare.length - mostrate.length;
+  const conTutte = () => { const u = new URLSearchParams(Object.entries(filtri).filter(([k, v]) => v && k !== 'ok' && k !== 'errore') as [string, string][]); u.set('tutte', '1'); return `/gare?${u}`; };
 
   // Distinte caricate (foto/PDF): link temporanei, solo per chi può vederle (RLS)
   const allegati = new Map<string, { nome: string; url: string }[]>();
   if (gare.length) {
-    const { data: al } = await supabase.from('gare_allegati').select('gara_id, percorso, nome_file').in('gara_id', gare.map((g) => g.id).slice(0, 300));
+    const { data: al } = await supabase.from('gare_allegati').select('gara_id, percorso, nome_file').in('gara_id', mostrate.map((g) => g.id).slice(0, 300));
     if (al?.length) {
       const { data: firmati } = await supabase.storage.from('distinte').createSignedUrls(al.map((a) => a.percorso), 3600);
       al.forEach((a, i) => {
@@ -109,7 +117,7 @@ export default async function Gare({
 
   // Raggruppate per giorno
   const perGiorno = new Map<string, typeof gare>();
-  for (const g of gare) {
+  for (const g of mostrate) {
     const giorno = new Date(g.data_ora).toLocaleDateString('it-IT', {
       timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long',
     });
@@ -123,7 +131,7 @@ export default async function Gare({
         <div>
           <h1 className="font-display text-4xl font-bold">Gare da vedere</h1>
           <p className="text-grigio">
-            {gare.length} gare
+            {gare.length} gare{nascoste > 0 && ` (qui le prime ${mostrate.length})`}
             {tutteLeGare.length === LIMITE && ' (le prime 5000: restringi i filtri)'}
             {scoperte > 0 && <> – <strong className="text-inchiostro">{scoperte} senza osservatore</strong></>}
           </p>
@@ -149,7 +157,7 @@ export default async function Gare({
             <option value="tutte">Tutte</option>
           </select>
         </label>
-        <fieldset className="block">
+        <fieldset className="col-span-2 block sm:col-span-1">
           <legend className="mb-1 block text-xs text-grigio">Attività</legend>
           <div className="flex h-12 items-center gap-4">
             <label className="flex items-center gap-2 font-semibold">
@@ -160,7 +168,7 @@ export default async function Gare({
             </label>
           </div>
         </fieldset>
-        <label className="block">
+        <label className="col-span-2 block sm:col-span-1">
           <span className="mb-1 block text-xs text-grigio">Anno di nascita</span>
           <input type="text" name="annata" inputMode="numeric" pattern="20(0[89]|1\d|2[01])" maxLength={4}
             placeholder={`${ANNATA_MIN}–${ANNATA_MAX}`} defaultValue={annata ?? filtri.annata ?? ''}
@@ -195,6 +203,12 @@ export default async function Gare({
                 </div>
               </section>
             ))}</StaffGare>
+          )}
+          {nascoste > 0 && (
+            <p className="rounded-xl border border-dashed border-linea p-4 text-center text-grigio">
+              Altre {nascoste} gare non mostrate: riduci i km o scrivi l’anno di nascita.{' '}
+              <Link href={conTutte()} className="font-semibold text-blu underline">Mostra tutte</Link>
+            </p>
           )}
         </>
       )}
