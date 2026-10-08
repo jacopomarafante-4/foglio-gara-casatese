@@ -306,7 +306,7 @@ export default async function Giocatori({
     g.osservato ? (
       <StatoBadge stato={g.stato} />
     ) : (
-      <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Da distinta</span>
+      <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Nel database</span>
     );
   /* Titolo di gruppo quando cambia l'annata (elenco di base, per annata) */
   const nuovaAnnata = (i: number) => perAnnata && (i === 0 || righe[i - 1].g.annata !== righe[i].g.annata);
@@ -378,8 +378,8 @@ export default async function Giocatori({
           <select name="societa" defaultValue={filtri.societa ?? ''} className="campo"><option value="">Tutte</option>
             {societa.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}</select></label>
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Quali giocatori</span>
-          <select name="chi" defaultValue={filtri.chi ?? ''} className="campo"><option value="">Solo osservati, senza Academy</option>
-            <option value="tutti">Tutti, anche da distinta e Academy</option><option value="preferiti">★ Solo i miei preferiti</option></select></label>
+          <select name="chi" defaultValue={filtri.chi ?? ''} className="campo"><option value="">Solo segnalati, senza Academy</option>
+            <option value="tutti">Tutti, anche nel database e Academy</option><option value="preferiti">★ Solo i miei preferiti</option></select></label>
         {/* Ordinamento: da computer si tocca l'intestazione della tabella; qui per telefono e tablet (e per tenerlo filtrando) */}
         <label className="lg:hidden"><span className="mb-1 block text-sm font-semibold text-grigio">Ordina per</span>
           <select name="ordina" defaultValue={ordina ?? ''} className="campo"><option value="">Annata</option>

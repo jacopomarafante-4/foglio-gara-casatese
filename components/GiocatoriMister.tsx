@@ -14,7 +14,7 @@ const ORDINE_STATI = Object.keys(STATI) as StatoGiocatore[];
 const SIGLE: Record<string, string> = { portiere: 'POR', difensore: 'DIF', centrocampista: 'CEN', attaccante: 'ATT', movimento: 'MOV' };
 const NOMI_AREE: Record<string, string> = { tecnica: 'Tecnica', motoria: 'Motoria', tattica: 'Tattica', mentale: 'Mentale' };
 const PALLINO: Record<string, string> = {
-  in_lista: 'bg-grigio', in_osservazione: 'bg-blu', da_rivedere: 'bg-oro', inserito: 'bg-blu-scuro', da_non_inserire: 'bg-rosso',
+  in_lista: 'bg-grigio', in_osservazione: 'bg-blu', positivo: 'bg-verde', da_rivedere: 'bg-oro', inserito: 'bg-blu-scuro', da_non_inserire: 'bg-rosso',
 };
 const TONO_GIUDIZIO: Record<string, string> = {
   da_prendere: 'bg-blu text-white', da_rivedere: 'bg-oro text-inchiostro', non_a_livello: 'bg-rosso text-white',

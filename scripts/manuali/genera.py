@@ -252,11 +252,13 @@ note solo tecniche · <span class="k">Esci</span> sui dispositivi condivisi · e
 <h2>5. Parole dell'app</h2>
 <h3>Stati di un giocatore osservato (Scouting)</h3>
 <table><tr><th style="width:22%">Stato</th><th>Significato</th></tr>
-<tr><td>In lista</td><td>Segnalato: è nell'archivio, da seguire.</td></tr>
-<tr><td>In osservazione</td><td>Lo stiamo seguendo attivamente (gare viste, contatti, open day, prova).</td></tr>
-<tr><td>Da rivedere</td><td>Interessante: va visto di nuovo prima di decidere.</td></tr>
-<tr><td>Inserito</td><td>È entrato in una nostra squadra.</td></tr>
-<tr><td>Da non inserire</td><td>Deciso di non prenderlo (il motivo va nelle note). Resta in archivio.</td></tr></table>
+<tr><td>Nel database</td><td>È in archivio (per esempio da una distinta o dalle rose) ma nessuno l'ha ancora segnalato.</td></tr>
+<tr><td>Segnalato</td><td>Qualcuno l'ha visto e segnalato: è da seguire.</td></tr>
+<tr><td>Osservato</td><td>L'hanno valutato almeno 3 persone diverse: ci passa da solo alla terza valutazione.</td></tr>
+<tr><td>Esito positivo</td><td>Adeguato alla nostra linea tecnica. Per inserirlo deve essere d'accordo anche lui con la famiglia.</td></tr>
+<tr><td>Esito rimandato</td><td>Interessante: va rivisto prima di decidere.</td></tr>
+<tr><td>Esito negativo</td><td>Non adeguato ora (il motivo va nelle note). Resta in archivio.</td></tr>
+<tr><td>Inserito</td><td>Esito positivo e d'accordo ragazzo e famiglia: entra nell'Academy.</td></tr></table>
 <p class="small">I giocatori dell'Academy Casatese Merate non compaiono nell'archivio: si vedono scegliendo
 "Tutti i giocatori" (o l'Academy come società).</p>
 <p class="small">Lo stato lo cambiano solo l'amministratore e i direttori.</p>
@@ -489,14 +491,14 @@ toglie toccandola di nuovo. Il pulsante <span class="k">Invia allo scouting</spa
 <li><b>Voti</b> da 1 a 5, solo su quello che hai visto: Tecnica, Motoria, Tattica, Mentale (con <b>+ Aggiungi una nota</b>), statura, forza.</li>
 <li><b>Dove e quando</b>: partita o occasione, data.</li></ol>
 <p>La segnalazione arriva firmata con il tuo nome e la tua squadra.</p>
-<div class="box"><b class="t">È già in lista? Lo valuti</b>Mentre scrivi annata e cognome, se il ragazzo è già nell'archivio dello scouting si apre la finestra
+<div class="box"><b class="t">È già segnalato? Lo valuti</b>Mentre scrivi annata e cognome, se il ragazzo è già nell'archivio dello scouting si apre la finestra
 <b>"Già in lista. Vuoi valutare?"</b>: tocca <span class="k">Sì, valuta</span> (o "No, è un altro giocatore"). Anche inviando, se è
 già in lista la segnalazione non si salva: si apre la <b>Valutazione</b>. Se vuoi dai i voti del dettaglio (spunti, guida della palla, ricezione…), scegli il
 giudizio finale (Da prendere, Da rivedere, Non a livello) e tocca <span class="k">Salva valutazione</span>. Quello che avevi scritto
 è già nel commento finale. La valutazione arriva firmata con il tuo nome e la tua squadra.</div>
 <h3>Scouting → Giocatori</h3>
 <p>I giocatori osservati dallo scouting della <b>tua annata</b> (non quelli dell'Academy), divisi per stato, ognuno col suo
-colore: In lista, In osservazione, Da rivedere, Inserito, Da non inserire. In alto cerchi per nome o società e filtri per
+colore: Segnalato, Osservato, Esito positivo, rimandato, negativo, Inserito. Ogni stato si può sempre cambiare. In alto cerchi per nome o società e filtri per
 stato e ruolo. Ogni riga dice ruolo, società, quante segnalazioni e valutazioni ha, l'ultimo giudizio e, a destra, la media
 dei voti per area più recenti. Sotto il nome, in colonne, gli ultimi voti per area, dati in una segnalazione o in una vecchia valutazione (<b>TEC</b> tecnica, <b>MOT</b> motoria,
 <b>TAT</b> tattica, <b>MEN</b> mentale: blu i voti alti, oro il 3, arancione e rosso i bassi) e <b>SEGN</b>, quante
@@ -521,7 +523,7 @@ scout = copertina('Manuale dello scout', 'Scouting: segnalare, valutare, seguire
 <li>Aggiungere i contatti della famiglia</li>
 <li>Modificare i dati dei giocatori che hai segnalato tu</li></ul></div>
 <div class="col"><h3>Non puoi</h3><ul class="ko">
-<li>Cambiare lo stato di un giocatore (in lista, in osservazione…)</li>
+<li>Cambiare lo stato di un giocatore (segnalato, osservato, esito, inserito)</li>
 <li>Inserire o modificare le gare e le squadre da seguire</li>
 <li>Vedere i contatti inseriti da altri</li>
 <li>Unire schede doppie</li>

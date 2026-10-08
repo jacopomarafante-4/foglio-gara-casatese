@@ -3,6 +3,7 @@ import { STATI, type StatoGiocatore } from '@/lib/tipi';
 const COLORI: Record<StatoGiocatore, string> = {
   in_lista: 'bg-linea text-inchiostro',
   in_osservazione: 'bg-blu/10 text-blu',
+  positivo: 'bg-verde/15 text-verde',
   da_rivedere: 'bg-oro/25 text-inchiostro',
   inserito: 'bg-blu-scuro text-white',
   da_non_inserire: 'bg-rosso/10 text-rosso',

@@ -73,7 +73,7 @@ export default async function Home({
   }
   const incarichiAttivi = ((aperti.data as unknown as Incarico[]) ?? []).filter((x) => incaricoAttivo(x, adesso));
   const incarichiAperti = incarichiAttivi.length;
-  const statiGrafico: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'da_rivedere', 'inserito', 'da_non_inserire'];
+  const statiGrafico: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'positivo', 'da_rivedere', 'da_non_inserire', 'inserito'];
   const maxStato = Math.max(1, ...statiGrafico.map((s) => perStato.get(s) ?? 0));
 
   return (
@@ -117,7 +117,7 @@ export default async function Home({
       />
 
       {tutto && perStato.size > 0 && (
-        <Riquadro titolo="Archivio per stato" spiegazione="Giocatori osservati: da chi è in lista fino a chi è stato inserito. Tocca uno stato per l’elenco." href="/giocatori/stati">
+        <Riquadro titolo="Archivio per stato" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito. Tocca uno stato per l’elenco." href="/giocatori/stati">
           <ul className="space-y-2">
             {statiGrafico.map((s, i) => (
               <li key={s}>

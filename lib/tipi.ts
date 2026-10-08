@@ -4,7 +4,7 @@
 export type RuoloCampo = 'portiere' | 'difensore' | 'centrocampista' | 'attaccante' | 'movimento';
 export type Piede = 'destro' | 'sinistro' | 'ambidestro';
 export type StatoGiocatore =
-  | 'in_lista' | 'in_osservazione' | 'da_rivedere' | 'inserito' | 'da_non_inserire';
+  | 'in_lista' | 'in_osservazione' | 'positivo' | 'da_rivedere' | 'da_non_inserire' | 'inserito';
 export type Giudizio = 'da_prendere' | 'da_rivedere' | 'non_a_livello';
 
 export const RUOLI_CAMPO: Record<RuoloCampo, string> = {
@@ -36,13 +36,17 @@ export const PIEDI: Record<Piede, string> = {
   ambidestro: 'Ambidestro',
 };
 
+/** Percorso del giocatore (0058): Nel database (osservato = false) → Segnalato → Osservato (da solo alla 3ª valutazione) →
+ *  Esito positivo / rimandato / negativo → Inserito (positivo e d'accordo ragazzo e famiglia). Nomi interni come prima. */
 export const STATI: Record<StatoGiocatore, string> = {
-  in_lista: 'In lista',
-  in_osservazione: 'In osservazione',
-  da_rivedere: 'Da rivedere',
+  in_lista: 'Segnalato',
+  in_osservazione: 'Osservato',
+  positivo: 'Esito positivo',
+  da_rivedere: 'Esito rimandato',
+  da_non_inserire: 'Esito negativo',
   inserito: 'Inserito',
-  da_non_inserire: 'Da non inserire',
 };
+export const NEL_DATABASE = 'Nel database';
 
 /** Stato come compare nello storico: le righe vecchie possono avere stati non più usati (0022) */
 const STATI_VECCHI: Record<string, string> = { invitato: 'Invitato', in_prova: 'In prova' };
