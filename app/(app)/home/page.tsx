@@ -117,11 +117,11 @@ export default async function Home({
       />
 
       {tutto && perStato.size > 0 && (
-        <Riquadro titolo="Archivio per stato" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito. Tocca uno stato per l’elenco." href="/giocatori/stati">
+        <Riquadro titolo="Archivio per stato" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito. Tocca uno stato per l’elenco." href="/giocatori">
           <ul className="space-y-2">
             {statiGrafico.map((s, i) => (
               <li key={s}>
-                <Link href={`/giocatori?stato=${s}`} className="grid grid-cols-[8rem_1fr] items-center gap-2 text-sm hover:opacity-80">
+                <Link href={`/giocatori?scheda=${{ in_lista: 'segnalati', in_osservazione: 'osservati', inserito: 'inseriti' }[s as string] ?? 'esito&esito=' + s}`} className="grid grid-cols-[8rem_1fr] items-center gap-2 text-sm hover:opacity-80">
                   <span className="font-semibold">{STATI[s]}</span>
                   <span className="flex items-center gap-2">
                     <i className="block h-5 rounded-md" style={{ width: `${Math.max(2, ((perStato.get(s) ?? 0) / maxStato) * 100)}%`, background: s === 'da_non_inserire' ? 'var(--color-linea)' : `color-mix(in srgb, var(--color-blu) ${100 - i * 18}%, white)` }} />

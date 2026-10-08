@@ -652,7 +652,7 @@ Le tue gare le ritrovi in Home, in <b>Le mie gare</b>.</li></ul>''', 'Gare da ve
 <ul>
 <li><b>Giocatori</b>: cerca per nome o descrizione, filtra per annata, ruolo, stato, società.
 Di norma vedi i ragazzi <b>osservati</b>; con "Anche solo da distinta" vedi anche quelli letti dalle distinte e mai osservati.</li>
-<li><b>Per stato</b>: le colonne In lista → In osservazione → Da rivedere → Inserito → Da non inserire. Utile per vedere la pipeline.</li>
+<li><b>Schede</b> in cima all'elenco: Tutti · Segnalati · Osservati · Esito (con positivo, rimandato, negativo) · Inseriti · Nel database, ognuna col numero dei ragazzi. Gli altri filtri valgono dentro la scheda scelta.</li>
 <li><b>Attività</b>: le tue prossime gare ("Ci vado io"), le tue segnalazioni e valutazioni, con i totali. Il PIN, se lo perdi, lo rigenerano l'amministratore o un direttore.</li>
 </ul>
 </section>
@@ -758,7 +758,7 @@ quello del calendario ufficiale.</p>
 <li><b>Giocatori</b>: archivio con ricerca e filtri; "Anche solo da distinta" mostra anche i ragazzi letti dalle distinte.
 Per ogni giocatore: anno, ruolo, stato, squadra, valutazione (o il pulsante <b>Valuta</b>) e prossima gara. Da computer
 si ordina cliccando l'intestazione di una colonna (di nuovo per invertire); da telefono con "Ordina per" nei filtri.
-<b>Per stato</b> mostra la pipeline a colonne.</li>
+Le <b>schede</b> in cima (Segnalati, Osservati, Esito, Inseriti, Nel database) mostrano il percorso dei giocatori.</li>
 <li><b>Scheda</b>: squadra e categoria, prossime gare, medie delle valutazioni, storico squadre e partite (con il percorso tra
 le società), eventi, storia completa, <b>contatti della famiglia</b>.</li>
 <li><b>Gare</b>: le gare da vedere con i giocatori segnalati di ogni partita e chi ci va.</li>
@@ -788,8 +788,7 @@ chi l'ha preso lo lascia o lo segna fatto con l'esito. Tu puoi anche liberarlo, 
 <li><b>Affidare</b>: con "Affida a" scegli tu chi se ne occupa (uno scout o un altro direttore), già quando crei l'incarico
 o dopo. Puoi affidare anche una <b>partita</b> (in Gare, "Affida a…" sotto la gara: la persona risulta anche su "Ci va") o un
 <b>giocatore</b> (nella sua scheda, "Affida a…"). L'incarico compare in Home con chi l'ha affidato.</li>
-<li>Come l'amministratore puoi <b>segnalare</b>, <b>valutare</b>, <b>cambiare lo stato</b> (anche trascinando nella vista
-Per stato), <b>gestire le gare</b> e unire le <b>schede doppie</b>.</li></ul>''', 'Scheda di un giocatore')}
+<li>Come l'amministratore puoi <b>segnalare</b>, <b>valutare</b>, <b>cambiare lo stato</b> (nella scheda del giocatore), <b>gestire le gare</b> e unire le <b>schede doppie</b>.</li></ul>''', 'Scheda di un giocatore')}
 <div class="box"><b class="t">Glossario e regole</b>Stati dei giocatori, categorie per anno di nascita e regole sui dati sono nel
 <b>Manuale generale</b>.</div>
 </section>

@@ -14,7 +14,6 @@ import { istanteTraOre, perRicerca } from '@/lib/utili';
 import { categoriaDaAnnata, giocaInGara } from '@/lib/categorie';
 import { StatoBadge } from '@/components/StatoBadge';
 import { elencoSocieta, idNostraSocieta } from '@/lib/societa';
-import { VistaGiocatori } from '@/components/VistaGiocatori';
 import { ContattoFlag } from '@/components/ContattoFlag';
 import { conContatto } from '@/lib/contatti';
 import { SlotValutazioni, valutatori, SOGLIA_VALUTAZIONI } from '@/components/Autore';
@@ -151,8 +150,22 @@ export default async function Giocatori({
   const societa = await elencoSocieta(supabase);
   const nostra = idNostraSocieta(societa);
   const preferiti = await mieiPreferiti(supabase);
-  const soloPreferiti = filtri.chi === 'preferiti';
-  const tuttiIGiocatori = filtri.chi === 'tutti' || soloPreferiti;
+  const soloPreferiti = filtri.chi === 'preferiti' || filtri.pref === '1';
+  /* Schede del percorso (0058): ognuna è un insieme di stati; "Tutti" = i segnalati in poi, senza i ragazzi dell'Academy */
+  const SCHEDE = {
+    tutti: { l: 'Tutti', stati: null as string[] | null },
+    segnalati: { l: 'Segnalati', stati: ['in_lista'] },
+    osservati: { l: 'Osservati', stati: ['in_osservazione'] },
+    esito: { l: 'Esito', stati: ['positivo', 'da_rivedere', 'da_non_inserire'] },
+    inseriti: { l: 'Inseriti', stati: ['inserito'] },
+    database: { l: 'Nel database', stati: null },
+  } as const;
+  type Scheda = keyof typeof SCHEDE;
+  const vecchia = filtri.chi === 'tutti' ? 'database' : null;   // vecchi link "Tutti i giocatori"
+  const scheda: Scheda = (filtri.scheda && filtri.scheda in SCHEDE ? filtri.scheda : vecchia ?? 'tutti') as Scheda;
+  const ESITI = { positivo: 'Positivo', da_rivedere: 'Rimandato', da_non_inserire: 'Negativo' } as const;
+  const esito = scheda === 'esito' && filtri.esito && filtri.esito in ESITI ? filtri.esito : null;
+  const tuttiIGiocatori = scheda === 'database' || scheda === 'inseriti' || soloPreferiti;
   const costruisci = () => {
     let q = supabase
       .from('giocatori')
@@ -170,8 +183,10 @@ export default async function Giocatori({
     else if (a) q = q.lte('annata', a);
     const ruolo = valoreValido(RUOLI_CAMPO, filtri.ruolo);
     if (ruolo) q = q.eq('ruolo', ruolo);
-    const stato = valoreValido(STATI, filtri.stato);
-    if (stato) q = q.eq('stato', stato);
+    if (scheda === 'database') q = q.eq('osservato', false);
+    else if (esito) q = q.eq('stato', esito);
+    else if (SCHEDE[scheda].stati) q = q.in('stato', [...SCHEDE[scheda].stati!]);
+    if (scheda === 'inseriti') q = q.eq('osservato', true);
     if (filtri.societa) q = q.eq('societa_id', filtri.societa);
     if (soloPreferiti) q = q.in('id', preferiti.giocatori.size ? [...preferiti.giocatori] : ['00000000-0000-0000-0000-000000000000']);
     // Di norma solo i ragazzi osservati e non dell'Academy; "Tutti i giocatori" = anche i nostri e quelli
@@ -184,6 +199,18 @@ export default async function Giocatori({
     if (cerca) q = q.or(`cognome.ilike.%${cerca}%,nome.ilike.%${cerca}%,descrizione.ilike.%${cerca}%`);
     return q;
   };
+  /* quanti in ogni scheda (senza gli altri filtri) */
+  const contaScheda = async (k: Scheda) => {
+    let q = supabase.from('giocatori').select('id', { count: 'exact', head: true });
+    if (k === 'database') q = q.eq('osservato', false);
+    else {
+      q = q.eq('osservato', true);
+      if (SCHEDE[k].stati) q = q.in('stato', [...SCHEDE[k].stati!]);
+      if (k !== 'inseriti' && nostra) q = q.or(`societa_id.is.null,societa_id.neq.${nostra}`);
+    }
+    return (await q).count ?? 0;
+  };
+  const conteggi = Object.fromEntries(await Promise.all((Object.keys(SCHEDE) as Scheda[]).map(async (k) => [k, await contaScheda(k)] as const))) as Record<Scheda, number>;
   const tutti: Riga[] = [];
   let error: { message: string } | null = null;
   for (let da = 0; ; da += 1000) {
@@ -347,12 +374,31 @@ export default async function Giocatori({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <VistaGiocatori attiva="elenco" admin={gestisce(profilo.ruolo)} />
+          {gestisce(profilo.ruolo) && <Link href="/giocatori/doppioni" className="rounded-lg border border-linea px-3 py-2 text-sm font-semibold hover:border-blu">Possibili doppioni</Link>}
           {puoSegnalare(profilo.ruolo) && (
             <Link href="/segnala" className="bottone">Segnala un giocatore</Link>
           )}
         </div>
       </div>
+
+      <nav className="space-y-2" aria-label="Percorso del giocatore">
+        <div className="flex gap-1 overflow-x-auto border-b border-linea [scrollbar-width:none]">
+          {(Object.keys(SCHEDE) as Scheda[]).map((k) => (
+            <Link key={k} href={link({ scheda: k === 'tutti' ? null : k, esito: null, chi: null, stato: null, pagina: null })} aria-current={scheda === k ? 'page' : undefined}
+              className={`flex-none whitespace-nowrap border-b-[3px] px-3 pb-2 pt-1 font-display text-base font-semibold ${scheda === k ? 'border-blu text-inchiostro' : 'border-transparent text-grigio hover:text-inchiostro'}`}>
+              {SCHEDE[k].l} <span className="text-sm font-normal text-grigio">{conteggi[k]}</span>
+            </Link>
+          ))}
+        </div>
+        {scheda === 'esito' && (
+          <div className="flex flex-wrap gap-1.5">
+            {[[null, 'Tutti gli esiti'], ...Object.entries(ESITI)].map(([v, l]) => (
+              <Link key={l} href={link({ esito: v, pagina: null })} aria-current={esito === v ? 'page' : undefined}
+                className={`rounded-full border px-3 py-1 text-sm font-semibold ${esito === v ? 'border-blu bg-blu text-white' : 'border-linea bg-white hover:border-blu'}`}>{l}</Link>
+            ))}
+          </div>
+        )}
+      </nav>
 
       <FiltriAuto className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-4">
         <label className="col-span-2 sm:col-span-3 lg:col-span-4"><span className="mb-1 block text-sm font-semibold text-grigio">Cerca</span>
@@ -368,18 +414,16 @@ export default async function Giocatori({
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Ruolo</span>
           <select name="ruolo" defaultValue={filtri.ruolo ?? ''} className="campo"><option value="">Tutti</option>
             {Object.entries(RUOLI_CAMPO).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
-        <label><span className="mb-1 block text-sm font-semibold text-grigio">Stato</span>
-          <select name="stato" defaultValue={filtri.stato ?? ''} className="campo"><option value="">Tutti</option>
-            {Object.entries(STATI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
+        {scheda !== 'tutti' && <input type="hidden" name="scheda" value={scheda} />}
+        {esito && <input type="hidden" name="esito" value={esito} />}
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Prima impressione</span>
           <select name="impressione" defaultValue={filtri.impressione ?? ''} className="campo"><option value="">Tutte</option>
             {Object.entries(IMPRESSIONI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}<option value="nessuna">Senza impressione</option></select></label>
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Società</span>
           <select name="societa" defaultValue={filtri.societa ?? ''} className="campo"><option value="">Tutte</option>
             {societa.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}</select></label>
-        <label><span className="mb-1 block text-sm font-semibold text-grigio">Quali giocatori</span>
-          <select name="chi" defaultValue={filtri.chi ?? ''} className="campo"><option value="">Solo segnalati, senza Academy</option>
-            <option value="tutti">Tutti, anche nel database e Academy</option><option value="preferiti">★ Solo i miei preferiti</option></select></label>
+        <label className="flex items-center gap-2 self-end pb-3 font-semibold">
+          <input type="checkbox" name="pref" value="1" defaultChecked={soloPreferiti} className="size-5" />★ Solo i miei preferiti</label>
         {/* Ordinamento: da computer si tocca l'intestazione della tabella; qui per telefono e tablet (e per tenerlo filtrando) */}
         <label className="lg:hidden"><span className="mb-1 block text-sm font-semibold text-grigio">Ordina per</span>
           <select name="ordina" defaultValue={ordina ?? ''} className="campo"><option value="">Annata</option>
