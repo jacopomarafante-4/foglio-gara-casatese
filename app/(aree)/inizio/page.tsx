@@ -12,7 +12,7 @@ import { daFare, riepilogo, type Registro } from '@/lib/registro';
 import { nomiMister } from '@/lib/distinta';
 import type { Avviso } from '@/components/calendario/Avvisi';
 import { HomeOrganizzazione, HomeSquadra } from '@/components/HomePortale';
-import { DashboardSocieta, type RisultatoDash, type SquadraDash } from '@/components/DashboardSocieta';
+import { DashboardSocieta, type RisultatoDash, type ScoutingRecente, type SquadraDash } from '@/components/DashboardSocieta';
 import type { StatoGiocatore } from '@/lib/tipi';
 import { contaRisposte, presenzePerMeseSquadra, risultati, saluto, stagioneSquadra, traQuanto } from '@/lib/home';
 import { linkLuogo, type Campi } from '@/lib/campi';
@@ -37,13 +37,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   /* ---------- admin e direttori: la dashboard della società (con ?squadra= la Home di una squadra) ---------- */
   if (chi.profilo && !sceltaSquadra) {
     const supabase = await createClient();
-    const [{ data: docsTutti }, segn, val, stati, inc, nec] = await Promise.all([
+    /* weekend appena passato: l'ultimo sabato iniziato (oggi compreso) e la domenica dopo */
+    const g0 = new Date(oggi + 'T12:00:00Z'), indietro = (g0.getUTCDay() + 1) % 7;
+    const sabPassato = new Date(g0.getTime() - indietro * 864e5).toISOString().slice(0, 10), domPassata = new Date(g0.getTime() - (indietro - 1) * 864e5).toISOString().slice(0, 10);
+    const GIOC = 'giocatore:giocatori(id, cognome, nome, descrizione, annata, societa(nome))';
+    const [{ data: docsTutti }, segn, val, stati, inc, nec, segnWk, valWk] = await Promise.all([
       supabase.from('docs').select('path, data').or('path.eq.shared/teams,path.eq.shared/eventi,path.eq.shared/avvisi,path.like.calendar/%,path.like.registro/%,path.like.roster/%'),
       supabase.from('segnalazioni').select('created_at').gte('created_at', istanteTraOre(-24 * 7 * 8)),
       supabase.from('valutazioni').select('id', { count: 'exact', head: true }).gte('created_at', istanteTraOre(-24 * 30)),
       supabase.from('giocatori').select('stato').eq('osservato', true),
       supabase.from('incarichi').select('id', { count: 'exact', head: true }).eq('fatto', false),
       supabase.from('necessita').select('id', { count: 'exact', head: true }).eq('aperta', true),
+      supabase.from('segnalazioni').select(`id, data, created_at, impressione, squadra, autore:profiles(nome, cognome), ${GIOC}`).order('data', { ascending: false }).order('created_at', { ascending: false }).limit(30),
+      supabase.from('valutazioni').select(`id, data, created_at, giudizio, autore_squadra, autore:profiles(nome, cognome), ${GIOC}`).order('data', { ascending: false }).order('created_at', { ascending: false }).limit(30),
     ]);
     const doc = (path: string) => docsTutti?.find((d) => d.path === path)?.data as Record<string, unknown> | undefined;
     const squadreSoc = filtraSquadre(chi, ((doc('shared/teams')?.items ?? []) as SquadraCal[]).filter((t) => !t.organizza && !t.vedeTutte));
@@ -74,7 +80,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     for (const x of segn.data ?? []) { const i = 7 - Math.floor((adesso - Date.parse(x.created_at)) / (7 * 864e5)); if (i >= 0 && i < 8) settimane[i].n++; }
     const perStato: Partial<Record<StatoGiocatore, number>> = {};
     for (const g of stati.data ?? []) perStato[g.stato as StatoGiocatore] = (perStato[g.stato as StatoGiocatore] ?? 0) + 1;
-    return <DashboardSocieta saluto={saluto(ora)} nome={chi.profilo.nome || ''} oggi={oggi} weekend={weekend} squadre={squadreDash} impegni={impegni} recenti={recenti}
+    /* scouting del weekend appena passato (data dell'osservazione); se vuoto, le ultime 5 */
+    type RigaSc = { id: string; data: string; created_at: string; impressione?: string | null; giudizio?: string | null; squadra?: string | null; autore_squadra?: string | null;
+      autore: { nome: string | null; cognome: string | null } | null; giocatore: { id: string; cognome: string | null; nome: string | null; descrizione: string | null; annata: number; societa: { nome: string } | null } | null };
+    const tutteSc: ScoutingRecente[] = [
+      ...((segnWk.data as unknown as RigaSc[] | null) ?? []).map((x) => ({ ...x, tipo: 'segnalazione' as const })),
+      ...((valWk.data as unknown as RigaSc[] | null) ?? []).map((x) => ({ ...x, tipo: 'valutazione' as const })),
+    ].filter((x) => x.giocatore).map((x) => ({
+      id: x.tipo + x.id, tipo: x.tipo, data: x.data, giocatoreId: x.giocatore!.id,
+      giocatore: [x.giocatore!.cognome, x.giocatore!.nome].filter(Boolean).join(' ') || x.giocatore!.descrizione || 'Senza nome',
+      annata: x.giocatore!.annata, societa: x.giocatore!.societa?.nome ?? '',
+      autore: x.autore ? [x.autore.nome, x.autore.cognome].filter(Boolean).join(' ') : (x.squadra || x.autore_squadra ? `Mister ${x.squadra || x.autore_squadra}` : ''),
+      esito: x.tipo === 'segnalazione' ? x.impressione ?? null : x.giudizio ?? null,
+    })).sort((a, b) => b.data.localeCompare(a.data));
+    const delWeekend = tutteSc.filter((x) => x.data >= sabPassato && x.data <= domPassata);
+    return <DashboardSocieta scoutingWeekend={{ sab: sabPassato, dom: domPassata, righe: delWeekend.length ? delWeekend : tutteSc.slice(0, 5), delWeekend: delWeekend.length > 0 }} saluto={saluto(ora)} nome={chi.profilo.nome || ''} oggi={oggi} weekend={weekend} squadre={squadreDash} impegni={impegni} recenti={recenti}
       avvisi={((doc('shared/avvisi')?.items ?? []) as Avviso[]).filter((a) => (a.data || '') >= daQuando).sort((x, y) => (y.data || '').localeCompare(x.data || '')).slice(0, 3)}
       scouting={{ settimane, perStato, valutazioni30: val.count ?? 0, incarichi: inc.count ?? 0, necessita: nec.count ?? 0 }} />;
   }
