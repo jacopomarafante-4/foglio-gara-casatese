@@ -98,6 +98,10 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   `app/(aree)/inizio/page.tsx`): fascia blu con presenza media (linea mese per mese), partite, gol, segnalazioni per settimana; presenze per
   squadra, risultati V/N/P, weekend per calendario, imbuto dello scouting per stato, ultimi risultati, da sistemare; ogni riquadro con la
   sua spiegazione. "Amichevole" (interfaccia e dati: tipo, comp, convType) è diventato "Partita".
+  RR/DOR/YIA (Dashboard della squadra): da `roster/<squadra>.storico` = { stagioni: { "2025/26": [chiavi dei nomi] }, altrove }, scritto da
+  `scripts/storico-rose.mjs [--conferma]` (carriera Academy per le annate dei ragazzi della rosa; `altrove` = passati in un'altra squadra);
+  carriera dalle rose storiche (Excel in private/rose/ → private/rose/rose.json) con `scripts/import-rose-storiche.mjs [--conferma]`
+  (nota "Dalle rose della società", rilanciabile). Rilanciare storico-rose quando cambiano le rose. Calcoli: `storiaRosa`, `chiaveNome`.
   Ogni profilo ha la sua Home-dashboard con la stessa fascia blu (`components/dashboard/Pezzi.tsx`: `Fascia`, `NumeroFascia`, `Sparkline`,
   `Colonne`, `Riquadro`, `BarraPct`): mister e preparatori (`HomeSquadra`: presenza, partite, gol, prossima), organizzativo (impegni per
   calendario, eventi), scout (`app/(app)/home`: sue segnalazioni per settimana, valutazioni, gare, incarichi; archivio per stato),

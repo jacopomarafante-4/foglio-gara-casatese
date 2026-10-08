@@ -64,3 +64,15 @@ test('attività di base: presenze senza minuti contano come partite insieme', ()
 test('ogni sigla ha nome e spiegazione', () => {
   for (const [k, s] of Object.entries(SIGLE)) assert.ok(s.nome && s.spiegazione.length > 20, k);
 });
+
+test('storia della rosa: RR, DOR, YIA dalla stagione passata, nomi in qualsiasi ordine', async () => {
+  const { storiaRosa, chiaveNome } = await import('@/lib/statistiche');
+  assert.equal(chiaveNome('Rossi Mario'), chiaveNome('MARIO  Rossì'));
+  const storico = { stagioni: { '2024/25': [chiaveNome('Rossi Mario')], '2025/26': [chiaveNome('Rossi Mario'), chiaveNome('Bianchi Luca'), chiaveNome('Verdi Paolo'), chiaveNome('Neri Ugo')] } };
+  const s = storiaRosa([{ name: 'Mario Rossi' }, { name: 'Bianchi Luca' }, { name: 'Gialli Nuovo' }], storico);
+  assert.equal(s.stagione, '2025/26');
+  assert.equal(s.rr, 2 / 4); assert.equal(s.dor, 2 / 4);
+  assert.equal(s.yia, (3 + 2 + 1) / 3);   // Rossi 2 stagioni passate + questa, Bianchi 1 + questa, Gialli solo questa
+  assert.equal(s.nuovi, 1);
+  assert.equal(storiaRosa([{ name: 'X' }], null), null);
+});
