@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { scaricaFogliPin } from '@/lib/fogli-pin';
 import { ImportaAnagrafica } from '@/components/ImportaAnagrafica';
+import { Fascia, NumeroFascia } from '@/components/dashboard/Pezzi';
 
 export type SquadraRosa = { id: string; name: string; category: string | null; players: { id: string; name: string }[] };
 type Quota = { rata?: string; importo?: string; scadenza?: string; pagata?: boolean };
@@ -177,8 +178,23 @@ export function Tesserati({ squadre, iniziali, documenti, oggi }: {
 
   if (!squadre.length) return <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">Nessuna squadra con la rosa.</p>;
 
+  /* totali di tutte le squadre per la fascia: quanti ragazzi sono in regola per ogni voce */
+  const tutti = lista.length;
+  const inRegola = (k: Filtro) => lista.filter((t) => !passa[k](t)).length;
+  const barra = (ok: number) => (
+    <div className="h-2.5 overflow-hidden rounded-full bg-white/15" aria-hidden><i className="block h-full rounded-full bg-verde" style={{ width: `${tutti ? (ok / tutti) * 100 : 0}%` }} /></div>
+  );
+  const nDoc = lista.reduce((a, t) => a + daControllare(t), 0);
+
   return (
     <div className="space-y-4">
+      <Fascia titolo="Segreteria" sottotitolo={`${tutti} tesserati in ${squadre.length} squadre`}>
+        <NumeroFascia titolo="Certificati" valore={<>{inRegola('cert')}<span className="text-xl text-white/70">/{tutti}</span></>} sotto="Certificati medici in regola (validi e non in scadenza).">{barra(inRegola('cert'))}</NumeroFascia>
+        <NumeroFascia titolo="Iscrizioni" valore={<>{inRegola('iscr')}<span className="text-xl text-white/70">/{tutti}</span></>} sotto="Iscrizioni complete.">{barra(inRegola('iscr'))}</NumeroFascia>
+        <NumeroFascia titolo="Quote" valore={<>{inRegola('quote')}<span className="text-xl text-white/70">/{tutti}</span></>} sotto="Ragazzi senza rate da pagare.">{barra(inRegola('quote'))}</NumeroFascia>
+        <NumeroFascia titolo="Da controllare" valore={nDoc} sotto={`Documenti caricati dalle famiglie da accettare o rifiutare. PIN famiglia: ${inRegola('pin')}/${tutti}.`} />
+      </Fascia>
+      <p className="text-sm text-grigio">Tocca un ragazzo per i suoi dati: si salvano da soli. Il PIN della famiglia si consegna col foglio PIN in PDF.</p>
       <div className="flex flex-wrap items-end gap-3">
         <label className="min-w-56 flex-1 sm:max-w-xs">
           <span className="mb-1 block text-sm font-semibold text-grigio">Squadra</span>

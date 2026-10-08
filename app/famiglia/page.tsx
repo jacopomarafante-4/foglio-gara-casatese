@@ -5,6 +5,7 @@ import { ETICHETTE_CONVOCAZIONE } from '@/lib/calendario-portale';
 import { oggiIso } from '@/lib/utili';
 import { traQuanto } from '@/lib/home';
 import { Risposta } from '@/components/famiglia/Risposta';
+import { Fascia, NumeroFascia } from '@/components/dashboard/Pezzi';
 
 /** Ritrovo: quello scritto dal mister, se no 75 minuti prima dell'inizio (come nel foglio convocazioni) */
 const ritrovo = (c: Convocazione) => {
@@ -27,10 +28,16 @@ export default async function HomeFamiglia() {
   const avvisi = (f.avvisi ?? []).slice().sort((a, b) => (b.data || '').localeCompare(a.data || '')).slice(0, 3);
   return (
     <div className="space-y-3">
-      <div>
-        <h1 className="font-display text-4xl font-bold">{f.ragazzo?.nome}</h1>
-        <p className="text-grigio">{cat}</p>
-      </div>
+      <Fascia titolo={f.ragazzo?.nome || 'La mia famiglia'} sottotitolo={cat}>
+        <NumeroFascia titolo="Prossima partita" valore={prossima ? <span className="text-3xl">{traQuanto(oggi, prossima.date)}</span> : '—'}
+          sotto={prossima ? `${prossima.opponent || 'Avversario da definire'} · ${giorno(prossima.date)} ${fmtData(prossima.date).slice(0, 5)}` : 'Nessuna partita in calendario.'} />
+        <NumeroFascia titolo="Convocazioni" valore={conv.length} sotto={conv.length ? 'In arrivo: rispondete qui sotto se ci sarà.' : 'Nessuna convocazione per ora.'} />
+        <NumeroFascia titolo="Certificato" valore={<span className="text-3xl">{giorni == null ? '—' : giorni < 0 ? 'Scaduto' : giorni <= 30 ? `${giorni} gg` : 'In regola'}</span>}
+          sotto={scad ? `Valido fino al ${fmtData(scad)}.` : 'Scadenza non ancora segnata dalla segreteria.'}>
+          {giorni != null && <i className={`block h-2.5 rounded-full ${giorni < 0 ? 'bg-rosso' : giorni <= 30 ? 'bg-oro' : 'bg-verde'}`} aria-hidden />}
+        </NumeroFascia>
+        <NumeroFascia titolo="Avvisi" valore={avvisi.length} sotto="Della società, ultimi giorni." />
+      </Fascia>
       {giorni != null && giorni <= 30 && (
         <section className={`rounded-2xl border p-4 ${giorni < 0 ? 'border-rosso bg-rosso/10' : 'border-oro bg-oro/15'}`}>
           <b>{giorni < 0 ? 'Certificato medico scaduto' : 'Certificato medico in scadenza'}</b>

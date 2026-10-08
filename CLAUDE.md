@@ -97,6 +97,11 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
   `app/(aree)/inizio/page.tsx`): fascia blu con presenza media (linea mese per mese), partite, gol, segnalazioni per settimana; presenze per
   squadra, risultati V/N/P, weekend per calendario, imbuto dello scouting per stato, ultimi risultati, da sistemare; ogni riquadro con la
   sua spiegazione. "Amichevole" (interfaccia e dati: tipo, comp, convType) è diventato "Partita".
+  Ogni profilo ha la sua Home-dashboard con la stessa fascia blu (`components/dashboard/Pezzi.tsx`: `Fascia`, `NumeroFascia`, `Sparkline`,
+  `Colonne`, `Riquadro`, `BarraPct`): mister e preparatori (`HomeSquadra`: presenza, partite, gol, prossima), organizzativo (impegni per
+  calendario, eventi), scout (`app/(app)/home`: sue segnalazioni per settimana, valutazioni, gare, incarichi; archivio per stato),
+  segreteria (`Tesserati`: certificati, iscrizioni, quote in regola su tutti i tesserati, documenti da controllare), famiglie (prossima
+  partita, convocazioni, certificato, avvisi).
 - Squadra: pagine con `apriSquadra()` in `lib/pagina-squadra.ts` (chi entra, squadra, sola lettura dei direttori, `conSquadra()` per i
   link); scelta della squadra per lo staff `components/SceltaSquadra.tsx` (`?squadra=`); sotto-schede `components/squadra/SottoSchede.tsx`.
   Rosa (`/squadra/rosa`, `components/squadra/Rosa.tsx`): nomi, aggiunte ed eliminazioni solo admin (`eliminaGiocatore` toglie anche

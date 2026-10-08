@@ -8,6 +8,7 @@ import { elencoSocieta } from '@/lib/societa';
 import { staffScouting } from '@/lib/staff';
 import { Avviso } from '@/components/Avviso';
 import { Incarichi, SELECT_INCARICO, type Incarico } from '@/components/Incarichi';
+import { Colonne, Fascia, NumeroFascia, Riquadro } from '@/components/dashboard/Pezzi';
 
 type UltimaSegnalazione = {
   id: string;
@@ -32,7 +33,7 @@ export default async function Home({
   const tutto = vedeTutto(profilo.ruolo);
   const supabase = await createClient();
 
-  const [ultime, mieGare, conteggi, aperti, fatti, societa, staff] = await Promise.all([
+  const [ultime, mieGare, conteggi, aperti, fatti, societa, staff, mieSegn, mieVal] = await Promise.all([
     supabase
       .from('segnalazioni')
       .select('*, autore:profiles(nome, cognome, email), giocatore:giocatori(id, cognome, nome, descrizione, annata)')
@@ -50,6 +51,8 @@ export default async function Home({
     supabase.from('incarichi').select(SELECT_INCARICO).eq('fatto', true).order('fatto_il', { ascending: false }).limit(10),
     tutto ? elencoSocieta(supabase) : Promise.resolve([]),
     tutto ? staffScouting(supabase) : Promise.resolve([]),
+    supabase.from('segnalazioni').select('created_at').eq('autore_id', profilo.id).gte('created_at', istanteTraOre(-24 * 7 * 8)),
+    supabase.from('valutazioni').select('id', { count: 'exact', head: true }).eq('autore_id', profilo.id).gte('created_at', istanteTraOre(-24 * 30)),
   ]);
 
   const segnalazioni = (ultime.data as unknown as UltimaSegnalazione[]) ?? [];
@@ -62,23 +65,37 @@ export default async function Home({
     perStato.set(r.stato, (perStato.get(r.stato) ?? 0) + 1);
   }
 
+  /* le mie segnalazioni settimana per settimana (8 settimane fino a oggi) */
+  const adesso = Date.parse(istanteTraOre(0));
+  const settimane = Array.from({ length: 8 }, () => 0);
+  for (const x of (mieSegn.data as { created_at: string }[] | null) ?? []) {
+    const i = 7 - Math.floor((adesso - Date.parse(x.created_at)) / (7 * 864e5)); if (i >= 0 && i < 8) settimane[i]++;
+  }
+  const incarichiAperti = ((aperti.data as unknown as Incarico[]) ?? []).length;
+  const statiGrafico: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'da_rivedere', 'inserito', 'da_non_inserire'];
+  const maxStato = Math.max(1, ...statiGrafico.map((s) => perStato.get(s) ?? 0));
+
   return (
-    <div className="space-y-10">
-      <section>
-        <p className="text-grigio">{ETICHETTA_RUOLO[profilo.ruolo]}</p>
-        <h1 className="font-display text-4xl font-bold">Ciao {profilo.nome ?? nomeCompleto(profilo)}</h1>
-      </section>
+    <div className="space-y-8">
+      <Fascia titolo={`Ciao ${profilo.nome ?? nomeCompleto(profilo)}`} sottotitolo={`${ETICHETTA_RUOLO[profilo.ruolo]} · Scouting`}>
+        <NumeroFascia titolo="Mie segnalazioni" valore={settimane.reduce((a, x) => a + x, 0)} sotto="Nelle ultime 8 settimane, settimana per settimana.">
+          <Colonne valori={settimane} />
+        </NumeroFascia>
+        <NumeroFascia titolo="Mie valutazioni" valore={mieVal.count ?? 0} sotto="Negli ultimi 30 giorni." />
+        <NumeroFascia titolo="Mie gare" valore={gare.length} sotto={gare[0] ? `Prossima: ${dataOraBreve(gare[0].data_ora)}` : 'Nessuna gara: sceglila in Gare.'} />
+        <NumeroFascia titolo="Incarichi" valore={incarichiAperti} sotto="Aperti, da prendere o da chiudere." />
+      </Fascia>
 
       <Avviso ok={ok} errore={errore} />
 
       {puoSegnalare(profilo.ruolo) && (
         <Link
           href="/segnala"
-          className="flex items-center justify-between gap-6 rounded-2xl bg-blu px-6 py-7 text-white hover:bg-blu-scuro"
+          className="flex items-center justify-between gap-6 rounded-2xl border-2 border-blu bg-white px-6 py-6 text-blu hover:bg-blu/5"
         >
           <span>
             <span className="block font-display text-3xl font-bold leading-tight">Segnala un giocatore</span>
-            <span className="mt-1 block text-white/80">Annata, ruolo, società e cosa hai visto. Il nome può aspettare.</span>
+            <span className="mt-1 block text-grigio">Annata, ruolo, società e cosa hai visto. Il nome può aspettare.</span>
           </span>
           <span
             aria-hidden
@@ -99,21 +116,21 @@ export default async function Home({
       />
 
       {tutto && perStato.size > 0 && (
-        <section>
-          <h2 className="font-display text-2xl font-bold">Archivio</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(Object.keys(STATI) as StatoGiocatore[]).filter((s) => perStato.get(s)).map((s) => (
-              <Link
-                key={s}
-                href={`/giocatori?stato=${s}`}
-                className="rounded-lg border border-linea bg-white px-4 py-2 hover:border-blu"
-              >
-                <span className="font-display text-2xl font-bold">{perStato.get(s)}</span>{' '}
-                <span className="text-sm text-grigio">{STATI[s].toLowerCase()}</span>
-              </Link>
+        <Riquadro titolo="Archivio per stato" spiegazione="Giocatori osservati: da chi è in lista fino a chi è stato inserito. Tocca uno stato per l’elenco." href="/giocatori/stati">
+          <ul className="space-y-2">
+            {statiGrafico.map((s, i) => (
+              <li key={s}>
+                <Link href={`/giocatori?stato=${s}`} className="grid grid-cols-[8rem_1fr] items-center gap-2 text-sm hover:opacity-80">
+                  <span className="font-semibold">{STATI[s]}</span>
+                  <span className="flex items-center gap-2">
+                    <i className="block h-5 rounded-md" style={{ width: `${Math.max(2, ((perStato.get(s) ?? 0) / maxStato) * 100)}%`, background: s === 'da_non_inserire' ? 'var(--color-linea)' : `color-mix(in srgb, var(--color-blu) ${100 - i * 18}%, white)` }} />
+                    <b className="font-display text-base tabular-nums">{perStato.get(s) ?? 0}</b>
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </Riquadro>
       )}
 
       <div className="grid gap-8 lg:grid-cols-2">

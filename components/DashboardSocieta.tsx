@@ -6,6 +6,7 @@ import { calendario as calDi, fmtData, giorno, type Impegno } from '@/lib/progra
 import { SOGLIA_PRESENZE } from '@/lib/registro';
 import { STATI, type StatoGiocatore } from '@/lib/tipi';
 import type { Avviso } from '@/components/calendario/Avvisi';
+import { Colonne, Fascia, NumeroFascia, Riquadro, Sparkline } from '@/components/dashboard/Pezzi';
 
 export type SquadraDash = {
   id: string; sigla: string; categoria: string; adb: boolean; rosa: number; allenamenti: number; presenza: number | null;
@@ -17,49 +18,6 @@ export type ScoutingDash = { settimane: { da: string; n: number }[]; perStato: P
 
 const pct = (v: number | null) => (v == null ? '—' : Math.round(v * 100) + '%');
 const colorePresenza = (v: number | null) => (v == null ? 'var(--color-linea)' : v < SOGLIA_PRESENZE ? 'var(--color-rosso)' : v < 0.85 ? 'var(--color-oro)' : 'var(--color-verde)');
-
-function Riquadro({ titolo, spiegazione, href, children, className = '' }: { titolo: string; spiegazione: string; href?: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-2xl border border-linea bg-white p-4 shadow-[0_1px_2px_rgba(14,26,43,.05)] ${className}`}>
-      <div className="mb-3 flex items-baseline justify-between gap-2">
-        <div><h2 className="font-display text-xl font-bold">{titolo}</h2><p className="text-sm text-grigio">{spiegazione}</p></div>
-        {href && <a href={href} className="flex-none text-sm font-semibold text-blu">Apri ›</a>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-/** Mini linea bianca per la fascia (valori 0–1) */
-function Sparkline({ valori }: { valori: number[] }) {
-  if (valori.length < 2) return <div className="h-8" />;
-  const w = 100, h = 30, x = (i: number) => (i * w) / (valori.length - 1), min = Math.min(...valori, 0.6), y = (v: number) => h - 3 - ((v - min) / (1 - min || 1)) * (h - 6);
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-8 w-full" aria-hidden>
-      <polyline points={valori.map((v, i) => `${x(i)},${y(v)}`).join(' ')} fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={x(valori.length - 1)} cy={y(valori.at(-1)!)} r="3" fill="var(--color-oro)" />
-    </svg>
-  );
-}
-/** Mini colonne bianche (segnalazioni per settimana) */
-function Colonne({ valori }: { valori: number[] }) {
-  const max = Math.max(1, ...valori);
-  return (
-    <div className="flex h-8 items-end gap-1" aria-hidden>
-      {valori.map((v, i) => <i key={i} className={`flex-1 rounded-t-sm ${i === valori.length - 1 ? 'bg-oro' : 'bg-white/70'}`} style={{ height: `${Math.max(6, (v / max) * 100)}%` }} />)}
-    </div>
-  );
-}
-function NumeroFascia({ titolo, valore, sotto, children }: { titolo: string; valore: React.ReactNode; sotto: string; children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col justify-between rounded-xl bg-white/10 p-3 ring-1 ring-white/15">
-      <p className="text-[13px] font-semibold uppercase tracking-wider text-white/80">{titolo}</p>
-      <p className="my-1 font-display text-4xl font-bold leading-none">{valore}</p>
-      {children}
-      <p className="mt-1 text-[13px] leading-snug text-white/80">{sotto}</p>
-    </div>
-  );
-}
 
 export function DashboardSocieta(p: {
   saluto: string; nome: string; oggi: string; weekend: string[]; squadre: SquadraDash[]; impegni: Impegno[]; recenti: RisultatoDash[];
@@ -84,15 +42,7 @@ export function DashboardSocieta(p: {
 
   return (
     <div className="space-y-4">
-      {/* fascia del club */}
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-blu to-blu-scuro p-4 text-white shadow-lg sm:p-5">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h1 className="font-display text-4xl font-bold">{p.saluto}{p.nome ? ', ' + p.nome : ''}</h1>
-            <p className="text-white/80 first-letter:uppercase">{dataLunga} · tutta la società · {p.squadre.length} squadre</p>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <Fascia titolo={`${p.saluto}${p.nome ? ', ' + p.nome : ''}`} sottotitolo={`${dataLunga} · tutta la società · ${p.squadre.length} squadre`}>
           <NumeroFascia titolo="Presenza" valore={pct(presenzaMedia)} sotto="Media degli allenamenti di tutte le squadre, esclusi gli infortuni.">
             <Sparkline valori={andamento} />
           </NumeroFascia>
@@ -109,8 +59,7 @@ export function DashboardSocieta(p: {
           <NumeroFascia titolo="Segnalazioni" valore={segn8} sotto="Scouting: nuove segnalazioni nelle ultime 8 settimane.">
             <Colonne valori={p.scouting.settimane.map((x) => x.n)} />
           </NumeroFascia>
-        </div>
-      </section>
+        </Fascia>
 
       {p.avvisi.length > 0 && (
         <Riquadro titolo="Avvisi della società" spiegazione="Pubblicati negli ultimi 14 giorni." href="/calendari/avvisi">
