@@ -7,6 +7,7 @@ import { CALENDARI, type Calendario } from '@/lib/condivisi';
 import { calendario as calDi, fmtData, giorno, type Evento, type Impegno, type Partita } from '@/lib/programma';
 import { SOGLIA_PRESENZE, assente, presenzaDi, type Allenamento, type DaFare, type riepilogo } from '@/lib/registro';
 import { SIGLE } from '@/lib/statistiche';
+import { Fascia, NumeroFascia, Sparkline } from '@/components/dashboard/Pezzi';
 import type { Portieri } from '@/lib/portale-dati';
 import type { Avviso } from '@/components/calendario/Avvisi';
 import { Legenda, RigaPartita } from '@/components/calendario/Righe';
@@ -58,19 +59,6 @@ const DataBox = ({ d, casa }: { d?: string; casa?: boolean }) => (
     {d ? +d.slice(8, 10) : '–'}<small className="mt-0.5 font-sans text-[11px] font-semibold uppercase">{d ? giorno(d).slice(0, 3) : ''}</small>
   </span>
 );
-/** Andamento delle presenze mese per mese: linea sottile con l'ultimo punto evidenziato */
-function Andamento({ punti }: { punti: { mese: string; pct: number }[] }) {
-  if (punti.length < 2) return null;
-  const w = 100, h = 40, x = (i: number) => 4 + (i * (w - 8)) / (punti.length - 1), y = (v: number) => h - 4 - v * (h - 8);
-  const linea = punti.map((q, i) => `${x(i)},${y(q.pct)}`).join(' ');
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="mt-1 h-10 w-full" role="img" aria-label={punti.map((q) => `${mese(q.mese)} ${Math.round(q.pct * 100)}%`).join(', ')}>
-      <polyline points={linea} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blu" />
-      <circle cx={x(punti.length - 1)} cy={y(punti.at(-1)!.pct)} r="3.5" className="fill-blu" />
-    </svg>
-  );
-}
-
 export function HomeSquadra(p: {
   squadra: { id: string; name: string; category: string; mister: string }; squadraQs: string; oggi: string; weekend: string[]; adb: boolean;
   impegni: Impegno[]; portieri: Portieri | null; prossima: (Partita & { id: string }) | null; foglioPronto: boolean;
@@ -120,10 +108,27 @@ export function HomeSquadra(p: {
 
   return (
     <div className="space-y-3">
-      <div>
-        <h1 className="font-display text-4xl font-bold">{p.saluto}{p.soloLettura ? '' : ', Mister'}</h1>
-        <p className="text-grigio first-letter:uppercase">{dataLunga} · {[p.squadra.category, p.soloLettura && p.squadra.mister && 'Mister ' + p.squadra.mister].filter(Boolean).join(' · ')}</p>
-      </div>
+      <Fascia titolo={`${p.saluto}${p.soloLettura ? '' : ', Mister'}`}
+        sottotitolo={`${dataLunga} · ${[p.squadra.category, p.soloLettura && p.squadra.mister && 'Mister ' + p.squadra.mister].filter(Boolean).join(' · ')}`}>
+        <NumeroFascia titolo="Presenza" valore={pct(r.mediaPresenze)}
+          sotto={primoMese && ultimoMese ? `${mese(primoMese.mese)} ${pct(primoMese.pct)} → ${mese(ultimoMese.mese)} ${pct(ultimoMese.pct)}${r.sottoSoglia ? ` · ${r.sottoSoglia} sotto il ${SOGLIA_PRESENZE * 100}%` : ''}` : `Media di ${r.nT} allenamenti, esclusi gli infortuni.`}>
+          <Sparkline valori={p.andamento.map((x) => x.pct)} />
+        </NumeroFascia>
+        <NumeroFascia titolo="Partite" valore={r.nG} sotto={!p.adb && r.nNoti ? `${r.v} vinte · ${r.n} pari · ${r.p} perse.` : 'Partite col tabellino compilato.'}>
+          {!p.adb && r.v + r.n + r.p > 0 && (
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-white/15" aria-hidden>
+              <i className="bg-verde" style={{ width: `${(r.v / (r.v + r.n + r.p)) * 100}%` }} />
+              <i className="bg-white/70" style={{ width: `${(r.n / (r.v + r.n + r.p)) * 100}%` }} />
+              <i className="bg-rosso" style={{ width: `${(r.p / (r.v + r.n + r.p)) * 100}%` }} />
+            </div>
+          )}
+        </NumeroFascia>
+        {p.adb || !r.nNoti
+          ? <NumeroFascia titolo="Allenamenti" valore={r.nT} sotto="Sedute con le presenze segnate in stagione." />
+          : <NumeroFascia titolo="Gol" valore={<>{r.gf}<span className="text-white/60">–</span>{r.gs}</>} sotto={`Fatti e subiti in stagione (${r.gf - r.gs >= 0 ? '+' : ''}${r.gf - r.gs}).`} />}
+        <NumeroFascia titolo="Prossima" valore={m ? <span className="text-3xl">{p.traQuanto}</span> : '—'}
+          sotto={m ? `${m.opponent || 'Avversario da definire'} · ${m.home ? 'in casa' : 'trasferta'}` : 'Nessuna partita in calendario.'} />
+      </Fascia>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <AvvisiSocieta avvisi={p.avvisi} />
 
@@ -206,26 +211,10 @@ export function HomeSquadra(p: {
           </Card>
         )}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:col-span-2">
-          <a href={app(p.adb ? '/squadra/tabellini' : '/squadra/statistiche-partite')} className="rounded-2xl border border-linea bg-white p-4 hover:border-blu">
-            <h2 className="mb-1 font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Stagione</h2>
-            {p.adb || !r.nNoti ? (
-              <><p className="font-display text-4xl font-bold text-blu">{r.nG}</p><p className="text-sm text-grigio">partite giocate</p></>
-            ) : (
-              <><p className="font-display text-4xl font-bold text-blu">{r.v}–{r.n}–{r.p}</p>
-                <p className="text-sm text-grigio">vinte · pari · perse<br />gol {r.gf} fatti, {r.gs} subiti</p></>
-            )}
-          </a>
-          <a href={app('/squadra/statistiche-allenamento')} className="rounded-2xl border border-linea bg-white p-4 hover:border-blu">
-            <h2 className="mb-1 font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Presenze</h2>
-            <p className="font-display text-4xl font-bold text-blu">{pct(r.mediaPresenze)}</p>
-            <Andamento punti={p.andamento} />
-            <p className="text-sm text-grigio">{primoMese && ultimoMese ? `${mese(primoMese.mese)} ${pct(primoMese.pct)} → ${mese(ultimoMese.mese)} ${pct(ultimoMese.pct)}` : `${r.nT} allenamenti`}
-              {r.sottoSoglia ? ` · ${r.sottoSoglia} sotto il ${SOGLIA_PRESENZE * 100}%` : ''}</p>
-          </a>
-          <a href={app('/squadra/dashboard')} className="col-span-2 rounded-2xl border border-linea bg-white p-4 hover:border-blu sm:col-span-1">
-            <h2 className="mb-1 flex justify-between font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Dashboard<span aria-hidden>›</span></h2>
-            <dl className="space-y-2 text-sm">
+        <div className="md:col-span-2">
+          <a href={app('/squadra/dashboard')} className="block rounded-2xl border border-linea bg-white p-4 hover:border-blu">
+            <h2 className="mb-1 flex justify-between font-display text-[13px] font-bold uppercase tracking-wider text-grigio">Statistiche della squadra<span aria-hidden>›</span></h2>
+            <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               {([['TAR', pct(p.kpi.tar)], ['TMR', p.kpi.tmr == null ? '—' : p.kpi.tmr.toFixed(1)]] as const).map(([k, v]) => (
                 <div key={k}>
                   <dt className="flex items-baseline justify-between gap-2"><span><b className="font-display text-blu">{k}</b> {SIGLE[k].nome}</span>
@@ -247,21 +236,16 @@ export function HomeOrganizzazione({ weekend, impegni, eventi, avvisi }: { weeke
   const conta = (k: Calendario) => impegni.filter((m) => calDi(m) === k).length;
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="font-display text-4xl font-bold">Organizzazione</h1>
-        <p className="text-grigio">Calendari, campi, eventi e avvisi della società</p>
-      </div>
+      <Fascia titolo="Organizzazione" sottotitolo={`Weekend di sabato ${fmtData(sab).slice(0, 5)} e domenica ${fmtData(dom).slice(0, 5)}: impegni per calendario`}>
+        {(Object.keys(CALENDARI) as Calendario[]).map((k) => (
+          <NumeroFascia key={k} titolo={CALENDARI[k].nome} valore={conta(k)} sotto={k === 'trasferta' ? 'Partite fuori casa.' : `Partite ed eventi sui campi di ${CALENDARI[k].nome}.`}>
+            <i className="block h-2.5 rounded-full" style={{ background: CALENDARI[k].colore }} aria-hidden />
+          </NumeroFascia>
+        ))}
+        <NumeroFascia titolo="Eventi" valore={eventi.length} sotto="Eventi della società in programma." />
+      </Fascia>
+      <a className={`${bottone(true)} inline-block`} href="/calendari/tutte">Apri la vista Giorno</a>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Scheda titolo={`Weekend · sab ${fmtData(sab).slice(0, 5)} e dom ${fmtData(dom).slice(0, 5)}`} larga>
-          <div className="grid grid-cols-3 gap-2">
-            {(Object.keys(CALENDARI) as Calendario[]).map((k) => (
-              <a key={k} href="/calendari/tutte" className="flex flex-col rounded-lg border border-linea p-2.5 text-sm hover:border-blu" style={{ borderLeft: `5px solid ${CALENDARI[k].colore}` }}>
-                <b className="font-display text-base">{CALENDARI[k].nome}</b><span><b>{conta(k)}</b> impegni</span>
-              </a>
-            ))}
-          </div>
-          <a className={`${bottone(true)} mt-3 inline-block`} href="/calendari/tutte">Apri la vista Giorno</a>
-        </Scheda>
         <Scheda titolo="Prossimi eventi">
           {eventi.length ? <ul>{eventi.map((e) => <Voce key={e.id} href="/calendari/tutte">{giorno(e.data)} {fmtData(e.data).slice(0, 5)} · {e.titolo || 'Evento'}</Voce>)}</ul>
             : <p className="text-sm text-grigio">Nessun evento in programma.</p>}

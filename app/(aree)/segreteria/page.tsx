@@ -24,13 +24,6 @@ export default async function Segreteria() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-4xl font-bold">Tesserati</h1>
-        <p className="mt-1 max-w-prose text-grigio">
-          Anagrafica, genitori, certificato medico, taglie, iscrizione e quote di ogni ragazzo, e il PIN con cui la famiglia entra
-          nell’app. Si salva da solo. Il PIN si consegna a mano con il foglio PIN: uno per ragazzo, o tutta la squadra insieme.
-        </p>
-      </div>
       {rose.error || tess.error ? (
         <p className="rounded-xl border border-dashed border-linea p-8 text-center text-grigio">
           Segreteria non disponibile: {(rose.error ?? tess.error)!.message}
