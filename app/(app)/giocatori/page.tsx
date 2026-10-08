@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FiltriAuto } from '@/components/FiltriAuto';
 import { Fragment } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
@@ -77,14 +78,16 @@ const COLONNE = {
   stato: 'Stato',
   impressione: 'Segnalazione',
   valutazione: 'Valutazioni',
+  segnalato: 'Ultima segnalazione',
+  valutato: 'Ultima valutazione',
   squadra: 'Squadra',
   gara: 'Prossima gara',
 } as const;
 type Colonna = keyof typeof COLONNE;
 /* Da computer: l'annata sta accanto al nome, squadra e prossima gara in una colonna su due righe (la tabella è larga 1000 px) */
 const COLONNE_TABELLA: [Colonna, string][] = [
-  ['giocatore', 'Giocatore'], ['ruolo', 'Ruolo'], ['piede', 'Piede'], ['stato', 'Stato'],
-  ['impressione', 'Segnalazione'], ['valutazione', 'Valutazioni'], ['squadra', 'Squadra e gara'],
+  ['giocatore', 'Giocatore'], ['ruolo', 'Ruolo e piede'], ['stato', 'Stato'],
+  ['impressione', 'Segnalazione'], ['segnalato', 'Segnalato'], ['valutazione', 'Valutazioni'], ['valutato', 'Valutato'], ['squadra', 'Squadra e gara'],
 ];
 
 /** Istante della gara → "dom 27/09 10:30" (ora italiana) */
@@ -215,6 +218,8 @@ export default async function Giocatori({
           // quante persone l'hanno valutato, poi il giudizio dell'ultima
           case 'valutazione': { const n = valutatori(g.valutazioni).length; const gi = sintesi.get(g.id)?.giudizio; return n ? n * 10 - (gi ? ORDINE_GIUDIZI.indexOf(gi) : 3) : null; }
           case 'gara': return chiaveGara.get(g.id) ?? null;
+          case 'segnalato': return (g.segnalazioni ?? []).map((x) => x.data).filter(Boolean).sort().at(-1) ?? null;
+          case 'valutato': return (g.valutazioni ?? []).map((x) => x.data).filter(Boolean).sort().at(-1) ?? null;
         }
       };
       const [x, y] = [valore(a), valore(b)];
@@ -242,10 +247,10 @@ export default async function Giocatori({
     return `?${sp.toString()}`;
   };
   // Primo clic: A→Z (o dal più alto per la valutazione); secondo clic: al contrario
-  const primoVerso = (c: Colonna) => (c === 'valutazione' ? 'giu' : 'su');   // segnalazione: su = positiva e voto alto prima
+  const primoVerso = (c: Colonna) => (c === 'valutazione' || c === 'segnalato' || c === 'valutato' ? 'giu' : 'su');   // date: le più recenti prima   // segnalazione: su = positiva e voto alto prima
   const linkOrdina = (c: Colonna) =>
     link({ ordina: c, verso: ordina === c ? (discendente ? 'su' : 'giu') : primoVerso(c), pagina: null });
-  const freccia = (c: Colonna) => (ordina === c ? (discendente ? ' ▼' : ' ▲') : '');
+  const freccia = (c: Colonna) => (ordina === c ? (discendente ? ' ▼' : ' ▲') : ' ⇅');
 
   const righe = giocatori.map((g) => {
     const v = sintesi.get(g.id)!;
@@ -270,9 +275,9 @@ export default async function Giocatori({
   /* Segnalazione: prima impressione e voto globale (media dei voti per area delle segnalazioni) */
   /* data dell'ultima segnalazione / valutazione: "12/09/26" */
   const ultimaData = (xs: { data?: string | null }[] | null | undefined) => (xs ?? []).map((x) => x.data).filter((d): d is string => !!d).sort().at(-1);
-  const quando = (d?: string, cosa = '') => d ? <span className="whitespace-nowrap text-xs text-grigio" title={`${cosa} il ${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`}>{d.slice(8, 10)}/{d.slice(5, 7)}/{d.slice(2, 4)}</span> : null;
+  const quando = (d?: string) => d ? <span className="whitespace-nowrap font-semibold tabular-nums">{d.slice(8, 10)}/{d.slice(5, 7)}/{d.slice(2, 4)}</span> : <span className="text-grigio">–</span>;
   const valutazioni = (r: (typeof righe)[number]) => (
-    <span className="flex items-center gap-1.5">{colonnaValutazione(r)}{quando(ultimaData(r.g.valutazioni), 'Ultima valutazione')}</span>
+    <span className="flex items-center gap-1.5">{colonnaValutazione(r)}</span>
   );
   const segnalazione = (r: (typeof righe)[number]) => {
     const i = impressioneDi(r.g), m = r.v.media, d = ultimaData(r.g.segnalazioni);
@@ -285,7 +290,6 @@ export default async function Giocatori({
             {m.toFixed(1).replace('.', ',')}
           </span>
         )}
-        {quando(d, 'Ultima segnalazione')}
       </span>
     );
   };
@@ -341,62 +345,39 @@ export default async function Giocatori({
         </div>
       </div>
 
-      <form method="GET" className="grid grid-cols-2 gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4 lg:grid-cols-8">
-        <input name="q" defaultValue={filtri.q} placeholder="Cerca per nome o descrizione" className="campo col-span-2" />
-        <select name="annata" defaultValue={filtri.annata ?? ''} className="campo">
-          <option value="">Tutte le annate</option>
-          {annateDisponibili().map((a) => (
-            <option key={a} value={a}>{a}</option>
-          ))}
-        </select>
-        <select name="ruolo" defaultValue={filtri.ruolo ?? ''} className="campo">
-          <option value="">Tutti i ruoli</option>
-          {Object.entries(RUOLI_CAMPO).map(([v, e]) => (
-            <option key={v} value={v}>{e}</option>
-          ))}
-        </select>
-        <select name="stato" defaultValue={filtri.stato ?? ''} className="campo">
-          <option value="">Tutti gli stati</option>
-          {Object.entries(STATI).map(([v, e]) => (
-            <option key={v} value={v}>{e}</option>
-          ))}
-        </select>
-        <select name="impressione" defaultValue={filtri.impressione ?? ''} className="campo" aria-label="Prima impressione">
-          <option value="">Ogni impressione</option>
-          {Object.entries(IMPRESSIONI).map(([v, e]) => (
-            <option key={v} value={v}>Impressione {e.toLowerCase()}</option>
-          ))}
-          <option value="nessuna">Senza impressione</option>
-        </select>
-        <select name="chi" defaultValue={filtri.chi ?? ''} className="campo">
-          <option value="">Osservati (senza Academy)</option>
-          <option value="tutti">Tutti i giocatori</option>
-        </select>
-        <select name="societa" defaultValue={filtri.societa ?? ''} className="campo">
-          <option value="">Tutte le società</option>
-          {societa.map((s) => (
-            <option key={s.id} value={s.id}>{s.nome}</option>
-          ))}
-        </select>
-        {/* Ordinamento: da computer si clicca l'intestazione (queste due restano nascoste ma tengono
-            l'ordinamento scelto quando si filtra); da telefono e tablet si sceglie qui */}
-        <select name="ordina" defaultValue={ordina ?? ''} className="campo lg:hidden" aria-label="Ordina per">
-          <option value="">Ordina: modificati di recente</option>
-          {Object.entries(COLONNE).map(([v, e]) => (
-            <option key={v} value={v}>Ordina per {e.toLowerCase()}</option>
-          ))}
-        </select>
-        <select name="verso" defaultValue={filtri.verso ?? ''} className="campo lg:hidden" aria-label="Verso">
-          <option value="">Crescente (A→Z)</option>
-          <option value="giu">Decrescente (Z→A)</option>
-        </select>
-        <div className="col-span-2 flex gap-2 sm:col-span-4 lg:col-span-8 lg:justify-end">
-          <Link href="/giocatori" className="rounded-lg px-4 py-3 text-sm font-medium text-grigio hover:bg-carta">
-            Azzera
-          </Link>
-          <button className="bottone flex-1 lg:flex-none">Filtra</button>
+      <FiltriAuto className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-4">
+        <label className="col-span-2 sm:col-span-3 lg:col-span-4"><span className="mb-1 block text-sm font-semibold text-grigio">Cerca</span>
+          <input name="q" defaultValue={filtri.q} placeholder="Cognome, nome o descrizione, poi Invio" className="campo" /></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Annata</span>
+          <select name="annata" defaultValue={filtri.annata ?? ''} className="campo"><option value="">Tutte</option>
+            {annateDisponibili().map((a) => <option key={a} value={a}>{a}</option>)}</select></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Ruolo</span>
+          <select name="ruolo" defaultValue={filtri.ruolo ?? ''} className="campo"><option value="">Tutti</option>
+            {Object.entries(RUOLI_CAMPO).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Stato</span>
+          <select name="stato" defaultValue={filtri.stato ?? ''} className="campo"><option value="">Tutti</option>
+            {Object.entries(STATI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Prima impressione</span>
+          <select name="impressione" defaultValue={filtri.impressione ?? ''} className="campo"><option value="">Tutte</option>
+            {Object.entries(IMPRESSIONI).map(([v, e]) => <option key={v} value={v}>{e}</option>)}<option value="nessuna">Senza impressione</option></select></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Società</span>
+          <select name="societa" defaultValue={filtri.societa ?? ''} className="campo"><option value="">Tutte</option>
+            {societa.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}</select></label>
+        <label><span className="mb-1 block text-sm font-semibold text-grigio">Quali giocatori</span>
+          <select name="chi" defaultValue={filtri.chi ?? ''} className="campo"><option value="">Solo osservati, senza Academy</option>
+            <option value="tutti">Tutti, anche da distinta e Academy</option></select></label>
+        {/* Ordinamento: da computer si tocca l'intestazione della tabella; qui per telefono e tablet (e per tenerlo filtrando) */}
+        <label className="lg:hidden"><span className="mb-1 block text-sm font-semibold text-grigio">Ordina per</span>
+          <select name="ordina" defaultValue={ordina ?? ''} className="campo"><option value="">Annata</option>
+            {Object.entries(COLONNE).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
+        <label className="lg:hidden"><span className="mb-1 block text-sm font-semibold text-grigio">Verso</span>
+          <select name="verso" defaultValue={filtri.verso ?? ''} className="campo"><option value="">Dal primo (A→Z, dal più vecchio)</option>
+            <option value="giu">Dall’ultimo (Z→A, dal più recente)</option></select></label>
+        <div className="col-span-2 flex items-end justify-end sm:col-span-3 lg:col-span-1">
+          <Link href="/giocatori" className="rounded-lg px-4 py-3 text-sm font-semibold text-grigio hover:bg-carta">Azzera i filtri</Link>
         </div>
-      </form>
+      </FiltriAuto>
+      <p className="-mt-4 text-sm text-grigio">I filtri si applicano appena scegli. Da computer tocca il titolo di una colonna (⇅) per ordinare.</p>
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}
 
@@ -417,12 +398,13 @@ export default async function Giocatori({
             <table className="w-full table-fixed text-left text-sm">
               <colgroup>
                 <col />
+                <col className="w-32" />
                 <col className="w-28" />
-                <col className="w-16" />
+                <col className="w-28" />
+                <col className="w-[5.5rem]" />
+                <col className="w-36" />
+                <col className="w-[5.5rem]" />
                 <col className="w-32" />
-                <col className="w-32" />
-                <col className="w-48" />
-                <col className="w-40" />
               </colgroup>
               <thead className="border-b border-linea bg-carta text-xs uppercase tracking-wide text-grigio">
                 <tr>
@@ -435,7 +417,7 @@ export default async function Giocatori({
                     >
                       <Link
                         href={linkOrdina(c)}
-                        className={`block truncate px-2 py-2 hover:text-inchiostro ${ordina === c ? 'text-inchiostro' : ''}`}
+                        className={`block whitespace-nowrap px-2 py-2 hover:text-inchiostro ${ordina === c ? 'text-inchiostro' : ''}`}
                         title={`Ordina per ${COLONNE[c].toLowerCase()}`}
                       >
                         {titolo}{freccia(c)}
@@ -455,7 +437,7 @@ export default async function Giocatori({
                     <Fragment key={r.g.id}>
                     {nuovaAnnata(i) && (
                       <tr className="bg-carta" style={{ borderLeft: `4px solid ${coloreAnnata(r.g.annata)[1]}` }}>
-                        <td colSpan={7} className="px-2 py-1.5">{titoloAnnata(r.g.annata)}</td>
+                        <td colSpan={8} className="px-2 py-1.5">{titoloAnnata(r.g.annata)}</td>
                       </tr>
                     )}
                     <tr className={r.completo ? 'bg-verde/[0.07] hover:bg-verde/10' : 'hover:bg-carta'}>
@@ -467,11 +449,13 @@ export default async function Giocatori({
                           {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                         </Link>
                       </td>
-                      {cella(etichettaRuolo(r.g) ?? <span className="text-grigio">–</span>, etichettaRuolo(r.g) ?? undefined)}
-                      {cella(piedeDi(r.g) ? PIEDI_SIGLA[piedeDi(r.g)!] : <span className="text-grigio">–</span>, piedeDi(r.g) ? PIEDI_BREVI[piedeDi(r.g)!] : undefined)}
+                      {cella(<>{etichettaRuolo(r.g) ?? <span className="text-grigio">–</span>}{piedeDi(r.g) && <span className="text-grigio"> · {PIEDI_SIGLA[piedeDi(r.g)!]}</span>}</>,
+                        [etichettaRuolo(r.g), piedeDi(r.g) && 'piede ' + PIEDI_BREVI[piedeDi(r.g)!].toLowerCase()].filter(Boolean).join(', ') || undefined)}
                       {cella(stato(r.g))}
                       {cella(segnalazione(r))}
+                      {cella(quando(ultimaData(r.g.segnalazioni)))}
                       <td className="px-2 py-1.5">{valutazioni(r)}</td>
+                      {cella(quando(ultimaData(r.g.valutazioni)))}
                       <td className="p-0">
                         <Link href={r.href} tabIndex={-1} title={`${r.squadra}\nProssima gara: ${r.testoGara}`} className="block px-2 py-1.5 leading-tight">
                           <span className="block truncate">{r.squadra}</span>
@@ -513,8 +497,12 @@ export default async function Giocatori({
                 <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
                   <dt className="self-center text-grigio">Segnalazione</dt>
                   <dd>{segnalazione(r)}</dd>
+                  <dt className="self-center text-grigio">Segnalato il</dt>
+                  <dd>{quando(ultimaData(r.g.segnalazioni))}</dd>
                   <dt className="self-center text-grigio">Valutazioni</dt>
                   <dd>{valutazioni(r)}</dd>
+                  <dt className="self-center text-grigio">Valutato il</dt>
+                  <dd>{quando(ultimaData(r.g.valutazioni))}</dd>
                   <dt className="text-grigio">Squadra</dt>
                   <dd className="truncate">{r.squadra}</dd>
                   <dt className="text-grigio">Prossima gara</dt>
