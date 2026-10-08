@@ -206,7 +206,8 @@ Non cambia lo stato dei giocatori e non vede il Portale.</td></tr>
 Ognuno vede solo le aree che gli servono. Se non ci stanno tutte, la barra scorre di lato.</li>
 <li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta. In <b>Squadra</b>: Rosa, Allenamento, Partite,
 Statistiche, Calendario; sotto, nella pagina, le loro schede (per esempio in Partite: Dati partita, Convocazioni, Formazione,
-Piazzati, Foglio gara, Distinta, Tabellini, Campi; in Statistiche: Dashboard, Allenamento, Partite).</li>
+Piazzati (prima della partita), Foglio gara, Distinta (da stampare), Tabellini (dopo la partita); in Statistiche: Dashboard,
+Allenamento, Partite; in Calendario: Partite, Campi).</li>
 <li>Il <b>logo</b> in alto riporta sempre alla Home.</li>
 </ul>''', 'La Home di un mister.')}
 </section>
@@ -332,10 +333,10 @@ portieri da segnare. Tocca una riga per andarci; se è tutto a posto compare una
 <li><b>Stagione</b> (vinte, pari, perse e gol) e <b>Presenze</b> (media e andamento mese per mese): tocca per le statistiche complete.</li>
 </ul>''', 'Home')}
 <h3>Calendario → La mia squadra</h3>
-<p>Un solo elenco con le partite da giocare fino a fine stagione: campionato, amichevoli e tornei, ognuna con la sua
-<b>etichetta</b> (Campionato, Amichevole, Torneo). Colori: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco,
-<b>rosso</b> in trasferta. <span class="k">+ Aggiungi amichevole</span>, in fondo, ne aggiunge una: si apre subito
-"Modifica amichevole" per data, ora, avversario e campo (lo stesso per cambiarla o eliminarla dopo). Le partite già giocate sono
+<p>Un solo elenco con le partite da giocare fino a fine stagione: campionato, altre partite e tornei, ognuna con la sua
+<b>etichetta</b> (Campionato, Partita, Torneo). Colori come nei calendari Google: <b>verde acqua</b> in casa a Merate, <b>arancione</b>
+in casa a Cernusco, <b>verde</b> in trasferta. <span class="k">+ Aggiungi partita</span>, in cima, ne aggiunge una: si apre subito
+"Modifica partita" per data, ora, avversario e campo (lo stesso per cambiarla o eliminarla dopo). Le partite già giocate sono
 nello <b>Storico</b>, in fondo alla pagina: toccalo per aprirlo.</p>
 <h3>Calendario → Tutte le squadre</h3>
 <p>Le partite da giocare di tutta la società, con la tua evidenziata; il menu <b>Categoria</b> ne mostra una sola. La vista
@@ -462,7 +463,7 @@ categoria (es. "Under 14 - Provinciale").</p>
 <p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>
 <h3>Statistiche (Squadra → Statistiche → Partite)</h3>
 <p>Partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti.</p>
-<h3>Campi</h3>
+<h3>Campi (Squadra → Calendario → Campi)</h3>
 <p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni
 porta dritto lì.</p>
 </section>
@@ -607,7 +608,7 @@ altro), data, presenza, esito, note. Dopo l'evento aggiorna presenza ed esito co
 <section>
 <h2>Calendario delle nostre squadre</h2>
 <p>Nella scheda <b>Calendario</b> ci sono le partite di tutte le squadre dell'Academy, di tutte le annate, con i colori del
-Portale: <b>blu</b> in casa a Merate, <b>oro</b> in casa a Cernusco, <b>rosso</b> in trasferta. Scegli il periodo (questo weekend,
+app: <b>verde acqua</b> in casa a Merate, <b>arancione</b> in casa a Cernusco, <b>verde</b> in trasferta. Scegli il periodo (questo weekend,
 prossime 2 settimane, fino a fine stagione) e, se vuoi, una sola squadra. Per ogni partita: ora, avversario, campionato o
 amichevole, campo.</p>
 </section>

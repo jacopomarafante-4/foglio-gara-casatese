@@ -16,9 +16,9 @@ export function SchedeArea({ ruolo, segnala }: { ruolo: Ruolo; segnala: boolean;
         <Scheda href={'/squadra/rosa' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Rosa</Scheda>
         <Scheda href={'/squadra/presenze' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/presenze', '/squadra/test', '/squadra/miei-allenamenti']}>Allenamento</Scheda>
         <Scheda href={'/squadra/convocazioni' + (squadraScelta ? '?squadra=' + squadraScelta : '')}
-          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/modulistica/distinta', '/squadra/tabellini', '/squadra/campi']}>Partite</Scheda>
+          attivaSu={['/squadra/partita', '/squadra/formazione', '/squadra/piazzati', '/squadra/foglio-gara', '/modulistica/distinta', '/squadra/tabellini']}>Partite</Scheda>
         <Scheda href={'/squadra/dashboard' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/statistiche-allenamento', '/squadra/statistiche-partite']}>Statistiche</Scheda>
-        <Scheda href={'/squadra/calendario' + (squadraScelta ? '?squadra=' + squadraScelta : '')}>Calendario</Scheda>
+        <Scheda href={'/squadra/calendario' + (squadraScelta ? '?squadra=' + squadraScelta : '')} attivaSu={['/squadra/campi']}>Calendario</Scheda>
       </nav>
     );
   }

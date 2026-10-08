@@ -10,12 +10,13 @@ import { ScaricaExcel } from '@/components/ScaricaExcel';
 import { fogliCalendario, nomeFile } from '@/lib/esporta';
 import { CalendarioSquadra } from '@/components/calendario/CalendarioSquadra';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
+import { SchedeCalendario } from '@/components/squadra/SottoSchede';
 
 type Id = Partita & { id: string };
 
 export default async function CalendarioDellaSquadra({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {
   const q = await searchParams;
-  const { chi, squadre, squadra, soloLettura } = await apriSquadra(q.squadra);
+  const { chi, squadre, squadra, soloLettura, conSquadra } = await apriSquadra(q.squadra);
   const oggi = oggiIso();
   if (!squadra) return <p className="text-grigio">Nessuna squadra.</p>;
 
@@ -45,6 +46,7 @@ export default async function CalendarioDellaSquadra({ searchParams }: { searchP
   return (
     <div className="space-y-5">
       <h1 className="font-display text-4xl font-bold">Calendario</h1>
+      <SchedeCalendario attiva="/squadra/calendario" conSquadra={conSquadra} />
       <SceltaSquadra squadre={squadre} scelta={id} />
       {soloLettura && <p className="rounded-md bg-blu/10 px-4 py-3 text-sm text-blu">Sola lettura.</p>}
       {(ufficiali.length > 0 || amichevoli.length > 0) && <ScaricaExcel nome={nomeFile('Calendario', squadra.category || squadra.name || '', oggi)}
