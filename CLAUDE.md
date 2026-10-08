@@ -68,7 +68,7 @@ tolgono anche le tessere e i cookie `acm_squadra`/`acm_profilo`.
 - Navigazione (07/10/2026, controllo UX): l'area Modulistica non c'è più. Squadra = Rosa · Allenamento · Partite · Statistiche ·
   Calendario (`components/SchedeArea.tsx`); sottoschede nella pagina, che vanno a capo (`components/squadra/SottoSchede.tsx`:
   `SchedeAllenamento`, `SchedePartite` in tre gruppi: prima della partita (Dati, Convocazioni, Formazione, Piazzati), da stampare (Foglio
-  gara, Distinta), dopo la partita (Tabellini); `SchedeStatistiche` = Dashboard, Allenamento, Partite; `SchedeCalendario` = Partite, Campi). Gli indirizzi
+  gara, Distinta), dopo la partita (Tabellini); `SchedeStatistiche` = Dashboard, Allenamento, Partite, Campi solo dal 📌 delle Convocazioni). Gli indirizzi
   `/modulistica/distinta` (area Squadra → Partite) e `/modulistica/programma` (area Calendario) restano; `Aree.tsx`, `NomeArea.tsx`
   li assegnano all'area giusta. Titoli delle pagine brevi, senza il nome della squadra (è già nell'intestazione o nella scelta).
 - Moduli (admin, direttori e mister; azioni in `app/(aree)/modulistica/actions.ts`): Distinta (`/modulistica/distinta`,
