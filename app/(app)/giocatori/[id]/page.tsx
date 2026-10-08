@@ -27,6 +27,8 @@ import { EventiGiocatore, type Evento } from '@/components/EventiGiocatore';
 import { aggiornaGiocatore, aggiungiContatto, cambiaStato, eliminaContatto } from '../actions';
 import { affidaGiocatore } from '../../home/actions';
 import { staffScouting } from '@/lib/staff';
+import { Stellina } from '@/components/Stellina';
+import { mieiPreferiti } from '@/lib/preferiti';
 
 type Autore = { nome: string | null; cognome: string | null; email: string } | null;
 
@@ -165,6 +167,7 @@ export default async function SchedaGiocatore({
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
+            <Stellina tipo="giocatore" id={g.id} attiva={(await mieiPreferiti(supabase)).giocatori.has(g.id)} grande />
             <h1 className="font-display text-4xl font-bold">{titolo}</h1>
             {g.osservato === false ? (
               <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">

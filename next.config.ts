@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
     // Copia dei PDF nell'archivio (archiviaPdf) e documenti delle famiglie: i file passano dall'azione del server.
     // Su Vercel una richiesta non supera comunque 4,5 MB
     serverActions: { bodySizeLimit: '4.5mb' },
+    // "Indietro" senza ricaricare: le pagine già viste restano in memoria nel browser per 3 minuti (da Next 15 erano 0).
+    // Salvataggi e azioni (revalidatePath, redirect) le aggiornano comunque subito.
+    staleTimes: { dynamic: 180, static: 300 },
   },
   // Il vecchio Portale squadre (public/portale/, JavaScript senza build) è spento: tutte le sue schede sono pagine dell'app.
   // Chi apre un vecchio indirizzo o segnalibro va alla Home (senza accesso, il proxy lo manda al PIN). In public/portale/

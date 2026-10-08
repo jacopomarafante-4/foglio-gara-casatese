@@ -14,6 +14,11 @@ export type Incarico = {
   giocatore: { id: string } | null;
 };
 
+/** Un incarico aperto resta attivo fino a 72 ore dopo l'inizio dell'evento (la gara, se no la data scritta); senza data sempre */
+export function incaricoAttivo(x: { quando: string | null; gara?: { data_ora: string } | null }, adesso: number) {
+  const inizio = x.gara?.data_ora ?? (x.quando ? x.quando + 'T00:00:00' : null);
+  return !inizio || Date.parse(inizio) + 72 * 3600 * 1000 > adesso;
+}
 export const SELECT_INCARICO =
   'id, titolo, tipo, categoria, quando, dettagli, fatto, fatto_il, esito, created_at, societa(nome), ' +
   'creato:profiles!incarichi_creato_da_fkey(id, nome, cognome, email), assegnato:profiles!incarichi_assegnato_a_fkey(id, nome, cognome, email), ' +
