@@ -159,7 +159,7 @@ export function DashboardSocieta(p: {
           ) : <p className="text-sm text-grigio">Nessun impegno questo weekend.</p>}
         </Riquadro>
 
-        <Riquadro titolo="Scouting" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito." href="/giocatori/stati">
+        <Riquadro titolo="Scouting" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito." href="/giocatori">
           <ul className="space-y-2">
             {stati.map((s, i) => {
               const n = p.scouting.perStato[s] ?? 0;
