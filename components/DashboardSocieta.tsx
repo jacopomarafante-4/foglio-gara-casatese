@@ -42,7 +42,7 @@ export function DashboardSocieta(p: {
   const giocateTutte = p.squadre.reduce((a, s) => a + s.giocate, 0);
   const segn8 = p.scouting.settimane.reduce((a, x) => a + x.n, 0);
   const perCal = (Object.keys(CALENDARI) as Calendario[]).map((k) => ({ k, n: p.impegni.filter((x) => calDi(x) === k).length }));
-  const stati: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'da_rivedere', 'inserito'];
+  const stati: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'positivo', 'da_rivedere', 'inserito'];
   const maxStato = Math.max(1, ...stati.map((s) => p.scouting.perStato[s] ?? 0));
   const daSistemare = p.squadre.filter((s) => s.tabelliniMancanti || s.sottoSoglia);
   const maxGiocate = Math.max(1, ...ago.map((s) => s.v + s.n + s.p));
@@ -159,7 +159,7 @@ export function DashboardSocieta(p: {
           ) : <p className="text-sm text-grigio">Nessun impegno questo weekend.</p>}
         </Riquadro>
 
-        <Riquadro titolo="Scouting" spiegazione="Giocatori osservati per stato: da chi è in lista fino a chi è stato inserito." href="/giocatori/stati">
+        <Riquadro titolo="Scouting" spiegazione="Giocatori per stato: da segnalato a osservato, esito e inserito." href="/giocatori/stati">
           <ul className="space-y-2">
             {stati.map((s, i) => {
               const n = p.scouting.perStato[s] ?? 0;

@@ -308,6 +308,10 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0058: percorso del giocatore. Nomi interni invariati, etichette in `STATI` (lib/tipi.ts): Nel database (osservato false) → Segnalato
+  (in_lista) → Osservato (in_osservazione, da solo alla 3ª persona che valuta: trigger `valutazioni_osservato_dopo_tre`) → Esito positivo
+  (`positivo`, nuovo) / rimandato (da_rivedere) / negativo (da_non_inserire) → Inserito (positivo + accordo di ragazzo e famiglia).
+- 0057: `preferiti` (stellina su gare e giocatori, RLS: ognuno i suoi), `lib/preferiti.ts`, `components/Stellina.tsx`.
 - 0056: valutazione, la domanda sul ruolo cambia con l'età (`domandaRuolo()` in `lib/categorie.ts`, età sportiva): fino ai
   Pulcini (età ≤ 11) portiere o di movimento, Esordienti (12-13) portiere o la linea (obbligatoria), dall'Under 14 il ruolo preciso
   come prima. `valutazioni.ruolo_campo` per le prime due; il trigger `ruolo_da_valutazione` aggiorna `giocatori.ruolo` ("di

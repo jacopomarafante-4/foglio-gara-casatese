@@ -171,7 +171,7 @@ export default async function SchedaGiocatore({
             <h1 className="font-display text-4xl font-bold">{titolo}</h1>
             {g.osservato === false ? (
               <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">
-                Solo da distinta: mai osservato
+                Nel database: mai segnalato
               </span>
             ) : (
               <StatoBadge stato={g.stato} />
