@@ -12,9 +12,9 @@ export const SIGLE = {
   TMR: { nome: 'Allenamenti per partita', spiegazione: 'Quanti allenamenti per ogni partita giocata nel periodo.' },
   SMM: { nome: 'Minuti giocati insieme', spiegazione: 'Per ogni coppia di ragazzi, i minuti in campo insieme (stima: il minore dei due minutaggi in ogni partita).' },
   PPC: { nome: 'Partite giocate insieme', spiegazione: 'Per ogni coppia di ragazzi, la % di partite in cui hanno giocato tutti e due.' },
-  RR: { nome: 'Permanenza', spiegazione: '% di ragazzi della rosa di inizio stagione ancora in squadra.', attivo: false },
-  DOR: { nome: 'Abbandoni', spiegazione: '% di ragazzi usciti dalla rosa durante la stagione.', attivo: false },
-  YIA: { nome: 'Anni in Academy', spiegazione: 'Da quanti anni, in media, i ragazzi giocano con noi.', attivo: false },
+  RR: { nome: 'Permanenza', spiegazione: '% di ragazzi delle stesse annate che erano con noi la stagione scorsa e sono ancora all’Academy (in questa o in un’altra squadra).' },
+  DOR: { nome: 'Abbandoni', spiegazione: '% di ragazzi delle stesse annate che erano con noi la stagione scorsa e non sono più all’Academy.' },
+  YIA: { nome: 'Anni in Academy', spiegazione: 'Da quante stagioni, in media, i ragazzi della rosa giocano con noi (questa compresa).' },
 } as const;
 export type Sigla = keyof typeof SIGLE;
 
@@ -71,5 +71,29 @@ export function dashboard(reg: Registro, giocatori: { id: string; name: string }
     tmr: gm.length ? tr.length / gm.length : null,
     andamento, assenze, minuti, coppie, conMinuti,
     risultati: { noti: noti.length, v: noti.filter((s) => s.gf > s.ga).length, n: noti.filter((s) => s.gf === s.ga).length, p: noti.filter((s) => s.gf < s.ga).length },
+  };
+}
+
+/* ---------- Rose delle stagioni passate (roster.storico, scritto da scripts/storico-rose.mjs) ---------- */
+/** Chiave di un nome per il confronto: lettere minuscole senza accenti, parole in ordine alfabetico ("Rossi Mario" = "Mario Rossi") */
+export const chiaveNome = (n: string) => n.normalize('NFKD').replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ')
+  .split(/\s+/).filter(Boolean).sort().join('');
+export type Storico = { aggiornato?: string; stagioni: Record<string, string[]>; altrove?: string[] };
+
+/** RR, DOR e YIA di una rosa: confronto con la stagione passata più recente dello storico; null se lo storico manca */
+export function storiaRosa(rosa: { name: string }[], storico?: Storico | null) {
+  const stagioni = Object.keys(storico?.stagioni ?? {}).sort();
+  if (!storico || !stagioni.length) return null;
+  const ora = new Set(rosa.map((p) => chiaveNome(p.name)));
+  const ultima = stagioni.at(-1)!, prima = new Set(storico.stagioni[ultima]);
+  // rimasto = ancora all'Academy: in questa rosa o in un'altra squadra (storico.altrove)
+  const altrove = new Set(storico.altrove ?? []);
+  const rimasti = [...prima].filter((k) => ora.has(k) || altrove.has(k)).length;
+  const anni = rosa.map((p) => 1 + stagioni.filter((s) => storico.stagioni[s].includes(chiaveNome(p.name))).length);
+  return {
+    stagione: ultima, primaQuanti: prima.size, rimasti, usciti: prima.size - rimasti,
+    rr: prima.size ? rimasti / prima.size : null, dor: prima.size ? (prima.size - rimasti) / prima.size : null,
+    yia: anni.length ? anni.reduce((x, y) => x + y, 0) / anni.length : null,
+    nuovi: rosa.filter((p) => !stagioni.some((s) => storico.stagioni[s].includes(chiaveNome(p.name)))).length,
   };
 }

@@ -5,7 +5,7 @@ import { leggiDocs } from '@/lib/portale-dati';
 import { apriSquadra } from '@/lib/pagina-squadra';
 import type { Partita } from '@/lib/programma';
 import { SOGLIA_PRESENZE, mesiDelRegistro, pctTesto, type Registro } from '@/lib/registro';
-import { dashboard, SIGLE } from '@/lib/statistiche';
+import { dashboard, SIGLE, storiaRosa, type Storico } from '@/lib/statistiche';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
 import { SceltaPeriodo } from '@/components/squadra/SceltaPeriodo';
 import { SchedeStatistiche } from '@/components/squadra/SottoSchede';
@@ -32,6 +32,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const mesi = mesiDelRegistro(reg, calendario);
   const periodo = q.periodo && mesi.includes(q.periodo) ? q.periodo : 'all';
   const d = dashboard(reg, giocatori, calendario, periodo);
+  const storia = storiaRosa(giocatori, (docs['roster/' + id] as { storico?: Storico } | null)?.storico);
 
   /* tabella delle coppie: minuti insieme (SMM) o % di partite insieme (PPC); i ragazzi che hanno giocato, dal più presente */
   const inMinuti = d.conMinuti && q.coppie !== 'pct';
@@ -57,8 +58,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <Riquadro sigla="TMR" valore={d.tmr == null ? '—' : d.tmr.toFixed(1)} />
             <Riquadro nome="Partite giocate" valore={d.partite}
               spiegazione={!adb && d.risultati.noti ? `${d.risultati.v} vinte, ${d.risultati.n} pari, ${d.risultati.p} perse (col risultato nel tabellino).` : 'Partite con il tabellino compilato nel periodo.'} />
-            <Riquadro sigla="RR" valore="" attivo={false} />
-            <Riquadro sigla="DOR" valore="" attivo={false} />
+            <Riquadro sigla="RR" valore={pctTesto(storia?.rr ?? null)} attivo={!!storia}
+              spiegazione={storia ? `${SIGLE.RR.spiegazione} ${storia.rimasti} su ${storia.primaQuanti} del ${storia.stagione}.` : undefined} />
+            <Riquadro sigla="DOR" valore={pctTesto(storia?.dor ?? null)} attivo={!!storia}
+              spiegazione={storia ? `${SIGLE.DOR.spiegazione} ${storia.usciti} su ${storia.primaQuanti} del ${storia.stagione}.` : undefined} />
+            <Riquadro sigla="YIA" valore={storia?.yia == null ? '—' : storia.yia.toFixed(1).replace('.', ',')} attivo={!!storia}
+              spiegazione={storia ? `${SIGLE.YIA.spiegazione} ${storia.nuovi} ragazzi sono al primo anno.` : undefined} />
           </div>
 
           <Sezione titolo="Presenze allenamento per allenamento" spiegazione={`% di ragazzi presenti a ogni seduta (esclusi gli infortunati). La linea rossa è la soglia del ${SOGLIA_PRESENZE * 100}%.`}>
@@ -116,10 +121,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
           <Sezione titolo="Da attivare" spiegazione="Indicatori che servono a te ma per cui oggi l'app non registra i dati.">
             <ul className="space-y-1.5 text-sm">
-              {(['RR', 'DOR', 'YIA'] as const).map((k) => (
-                <li key={k}><b className="font-display text-blu">{k}</b> · <b>{SIGLE[k].nome}</b>: {SIGLE[k].spiegazione}{' '}
-                  <span className="text-grigio">{k === 'YIA' ? 'Serve l’anno di arrivo in Academy di ogni ragazzo.' : 'Serve la data di entrata e di uscita dalla rosa.'}</span></li>
-              ))}
+              {!storia && <li><b className="font-display text-blu">RR, DOR, YIA</b>: <span className="text-grigio">mancano le rose delle stagioni passate per questa annata.</span></li>}
               <li><b>Fasi, mezzi, obiettivi e difficoltà dell’allenamento</b>: <span className="text-grigio">servono le sedute con gli esercizi (Esercitazioni, in lavorazione).</span></li>
             </ul>
           </Sezione>
