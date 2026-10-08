@@ -10,6 +10,8 @@ import { Avviso } from '@/components/Avviso';
 import { CalendarioSquadre } from '@/components/scouting/CalendarioSquadre';
 import { staffScouting } from '@/lib/staff';
 import { istanteTraOre } from '@/lib/utili';
+import { FiltriAuto } from '@/components/FiltriAuto';
+import { mieiPreferiti } from '@/lib/preferiti';
 
 const ANNATA_MIN = 2008, ANNATA_MAX = 2021;
 const LIMITE = 5000;
@@ -21,7 +23,7 @@ const chipVista = (attiva: boolean) => `rounded-full px-3 py-1.5 text-sm font-se
 export default async function Gare({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; adb?: string; ago?: string; annata?: string; tutte?: string; ok?: string; errore?: string }>;
+  searchParams: Promise<{ vista?: string; squadra?: string; km?: string; periodo?: string; adb?: string; ago?: string; annata?: string; tutte?: string; societa?: string; pref?: string; ok?: string; errore?: string }>;
 }) {
   const filtri = await searchParams;
   const profilo = (await getProfilo())!;
@@ -80,8 +82,11 @@ export default async function Gare({
   }
 
   const sede = CENTRO_DISTANZE;
+  const preferiti = await mieiPreferiti(supabase);
+  const soloPreferite = filtri.pref === '1';
   const staff = gestisce(profilo.ruolo) ? await staffScouting(supabase) : undefined;
   const tutteLeGare = (gareData as unknown as Gara[]) ?? [];
+  const nomiSocieta = [...new Set(tutteLeGare.flatMap((g) => [g.casa_nome, g.trasferta_nome]).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'it'));
   const fine = fineStagione();
 
   /** Età della categoria della gara: AdB fino a 13 anni (Esordienti), agonistica da 14; categoria non chiara = si tiene */
@@ -92,8 +97,13 @@ export default async function Gare({
       if (eta.max <= 13 ? !conAdb : !conAgonistica) return false;
       return !annata || (fine - annata >= eta.min && fine - annata <= eta.max);
     })
+    .filter((g) => !soloPreferite || preferiti.gare.has(g.id))
+    .filter((g) => {
+      const cerca = (filtri.societa ?? '').trim().toLowerCase();
+      return !cerca || `${g.casa_nome} ${g.trasferta_nome}`.toLowerCase().includes(cerca);
+    })
     .map((g) => ({ ...arricchisci(g, sede, seguite), giocatori: giocatoriDellaGara(g, giocatori) }))
-    .filter((g) => g.distanza === null || g.distanza <= km * TOLLERANZA);
+    .filter((g) => soloPreferite || g.distanza === null || g.distanza <= km * TOLLERANZA);   // le preferite: a qualsiasi distanza
   /* Al massimo MOSTRA gare (con AdB sono migliaia): prima quelle con giocatori segnalati o squadre seguite, poi le più vicine
      nel tempo; "Mostra tutte" toglie il limite */
   const interessa = (g: (typeof gare)[number]) => g.seguite.length > 0 || g.giocatori.length > 0;
@@ -145,7 +155,7 @@ export default async function Gare({
       <Avviso ok={filtri.ok} errore={filtri.errore} />
 
       {/* Filtri: tutti alti uguali (h-12), testi corti per non essere tagliati */}
-      <form method="GET" className="grid grid-cols-2 items-end gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+      <FiltriAuto className="grid grid-cols-2 items-end gap-3 rounded-xl border border-linea bg-white p-4 sm:grid-cols-4 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
         <label className="block">
           <span className="mb-1 block text-xs text-grigio">Entro km</span>
           <input type="number" name="km" min={1} max={200} defaultValue={km} className="campo h-12 py-0" />
@@ -174,8 +184,16 @@ export default async function Gare({
             placeholder={`${ANNATA_MIN}–${ANNATA_MAX}`} defaultValue={annata ?? filtri.annata ?? ''}
             title={`Un anno dal ${ANNATA_MIN} al ${ANNATA_MAX}`} className="campo h-12 py-0" />
         </label>
-        <button className="bottone col-span-2 h-12 px-6 sm:col-span-4 lg:col-span-1">Aggiorna</button>
-      </form>
+        <label className="flex h-12 items-center gap-2 self-end font-semibold">
+          <input type="checkbox" name="pref" value="1" defaultChecked={soloPreferite} className="size-5" />★ Solo preferite
+        </label>
+        <label className="col-span-2 block sm:col-span-2">
+          <span className="mb-1 block text-xs text-grigio">Società (casa o trasferta)</span>
+          <input type="search" name="societa" list="elenco-societa" defaultValue={filtri.societa ?? ''} placeholder="Es. Concorezzese, poi Invio" className="campo h-12 py-0" />
+          <datalist id="elenco-societa">{nomiSocieta.map((n) => <option key={n} value={n} />)}</datalist>
+        </label>
+        <button className="bottone col-span-2 h-12 px-6 sm:col-span-2 lg:col-span-1">Aggiorna</button>
+      </FiltriAuto>
       {annataErrata && <p className="-mt-3 text-sm text-rosso">Anno di nascita dal {ANNATA_MIN} al {ANNATA_MAX}: filtro non applicato.</p>}
 
       {error && <p className="text-rosso">Errore nel caricamento: {error.message}</p>}
@@ -198,7 +216,7 @@ export default async function Gare({
                 <h2 className="mb-3 font-display text-2xl font-bold first-letter:uppercase">{giorno}</h2>
                 <div className="space-y-3">
                   {lista.map((g) => (
-                    <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff ? 'pagina' : undefined} />
+                    <GaraCard key={g.id} gara={g} mioId={profilo.id} puoPrenotarsi={puoSegnalare(profilo.ruolo)} allegati={allegati.get(g.id)} staff={staff ? 'pagina' : undefined} preferita={preferiti.gare.has(g.id)} />
                   ))}
                 </div>
               </section>

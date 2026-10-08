@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { annullaPrenotazione, prenotaGara } from '@/app/(app)/gare/actions';
 import { AffidaGara, StaffGare } from '@/components/AffidaGara';
+import { Stellina } from '@/components/Stellina';
 import type { PersonaStaff } from '@/lib/staff';
 import { StatoBadge } from '@/components/StatoBadge';
 import type { GaraArricchita } from '@/lib/gare';
@@ -11,6 +12,7 @@ export function GaraCard({
   puoPrenotarsi,
   allegati,
   staff,
+  preferita,
 }: {
   gara: GaraArricchita;
   mioId: string;
@@ -19,6 +21,8 @@ export function GaraCard({
   allegati?: { nome: string; url: string }[];
   /** Solo per admin e direttori: a chi affidare la partita ('pagina' = elenco dato una volta sola con StaffGare) */
   staff?: PersonaStaff[] | 'pagina';
+  /** stellina dei preferiti (0057); undefined = niente stellina */
+  preferita?: boolean;
 }) {
   const ora = gara.ora_da_definire
     ? null
@@ -48,6 +52,7 @@ export function GaraCard({
       </div>
 
       <div className="min-w-0 flex-1">
+        {preferita !== undefined && <span className="float-right -mr-1 -mt-1"><Stellina tipo="gara" id={gara.id} attiva={preferita} /></span>}
         <p className="flex flex-wrap items-center gap-x-2 text-sm text-grigio">
           <span>
             {gara.categoria}

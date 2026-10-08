@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { FiltriAuto } from '@/components/FiltriAuto';
+import { Stellina } from '@/components/Stellina';
+import { mieiPreferiti } from '@/lib/preferiti';
 import { Fragment } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
@@ -148,7 +150,9 @@ export default async function Giocatori({
   // prossima gara si calcola qui, poi si prende la pagina
   const societa = await elencoSocieta(supabase);
   const nostra = idNostraSocieta(societa);
-  const tuttiIGiocatori = filtri.chi === 'tutti';
+  const preferiti = await mieiPreferiti(supabase);
+  const soloPreferiti = filtri.chi === 'preferiti';
+  const tuttiIGiocatori = filtri.chi === 'tutti' || soloPreferiti;
   const costruisci = () => {
     let q = supabase
       .from('giocatori')
@@ -158,13 +162,18 @@ export default async function Giocatori({
           'valutazioni(tecnica, motoria, tattica, mentale, giudizio, data, autore_id, autore_squadra, autore:profiles(nome, cognome, email))',
       )
       .order('updated_at', { ascending: false });
-    const annata = Number(filtri.annata);
-    if (Number.isInteger(annata) && annata > 0) q = q.eq('annata', annata);
+    // annata singola (vecchi link) o fascia "da–a" (in qualsiasi ordine)
+    const n = (v?: string) => { const x = Number(v); return Number.isInteger(x) && x > 1990 ? x : null; };
+    const da = n(filtri.annata_da) ?? n(filtri.annata), a = n(filtri.annata_a) ?? n(filtri.annata);
+    if (da && a) q = q.gte('annata', Math.min(da, a)).lte('annata', Math.max(da, a));
+    else if (da) q = q.gte('annata', da);
+    else if (a) q = q.lte('annata', a);
     const ruolo = valoreValido(RUOLI_CAMPO, filtri.ruolo);
     if (ruolo) q = q.eq('ruolo', ruolo);
     const stato = valoreValido(STATI, filtri.stato);
     if (stato) q = q.eq('stato', stato);
     if (filtri.societa) q = q.eq('societa_id', filtri.societa);
+    if (soloPreferiti) q = q.in('id', preferiti.giocatori.size ? [...preferiti.giocatori] : ['00000000-0000-0000-0000-000000000000']);
     // Di norma solo i ragazzi osservati e non dell'Academy; "Tutti i giocatori" = anche i nostri e quelli
     // visti solo nelle distinte (0014). Scegliendo l'Academy come società si vedono comunque i nostri.
     if (!tuttiIGiocatori) {
@@ -348,9 +357,14 @@ export default async function Giocatori({
       <FiltriAuto className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl border border-linea bg-white p-4 sm:grid-cols-3 lg:grid-cols-4">
         <label className="col-span-2 sm:col-span-3 lg:col-span-4"><span className="mb-1 block text-sm font-semibold text-grigio">Cerca</span>
           <input name="q" defaultValue={filtri.q} placeholder="Cognome, nome o descrizione, poi Invio" className="campo" /></label>
-        <label><span className="mb-1 block text-sm font-semibold text-grigio">Annata</span>
-          <select name="annata" defaultValue={filtri.annata ?? ''} className="campo"><option value="">Tutte</option>
-            {annateDisponibili().map((a) => <option key={a} value={a}>{a}</option>)}</select></label>
+        <div><span className="mb-1 block text-sm font-semibold text-grigio">Annata, dalla alla</span>
+          <span className="flex items-center gap-1.5">
+            <select name="annata_da" aria-label="Annata dalla" defaultValue={filtri.annata_da ?? filtri.annata ?? ''} className="campo"><option value="">Tutte</option>
+              {annateDisponibili().map((a) => <option key={a} value={a}>{a}</option>)}</select>
+            <span className="text-grigio">–</span>
+            <select name="annata_a" aria-label="Annata alla" defaultValue={filtri.annata_a ?? filtri.annata ?? ''} className="campo"><option value="">Tutte</option>
+              {annateDisponibili().map((a) => <option key={a} value={a}>{a}</option>)}</select>
+          </span></div>
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Ruolo</span>
           <select name="ruolo" defaultValue={filtri.ruolo ?? ''} className="campo"><option value="">Tutti</option>
             {Object.entries(RUOLI_CAMPO).map(([v, e]) => <option key={v} value={v}>{e}</option>)}</select></label>
@@ -365,7 +379,7 @@ export default async function Giocatori({
             {societa.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}</select></label>
         <label><span className="mb-1 block text-sm font-semibold text-grigio">Quali giocatori</span>
           <select name="chi" defaultValue={filtri.chi ?? ''} className="campo"><option value="">Solo osservati, senza Academy</option>
-            <option value="tutti">Tutti, anche da distinta e Academy</option></select></label>
+            <option value="tutti">Tutti, anche da distinta e Academy</option><option value="preferiti">★ Solo i miei preferiti</option></select></label>
         {/* Ordinamento: da computer si tocca l'intestazione della tabella; qui per telefono e tablet (e per tenerlo filtrando) */}
         <label className="lg:hidden"><span className="mb-1 block text-sm font-semibold text-grigio">Ordina per</span>
           <select name="ordina" defaultValue={ordina ?? ''} className="campo"><option value="">Annata</option>
@@ -441,8 +455,9 @@ export default async function Giocatori({
                       </tr>
                     )}
                     <tr className={r.completo ? 'bg-verde/[0.07] hover:bg-verde/10' : 'hover:bg-carta'}>
-                      <td className="p-0 pl-2">
-                        <Link href={r.href} title={r.nome} className={`flex items-center gap-1.5 px-2 py-2.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
+                      <td className="flex items-center p-0 pl-1">
+                        <Stellina tipo="giocatore" id={r.g.id} attiva={preferiti.giocatori.has(r.g.id)} />
+                        <Link href={r.href} title={r.nome} className={`flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pr-2 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
                           <Annata annata={r.g.annata} />
                           {/* nome intero: se è lungo va a capo (al massimo due righe) invece di finire con "…" */}
                           <span className="line-clamp-2 min-w-0 break-words leading-tight">{r.nome}</span>
@@ -483,6 +498,7 @@ export default async function Giocatori({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className={`flex items-center gap-1.5 font-semibold ${r.g.cognome ? '' : 'italic'}`}>
+                      <Stellina tipo="giocatore" id={r.g.id} attiva={preferiti.giocatori.has(r.g.id)} />
                       <span className="truncate">{r.nome}</span>
                       {contatto.has(r.g.id) && <ContattoFlag presente breve />}
                     </p>

@@ -7,7 +7,7 @@ import { dataBreve, dataOraBreve, istanteTraOre } from '@/lib/utili';
 import { elencoSocieta } from '@/lib/societa';
 import { staffScouting } from '@/lib/staff';
 import { Avviso } from '@/components/Avviso';
-import { Incarichi, SELECT_INCARICO, type Incarico } from '@/components/Incarichi';
+import { Incarichi, SELECT_INCARICO, incaricoAttivo, type Incarico } from '@/components/Incarichi';
 import { Colonne, Fascia, NumeroFascia, Riquadro } from '@/components/dashboard/Pezzi';
 
 type UltimaSegnalazione = {
@@ -71,7 +71,8 @@ export default async function Home({
   for (const x of (mieSegn.data as { created_at: string }[] | null) ?? []) {
     const i = 7 - Math.floor((adesso - Date.parse(x.created_at)) / (7 * 864e5)); if (i >= 0 && i < 8) settimane[i]++;
   }
-  const incarichiAperti = ((aperti.data as unknown as Incarico[]) ?? []).length;
+  const incarichiAttivi = ((aperti.data as unknown as Incarico[]) ?? []).filter((x) => incaricoAttivo(x, adesso));
+  const incarichiAperti = incarichiAttivi.length;
   const statiGrafico: StatoGiocatore[] = ['in_lista', 'in_osservazione', 'da_rivedere', 'inserito', 'da_non_inserire'];
   const maxStato = Math.max(1, ...statiGrafico.map((s) => perStato.get(s) ?? 0));
 
@@ -107,7 +108,7 @@ export default async function Home({
       )}
 
       <Incarichi
-        aperti={(aperti.data as unknown as Incarico[]) ?? []}
+        aperti={incarichiAttivi}
         fatti={(fatti.data as unknown as Incarico[]) ?? []}
         mioId={profilo.id}
         gestore={tutto}

@@ -629,6 +629,10 @@ indicato: se li vedi, completali. Se nessuno rientra, è lì che serve cercare s
 <li><b>Filtri</b>: entro quanti km, periodo (7 giorni o tutte), <b>AdB</b> (Esordienti, Pulcini, Primi calci, Piccoli amici)
 e/o <b>Agonistica</b> (dall'Under 14), <b>anno di nascita</b> (dal 2008 al 2021: le gare della categoria in cui gioca quell'annata).
 Le squadre seguite e i giocatori segnalati restano evidenziati dentro ogni gara.</li>
+<li><b>Società</b>: scrivi il nome (o sceglilo dai suggerimenti) e premi Invio: solo le gare di quella società, in casa o in trasferta.</li>
+<li><b>Stellina ☆</b>: tocca la stellina su una gara o su un giocatore per metterlo nei tuoi <b>preferiti</b> (★). Con <b>★ Solo preferite</b>
+(Gare) o "Quali giocatori → ★ Solo i miei preferiti" (Giocatori) vedi solo quelli. Ognuno vede i suoi.</li>
+<li><b>Incarichi</b>: restano aperti finché non li chiudi, al massimo fino a 72 ore dopo l'inizio dell'evento.</li>
 <li><b>Aggiungi partita</b>: una partita vista (anche fuori calendario: tornei, amichevoli, Esordienti, Pulcini) con le
 <b>foto o i PDF delle distinte</b> e i <b>giocatori visti</b>, tutto in una pagina. Se la partita è già nei calendari si usa
 quella. Le distinte restano private: le vedono admin, direttori e chi le ha caricate (📎 sulla gara).</li>
