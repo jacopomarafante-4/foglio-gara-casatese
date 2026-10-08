@@ -20,7 +20,7 @@ const Sezione = ({ titolo, spiegazione, children }: { titolo: string; spiegazion
 /** "Rossi Mario" → "Rossi M." per le intestazioni strette della tabella delle coppie */
 const corto = (n: string) => { const [a, ...b] = n.split(' '); return b.length ? `${a} ${b[0][0]}.` : a; };
 
-export default async function Dashboard({ searchParams }: { searchParams: Promise<{ squadra?: string; periodo?: string; coppie?: string }> }) {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ squadra?: string; periodo?: string; coppie?: string; con?: string }> }) {
   const q = await searchParams;
   const { chi, squadre, squadra, eta, conSquadra } = await apriSquadra(q.squadra);
   if (!squadra) return <p className="text-grigio">Nessuna squadra.</p>;
@@ -35,13 +35,23 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const storia = storiaRosa(giocatori, (docs['roster/' + id] as { storico?: Storico } | null)?.storico);
 
   /* tabella delle coppie: minuti insieme (SMM) o % di partite insieme (PPC); i ragazzi che hanno giocato, dal più presente */
-  const inMinuti = d.conMinuti && q.coppie !== 'pct';
+  // vista della tabella: minuti insieme (solo con i minuti), numero di partite insieme, o % delle partite della squadra
+  const vista: 'min' | 'num' | 'pct' = q.coppie === 'pct' ? 'pct' : q.coppie === 'num' || !d.conMinuti ? 'num' : 'min';
+  const inMinuti = vista === 'min';
   const inCampo = d.minuti.filter((m) => m.partite).sort((a, b) => b.min - a.min || b.partite - a.partite).map((m) => m.p);
-  const valore = (a: string, b: string) => { const c = d.coppie[a]?.[b]; return !c ? 0 : inMinuti ? c.min : c.insieme / d.partite; };
+  const valore = (a: string, b: string) => { const c = d.coppie[a]?.[b]; return !c ? 0 : vista === 'min' ? c.min : vista === 'num' ? c.insieme : c.insieme / d.partite; };
+  const scritto = (v: number) => (vista === 'pct' ? Math.round(v * 100) : v);
+  const spiega = (v: number) => (vista === 'min' ? `${v} minuti` : vista === 'num' ? `${v} ${v === 1 ? 'partita' : 'partite'} insieme` : `${Math.round(v * 100)}% delle partite`);
+  /* "Con chi gioca di più": il ragazzo scelto (?con=id) e gli altri in ordine di partite insieme */
+  const scelto = inCampo.find((p) => p.id === q.con) ?? inCampo[0];
+  const compagni = scelto ? inCampo.filter((p) => p.id !== scelto.id).map((p) => ({ p, n: d.coppie[scelto.id]?.[p.id]?.insieme ?? 0 })).sort((x, y) => y.n - x.n) : [];
+  const partiteScelto = d.minuti.find((m) => m.p.id === scelto?.id)?.partite ?? 0;
   const massimo = Math.max(1e-9, ...inCampo.flatMap((a) => inCampo.map((b) => (a.id === b.id ? 0 : valore(a.id, b.id)))));
-  const link = (coppie: string) => conSquadra(`/squadra/dashboard?coppie=${coppie}${periodo !== 'all' ? '&periodo=' + periodo : ''}`);
+  const link = (coppie: string, con = q.con) => conSquadra(`/squadra/dashboard?coppie=${coppie}${con ? '&con=' + con : ''}${periodo !== 'all' ? '&periodo=' + periodo : ''}`);
   const chip = (attivo: boolean) => `rounded-full px-3 py-1 text-sm font-semibold ${attivo ? 'bg-blu text-white' : 'border border-linea bg-white'}`;
   const sigla = inMinuti ? 'SMM' : 'PPC';
+  const titoloTabella = vista === 'min' ? `SMM · ${SIGLE.SMM.nome}` : vista === 'num' ? 'Partite giocate insieme' : `PPC · ${SIGLE.PPC.nome}`;
+  const spiegazioneTabella = vista === 'num' ? 'Per ogni coppia di ragazzi, quante partite hanno giocato tutti e due (convocato = presente).' : SIGLE[sigla].spiegazione;
 
   return (
     <div className="space-y-4">
@@ -84,13 +94,20 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           )}
 
           {inCampo.length > 1 && (
-            <Sezione titolo={`${sigla} · ${SIGLE[sigla].nome}`} spiegazione={SIGLE[sigla].spiegazione + ' Più il colore è scuro, più giocano insieme.'}>
-              {d.conMinuti && (
-                <div className="flex gap-2">
-                  <Link href={link('min')} className={chip(inMinuti)}>Minuti insieme</Link>
-                  <Link href={link('pct')} className={chip(!inMinuti)}>% partite insieme</Link>
-                </div>
-              )}
+            <>
+            <Sezione titolo="Con chi gioca di più" spiegazione="Scegli un ragazzo: gli altri in ordine di partite giocate insieme a lui.">
+              <div className="flex flex-wrap gap-1.5">
+                {inCampo.map((p) => <Link key={p.id} href={link(q.coppie ?? '', p.id)} className={chip(p.id === scelto?.id)}>{corto(p.name)}</Link>)}
+              </div>
+              {scelto && <p className="text-sm text-grigio"><b className="text-inchiostro">{scelto.name}</b> ha giocato {partiteScelto} {partiteScelto === 1 ? 'partita' : 'partite'}. Insieme a:</p>}
+              <Barre unita="" voci={compagni.map((x) => ({ l: x.p.name, n: x.n, sotto: partiteScelto ? `${Math.round((x.n / partiteScelto) * 100)}% delle sue` : undefined }))} />
+            </Sezione>
+            <Sezione titolo={titoloTabella} spiegazione={spiegazioneTabella + ' Più il colore è scuro, più giocano insieme.'}>
+              <div className="flex flex-wrap gap-2">
+                {d.conMinuti && <Link href={link('min')} className={chip(vista === 'min')}>Minuti insieme</Link>}
+                <Link href={link('num')} className={chip(vista === 'num')}>Partite insieme</Link>
+                <Link href={link('pct')} className={chip(vista === 'pct')}>% delle partite</Link>
+              </div>
               <div className="overflow-x-auto">
                 <table className="text-xs">
                   <thead><tr><th className="sticky left-0 bg-white" />
@@ -105,9 +122,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                           if (a.id === b.id) return <td key={b.id} className="bg-carta" />;
                           const v = valore(a.id, b.id), forza = v / massimo;
                           return (
-                            <td key={b.id} title={`${a.name} e ${b.name}: ${inMinuti ? v + ' minuti' : Math.round(v * 100) + '% delle partite'}`}
+                            <td key={b.id} title={`${a.name} e ${b.name}: ${spiega(v)}`}
                               className="size-9 border border-white text-center" style={{ background: `rgba(0, 61, 165, ${0.08 + forza * 0.85})`, color: forza > 0.5 ? 'white' : undefined }}>
-                              {v ? (inMinuti ? v : Math.round(v * 100)) : '·'}
+                              {v ? scritto(v) : '·'}
                             </td>
                           );
                         })}
@@ -117,6 +134,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 </table>
               </div>
             </Sezione>
+            </>
           )}
 
           <Sezione titolo="Da attivare" spiegazione="Indicatori che servono a te ma per cui oggi l'app non registra i dati.">
