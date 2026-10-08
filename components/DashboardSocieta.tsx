@@ -14,6 +14,12 @@ export type SquadraDash = {
   sottoSoglia: number; tabelliniMancanti: number;
 };
 export type RisultatoDash = { id: string; sigla: string; data: string; avversario: string; casa: boolean; gf: number; ga: number };
+export type ScoutingRecente = { id: string; tipo: 'segnalazione' | 'valutazione'; data: string; giocatoreId: string; giocatore: string; annata: number;
+  societa: string; autore: string; esito: string | null };
+const ESITI: Record<string, [string, string]> = {
+  positiva: ['Positiva', 'bg-verde/15 text-verde'], da_rivedere: ['Da rivedere', 'bg-oro/25 text-inchiostro'], negativa: ['Negativa', 'bg-rosso/10 text-rosso'],
+  da_prendere: ['Da prendere', 'bg-verde/15 text-verde'], non_a_livello: ['Non a livello', 'bg-rosso/10 text-rosso'],
+};
 export type ScoutingDash = { settimane: { da: string; n: number }[]; perStato: Partial<Record<StatoGiocatore, number>>; valutazioni30: number; incarichi: number; necessita: number };
 
 const pct = (v: number | null) => (v == null ? '—' : Math.round(v * 100) + '%');
@@ -21,8 +27,9 @@ const colorePresenza = (v: number | null) => (v == null ? 'var(--color-linea)' :
 
 export function DashboardSocieta(p: {
   saluto: string; nome: string; oggi: string; weekend: string[]; squadre: SquadraDash[]; impegni: Impegno[]; recenti: RisultatoDash[];
-  avvisi: Avviso[]; scouting: ScoutingDash;
+  avvisi: Avviso[]; scouting: ScoutingDash; scoutingWeekend: { sab: string; dom: string; righe: ScoutingRecente[]; delWeekend: boolean };
 }) {
+  const sw = p.scoutingWeekend;
   const [sab, dom] = p.weekend;
   const dataLunga = new Date(p.oggi + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
   const conPresenza = p.squadre.filter((s) => s.presenza != null);
@@ -68,6 +75,29 @@ export function DashboardSocieta(p: {
               {a.titolo && <b className="block">{a.titolo}</b>}<p className="line-clamp-2 whitespace-pre-line">{a.testo}</p></li>))}</ul>
         </Riquadro>
       )}
+
+      <Riquadro titolo={`Scouting del weekend · ${fmtData(sw.sab).slice(0, 5)} e ${fmtData(sw.dom).slice(0, 5)}`}
+        spiegazione={sw.delWeekend ? `Segnalazioni e valutazioni di giocatori visti nel weekend: ${sw.righe.filter((x) => x.tipo === 'segnalazione').length} segnalazioni, ${sw.righe.filter((x) => x.tipo === 'valutazione').length} valutazioni.`
+          : 'Nel weekend nessuna segnalazione o valutazione: qui le ultime 5.'} href="/giocatori">
+        {sw.righe.length ? (
+          <ul className="grid gap-2 md:grid-cols-2">
+            {sw.righe.map((x) => (
+              <li key={x.id}>
+                <a href={`/giocatori/${x.giocatoreId}`} className={`flex items-start gap-3 rounded-xl border-l-4 bg-carta p-2.5 hover:bg-blu/5 ${x.tipo === 'valutazione' ? 'border-oro' : 'border-blu'}`}>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-baseline gap-x-2"><b className="truncate">{x.giocatore}</b><span className="text-sm text-grigio">{x.annata}</span></span>
+                    <span className="block truncate text-sm text-grigio">{[x.societa, x.autore].filter(Boolean).join(' · ')}</span>
+                  </span>
+                  <span className="flex flex-none flex-col items-end gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-grigio">{x.tipo === 'valutazione' ? 'Valutazione' : 'Segnalazione'} · {fmtData(x.data).slice(0, 5)}</span>
+                    {x.esito && ESITI[x.esito] && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${ESITI[x.esito][1]}`}>{ESITI[x.esito][0]}</span>}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="text-sm text-grigio">Ancora nessuna segnalazione.</p>}
+      </Riquadro>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Riquadro titolo="Presenze per squadra" spiegazione={`Verde dall’85%, oro fino al ${SOGLIA_PRESENZE * 100}%, rosso sotto. La riga tratteggiata è la soglia.`}>
