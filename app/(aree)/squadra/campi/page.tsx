@@ -4,7 +4,7 @@ import { apriSquadra } from '@/lib/pagina-squadra';
 import type { Partita } from '@/lib/programma';
 import type { Campi } from '@/lib/campi';
 import { SceltaSquadra } from '@/components/SceltaSquadra';
-import { SchedeCalendario } from '@/components/squadra/SottoSchede';
+import Link from 'next/link';
 import { CampiSquadra } from '@/components/squadra/CampiSquadra';
 
 export default async function PaginaCampi({ searchParams }: { searchParams: Promise<{ squadra?: string }> }) {
@@ -18,7 +18,7 @@ export default async function PaginaCampi({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-4">
       <h1 className="font-display text-4xl font-bold">Campi</h1>
-      <SchedeCalendario attiva="/squadra/campi" conSquadra={conSquadra} />
+      <Link href={conSquadra('/squadra/convocazioni')} className="-mt-2 inline-block text-sm font-semibold text-blu">‹ Torna alle Convocazioni</Link>
       <SceltaSquadra squadre={squadre} scelta={id} />
       <CampiSquadra key={id} squadraId={id} campi={campi} posizioni={reg.venues ?? {}} soloLettura={soloLettura} />
     </div>

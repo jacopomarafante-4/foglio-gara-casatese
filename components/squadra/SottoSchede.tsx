@@ -23,7 +23,7 @@ export function SchedeAllenamento({ attiva, eta, conSquadra }: { attiva: string;
 }
 
 /** Partite in tre momenti: prima della partita, da stampare, dopo la partita. Attività di base: Convocazioni e Tabellini.
- *  I Campi sono nel Calendario della squadra (SchedeCalendario) */
+ *  I Campi (posizione del cancello) si aprono dal 📌 delle Convocazioni */
 export function SchedePartite({ attiva, adb, conSquadra }: { attiva: string; adb: boolean; squadraId?: string; staff?: boolean; conSquadra: (h: string) => string }) {
   const gruppi: [string, [string, string][]][] = adb
     ? [['Prima della partita', [['/squadra/convocazioni', 'Convocazioni']]], ['Dopo la partita', [['/squadra/tabellini', 'Tabellini']]]]
@@ -47,11 +47,6 @@ export function SchedePartite({ attiva, adb, conSquadra }: { attiva: string; adb
       ))}
     </nav>
   );
-}
-
-/** Calendario della squadra: le partite e la posizione dei campi */
-export function SchedeCalendario({ attiva, conSquadra }: { attiva: string; conSquadra: (h: string) => string }) {
-  return <Pillole schede={[['/squadra/calendario', 'Partite'], ['/squadra/campi', 'Campi']]} attiva={attiva} etichetta="Schede del calendario" conSquadra={conSquadra} />;
 }
 
 /** Statistiche: Dashboard, poi il dettaglio di allenamento e partite (le partite dell'attività di base sono nei Tabellini) */

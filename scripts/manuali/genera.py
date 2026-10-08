@@ -207,7 +207,7 @@ Ognuno vede solo le aree che gli servono. Se non ci stanno tutte, la barra scorr
 <li><b>Schede</b>, sotto la striscia colorata: le parti dell'area aperta. In <b>Squadra</b>: Rosa, Allenamento, Partite,
 Statistiche, Calendario; sotto, nella pagina, le loro schede (per esempio in Partite: Dati partita, Convocazioni, Formazione,
 Piazzati (prima della partita), Foglio gara, Distinta (da stampare), Tabellini (dopo la partita); in Statistiche: Dashboard,
-Allenamento, Partite; in Calendario: Partite, Campi).</li>
+Allenamento, Partite).</li>
 <li>Il <b>logo</b> in alto riporta sempre alla Home.</li>
 </ul>''', 'La Home di un mister.')}
 </section>
@@ -463,7 +463,7 @@ categoria (es. "Under 14 - Provinciale").</p>
 <p><span class="k">+ Amichevole</span> aggiunge un'amichevole: finisce anche nel calendario.</p>
 <h3>Statistiche (Squadra → Statistiche → Partite)</h3>
 <p>Partite giocate, gol fatti e subiti, marcatori, e per ogni giocatore presenze e minuti.</p>
-<h3>Campi (Squadra → Calendario → Campi)</h3>
+<h3>Campi (dal 📌 nelle Convocazioni)</h3>
 <p>I campi delle vostre partite: con 📌 salvi il punto esatto del cancello, così il link di Google Maps nelle convocazioni
 porta dritto lì.</p>
 </section>
