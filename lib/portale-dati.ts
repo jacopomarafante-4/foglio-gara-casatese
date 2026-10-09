@@ -71,11 +71,15 @@ export async function calendariTutti(chi: Chi): Promise<{ squadre: SquadraCal[];
     }));
     return { squadre, eventi: (docs['shared/eventi']?.items ?? []) as Evento[], errore: cal.error?.message ?? '' };
   }
-  const { data, error } = await supabase.from('docs').select('path, data')
-    .or('path.eq.shared/teams,path.eq.shared/eventi,path.like.calendar/%');
+  const [{ data, error }, { data: righe, error: errRighe }] = await Promise.all([
+    supabase.from('docs').select('path, data').or('path.eq.shared/teams,path.eq.shared/eventi'),
+    supabase.from('calendario_partite').select('squadra, dati'),  // 0059: tabella a righe, allineata da sola dal blocco calendar/<squadra>
+  ]);
   const doc = (p: string) => data?.find((d) => d.path === p)?.data;
-  const squadre = ((doc('shared/teams')?.items ?? []) as SquadraCal[]).map((t) => ({ ...t, matches: (doc('calendar/' + t.id)?.matches ?? []) as Partita[] }));
-  return { squadre, eventi: (doc('shared/eventi')?.items ?? []) as Evento[], errore: error?.message ?? '' };
+  const squadre = ((doc('shared/teams')?.items ?? []) as SquadraCal[]).map((t) => ({
+    ...t, matches: (righe ?? []).filter((r) => r.squadra === t.id).map((r) => r.dati as Partita),
+  }));
+  return { squadre, eventi: (doc('shared/eventi')?.items ?? []) as Evento[], errore: error?.message ?? errRighe?.message ?? '' };
 }
 
 export type Portieri = Record<string, { team: SquadraCal; gk: { id: string; name: string }[]; foglio: FoglioConvocazioni }>;
