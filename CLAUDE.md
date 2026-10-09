@@ -308,6 +308,9 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0059: tabelle vere, fase 1: `calendario_partite` (una riga per partita, chiave squadra+id, voce completa in `dati`), copia a righe
+  dei blocchi `calendar/<squadra>` tenuta allineata dal trigger `docs_calendario_righe` (nessuno ci scrive a mano; lettura `vede_tutto()`).
+  L'app scrive ancora il blocco; controllo con `scripts/controlla-calendario-righe.mjs`. Prossimo: spostare le letture (i mister via funzioni `coach_*`).
 - 0058: percorso del giocatore. Nomi interni invariati, etichette in `STATI` (lib/tipi.ts): Nel database (osservato false) → Segnalato
   (in_lista) → Osservato (in_osservazione, da solo alla 3ª persona che valuta: trigger `valutazioni_osservato_dopo_tre`) → Esito positivo
   (`positivo`, nuovo) / rimandato (da_rivedere) / negativo (da_non_inserire) → Inserito (positivo + accordo di ragazzo e famiglia).
