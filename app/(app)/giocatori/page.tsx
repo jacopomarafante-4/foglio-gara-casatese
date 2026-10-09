@@ -7,6 +7,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getProfilo } from '@/lib/auth';
 import { gestisce, puoSegnalare } from '@/lib/ruoli';
+import { Avviso } from '@/components/Avviso';
+import StatoRapido from '@/components/StatoRapido';
 import {
   annateDisponibili, GIUDIZI, IMPRESSIONI, PIEDI, RUOLI_CAMPO, STATI, valoreValido, type Giudizio, type Impressione, type Piede, type RuoloCampo, type RuoloPreciso, etichettaRuolo, type StatoGiocatore,
 } from '@/lib/tipi';
@@ -329,9 +331,10 @@ export default async function Giocatori({
       </span>
     );
   };
+  const ritorno = `/giocatori${link({ ok: null, errore: null })}`;
   const stato = (g: Riga) =>
     g.osservato ? (
-      <StatoBadge stato={g.stato} />
+      gestisce(profilo.ruolo) ? <StatoRapido id={g.id} stato={g.stato} ritorno={ritorno} /> : <StatoBadge stato={g.stato} />
     ) : (
       <span className="rounded-full border border-linea px-2.5 py-0.5 text-xs font-semibold text-grigio">Nel database</span>
     );
@@ -365,6 +368,7 @@ export default async function Giocatori({
 
   return (
     <div className="space-y-6">
+      <Avviso ok={filtri.ok} errore={filtri.errore} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-4xl font-bold">Giocatori</h1>

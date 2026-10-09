@@ -202,13 +202,14 @@ export async function segnaPersoneDiverse(formData: FormData) {
   tornaDoppioni({ ok: 'Segnate come persone diverse: la coppia non verrà più proposta.' });
 }
 
-/* ---------- Vista a colonne per stato: spostamento rapido (admin e direttori) ---------- */
+/* ---------- Elenco Giocatori: cambio rapido dello stato (admin e direttori) ---------- */
 
 export async function spostaStato(formData: FormData) {
   const id = testo(formData, 'id')!;
   const stato = valoreValido(STATI, formData.get('stato'));
-  const ritorno = testo(formData, 'ritorno') ?? '/giocatori/stati';
-  const dove = ritorno.startsWith('/giocatori/stati') ? ritorno : '/giocatori/stati';
+  const ritorno = testo(formData, 'ritorno') ?? '/giocatori';
+  const pulito = ritorno.replace(/[?&](ok|errore)=[^&]*/g, '').replace(/^([^?]*)&/, '$1?');
+  const dove = /^\/giocatori(\?|$)/.test(pulito) ? pulito : '/giocatori';
   const sep = dove.includes('?') ? '&' : '?';
   if (!stato) redirect(`${dove}${sep}errore=${encodeURIComponent('Scegli uno stato.')}`);
 
