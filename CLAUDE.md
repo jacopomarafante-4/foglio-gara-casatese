@@ -308,6 +308,8 @@ Storia delle migrazioni e delle funzioni: i file del vecchio Portale citati qui 
   si salva); scarico da `/societa/archivio/[id]` (`archivio_apri`) e `/segreteria/documento/[id]` (`documento_apri`); l'eliminazione
   dall'archivio toglie anche il file. File vecchi spostati con `scripts/sposta-file-in-storage.mjs [--conferma]` (01/10/2026: 12 file);
   il backup sul Mac scarica anche i due contenitori.
+- 0060: `coach_calendari` (mister) e `calendari_squadre` (Scouting) riscritte per leggere da `calendario_partite` invece che dai
+  blocchi `calendar/<squadra>`; stesso risultato per chi chiama.
 - 0059: tabelle vere, fase 1: `calendario_partite` (una riga per partita, chiave squadra+id, voce completa in `dati`), copia a righe
   dei blocchi `calendar/<squadra>` tenuta allineata dal trigger `docs_calendario_righe` (nessuno ci scrive a mano; lettura `vede_tutto()`).
   L'app scrive ancora il blocco; controllo con `scripts/controlla-calendario-righe.mjs`. Prossimo: spostare le letture (i mister via funzioni `coach_*`).
